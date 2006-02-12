@@ -1,0 +1,49 @@
+#for GNU make
+
+#DMEXP = -DMEXP=521
+%107:MEXP=107
+%127:MEXP=127
+%521:MEXP=521
+#%607:MEXP=607
+#%19937:MEXP=19937
+#%44497:MEXP=44497
+#%86243:MEXP=86243
+#%110503:MEXP=110503
+#%132049:MEXP=132049
+#%216091:MEXP=216091
+
+#DDEBUG = -DDEBUG=1
+
+DMEXP = -DMEXP=${MEXP}
+
+CC = gcc -Wall -O9 -Wmissing-prototypes  $(DDEBUG) $(DMEXP) $(DPG)
+CPP = g++ -Wall -O9 $(DDEBUG) $(DMEXP) $(DPG)
+
+LINKOPT = -lntl -lgmp
+
+test_gen521: sfmt.o test_gen.o
+	${CC} -o $@ sfmt.o test_gen.o
+
+param-search521: search.o sfmt.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search2-521: search.o sfmt2.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt2.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search3-521: search.o sfmt3.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt3.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search4-521: search.o sfmt4.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt4.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search4a-521: search.o sfmt4a.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+test_bm521: sfmt.o test_bm.o util.o debug.o
+	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}
+
+.cpp.o:
+	${CPP} -c $<
+
+.c.o:
+	${CC} -c $<
