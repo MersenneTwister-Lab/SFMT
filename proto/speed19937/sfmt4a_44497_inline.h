@@ -1,9 +1,8 @@
 /* Simple and Fast Twister */
 
 #include <string.h>
-#include <stdint.h>
 #include <stdio.h>
-#include "random-common.h"
+#include "random-inline.h"
 
 #ifndef MEXP
 #define MEXP 44497
@@ -21,21 +20,21 @@ static unsigned int idx;
 #define SL2 7
 #define SR1 17
 
-inline unsigned int get_rnd_maxdegree(void)
+INLINE unsigned int get_rnd_maxdegree(void)
 {
     return MAXDEGREE;
 }
 
-inline unsigned int get_rnd_mexp(void)
+INLINE unsigned int get_rnd_mexp(void)
 {
     return MEXP;
 }
 
-inline unsigned int get_onetime_rnds(void) {
+INLINE unsigned int get_onetime_rnds(void) {
     return N * 4;
 }
 
-inline void print_param(FILE *fp) {
+INLINE void print_param(FILE *fp) {
     fprintf(fp, "POS1 = %u\n", POS1);
     fprintf(fp, "SL1 = %u\n", SL1);
     fprintf(fp, "SL2 = %u\n", SL2);
@@ -43,13 +42,13 @@ inline void print_param(FILE *fp) {
     fflush(fp);
 }
 
-inline void print_param2(FILE *fp) {
+INLINE void print_param2(FILE *fp) {
     fprintf(fp, "[POS1, SL1, SL2, SR1] = [%u,%u,%u,%u]\n", 
 	    POS1, SL1, SL2, SR1);
     fflush(fp);
 }
 
-inline void print_state(FILE *fp) {
+INLINE void print_state(FILE *fp) {
     int i, j;
     for (i = 0; i < N; i++) {
 	for (j = 0; j < 4; j++) {
@@ -61,7 +60,7 @@ inline void print_state(FILE *fp) {
     }
 }
 
-inline void gen_rand_all(void) {
+INLINE void gen_rand_all(void) {
     int i;
 
     sfmt[0][0] = (sfmt[0][0] << SL1) ^ sfmt[0][0]
@@ -106,7 +105,7 @@ inline void gen_rand_all(void) {
     }
 }
 
-inline uint32_t gen_rand(void)
+INLINE uint32_t gen_rand(void)
 {
     uint32_t r;
 
@@ -119,7 +118,7 @@ inline uint32_t gen_rand(void)
     return r;
 }
 
-inline void init_gen_rand(uint32_t seed)
+INLINE void init_gen_rand(uint32_t seed)
 {
     int i;
 

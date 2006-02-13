@@ -56,26 +56,26 @@
 static unsigned int mt[N];	/* the array for the state vector  */
 static int mti = N + 1;		/* mti==N+1 means mt[N] is not initialized */
 
-inline unsigned int get_rnd_maxdegree(void)
+INLINE unsigned int get_rnd_maxdegree(void)
 {
     return 19937;
 }
 
-inline unsigned int get_rnd_mexp(void)
+INLINE unsigned int get_rnd_mexp(void)
 {
     return 19937;
 }
 
-inline unsigned int get_onetime_rnds(void) 
+INLINE unsigned int get_onetime_rnds(void) 
 {
     return N;
 }
 
-inline void print_param(FILE *fp) {
+INLINE void print_param(FILE *fp) {
     ;
 }
 
-inline void print_state(FILE *fp) {
+INLINE void print_state(FILE *fp) {
     int i;
 
     for (i = 0; i < N; i++) {
@@ -87,7 +87,7 @@ inline void print_state(FILE *fp) {
 }
 
 /* initializes mt[N] with a seed */
-inline void init_gen_rand(uint32_t s)
+INLINE void init_gen_rand(uint32_t s)
 {
     mt[0] = s & 0xffffffffUL;
     for (mti = 1; mti < N; mti++) {
@@ -102,7 +102,7 @@ inline void init_gen_rand(uint32_t s)
     }
 }
 
-inline void gen_rand_all(void)
+INLINE void gen_rand_all(void)
 {
     unsigned long y;
     static unsigned long mag01[2] = { 0x0UL, MATRIX_A };
@@ -129,7 +129,7 @@ inline void gen_rand_all(void)
 }
 
 /* generates a random number on [0,0xffffffff]-interval */
-inline uint32_t gen_rand(void)
+INLINE uint32_t gen_rand(void)
 {
     unsigned long y;
 

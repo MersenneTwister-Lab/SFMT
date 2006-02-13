@@ -1,12 +1,15 @@
-#include <stdint.h>
-#include <stdbool.h>
+#include "c99.h"
 #include <stdio.h>
 #include <limits.h>
 #include <time.h>
 #include <string.h>
 
-#ifdef __ppc__
-static inline __attribute__((always_inline)) uint64_t get_clock(void) {
+#define QUOTE(str) QUOTE_HELPER(str)
+#define QUOTE_HELPER(str) # str
+#include QUOTE(RANDOM)
+
+#if defined(__ppc__)
+static INLINE __attribute__((always_inline)) uint64_t get_clock(void) {
     register uint32_t tbu, tbl, tmp;
 
     __asm__ volatile(
@@ -22,12 +25,20 @@ static inline __attribute__((always_inline)) uint64_t get_clock(void) {
 
     return (((uint64_t)tbu)<<32) + tbl;
 }
-#else
-static inline __attribute__((always_inline)) uint64_t get_clock() {
+#define TIC_MAG 1
+#elif defined(__GNUC__)
+static INLINE __attribute__((always_inline)) uint64_t get_clock() {
      uint64_t x;
      __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
      return x;
 }
+#define TIC_MAG 100
+#else
+#include <ia32intrin.h>
+static __int64 get_clock() {
+  return _rdtsc();
+}
+#define TIC_MAG 100
 #endif
 
 int main(int argc, char *argv[]) {
@@ -66,8 +77,9 @@ int main(int argc, char *argv[]) {
 	//sum += clo;
     }
     //sum /= 1000;
-    printf("%llu tick and %u randoms = %04.2f randoms per tick\n",
-	   min, randoms, (double)randoms / min);
+    printf("%llu", min);
+    printf(" tick and %u randoms = %04.2f randoms per %dtick\n",
+	   randoms, (double)randoms * TIC_MAG / min, TIC_MAG);
     //printf("%f tick and %u randoms = %04.2f randoms per tick\n",
     //   sum, randoms, (double)randoms / sum);
     min = UINT64_MAX;
@@ -84,8 +96,9 @@ int main(int argc, char *argv[]) {
 	//sum += clo;
     }
     //sum /= 1000;
-    printf("%llu tick and %u randoms = %04.2f randoms per tick\n",
-	   min, randoms, (double)randoms / min);
+    printf("%llu", min);
+    printf(" tick and %u randoms = %04.2f randoms per %dtick\n",
+	   randoms, (double)randoms * TIC_MAG / min, TIC_MAG);
     //printf("%f tick and %u randoms = %04.2f randoms per tick\n",
     //   sum, randoms, (double)randoms / sum);
     return 0;

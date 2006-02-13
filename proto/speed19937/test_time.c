@@ -24,12 +24,14 @@ static inline __attribute__((always_inline)) uint64_t get_clock(void) {
 
     return (((uint64_t)tbu)<<32) + tbl;
 }
+#define TIC_MAG 1
 #else
 static inline __attribute__((always_inline)) uint64_t get_clock() {
      uint64_t x;
      __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
      return x;
 }
+#define TIC_MAG 100
 #endif
 
 int main(int argc, char *argv[]) {
@@ -65,7 +67,7 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("%llu tick and %u randoms = %04.2f randoms per tick\n",
-	   min, randoms, (double)randoms / min);
+    printf("%llu tick and %u randoms = %04.2f randoms per %dtick\n",
+	   min, randoms, (double)randoms * TIC_MAG / min, TIC_MAG);
     return 0;
 }

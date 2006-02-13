@@ -1,9 +1,7 @@
 /* Hearty Twister Search Code, Makoto Matsumoto 2005/5/6 */
 
-#include <stdint.h>
 #include <stdio.h>
-//#include "types.h"
-#include "random-common.h"
+#include "random-inline.h"
 
 #ifndef MEXP
 #define MEXP 19937
@@ -22,22 +20,22 @@ static unsigned int idx;
 #define GROT1 17
 #define GROT2 22
 
-inline unsigned int get_rnd_maxdegree(void)
+INLINE unsigned int get_rnd_maxdegree(void)
 {
     return MAXDEGREE;
 }
 
-inline unsigned int get_rnd_mexp(void)
+INLINE unsigned int get_rnd_mexp(void)
 {
     return MEXP;
 }
 
-inline unsigned int get_onetime_rnds(void) 
+INLINE unsigned int get_onetime_rnds(void) 
 {
     return N;
 }
 
-inline void print_param(FILE *fp) {
+INLINE void print_param(FILE *fp) {
     fprintf(fp, "gmm = %u\n", GMM);
     fprintf(fp, "gs2 = %u\n", GS2);
     fprintf(fp, "gs3 = %u\n", GS3);
@@ -46,7 +44,7 @@ inline void print_param(FILE *fp) {
     fflush(fp);
 }
 
-inline void print_state(FILE *fp) {
+INLINE void print_state(FILE *fp) {
     int i;
 
     for (i = 0; i < N; i++) {
@@ -57,7 +55,7 @@ inline void print_state(FILE *fp) {
     }
 }
 
-inline void gen_rand_all(void) {
+INLINE void gen_rand_all(void) {
     uint32_t u;
     unsigned int jump;
     unsigned int i;
@@ -86,7 +84,7 @@ inline void gen_rand_all(void) {
 
 }
 
-inline uint32_t gen_rand()
+INLINE uint32_t gen_rand()
 {
     if (idx >= N) {
 	gen_rand_all();
@@ -94,7 +92,7 @@ inline uint32_t gen_rand()
     return gx[idx++];
 }
 
-inline void init_gen_rand(uint32_t seed)
+INLINE void init_gen_rand(uint32_t seed)
 {
     int i;
     gx[0] = seed;
