@@ -1,0 +1,94 @@
+\documentclass{article}
+%%
+%% Please do not modify in the preamble !
+%%
+\usepackage{amsmath}
+
+\newcommand{\Header}[5]{\vspace*{0.8cm}%
+\begin{centering}%
+\section*{#1}%
+{\bf#2}\\%
+{\bf#3}\\%
+{\bf \tt mailto:#4}\\%
+{\bf \tt http://#5}\\%
+\end{centering}\vspace*{0.3cm}%
+\addcontentsline{toc}{section}{#1\\{\rm #2}}%
+}
+
+%%
+%% Insert your title, name, and affiliation
+%%
+%% In case of a special session proposal
+%% an abstract for each speaker has to be
+%% submitted (in a separate file) and
+%% an additional session abstract, where
+%% "title" is the session title, "speaker"
+%% will be the session organizer with
+%% "affiliation" the affiliation of the
+%% session organizer.
+%%
+%% \Header{Title of your Sepecial Session}{Organizer}{Affiliation}
+%%
+
+\begin{document}
+\Header{Simple and Fast MT: A new variant of Mersenne Twister
+improved in its speed}{Mutsuo Saito}{Department of Mathematics 
+Hiroshima University}{saito@math.sci.hiroshima-u.ac.jp}{}
+
+%% Type your abstract here
+
+Good randomness is most important thing of pseudo random number
+generator, but speed is important thing, too.
+Here we suggest a high speed PRNG fit for resent CPU
+architectures.
+Our targets are CPUs such as Intel Pentium 4, AMD64 and PowerPC G5 
+which have long pipelines and SIMD instructions.
+
+And our speed up plans are;
+
+First, make all things simple. The simpleness is the source of
+speed. MT has little bit complicated internal state, PMT has
+calculation dependency of its lung.
+
+Second, use TGFSR. because GFSR is array base and 
+purpose of long pipe line is good performance for array access.
+
+Third, generate 128 bit random number and use it as 32 bit
+random number and 64 bit random number. Because,
+generate 128 bit once is good for SIMD instructions.
+So the recursion is like this. where x is 128 bit vector and
+A, B, C is 128 x 128 bit Matrix.
+%\[x_{n+1} = Ax_1 + Bx_m + Cx_{n-1}\]
+There is a little problem to calculate k-distributions of 32 and
+64 bit random numbers, but it can be solve by using additional 
+internal state.
+
+Fourth,  we provide fill\_array function that fills 
+given length array with random numbers. This function is
+just like burst mode of memory access. For GFSR based PRNG,
+the method that one function call returns one random number
+is bottle neck of performance.
+
+Fifth, use large internal state. To use advantage of pipeline fully,
+internal state array of GFSR shoule be large, as far as it is
+shorter than CPU cache size.
+
+Sixth, use SIMD instruction function provided by Intel C++ Compiler
+and GCC. First we expected that compiler optimization will
+generate SIMD instructions when we write 128 bit operation 
+by C language, but not. So we use compiler provided function/macro
+as a second best plan.
+
+Using these plans, we get a new PRNG SFMT which is 2 to 3 times 
+faster than MT.
+
+\begin{tabular}{|c|c|c|c|c|c|} \hline
+randoms per tick & MT19937 & PMT19937 & SFMT19937 & SFMT19937 & SFMT44497 \\ \hline
+PowerPC G4 & 7.40 & 7.53 & 9.00 & 16.13 & 29.27 \\ \hline
+PentiumM & & & & & \\ \hline
+AMD64 & & & & & \\ \hline
+\end{tabular}
+
+Finally, we can show that SFMT has good randomness same as MT.
+
+\end{document}

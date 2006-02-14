@@ -72,6 +72,22 @@ generate 128 bit once is good for SIMD instructions.
 So the recursion is like this. where x is 128 bit vector and
 A, B, C is 128 x 128 bit Matrix.
 \[x_{n+1} = Ax_1 + Bx_m + Cx_{n-1}\]
+\[A = \left( \begin{array}{cccc}
+    A' & 0 & 0 & 0 \\
+    0 & A' & 0 & 0 \\
+    0 & 0 & A' & 0 \\
+    0 & 0 & 0 & A' \end{array} \right) \]
+\[B = \left( \begin{array}{cccc}
+    B' & I & 0 & 0 \\
+    0 & B' & I & 0 \\
+    0 & 0 & B' & I \\
+    0 & 0 & 0 & B' \end{array} \right) \]
+\[C = \left( \begin{array}{cccc}
+    C' & 0 & 0 & 0 \\
+    I & C' & 0 & 0 \\
+    0 & I & C' & 0 \\
+    0 & 0 & I & C' \end{array} \right) \]
+
 There is a little problem to calculate k-distributions of 32 and
 64 bit random numbers, but it can be solve by using additonal 
 internal state.
