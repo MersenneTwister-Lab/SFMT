@@ -41,25 +41,32 @@ static __int64 get_clock() {
 #define TIC_MAG 100
 #endif
 
+#define KAISU 10000
+vector unsigned int dummy[KAISU/4+1];
+
 int main(int argc, char *argv[]) {
     uint32_t i, j;
     uint64_t clo;
     uint64_t min = UINT64_MAX;
+    uint32_t block;
     //double sum = 0;
     uint32_t randoms;
     bool verbose = false;
+    uint32_t *array = (uint32_t *)dummy;
 
     if ((argc >= 2) && (strncmp(argv[1],"-v",2) == 0)) {
 	verbose = true;
     }
-    randoms = get_onetime_rnds() * 1000;
+    block = get_onetime_rnds();
+    randoms = (KAISU / block) * block;
     init_gen_rand(1234);
     if (verbose) {
-	printf("init states\n");
-	print_state(stdout);
+	//printf("init states\n");
+	//print_state(stdout);
 	printf("generated randoms\n");
+	fill_array_block(array, 1000 / block + 1);
 	for (i = 0; i < 1000; i++) {
-	    printf("%10u ", gen_rand());
+	    printf("%10u ", array[i]);
 	    if (i % 5 == 4) {
 		printf("\n");
 	    }
@@ -67,9 +74,7 @@ int main(int argc, char *argv[]) {
     }
     for (i = 0; i < 100; i++) {
 	clo = get_clock();
-	for (j = 0; j < 1000; j++) {
-	    gen_rand_all();
-	}
+	fill_array_block(array, randoms / block);
 	clo = get_clock() - clo;
 	if (clo < min) {
 	    min = clo;

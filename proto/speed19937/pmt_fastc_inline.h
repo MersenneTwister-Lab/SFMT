@@ -20,6 +20,9 @@ static unsigned int idx;
 #define GROT1 17
 #define GROT2 22
 
+INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks);
+INLINE static void gen_rand_all(void);
+
 INLINE unsigned int get_rnd_maxdegree(void)
 {
     return MAXDEGREE;
@@ -82,6 +85,43 @@ INLINE void gen_rand_all(void) {
     }
     gx[N] = u;
 
+}
+
+INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks){
+    uint32_t u;
+    unsigned int i;
+  
+    idx = 0;
+    u = array[N];
+    for (i = 0; i < N - GMM; i++) {
+	u ^= (array[i] >> GROT1) 
+	    ^ (array[i] << GROT2);
+	u ^= array[i + GMM];
+	u ^= u << GS2;
+	array[i] ^=  u ^ (u << GS3);
+    }
+    for (; i < N * blocks; i++) {
+	u ^= (array[i] >> GROT1) 
+	    ^ (array[i] << GROT2);
+	u ^= array[i + GMM - N];
+	u ^= u << GS2;
+	array[i] ^=  u ^ (u << GS3);
+    }
+    array[N] = u;
+}
+
+INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+{
+    if (block_num == 0) {
+	return;
+    } else if (block_num == 1) {
+	gen_rand_all();
+	memcpy(array, gx, sizeof(gx));
+    } else {
+	memcpy(array, gx, sizeof(gx));
+	gen_rand_array(array, block_num);
+	memcpy(gx, &array[N * (block_num-1)], sizeof(gx));
+    }
 }
 
 INLINE uint32_t gen_rand()

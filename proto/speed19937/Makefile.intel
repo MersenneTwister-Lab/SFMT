@@ -36,6 +36,15 @@ sfmt4a_alti: sfmt4a_alti.o test_time.o
 sfmt4a_alti_inline: test_time_inline.c sfmt4a_alti_inline.h
 	${CC} -DRANDOM=sfmt4a_alti_inline.h -o $@ test_time_inline.c
 
+sfmt4a_alti_inline2: test_time2_inline.c sfmt4a_alti_inline.h
+	${CC} -DRANDOM=sfmt4a_alti_inline.h -o $@ test_time2_inline.c
+
+sfmt4b_alti_inline: test_time_inline.c sfmt4b_alti_inline.h
+	${CC} -DRANDOM=sfmt4b_alti_inline.h -o $@ test_time_inline.c
+
+sfmt4b_alti_inline2: test_time2_inline.c sfmt4b_alti_inline.h
+	${CC} -DRANDOM=sfmt4b_alti_inline.h -o $@ test_time2_inline.c
+
 sfmt4a_alti44497_inline: test_time_inline.c sfmt4a_alti44497_inline.h
 	${CC} -DRANDOM=sfmt4a_alti44497_inline.h -o $@ test_time_inline.c
 
@@ -48,11 +57,17 @@ pmt_fastc: ht-rnd.o test_time.o
 pmt_fastc_inline: test_time_inline.c pmt_fastc_inline.h
 	${CC} -DRANDOM=pmt_fastc_inline.h -o $@ test_time_inline.c
 
+pmt_fastc_inline2: test_time2_inline.c pmt_fastc_inline.h
+	${CC} -DRANDOM=pmt_fastc_inline.h -o $@ test_time2_inline.c
+
 mt_fastc: mt19937ar.o test_time.o
 	${CC} -o $@ mt19937ar.o test_time.o
 
 mt_fastc_inline: mt19937ar_inline.h test_time_inline.c
 	${CC} -DRANDOM=mt19937ar_inline.h -o $@ test_time_inline.c
+
+mt_fastc_inline2: mt19937ar_inline.h test_time2_inline.c
+	${CC} -DRANDOM=mt19937ar_inline.h -o $@ test_time2_inline.c
 
 testalti: test_alti.o
 	${CC} -o $@ test_alti.o

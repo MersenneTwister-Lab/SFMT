@@ -20,6 +20,9 @@ static unsigned int idx;
 #define SL2 7
 #define SR1 17
 
+INLINE static void gen_rand_array(uint32_t array[][4], uint32_t blocks);
+INLINE static void gen_rand_all(void);
+
 INLINE unsigned int get_rnd_maxdegree(void)
 {
     return MAXDEGREE;
@@ -105,6 +108,52 @@ INLINE void gen_rand_all(void) {
     }
 }
 
+INLINE static void gen_rand_array(uint32_t array[][4], uint32_t blocks)
+{
+    int i;
+
+    array[0][0] = (array[0][0] << SL1) ^ array[0][0]
+	^ (array[POS1][0] >> SR1) ^ array[POS1][1]
+	^ (array[N - 1][0] << SL2); 
+    array[0][1] = (array[0][1] << SL1) ^ array[0][1]
+	^ (array[POS1][1] >> SR1) ^ array[POS1][2]
+	^ (array[N - 1][1] << SL2) ^ array[N - 1][0];
+    array[0][2] = (array[0][2] << SL1) ^ array[0][2]
+	^ (array[POS1][2] >> SR1) ^ array[POS1][3]
+	^ (array[N - 1][2] << SL2) ^ array[N - 1][1];
+    array[0][3] = (array[0][3] << SL1) ^ array[0][3]
+	^ (array[POS1][3] >> SR1)
+	^ (array[N - 1][3] << SL2) ^ array[N - 1][2];
+    for (i = 1; i < N - POS1; i++) {
+	array[i][0] = (array[i][0] << SL1) ^ array[i][0]
+	    ^ (array[i + POS1][0] >> SR1) ^ array[i + POS1][1]
+	    ^ (array[i - 1][0] << SL2); 
+	array[i][1] = (array[i][1] << SL1) ^ array[i][1]
+	    ^ (array[i + POS1][1] >> SR1) ^ array[i + POS1][2]
+	    ^ (array[i - 1][1] << SL2) ^ array[i - 1][0];
+	array[i][2] = (array[i][2] << SL1) ^ array[i][2]
+	    ^ (array[i + POS1][2] >> SR1) ^ array[i + POS1][3]
+	    ^ (array[i - 1][2] << SL2) ^ array[i - 1][1];
+	array[i][3] = (array[i][3] << SL1) ^ array[i][3]
+	    ^ (array[i + POS1][3] >> SR1)
+	    ^ (array[i - 1][3] << SL2) ^ array[i - 1][2];
+    }
+    for (; i < N * blocks; i++) {
+	array[i][0] = (array[i][0] << SL1) ^ array[i][0]
+	    ^ (array[i + POS1 - N][0] >> SR1) ^ array[i + POS1 - N][1]
+	    ^ (array[i - 1][0] << SL2); 
+	array[i][1] = (array[i][1] << SL1) ^ array[i][1]
+	    ^ (array[i + POS1 - N][1] >> SR1) ^ array[i + POS1 - N][2]
+	    ^ (array[i - 1][1] << SL2) ^ array[i - 1][0];
+	array[i][2] = (array[i][2] << SL1) ^ array[i][2]
+	    ^ (array[i + POS1 - N][2] >> SR1) ^ array[i + POS1 - N][3]
+	    ^ (array[i - 1][2] << SL2) ^ array[i - 1][1];
+	array[i][3] = (array[i][3] << SL1) ^ array[i][3]
+	    ^ (array[i + POS1 - N][3] >> SR1)
+	    ^ (array[i - 1][3] << SL2) ^ array[i - 1][2];
+    }
+}
+
 INLINE uint32_t gen_rand(void)
 {
     uint32_t r;
@@ -116,6 +165,20 @@ INLINE uint32_t gen_rand(void)
     r = sfmt[idx / 4][idx % 4];
     idx++;
     return r;
+}
+
+INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+{
+    if (block_num == 0) {
+	return;
+    } else if (block_num == 1) {
+	gen_rand_all();
+	memcpy(array, sfmt, sizeof(sfmt));
+    } else {
+	memcpy(array, sfmt, sizeof(sfmt));
+	gen_rand_array((uint32_t **)array, block_num);
+	memcpy(sfmt, &array[N * (block_num-1)], sizeof(sfmt));
+    }
 }
 
 INLINE void init_gen_rand(uint32_t seed)
