@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "random-inline.h"
+#include <emmintrin.h>
 
 #define MEXP 19937
 
@@ -10,7 +11,10 @@
 #define N (MEXP / WORDSIZE + 1)
 #define MAXDEGREE (WORDSIZE * N)
 
-static vector unsigned int sfmt[N];
+INLINE static void gen_rand_array(__m128i array[], uint32_t blocks);
+INLINE static void gen_rand_all(void);
+
+static __m128i sfmt[N];
 static unsigned int idx;
 
 #define POS1 71
@@ -48,9 +52,12 @@ INLINE void print_param2(FILE *fp) {
 
 INLINE void print_state(FILE *fp) {
     int i;
+    uint32_t *psfmt;
+
+    psfmt = (uint32_t *)sfmt;
     for (i = 0; i < N; i++) {
-	fprintf(fp, "%08vlx ", sfmt[i]);
-	if (i % 2 == 1) {
+	fprintf(fp, "%08x ", psfmt[i]);
+	if (i % 8 == 7) {
 	    fprintf(fp, "\n");
 	}
     }
@@ -58,59 +65,105 @@ INLINE void print_state(FILE *fp) {
 
 INLINE void gen_rand_all(void) {
     int i;
-    vector unsigned int a, b, c, r;
+    __m128i a, b, c, v, w;
 
-    a = sfmt[0];
-    b = sfmt[POS1];
-    c = sfmt[N - 1];
-    r = vec_xor(vec_xor(
-		    vec_xor(
-			vec_sl(a, (vector unsigned int) SL1),
-			a),
-		    vec_xor(
-			vec_sr(b, (vector unsigned int) SR1),
-			vec_slo(b, (vector unsigned char)(4 << 3)))
-		    ),
-		vec_xor(
-		    vec_sl(c, (vector unsigned int) SL2),
-		    vec_sro(c, (vector unsigned char)(4 << 3)))
-	);
-    sfmt[0] = r;
+    a = _mm_load_si128(&sfmt[0]);
+    b = _mm_load_si128(&sfmt[POS1]);
+    c = _mm_load_si128(&sfmt[N - 1]);
+    v = _mm_slli_si128(b, 4);
+    w = _mm_srli_epi32(b, SR1);
+    b = _mm_xor_si128(v, w);
+    v = _mm_srli_si128(c, 4);
+    w = _mm_slli_epi32(c, SL2);
+    c = _mm_xor_si128(v, w);
+    v = _mm_slli_epi32(a, SL1);
+    a = _mm_xor_si128(a, v);
+    w = _mm_xor_si128(b, c);
+    w = _mm_xor_si128(w, a);
+    _mm_store_si128(&sfmt[0], w);
     for (i = 1; i < N - POS1; i++) {
-	a = sfmt[i];
-	b = sfmt[i + POS1];
-	c = r;
-	r = vec_xor(vec_xor(
-			vec_xor(
-			    vec_sl(a, (vector unsigned int) SL1),
-			    a),
-			vec_xor(
-			    vec_sr(b, (vector unsigned int) SR1),
-			    vec_slo(b, (vector unsigned char)(4 << 3)))
-			),
-		    vec_xor(
-			vec_sl(c, (vector unsigned int) SL2),
-			vec_sro(c, (vector unsigned char)(4 << 3)))
-	    );
-	sfmt[i] = r;
+	a = _mm_load_si128(&sfmt[i]);
+	b = _mm_load_si128(&sfmt[i + POS1]);
+	c = w;
+	v = _mm_slli_si128(b, 4);
+	w = _mm_srli_epi32(b, SR1);
+	b = _mm_xor_si128(v, w);
+	v = _mm_srli_si128(c, 4);
+	w = _mm_slli_epi32(c, SL2);
+	c = _mm_xor_si128(v, w);
+	v = _mm_slli_epi32(a, SL1);
+	a = _mm_xor_si128(a, v);
+	w = _mm_xor_si128(b, c);
+	w = _mm_xor_si128(w, a);
+	_mm_store_si128(&sfmt[i], w);
     }
     for (; i < N; i++) {
-	a = sfmt[i];
-	b = sfmt[i + POS1 - N];
-	c = r;
-	r = vec_xor(vec_xor(
-			vec_xor(
-			    vec_sl(a, (vector unsigned int) SL1),
-			    a),
-			vec_xor(
-			    vec_sr(b, (vector unsigned int) SR1),
-			    vec_slo(b, (vector unsigned char)(4 << 3)))
-			),
-		    vec_xor(
-			vec_sl(c, (vector unsigned int) SL2),
-			vec_sro(c, (vector unsigned char)(4 << 3)))
-	    );
-	sfmt[i] = r;
+	a = _mm_load_si128(&sfmt[i]);
+	b = _mm_load_si128(&sfmt[i + POS1 - N]);
+	c = w;
+	v = _mm_slli_si128(b, 4);
+	w = _mm_srli_epi32(b, SR1);
+	b = _mm_xor_si128(v, w);
+	v = _mm_srli_si128(c, 4);
+	w = _mm_slli_epi32(c, SL2);
+	c = _mm_xor_si128(v, w);
+	v = _mm_slli_epi32(a, SL1);
+	a = _mm_xor_si128(a, v);
+	w = _mm_xor_si128(b, c);
+	w = _mm_xor_si128(w, a);
+	_mm_store_si128(&sfmt[i], w);
+    }
+}
+
+INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
+    int i;
+    __m128i a, b, c, v, w;
+
+    a = _mm_load_si128(&array[0]);
+    b = _mm_load_si128(&array[POS1]);
+    c = _mm_load_si128(&array[N - 1]);
+    v = _mm_slli_si128(b, 4);
+    w = _mm_srli_epi32(b, SR1);
+    b = _mm_xor_si128(v, w);
+    v = _mm_srli_si128(c, 4);
+    w = _mm_slli_epi32(c, SL2);
+    c = _mm_xor_si128(v, w);
+    v = _mm_slli_epi32(a, SL1);
+    a = _mm_xor_si128(a, v);
+    w = _mm_xor_si128(b, c);
+    w = _mm_xor_si128(w, a);
+    _mm_store_si128(&array[0], w);
+    for (i = 1; i < N - POS1; i++) {
+	a = _mm_load_si128(&array[i]);
+	b = _mm_load_si128(&array[i + POS1]);
+	c = w;
+	v = _mm_slli_si128(b, 4);
+	w = _mm_srli_epi32(b, SR1);
+	b = _mm_xor_si128(v, w);
+	v = _mm_srli_si128(c, 4);
+	w = _mm_slli_epi32(c, SL2);
+	c = _mm_xor_si128(v, w);
+	v = _mm_slli_epi32(a, SL1);
+	a = _mm_xor_si128(a, v);
+	w = _mm_xor_si128(b, c);
+	w = _mm_xor_si128(w, a);
+	_mm_store_si128(&array[i], w);
+    }
+    for (; i < N * blocks; i++) {
+	a = _mm_load_si128(&array[i]);
+	b = _mm_load_si128(&array[i + POS1 - N]);
+	c = w;
+	v = _mm_slli_si128(b, 4);
+	w = _mm_srli_epi32(b, SR1);
+	b = _mm_xor_si128(v, w);
+	v = _mm_srli_si128(c, 4);
+	w = _mm_slli_epi32(c, SL2);
+	c = _mm_xor_si128(v, w);
+	v = _mm_slli_epi32(a, SL1);
+	a = _mm_xor_si128(a, v);
+	w = _mm_xor_si128(b, c);
+	w = _mm_xor_si128(w, a);
+	_mm_store_si128(&array[i], w);
     }
 }
 
@@ -125,6 +178,20 @@ INLINE uint32_t gen_rand(void)
     }
     r = sfmtp[idx++];
     return r;
+}
+
+INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+{
+    if (block_num == 0) {
+	return;
+    } else if (block_num == 1) {
+	gen_rand_all();
+	memcpy(array, sfmt, sizeof(sfmt));
+    } else {
+	memcpy(array, sfmt, sizeof(sfmt));
+	gen_rand_array((__m128i *)array, block_num);
+	memcpy(sfmt, &array[N * (block_num-1)], sizeof(sfmt));
+    }
 }
 
 INLINE void init_gen_rand(uint32_t seed)

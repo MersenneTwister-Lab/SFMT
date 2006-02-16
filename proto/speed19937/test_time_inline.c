@@ -26,6 +26,7 @@ static INLINE __attribute__((always_inline)) uint64_t get_clock(void) {
     return (((uint64_t)tbu)<<32) + tbl;
 }
 #define TIC_MAG 1
+#define TIC_COUNT 1
 #elif defined(__GNUC__)
 static INLINE __attribute__((always_inline)) uint64_t get_clock() {
      uint64_t x;
@@ -33,23 +34,40 @@ static INLINE __attribute__((always_inline)) uint64_t get_clock() {
      return x;
 }
 #define TIC_MAG 100
+#define TIC_COUNT 1
 #else
+#if 1
 #include <ia32intrin.h>
 static __int64 get_clock() {
   return _rdtsc();
 }
 #define TIC_MAG 100
+#define TIC_COUNT 1
+#endif
+#if 0
+#include <time.h>
+static unsigned long long get_clock() {
+  return (unsigned long long)clock();
+}
+#define TIC_MAG 1
+#define TIC_COUNT 1000
+#endif
 #endif
 
 #define KAISU 10000
+#ifdef __GNUC__
+//uint32_t dummy[KAISU/4+1] __attribute__((aligned(16)));
 vector unsigned int dummy[KAISU/4+1];
+#else
+//__declspec(align(16)) uint32_t dummy[KAISU/4+1];
+__m128i dummy[KAISU/4+1];
+#endif
 
 int main(int argc, char *argv[]) {
     uint32_t i, j;
     uint64_t clo;
-    uint64_t min = UINT64_MAX;
+    unsigned long long min = LONG_MAX;
     uint32_t block;
-    //double sum = 0;
     uint32_t randoms;
     bool verbose = false;
     uint32_t *array = (uint32_t *)dummy;
@@ -74,37 +92,40 @@ int main(int argc, char *argv[]) {
     }
     for (i = 0; i < 100; i++) {
 	clo = get_clock();
-	fill_array_block(array, randoms / block);
+	for (j = 0; j < TIC_COUNT; j++) {
+	    fill_array_block(array, randoms / block);
+	}
 	clo = get_clock() - clo;
 	if (clo < min) {
 	    min = clo;
 	}
-	//sum += clo;
     }
-    //sum /= 1000;
-    printf("%llu", min);
-    printf(" tick and %u randoms = %04.2f randoms per %dtick\n",
-	   randoms, (double)randoms * TIC_MAG / min, TIC_MAG);
-    //printf("%f tick and %u randoms = %04.2f randoms per tick\n",
-    //   sum, randoms, (double)randoms / sum);
-    min = UINT64_MAX;
-    //sum = 0;
+    if (min != 0) {
+      printf("%llu", min);
+      printf(" tick and %.0f randoms = %04.2f randoms per %dtick\n",
+	       (double)randoms * TIC_COUNT,
+	       (double)randoms * TIC_MAG * TIC_COUNT / min, TIC_MAG);
+    } else {
+	printf("can't count time too fast\n");
+    }
+    min = LONG_MAX;
     for (i = 0; i < 100; i++) {
 	clo = get_clock();
-	for (j = 0; j < randoms; j++) {
+	for (j = 0; j < randoms * TIC_COUNT; j++) {
 	    gen_rand();
 	}
 	clo = get_clock() - clo;
 	if (clo < min) {
 	    min = clo;
 	}
-	//sum += clo;
     }
-    //sum /= 1000;
-    printf("%llu", min);
-    printf(" tick and %u randoms = %04.2f randoms per %dtick\n",
-	   randoms, (double)randoms * TIC_MAG / min, TIC_MAG);
-    //printf("%f tick and %u randoms = %04.2f randoms per tick\n",
-    //   sum, randoms, (double)randoms / sum);
+    if (min != 0) {
+      printf("%llu", min);
+      printf(" tick and %.0f randoms = %04.2f randoms per %dtick\n",
+	       (double)randoms * TIC_COUNT,
+	       (double)randoms * TIC_MAG * TIC_COUNT / min, TIC_MAG);
+    } else {
+	printf("can't count time too fast\n");
+    }
     return 0;
 }
