@@ -40,5 +40,33 @@ void printBinary(FILE *fp, GF2X& poly)
 	    fprintf(fp, "\n");
 	}
     }
-    fprintf(fp, "deg=%ld\n");
+    fprintf(fp, "deg=%ld\n", deg(poly));
+}
+
+int32_t gauss_plus(mat_GF2& mat) {
+    int32_t rank;
+    int32_t rows;
+    int32_t cols;
+    int32_t i, j, pos;
+    
+    rank = gauss(mat);
+    rows = mat.NumRows();
+    cols = mat.NumCols();
+    pos = 0;
+    for (i = 0; i < rows; i++) {
+	while ((i + pos < cols) && IsZero(mat.get(i, i + pos))) {
+	    pos++;
+	}
+	if (i + pos >= cols) {
+	    break;
+	}
+	//cout << "mat[i] = " << mat[i] << endl;
+	for (j = 0; j < i; j++) {
+	    //cout << "mat[j] = " << mat[j] << endl;
+	    if (IsOne(mat.get(j, i + pos))) {
+		mat[j] += mat[i];
+		//cout << "new mat[j] = " << mat[j] << endl;
+	    }
+	}
+    }
 }

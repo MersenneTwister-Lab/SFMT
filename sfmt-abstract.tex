@@ -31,7 +31,7 @@
 %%
 
 \begin{document}
-\Header{Simple and Fast MT: A three-times faster
+\Header{Simple and Fast MT: A Two-times faster
 new variant of Mersenne Twister}{Mutsuo Saito and Makoto Matsumoto
 }{Department of Mathematics Hiroshima University
 }{saito@math.sci.hiroshima-u.ac.jp}{www.math.sci.hiroshima-u.ac.jp/\~{}saito/eng/}
@@ -57,7 +57,8 @@ breaks the pipeline.)
 Our design generates a 128-bit pseudorandom integer
 at one time by SIMD instructions.
 The recursion formula is
-\[x_{n+1} = Ax_n + Bx_m + Cx_{n-1},\]
+%\[x_{n+1} = Ax_n + Bx_m + Cx_{n-1},\]
+\[x_{n+1} = Ax_n + Bx_m + Cx_{n},\]
 where each of $x_i$ is a 128-dimensional vector over the two 
 element field ${\mathbb F}_2$ and
 $A$, $B$ and $C$ are $128 \times 128$ matrices over
@@ -76,10 +77,10 @@ Another speed-up is realized by
 ``fill\_array function,'' that fills 
 a user-specified length of array with pseudorandom numbers. 
 This is much faster than returning one number per one call.
-In addition, we use a larger state 
-than MT, namely 44497,
-which takes full advantage of pipeline
-and can be accomodated in modern CPU's cache.
+%In addition, we use a larger state 
+%than MT, namely 44497,
+%which takes full advantage of pipeline
+%and can be accomodated in modern CPU's cache.
 
 %Lastly, we explicitly use SIMD-instrution generation 
 %capability of Intel C++ Compiler and GCC: we expected that 
@@ -89,15 +90,19 @@ and can be accomodated in modern CPU's cache.
 
 As a result, we obtain a 
 new PRNG SFMT (Simple and Fast MT), 
-roughly 3 times faster than MT, as shown in the next table.
+roughly 2 times faster than MT, as shown in the next table.
 We also show that the quality of randomness of SFMT 
 is comparable with MT.
 
-\begin{tabular}{|c|c|c|c|c|c|} \hline
- & MT & PMT & SFMT & SFMT & SFMT \\ 
- & 19937 & 19937 & 19937 & 19937 & 44497 \\ \hline
-PowerPC G4 1.33GHz & 7.40 & 7.53 & 9.00 & 16.13 & 29.27 \\ \hline
-PentiumM 1.4GHz & & & & & \\ \hline
-AMD64 & & & & & \\ \hline
+\begin{table}[hb]
+\begin{center}
+\caption{generation time of $10^9$ random numbers\label{speed}}
+\begin{tabular}{|c|c|c|c|} \hline
+& MT & PMT & SFMT \\ \hline
+PowerPC G4 1.33GHz & 1.10ms & 1.04ms & 0.35ms \\ \hline
+PentiumM 1.4GHz & 0.75ms & 0.71ms & 0.36ms \\ \hline
+%AMD64 & & & & & \\ \hline
 \end{tabular}
+\end{center}
+\end{table}
 \end{document}

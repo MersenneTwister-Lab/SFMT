@@ -18,6 +18,8 @@ static unsigned int idx;
 #define SL2 7
 #define SR1 17
 
+#define MAX_BLOCKS 10
+
 INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks);
 INLINE static void gen_rand_all(void);
 
@@ -156,8 +158,26 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
 	    );
 	array[i] = r;
     }
-    for (; i < N * blocks; i++) {
+    for (; i < N; i++) {
 	a = array[i];
+	b = array[i + POS1 - N];
+	c = r;
+	r = vec_xor(vec_xor(
+			vec_xor(
+			    vec_sl(a, (vector unsigned int) SL1),
+			    a),
+			vec_xor(
+			    vec_sr(b, (vector unsigned int) SR1),
+			    vec_slo(b, (vector unsigned char)(4 << 3)))
+			),
+		    vec_xor(
+			vec_sl(c, (vector unsigned int) SL2),
+			vec_sro(c, (vector unsigned char)(4 << 3)))
+	    );
+	array[i] = r;
+    }
+    for (; i < N * blocks; i++) {
+	a = array[i - N];
 	b = array[i + POS1 - N];
 	c = r;
 	r = vec_xor(vec_xor(
@@ -202,6 +222,13 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 #endif
 INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 {
+    while (block_num > MAX_BLOCKS) {
+	memcpy(array, sfmt, sizeof(sfmt));
+	gen_rand_array((vector unsigned int *)array, MAX_BLOCKS);
+	memcpy(sfmt, &array[N * (MAX_BLOCKS - 1)], sizeof(sfmt));
+	array += N * MAX_BLOCKS;
+	block_num -= MAX_BLOCKS;
+    }
     if (block_num == 0) {
 	return;
     } else if (block_num == 1) {

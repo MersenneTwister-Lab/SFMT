@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include <iostream>
 
 #include <NTL/GF2X.h>
@@ -151,6 +152,7 @@ void test_shortest(char *filename) {
     printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
     exit(1);
   }
+  printf("weight = %ld\n", weight(lcmpoly));
   ht = ht_save;
   make_zero_state_inv(&ht, tmp);
   dist_sum = 0;

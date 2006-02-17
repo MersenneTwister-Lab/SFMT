@@ -5,7 +5,7 @@
 %127:MEXP=127
 %521:MEXP=521
 #%607:MEXP=607
-#%19937:MEXP=19937
+%19937:MEXP=19937
 #%44497:MEXP=44497
 #%86243:MEXP=86243
 #%110503:MEXP=110503
@@ -39,8 +39,14 @@ param-search4-521: search.o sfmt4.o mt19937ar.o util.o debug.o
 param-search4a-521: search.o sfmt4a.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-search4a-19937: search.o sfmt4a.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 test_bm521: sfmt.o test_bm.o util.o debug.o
 	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}
+
+test_gauss: test_gauss.cpp
+	g++ -Wall -O0 -g -o $@ test_gauss.cpp ${LINKOPT} 
 
 .cpp.o:
 	${CPP} -c $<

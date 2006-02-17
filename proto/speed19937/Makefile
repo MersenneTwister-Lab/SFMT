@@ -8,12 +8,6 @@ LINKOPT = -lntl -lgmp
 inline_all:sfmt4a_fastc_inline pmt_fastc_inline mt_fastc_inline
 
 ##### ALTIVEC ####
-sfmt4a_sse2_inline: sfmt4a_sse2_inline.h test_time_inline.c
-	${CC} -DRANDOM=sfmt4a_sse2_inline.h -o $@ test_time_inline.c
-
-sfmt4a_sse2_inline2: sfmt4a_sse2_inline.h test_time2_inline.c
-	${CC} -DRANDOM=sfmt4a_sse2_inline.h -o $@ test_time2_inline.c
-
 sfmt4a_alti: sfmt4a_alti.o test_time.o
 	${CC} -o $@ sfmt4a_alti.o test_time.o
 

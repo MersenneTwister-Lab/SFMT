@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "sfmt.h"
+#include "sfmt-st.h"
 
 #ifndef MEXP
 #define MEXP 19937

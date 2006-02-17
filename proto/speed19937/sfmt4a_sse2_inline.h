@@ -11,6 +11,8 @@
 #define N (MEXP / WORDSIZE + 1)
 #define MAXDEGREE (WORDSIZE * N)
 
+//#define MAX_BLOCKS 10
+
 INLINE static void gen_rand_array(__m128i array[], uint32_t blocks);
 INLINE static void gen_rand_all(void);
 
@@ -65,105 +67,135 @@ INLINE void print_state(FILE *fp) {
 
 INLINE void gen_rand_all(void) {
     int i;
-    __m128i a, b, c, v, w;
+    __m128i a, b, c, r;
 
     a = _mm_load_si128(&sfmt[0]);
     b = _mm_load_si128(&sfmt[POS1]);
     c = _mm_load_si128(&sfmt[N - 1]);
-    v = _mm_slli_si128(b, 4);
-    w = _mm_srli_epi32(b, SR1);
-    b = _mm_xor_si128(v, w);
-    v = _mm_srli_si128(c, 4);
-    w = _mm_slli_epi32(c, SL2);
-    c = _mm_xor_si128(v, w);
-    v = _mm_slli_epi32(a, SL1);
-    a = _mm_xor_si128(a, v);
-    w = _mm_xor_si128(b, c);
-    w = _mm_xor_si128(w, a);
-    _mm_store_si128(&sfmt[0], w);
+    r = _mm_xor_si128(_mm_xor_si128(
+				    _mm_xor_si128(
+						  _mm_slli_epi32(a, SL1),
+						  a),
+				    _mm_xor_si128(
+						  _mm_srli_epi32(b, SR1),
+						  _mm_srli_si128(b, 4))
+				    ),
+		      _mm_xor_si128(
+				    _mm_slli_epi32(c, SL2),
+				    _mm_slli_si128(c, 4))
+		      );
+    _mm_store_si128(&sfmt[0], r);
     for (i = 1; i < N - POS1; i++) {
 	a = _mm_load_si128(&sfmt[i]);
 	b = _mm_load_si128(&sfmt[i + POS1]);
-	c = w;
-	v = _mm_slli_si128(b, 4);
-	w = _mm_srli_epi32(b, SR1);
-	b = _mm_xor_si128(v, w);
-	v = _mm_srli_si128(c, 4);
-	w = _mm_slli_epi32(c, SL2);
-	c = _mm_xor_si128(v, w);
-	v = _mm_slli_epi32(a, SL1);
-	a = _mm_xor_si128(a, v);
-	w = _mm_xor_si128(b, c);
-	w = _mm_xor_si128(w, a);
-	_mm_store_si128(&sfmt[i], w);
+	c = r;
+	r = _mm_xor_si128(_mm_xor_si128(
+					_mm_xor_si128(
+						      _mm_slli_epi32(a, SL1),
+						      a),
+					_mm_xor_si128(
+						      _mm_srli_epi32(b, SR1),
+						      _mm_srli_si128(b, 4))
+					),
+			  _mm_xor_si128(
+					_mm_slli_epi32(c, SL2),
+					_mm_slli_si128(c, 4))
+			  );
+	_mm_store_si128(&sfmt[i], r);
     }
     for (; i < N; i++) {
 	a = _mm_load_si128(&sfmt[i]);
 	b = _mm_load_si128(&sfmt[i + POS1 - N]);
-	c = w;
-	v = _mm_slli_si128(b, 4);
-	w = _mm_srli_epi32(b, SR1);
-	b = _mm_xor_si128(v, w);
-	v = _mm_srli_si128(c, 4);
-	w = _mm_slli_epi32(c, SL2);
-	c = _mm_xor_si128(v, w);
-	v = _mm_slli_epi32(a, SL1);
-	a = _mm_xor_si128(a, v);
-	w = _mm_xor_si128(b, c);
-	w = _mm_xor_si128(w, a);
-	_mm_store_si128(&sfmt[i], w);
+	c = r;
+	r = _mm_xor_si128(_mm_xor_si128(
+					_mm_xor_si128(
+						      _mm_slli_epi32(a, SL1),
+						      a),
+					_mm_xor_si128(
+						      _mm_srli_epi32(b, SR1),
+						      _mm_srli_si128(b, 4))
+					),
+			  _mm_xor_si128(
+					_mm_slli_epi32(c, SL2),
+					_mm_slli_si128(c, 4))
+			  );
+	_mm_store_si128(&sfmt[i], r);
     }
 }
 
 INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
     int i;
-    __m128i a, b, c, v, w;
+    __m128i a, b, c, r;
 
     a = _mm_load_si128(&array[0]);
     b = _mm_load_si128(&array[POS1]);
     c = _mm_load_si128(&array[N - 1]);
-    v = _mm_slli_si128(b, 4);
-    w = _mm_srli_epi32(b, SR1);
-    b = _mm_xor_si128(v, w);
-    v = _mm_srli_si128(c, 4);
-    w = _mm_slli_epi32(c, SL2);
-    c = _mm_xor_si128(v, w);
-    v = _mm_slli_epi32(a, SL1);
-    a = _mm_xor_si128(a, v);
-    w = _mm_xor_si128(b, c);
-    w = _mm_xor_si128(w, a);
-    _mm_store_si128(&array[0], w);
+    r = _mm_xor_si128(_mm_xor_si128(
+				    _mm_xor_si128(
+						  _mm_slli_epi32(a, SL1),
+						  a),
+				    _mm_xor_si128(
+						  _mm_srli_epi32(b, SR1),
+						  _mm_srli_si128(b, 4))
+				    ),
+		      _mm_xor_si128(
+				    _mm_slli_epi32(c, SL2),
+				    _mm_slli_si128(c, 4))
+		      );
+    _mm_store_si128(&array[0], r);
     for (i = 1; i < N - POS1; i++) {
 	a = _mm_load_si128(&array[i]);
 	b = _mm_load_si128(&array[i + POS1]);
-	c = w;
-	v = _mm_slli_si128(b, 4);
-	w = _mm_srli_epi32(b, SR1);
-	b = _mm_xor_si128(v, w);
-	v = _mm_srli_si128(c, 4);
-	w = _mm_slli_epi32(c, SL2);
-	c = _mm_xor_si128(v, w);
-	v = _mm_slli_epi32(a, SL1);
-	a = _mm_xor_si128(a, v);
-	w = _mm_xor_si128(b, c);
-	w = _mm_xor_si128(w, a);
-	_mm_store_si128(&array[i], w);
+	c = r;
+	r = _mm_xor_si128(_mm_xor_si128(
+					_mm_xor_si128(
+						      _mm_slli_epi32(a, SL1),
+						      a),
+					_mm_xor_si128(
+						      _mm_srli_epi32(b, SR1),
+						      _mm_srli_si128(b, 4))
+					),
+			  _mm_xor_si128(
+					_mm_slli_epi32(c, SL2),
+					_mm_slli_si128(c, 4))
+			  );
+	_mm_store_si128(&array[i], r);
     }
-    for (; i < N * blocks; i++) {
+    for (; i < N; i++) {
 	a = _mm_load_si128(&array[i]);
 	b = _mm_load_si128(&array[i + POS1 - N]);
-	c = w;
-	v = _mm_slli_si128(b, 4);
-	w = _mm_srli_epi32(b, SR1);
-	b = _mm_xor_si128(v, w);
-	v = _mm_srli_si128(c, 4);
-	w = _mm_slli_epi32(c, SL2);
-	c = _mm_xor_si128(v, w);
-	v = _mm_slli_epi32(a, SL1);
-	a = _mm_xor_si128(a, v);
-	w = _mm_xor_si128(b, c);
-	w = _mm_xor_si128(w, a);
-	_mm_store_si128(&array[i], w);
+	c = r;
+	r = _mm_xor_si128(_mm_xor_si128(
+					_mm_xor_si128(
+						      _mm_slli_epi32(a, SL1),
+						      a),
+					_mm_xor_si128(
+						      _mm_srli_epi32(b, SR1),
+						      _mm_srli_si128(b, 4))
+					),
+			  _mm_xor_si128(
+					_mm_slli_epi32(c, SL2),
+					_mm_slli_si128(c, 4))
+			  );
+	_mm_store_si128(&array[i], r);
+    }
+    for (; i < N * blocks; i++) {
+	a = _mm_load_si128(&array[i - N]);
+	b = _mm_load_si128(&array[i + POS1 - N]);
+	c = r;
+	r = _mm_xor_si128(_mm_xor_si128(
+					_mm_xor_si128(
+						      _mm_slli_epi32(a, SL1),
+						      a),
+					_mm_xor_si128(
+						      _mm_srli_epi32(b, SR1),
+						      _mm_srli_si128(b, 4))
+					),
+			  _mm_xor_si128(
+					_mm_slli_epi32(c, SL2),
+					_mm_slli_si128(c, 4))
+			  );
+	_mm_store_si128(&array[i], r);
     }
 }
 
@@ -182,6 +214,15 @@ INLINE uint32_t gen_rand(void)
 
 INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 {
+#if 0
+    while (block_num > MAX_BLOCKS) {
+	memcpy(array, sfmt, sizeof(sfmt));
+	gen_rand_array((__m128i *)array, MAX_BLOCKS);
+	memcpy(sfmt, &array[N * (MAX_BLOCKS - 1)], sizeof(sfmt));
+	array += N * MAX_BLOCKS;
+	block_num -= MAX_BLOCKS;
+    }
+#endif
     if (block_num == 0) {
 	return;
     } else if (block_num == 1) {

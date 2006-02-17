@@ -56,6 +56,8 @@
 static unsigned int mt[N];	/* the array for the state vector  */
 static int mti = N + 1;		/* mti==N+1 means mt[N] is not initialized */
 
+//#define MAX_BLOCKS 10
+
 INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks);
 INLINE static void gen_rand_all(void);
 
@@ -148,12 +150,8 @@ INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
     array[N - 1] = array[M - 1] ^ (y >> 1) ^ mag01[y & 0x1UL];
     kk++;
     for (; kk < N * blocks - M; kk++) {
-	y = (array[kk] & UPPER_MASK) | (array[kk + 1 - N] & LOWER_MASK);
-	array[kk] = array[kk + M] ^ (y >> 1) ^ mag01[y & 0x1UL];
-    }
-    for (; kk < N * blocks; kk++) {
-	y = (array[kk] & UPPER_MASK) | (array[kk + 1 - N] & LOWER_MASK);
-	array[kk] = array[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+	y = (array[kk - N] & UPPER_MASK) | (array[kk + 1 - N] & LOWER_MASK);
+	array[kk] = array[kk + M - N] ^ (y >> 1) ^ mag01[y & 0x1UL];
     }
 }
 
@@ -176,23 +174,29 @@ INLINE uint32_t gen_rand(void)
 
     return y;
 }
-#if 0
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
-{
-    // no tempering !!
-    while (block_num > 0) {
-	gen_rand_all();
-	memcpy(array, mt, sizeof(mt));
-	array += N;
-	block_num--;
-    }
-}
-#endif
+
 INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 {
     int i;
     uint32_t y;
 
+#if 0
+    while (block_num > MAX_BLOCKS) {
+	memcpy(array, mt, sizeof(mt));
+	gen_rand_array(array, MAX_BLOCKS);
+	memcpy(mt, &array[N * (MAX_BLOCKS - 1)], sizeof(mt));
+	for (i = 0; i < N * MAX_BLOCKS; i++) {
+	    y = array[i];
+	    y ^= (y >> 11);
+	    y ^= (y << 7) & 0x9d2c5680UL;
+	    y ^= (y << 15) & 0xefc60000UL;
+	    y ^= (y >> 18);
+	    array[i] = y;
+	}
+	array += N * MAX_BLOCKS;
+	block_num -= MAX_BLOCKS;
+    }
+#endif
     if (block_num == 0) {
 	return;
     } else if (block_num == 1) {
