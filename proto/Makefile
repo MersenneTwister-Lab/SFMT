@@ -24,6 +24,9 @@ LINKOPT = -lntl -lgmp
 test_gen521: sfmt.o test_gen.o
 	${CC} -o $@ sfmt.o test_gen.o
 
+test_gen5-521: sfmt5.o test_gen.o
+	${CC} -o $@ sfmt5.o test_gen.o
+
 param-search521: search.o sfmt.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt.o mt19937ar.o util.o debug.o ${LINKOPT}
 
@@ -39,6 +42,12 @@ param-search4-521: search.o sfmt4.o mt19937ar.o util.o debug.o
 param-search4a-521: search.o sfmt4a.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-search4a128-521: search.o sfmt4a128.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt4a128.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search5-128-521: search.o sfmt5-128.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt5-128.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 param-search4a-19937: search.o sfmt4a.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}
 
@@ -47,6 +56,9 @@ shortest-base521: chk-shortest.o shortbase.o sfmt4a-cls.o util.o
 
 test_bm521: sfmt.o test_bm.o util.o debug.o
 	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}
+
+test_bm128-521: sfmt5.o test_bm.o util.o debug.o
+	${CPP} -o $@ test_bm.o sfmt5.o util.o debug.o ${LINKOPT}
 
 test_gauss: test_gauss.cpp
 	g++ -Wall -O0 -g -o $@ test_gauss.cpp ${LINKOPT} 

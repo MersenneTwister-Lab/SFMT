@@ -155,6 +155,9 @@ void search(unsigned int n) {
 		    genrand_int32(),
 		    genrand_int32(),
 		    genrand_int32(),
+		    genrand_int32(),
+		    genrand_int32(),
+		    genrand_int32(),
 		    genrand_int32());
 	init_gen_rand(genrand_int32()+3);
 	//print_param2(stdout);
@@ -206,7 +209,7 @@ int main(int argc, char* argv[]){
     int n;
     unsigned long seed;
 
-    setup_param(1, 0, 21, 4, 3, 29);
+    setup_param(1, 0, 21, 4, 3, 29, 2, 2, 2);
 
     if (argc != 3) {
 	limit = 32;

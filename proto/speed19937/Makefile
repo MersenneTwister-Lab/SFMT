@@ -23,6 +23,12 @@ sfmt4b_alti_inline: test_time_inline.c sfmt4b_alti_inline.h
 sfmt4b_alti_inline2: test_time2_inline.c sfmt4b_alti_inline.h
 	${CC} -DRANDOM=sfmt4b_alti_inline.h -o $@ test_time2_inline.c
 
+sfmt5_alti_inline: test_time_inline.c sfmt5_alti_inline.h
+	${CC} -DRANDOM=sfmt5_alti_inline.h -o $@ test_time_inline.c
+
+sfmt5_alti_inline2: test_time2_inline.c sfmt5_alti_inline.h
+	${CC} -DRANDOM=sfmt5_alti_inline.h -o $@ test_time2_inline.c
+
 sfmt4a_alti44497_inline: test_time_inline.c sfmt4a_alti44497_inline.h
 	${CC} -DRANDOM=sfmt4a_alti44497_inline.h -o $@ test_time_inline.c
 
