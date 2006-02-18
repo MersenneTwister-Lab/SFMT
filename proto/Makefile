@@ -42,6 +42,9 @@ param-search4a-521: search.o sfmt4a.o mt19937ar.o util.o debug.o
 param-search4a-19937: search.o sfmt4a.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+shortest-base521: chk-shortest.o shortbase.o sfmt4a-cls.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase.o sfmt4a-cls.o util.o ${LINKOPT}
+
 test_bm521: sfmt.o test_bm.o util.o debug.o
 	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}
 

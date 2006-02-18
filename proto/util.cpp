@@ -69,4 +69,5 @@ int32_t gauss_plus(mat_GF2& mat) {
 	    }
 	}
     }
+    return rank;
 }

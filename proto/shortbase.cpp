@@ -3,16 +3,19 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sfmt-st.h"
+#include "sfmt-cls.h"
 #include "shortbase.h"
 #include "util.h"
 
 NTL_CLIENT;
 
+#define MIN(a,b) ((a)>(b)?(b):(a))
+
 mat_GF2 debug_mat;
 mat_GF2 debug_mat2;
 static unsigned int bit_len;
 
+#if 0
 void dprintnext(in_status *st) {
     unsigned int i;
 
@@ -34,14 +37,14 @@ void dprintbase(char *file, int line, int num, in_status *st) {
     fprintf(stderr, " count:%u ", st->count);
     fprintf(stderr, "bitlen:%u]\n", bit_len);
 }
-
+#endif
 void set_bit_len(unsigned int len) {
     if ((len <= 0) || (len > 32)) {
 	printf("bitLength error\n");
 	exit(1);
     }
     bit_len = len;
-    mask = mask_tab[bit_len - 1];
+    //mask = mask_tab[bit_len - 1];
 }
 
 void set_special(in_status *st, unsigned int special_bit) {
@@ -50,25 +53,26 @@ void set_special(in_status *st, unsigned int special_bit) {
     st->zero = false;
     st->count = 0;
     //st->next = 0x80000000U >> special_bit;
-    st->next = NTH_BIT(special_bit);
+    st->next.put(special_bit, 1);
 }
 
-void set_normal(in_status *st, ht_rand *ht) {
+void set_normal(in_status *st, SFMT& sfmt) {
     int zero_count = 0;
     //DPRINTHT("ht:", ht);
-    st->random = *ht;
+    st->random = sfmt;
     st->special = false;
     st->zero = false;
     st->count = 0;
-    st->next = gen_rand(&(st->random)) & mask;
+    //st->next = gen_rand(&(st->random)) & mask;
+    st->random.gen_rand(st->next, bit_len);
     st->count++;
-    while (st->next == 0) {
+    while (IsZero(st->next)) {
 	zero_count++;
 	if (zero_count > MAXDEGREE) {
 	    st->zero = true;
 	    break;
 	}
-	st->next = gen_rand(&(st->random)) & mask;
+	st->random.gen_rand(st->next, bit_len);
 	st->count++;
     }
     //DPRINTHT("ht:", &(st->random));
@@ -76,10 +80,10 @@ void set_normal(in_status *st, ht_rand *ht) {
 
 void add_status(in_status *dist, in_status *src) {
     unsigned int c;
-    unsigned int n;
+    vec_GF2 next;
 
     c = dist->count;
-    n = dist->next;
+    next = dist->next;
     if (dist->special && (!src->special)) {
 	//DPRINT("before copy", NULL);
 	//DPRINTHT("dist", &(dist->random));
@@ -91,11 +95,11 @@ void add_status(in_status *dist, in_status *src) {
 	//DPRINT("before add", NULL);
 	//DPRINTHT("dist", &(dist->random));
 	//DPRINTHT("src ", &(src->random));
-	add(&(dist->random), &(src->random));
+	dist->random.add(src->random);
 	//DPRINT("after add", NULL);
 	//DPRINTHT("dist", &(dist->random));
     }
-    dist->next = n ^ (src->next);
+    dist->next = next + src->next;
     dist->count = MIN(c, src->count);
 }
 
@@ -110,34 +114,34 @@ void get_next_state(in_status *st) {
     if (st->zero) {
 	return;
     }
-    st->next = gen_rand(&(st->random)) & mask;
+    st->random.gen_rand(st->next, bit_len);
     st->count++;
-    while (st->next == 0) {
+    while (IsZero(st->next)) {
 	zero_count++;
 	if (zero_count > MAXDEGREE) {
 	    st->zero = true;
 	    break;
 	}
-	st->next = gen_rand(&(st->random)) & mask;
+	st->random.gen_rand(st->next, bit_len);
 	st->count++;
     }
     //DPRINTHT("after next", &(st->random));
 }
   
-int get_shortest_base(unsigned int bit_len, ht_rand *ht) {
+int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
     static in_status bases[32 + 1];
-    unsigned int next[bit_len + 1];
+    vec_GF2 next[bit_len + 1];
     bool dependents[bit_len + 1];
     unsigned int shortest;
     unsigned int i;
-    int ret;
+    bool dependent_found;
 
     //DPRINT("in get_shortest_base bit_len:%u", bit_len);
     set_bit_len(bit_len);
     for (i = 0; i < bit_len; i++) {
 	set_special(&(bases[i]), i);
     }
-    set_normal(&(bases[bit_len]), ht);
+    set_normal(&(bases[bit_len]), sfmt);
     for (;;) {
 #ifdef DEBUG
 	//DPRINT("base", NULL);
@@ -148,8 +152,8 @@ int get_shortest_base(unsigned int bit_len, ht_rand *ht) {
 	for (i = 0; i <= bit_len; i++) {
 	    next[i] = bases[i].next;
 	}
-	ret = get_dependent_trans(dependents, next);
-	if (ret < 0) {
+	dependent_found = get_dependent_trans(dependents, next);
+	if (!dependent_found) {
 	    break;
 	}
 #ifdef DEBUG
@@ -169,7 +173,7 @@ int get_shortest_base(unsigned int bit_len, ht_rand *ht) {
 		add_status(&(bases[shortest]), &(bases[i]));
 	    }
 	}
-	if (bases[shortest].next == 0) {
+	if (IsZero(bases[shortest].next)) {
 	    get_next_state(&(bases[shortest]));
 	} else {
 	    fprintf(stderr, "next is not zero\n");
@@ -208,7 +212,7 @@ uint32_t get_shortest(bool dependents[], in_status bases[]) {
     return index;
 }
 
-int get_dependent_trans(bool dependent[], unsigned int array[]) {
+bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
     mat_GF2 mat;
     uint32_t rank;
 
@@ -255,19 +259,13 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
     return found;
 }
 
-void convert(mat_GF2& mat, uint32_t array[], uint32_t size) {
-    uint32_t msk;
+void convert(mat_GF2& mat, vec_GF2 array[], uint32_t size) {
     uint32_t i, j;
 
     mat.SetDims(size + 1, size + 1);
     for (i = 0; i < size + 1; i++) {
 	for (j = 0; j < size; j++) {
-	    msk = NTH_BIT2(j);
-	    if ((array[i] & msk) != 0) {
-		mat.put(j, i, 1);
-	    } else {
-		mat.put(j, i, 0);
-	    }
+	    mat.put(j, i, array[i].get(j));
 	}
     }
     for (i = 0; i < size + 1; i++) {

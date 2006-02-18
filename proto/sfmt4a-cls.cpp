@@ -1,103 +1,52 @@
 /* Hearty Twister Search Code, Makoto Matsumoto 2005/5/6 */
 
+#include <errno.h>
 #include <string.h>
-#include <stdint.h>
 #include <stdio.h>
-#include "sfmt-st.h"
+#include <stdlib.h>
+#include "sfmt-cls.h"
+//#include "debug.h"
 
-#ifndef MEXP
-#define MEXP 19937
-#endif
 
-#define WORDSIZE 128
-#define N (MEXP / WORDSIZE + 1)
-#define MAXDEGREE (WORDSIZE * N)
+static unsigned int POS1 = 1;
+static unsigned int SL1 = 11;
+static unsigned int SL2 = 7;
+static unsigned int SR1 = 17;
 
-class SFMT {
-private:
-    static uint32_t POS1;
-    static uint32_t SL1;
-    static uint32_t SL2;
-    static uint32_t SR1;
-    uint32_t sfmt[N][4];
-    uint32_t idx;
-    void next_state(void);
-public:
-    static unsigned int get_rnd_maxdegree(void);
-    static unsigned int get_rnd_mexp(void);
-    static void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
-			    unsigned int p4, unsigned int p5, unsigned int p6);
-    static ostream& operator<<(ostream& os);
-    static void print_param2(FILE *fp);
-    uint32_t gen_rand(void) {
-	uint32_t r;
-	
-	if (idx >= N * 4) {
-	    gen_rand_all();
-	    idx = 0;
-	}
-	r = sfmt[idx / 4][idx % 4];
-	idx++;
-	return r;
-    }
-    void add(SFMT& src) {
-	int i;
-	for (i = 0; i < N; i++) {
-	    sfmt[i] ^= src.sfmt[(N + i + src.idx - idx) % N];
-	}
-    }
-    istream& operator>>(istream& is, const SFMT& sfmt) {
-	string line;
-	while (is.good()) {
-	    is >> line;
-	    if 
-    }
-    SFMT(uint32_t seed) {
-	int i;
-	
-	sfmt[0][0] = seed;
-	for (i = 1; i < N * 4; i++) {
-	    sfmt[i/4][i%4] = 1812433253UL 
-		* (sfmt[(i - 1) / 4][(i - 1) % 4]
-		   ^ (sfmt[(i - 1) / 4][(i - 1) % 4] >> 30)) 
-		+ i;
-	}
-	idx = N * 4;
-    }
-};
-
-uint32_t SFMT::POS1 = 1;
-uint32_t SFMT::SL1 = 11;
-uint32_t SFMT::SL2 = 7;
-uint32_t SFMT::SR1 = 17;
-
-static unsigned int get_rnd_maxdegree(void) {
+unsigned int get_rnd_maxdegree(void)
+{
     return MAXDEGREE;
 }
-static unsigned int get_rnd_mexp(void) {
+
+unsigned int get_rnd_mexp(void)
+{
     return MEXP;
 }
-static void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
-			unsigned int p4, unsigned int p5, unsigned int p6) {
+
+void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
+		 unsigned int p4, unsigned int p5, unsigned int p6) {
     POS1 = p1 % (N-2) + 1;
     SL1 = p2 % (32 - 1) + 1;
     SL2 = p3 % (32 - 1) + 1;
     SR1 = p4 % (32 - 1) + 1;
 }
-    ostream& operator<<(ostream& os, SFMT& sfmt) {
-	fprintf(fp, "POS1 = %u\n", POS1);
-	fprintf(fp, "SL1 = %u\n", SL1);
-	fprintf(fp, "SL2 = %u\n", SL2);
-	fprintf(fp, "SR1 = %u\n", SR1);
-	fflush(fp);
-    }
-static void print_param2(FILE *fp) {
+
+void print_param(FILE *fp) {
+    fprintf(fp, "POS1 = %u\n", POS1);
+    fprintf(fp, "SL1 = %u\n", SL1);
+    fprintf(fp, "SL2 = %u\n", SL2);
+    fprintf(fp, "SR1 = %u\n", SR1);
+    fflush(fp);
+}
+
+void print_param2(FILE *fp) {
     fprintf(fp, "[POS1, SL1, SL2, SR1] = [%u,%u,%u,%u]\n", 
 	    POS1, SL1, SL2, SR1);
     fflush(fp);
 }
 
 void SFMT::next_state(void) {
+
     if (++idx >= N) {
 	idx = 0;
     }
@@ -115,4 +64,138 @@ void SFMT::next_state(void) {
 	^ (sfmt[(idx + N - 1) % N][3] << SL2) ^ sfmt[(idx + N -1) % N][2];
 }
 
+/* beheave as if it were LITTLE ENDIAN */
+vec_GF2& SFMT::gen_rand(vec_GF2& vec, uint32_t len)
+{
+    uint32_t i, j, k;
+    uint32_t tmp;
+
+    next_state();
+    k = 0;
+    vec.SetLength(len);
+    for (i = 0; i < 4; i++) {
+	tmp = sfmt[idx][i];
+	for (j = 0; j < 32; j++) {
+	    vec.put(k, tmp & 1);
+	    tmp = tmp >> 1;
+	    if (++k >= len) {
+		goto owari;
+	    }
+	}
+    }
+owari:
+    return vec;
+}
+
+/* for 128 bit */
+void SFMT::init_gen_rand(uint32_t seed)
+{
+    int i;
+
+    sfmt[0][0] = seed;
+    for (i = 1; i < N * 4; i++) {
+	sfmt[i/4][i%4] = 1812433253UL 
+	    * (sfmt[(i - 1) / 4][(i - 1) % 4]
+	       ^ (sfmt[(i - 1) / 4][(i - 1) % 4] >> 30)) 
+	    + i;
+    }
+    idx = N; // this line is for 128 bit.
+}
+
+void SFMT::add(const SFMT& src) {
+    int i, j;
+
+    for (i = 0; i < N; i ++) {
+	for (j = 0; j < 4; j++) {
+	    sfmt[i][j] ^= src.sfmt[(i + N + src.idx - idx) % N][j];
+	}
+    }
+}
+
+static unsigned int get_uint(char *line);
+static unsigned int get_uint(char *line) {
+    unsigned int result;
+
+    for (;(*line) && (*line != '=');line++);
+    if (!*line) {
+	fprintf(stderr, "WARN:can't get = in get_uint\n");
+	return 0;
+    }
+    line++;
+    errno = 0;
+    result = (unsigned int)strtol(line, NULL, 10);
+    if (errno) {
+	fprintf(stderr, "WARN:format error:%s", line);
+    }
+    return result;
+}
+
+void read_random_param(FILE *f) {
+    char line[256];
+
+    fgets(line, 256, f);
+    fgets(line, 256, f);
+    fgets(line, 256, f);
+    POS1 = get_uint(line);
+    fgets(line, 256, f);
+    SL1 = get_uint(line);
+    fgets(line, 256, f);
+    SL2 = get_uint(line);
+    fgets(line, 256, f);
+    SR1 = get_uint(line);
+}
+
+#if 0
+void print_ht_random(FILE *fp, ht_rand *ht) {
+  int i, j;
+
+  fprintf(fp, "index = %u ", ht->index);
+  fprintf(fp, "gfsr:\n");
+  for (i = 0; i < NN; i++) {
+    for (j = 31; j >= 0; j--) {
+      if ((ht->gx[i] & (1 << j)) != 0) {
+	fprintf(fp, "%c", '1');
+      } else {
+	fprintf(fp, "%c", '0');
+      }
+    }
+    fprintf(fp, "\n");
+  }
+}
+
+void dprint_ht(char *file, int line, char *s, ht_rand *ht) {
+  fprintf(stderr, "%s:%d %s", file, line, s);
+  print_ht_random(stderr, ht);
+}
+
+void dprintseq(char *file, int line, char *s, ht_rand *ht, unsigned int bitpos)
+{
+  fprintf(stderr, "%s:%d %s\n", file, line, s);
+  if (ht == NULL) {
+    fprintf(stderr, "NULL\n");
+  } else {
+    print_sequence(stderr, ht, bitpos);
+  }
+}
+
+/* for debug */
+void print_sequence(FILE *f, ht_rand *ht, unsigned int bitpos) {
+  ht_rand copy;
+  unsigned int mask = 1U << bitpos;
+  int i;
+
+  copy = *ht;
+  for (i = 0; i < MAXDEGREE; i++) {
+    if ((gen_rand(&copy) & mask) != 0) {
+      fputc('1', f);
+    } else {
+      fputc('0', f);
+    }
+    if ((i % WORDLL) == WORDLL - 1) {
+      fprintf(f, "\n");
+    }
+  }
+  fputc('\n', f);
+}
+#endif
 
