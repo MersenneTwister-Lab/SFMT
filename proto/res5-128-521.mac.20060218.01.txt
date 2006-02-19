@@ -1,8 +1,3 @@
-MEXP = 521
-seed = 1140265926
-search limit degree = 32
-now search 1 times
-----------
 succ = 1
 deg = 521
 POS1 = 1

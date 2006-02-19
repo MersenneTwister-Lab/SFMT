@@ -117,7 +117,7 @@ uint32_t gen_rand(void)
 	idx = 0;
     }
     r = sfmt[idx / 4][idx % 4];
-    idx += 4;
+    idx += 4;			/* for 128 bit */
     return r;
 }
 

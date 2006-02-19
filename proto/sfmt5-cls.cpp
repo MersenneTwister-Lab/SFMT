@@ -7,11 +7,19 @@
 #include "sfmt-cls.h"
 //#include "debug.h"
 
-
 static unsigned int POS1 = 1;
 static unsigned int SL1 = 11;
 static unsigned int SL2 = 7;
+static unsigned int SL3 = 7;
+static unsigned int SL4 = 7;
+static unsigned int SL5 = 7;
+static unsigned int SL6 = 7;
+static unsigned int SL7 = 7;
+static unsigned int SL8 = 7;
 static unsigned int SR1 = 17;
+static unsigned int SR2 = 17;
+static unsigned int SR3 = 17;
+static unsigned int SR4 = 17;
 
 unsigned int get_rnd_maxdegree(void)
 {
@@ -41,7 +49,6 @@ void setup_param(unsigned int p1, unsigned int p2, unsigned int p3,
     SR2 = p11 % (32 - 1) + 1;
     SR3 = p12 % (32 - 1) + 1;
     SR4 = p13 % (32 - 1) + 1;
-    memset(sfmt, 0, sizeof(sfmt));
 }
 
 void print_param(FILE *fp) {
@@ -70,6 +77,7 @@ void print_param2(FILE *fp) {
     fflush(fp);
 }
 
+/* for 128 bit */
 void SFMT::next_state(void) {
 
     if (++idx >= N) {
@@ -77,14 +85,14 @@ void SFMT::next_state(void) {
     }
     sfmt[idx][0] = (sfmt[idx][0] << SL1) ^ sfmt[idx][0]
 	^ (sfmt[(idx + POS1) % N][0] >> SR1) ^ sfmt[(idx + POS1) % N][1]
-	^ (sfmt[(idx + N - 1) % N][0] << SL5);
-    sfmt[idx][1] = (sfmt[idx][1] << SL2) ^ sfmt[idx][0]
+	^ (sfmt[(idx + N - 1) % N][0] << SL5); 
+    sfmt[idx][1] = (sfmt[idx][1] << SL2) ^ sfmt[idx][1]
 	^ (sfmt[(idx + POS1) % N][1] >> SR2) ^ sfmt[(idx + POS1) % N][2]
 	^ (sfmt[(idx + N - 1) % N][1] << SL6) ^ sfmt[(idx + N -1) % N][0];
-    sfmt[idx][2] = (sfmt[idx][2] << SL3) ^ sfmt[idx][3]
+    sfmt[idx][2] = (sfmt[idx][2] << SL3) ^ sfmt[idx][2]
 	^ (sfmt[(idx + POS1) % N][2] >> SR3) ^ sfmt[(idx + POS1) % N][3]
 	^ (sfmt[(idx + N - 1) % N][2] << SL7) ^ sfmt[(idx + N -1) % N][1];
-    sfmt[idx][3] = (sfmt[idx][3] << SL4) ^ sfmt[idx][2]
+    sfmt[idx][3] = (sfmt[idx][3] << SL4) ^ sfmt[idx][3]
 	^ (sfmt[(idx + POS1) % N][3] >> SR4)
 	^ (sfmt[(idx + N - 1) % N][3] << SL8) ^ sfmt[(idx + N -1) % N][2];
 }

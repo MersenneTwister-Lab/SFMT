@@ -8,6 +8,7 @@
 
 #include "sfmt-cls.h"
 #include "shortbase.h"
+#include "util.h"
 
 NTL_CLIENT;
 
@@ -92,7 +93,8 @@ void make_zero_state(SFMT& sfmt, GF2X& poly) {
     SFMT sfmtnew;
     int i;
 
-    for (i = 0; i <= deg(poly); i++) {
+    //for (i = 0; i <= deg(poly); i++) {
+    for (i = deg(poly); i >= 0; i--) {
 	if (coeff(poly, i) != 0) {
 	    sfmtnew.add(sfmt);
 	}
@@ -133,12 +135,15 @@ void test_shortest(char *filename) {
     printf("deg poly = %ld\n", deg(poly));
     fclose(fp);
     berlekampMassey(lcmpoly, *sfmt, maxdegree, 0);
-    for (i = 1; i < 32; i++) {
+    for (i = 0; i < 128; i++) {
 	berlekampMassey(minpoly, *sfmt, maxdegree, i);
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
     }
   
+    printf("deg lcm poly = %ld\n", deg(lcmpoly));
+    printf("weight = %ld\n", weight(lcmpoly));
+    printBinary(stdout, lcmpoly);
     DivRem(tmp, rempoly, lcmpoly, poly);
     printf("deg tmp = %ld\n", deg(tmp));
     if (deg(rempoly) != -1) {
@@ -146,13 +151,12 @@ void test_shortest(char *filename) {
 	delete sfmt;
 	exit(1);
     }
-    printf("weight = %ld\n", weight(lcmpoly));
     *sfmt = sfmt_save;
     make_zero_state(*sfmt, tmp);
     dist_sum = 0;
     count = 0;
     old = 0;
-    for (bit = 1; bit <= 32; bit++) {
+    for (bit = 1; bit <= 128; bit++) {
 	shortest = get_equiv_distrib(bit, *sfmt);
 	if (shortest > mexp) {
 	    printf("k(%d) = %d\n", bit, shortest);
