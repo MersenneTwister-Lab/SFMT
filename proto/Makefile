@@ -45,8 +45,8 @@ param-search4a-521: search.o sfmt4a.o mt19937ar.o util.o debug.o
 param-search4a128-521: search.o sfmt4a128.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt4a128.o mt19937ar.o util.o debug.o ${LINKOPT}
 
-param-search5-128-521: search.o sfmt5-128.o mt19937ar.o util.o debug.o
-	${CPP} -o $@ search.o sfmt5-128.o mt19937ar.o util.o debug.o ${LINKOPT}
+param-search5-128-521: search2.o sfmt5-cls.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search2.o sfmt5-cls.o mt19937ar.o util.o debug.o ${LINKOPT}
 
 param-search4a-19937: search.o sfmt4a.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}

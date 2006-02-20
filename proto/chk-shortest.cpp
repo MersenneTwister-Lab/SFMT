@@ -18,7 +18,7 @@ void test_shortest(char *filename);
 
 static int mexp;
 static int maxdegree;
-void generating_polynomial(vec_GF2& vec, SFMT& sfmt, unsigned int bitpos, 
+void generating_polynomial(vec_GF2& vec, SFMT& sfmt, unsigned int bitpos,
 			   unsigned int maxdegree) {
     unsigned int i;
     vec_GF2 rand;
@@ -65,19 +65,6 @@ void LCM(GF2X& lcm, const GF2X& x, const GF2X& y) {
     lcm /= gcd;
 }
 
-void berlekampMassey(GF2X& minpoly, SFMT& sfmt, unsigned int maxdegree,
-		     unsigned int bitpos) {
-    vec_GF2 genvec = vec_GF2(INIT_SIZE, 2 * maxdegree);
-    GF2X zero;
-
-    generating_polynomial(genvec, sfmt, bitpos, maxdegree);
-    if (genvec.length() == 0) {
-	minpoly = zero;
-	return;
-    }
-    MinPolySeq(minpoly, genvec, maxdegree);
-}
-
 int get_equiv_distrib(int bit, SFMT& sfmt) {
     static SFMT sfmtnew;
     int shortest;
@@ -93,8 +80,8 @@ void make_zero_state(SFMT& sfmt, GF2X& poly) {
     SFMT sfmtnew;
     int i;
 
-    //for (i = 0; i <= deg(poly); i++) {
-    for (i = deg(poly); i >= 0; i--) {
+    for (i = 0; i <= deg(poly); i++) {
+	//for (i = deg(poly); i >= 0; i--) {
 	if (coeff(poly, i) != 0) {
 	    sfmtnew.add(sfmt);
 	}
@@ -111,8 +98,9 @@ void test_shortest(char *filename) {
     GF2X minpoly;
     GF2X tmp;
     GF2X rempoly;
-    SFMT *sfmt;
+    SFMT sfmt;
     SFMT sfmt_save;
+    vec_GF2 vec;
     int shortest;
     int i;
     int dist_sum;
@@ -128,15 +116,18 @@ void test_shortest(char *filename) {
 	exit(1);
     }
     read_random_param(fp);
-    sfmt = new SFMT(123);
-    sfmt_save = *sfmt;
+    sfmt.reseed(123);
+    sfmt_save = sfmt;
     print_param(stdout);
     readFile(poly, fp);
     printf("deg poly = %ld\n", deg(poly));
     fclose(fp);
-    berlekampMassey(lcmpoly, *sfmt, maxdegree, 0);
+    vec.SetLength(2 * maxdegree);
+    generating_polynomial(vec, sfmt, 0, maxdegree);
+    berlekampMassey(lcmpoly, maxdegree, vec);
     for (i = 0; i < 128; i++) {
-	berlekampMassey(minpoly, *sfmt, maxdegree, i);
+	generating_polynomial(vec, sfmt, i, maxdegree);
+	berlekampMassey(minpoly, maxdegree, vec);
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
     }
@@ -148,16 +139,20 @@ void test_shortest(char *filename) {
     printf("deg tmp = %ld\n", deg(tmp));
     if (deg(rempoly) != -1) {
 	printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
-	delete sfmt;
 	exit(1);
     }
-    *sfmt = sfmt_save;
-    make_zero_state(*sfmt, tmp);
+    sfmt = sfmt_save;
+    make_zero_state(sfmt, tmp);
+#if 1
+    generating_polynomial(vec, sfmt, 0, maxdegree);
+    berlekampMassey(minpoly, maxdegree, vec);
+    printf("deg zero state = %ld\n", deg(lcmpoly));
+#endif
     dist_sum = 0;
     count = 0;
     old = 0;
     for (bit = 1; bit <= 128; bit++) {
-	shortest = get_equiv_distrib(bit, *sfmt);
+	shortest = get_equiv_distrib(bit, sfmt);
 	if (shortest > mexp) {
 	    printf("k(%d) = %d\n", bit, shortest);
 	    printf("distribution greater than mexp!\n");
@@ -173,7 +168,6 @@ void test_shortest(char *filename) {
 	printf("k(%d) = %d\n", bit, shortest);
     }
     printf("D.D:%7d, DUP:%5d\n", dist_sum, count);
-    delete sfmt;
 }
 
 int main(int argc, char *argv[]) {

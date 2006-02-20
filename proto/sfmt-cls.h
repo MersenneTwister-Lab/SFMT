@@ -25,6 +25,11 @@ public:
     void next_state(void);
     void add(const SFMT& src);
     vec_GF2& gen_rand(vec_GF2& vec, uint32_t len);
+    void reseed(uint32_t seed) {
+	memset(sfmt, 0, sizeof(sfmt));
+	idx = 0;
+	init_gen_rand(seed);
+    };    
     SFMT(void) {
 	memset(sfmt, 0, sizeof(sfmt));
 	idx = 0;

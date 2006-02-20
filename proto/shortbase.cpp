@@ -53,6 +53,7 @@ void set_special(in_status *st, unsigned int special_bit) {
     st->zero = false;
     st->count = 0;
     //st->next = 0x80000000U >> special_bit;
+    st->next.SetLength(bit_len);
     st->next.put(special_bit, 1);
 }
 
@@ -63,6 +64,7 @@ void set_normal(in_status *st, SFMT& sfmt) {
     st->special = false;
     st->zero = false;
     st->count = 0;
+    st->next.SetLength(bit_len);
     //st->next = gen_rand(&(st->random)) & mask;
     st->random.gen_rand(st->next, bit_len);
     st->count++;
@@ -233,7 +235,7 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
 	result[i] = false;
     }
     pos = 0;
-    for (i = 0; i < cols; i++) {
+    for (i = 0; (i < cols - pos) && (i < rows); i++) {
 	if (IsOne(mat.get(i, i + pos))) {
 	    continue;
 	}
@@ -250,7 +252,7 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
 	}
     }
     if (!found) {
-#if 1
+#if 0
 	cout << "not found" << endl;
 	cout << mat << endl;
 	exit(1);

@@ -6,7 +6,6 @@
 #include <iostream>
 
 extern "C" {
-#include "ht.h"
 #include "mt19937ar.h"
 }
 //#include "debug.h"
@@ -15,12 +14,13 @@ extern "C" {
 #include <NTL/vec_GF2.h>
 #include <NTL/GF2XFactoring.h>
 
+#include "sfmt-cls.h"
+#include "util.h"
+
 NTL_CLIENT;
 
 int non_reducible(GF2X& fpoly, int degree);
 void search(unsigned int n);
-void berlekampMassey(GF2X& minpoly, unsigned int maxdegree, 
-		     unsigned int bitpos);
 
 static unsigned long all_count = 0;
 static unsigned long pass_count = 0;
@@ -73,15 +73,15 @@ int non_reducible(GF2X& fpoly, int degree) {
     return IterIrredTest(fpoly);
 }
 
-void generating_polynomial(vec_GF2& vec, unsigned int bitpos, 
+void generating_polynomial(SFMT& sfmt, vec_GF2& vec, unsigned int bitpos, 
 			   unsigned int maxdegree)
 {
     unsigned int i;
-    unsigned int mask = 1UL << bitpos;
+    vec_GF2 random;
 
     //DPRINTHT("in gene:", rand);
     i = 0;
-    while ((gen_rand() & mask) == 0) {
+    while (IsZero(sfmt.gen_rand(random, bitpos + 1).get(bitpos))) {
 	i++;
 	if(i > 2 * maxdegree){
 	    printf("generating_polynomial:too much zeros\n");
@@ -93,82 +93,52 @@ void generating_polynomial(vec_GF2& vec, unsigned int bitpos,
     vec[0] = 1;
 
     for (i=1; i<= 2 * maxdegree-1; i++) {
-	if ((gen_rand() & mask) == mask){
-	    vec[i] = 1;
-	}
+	vec[i] = sfmt.gen_rand(random, bitpos + 1).get(bitpos);
     }
     //DPRINTHT("end gene:", rand);
-}
-
-void berlekampMassey(GF2X& minpoly, unsigned int maxdegree,
-		     unsigned int bitpos) {
-    vec_GF2 genvec;
-    GF2X zero;
-
-    genvec.FixLength(2 * maxdegree);
-    generating_polynomial(genvec, bitpos, maxdegree);
-    if (genvec.length() == 0) {
-	minpoly = zero;
-	return;
-    }
-    MinPolySeq(minpoly, genvec, maxdegree);
-}
-
-void printBinary(ostream& os, GF2X& poly)
-{
-    int i;
-    if (deg(poly) < 0) {
-	os << "0deg=-1\n";
-	return;
-    }
-    for(i = 0; i <= deg(poly); i++) {
-	if(rep(coeff(poly, i)) == 1) {
-	    os << '1';
-	} else {
-	    os << '0';
-	}
-	/* printf("%1d", (unsigned int)(poly[j] >> (i % WORDLL)) & 0x1ULL);*/
-	if ((i % 32) == 31) {
-	    os << '\n';
-	}
-    }
-    os << "deg=" << deg(poly) << endl;
 }
 
 void search(unsigned int n) {
     int j;
     unsigned int succ = 0;
-    int bmOk;
+    bool bmOk;
     GF2X minpoly;
-    unsigned int gmm;
-    unsigned int gs2;
-    unsigned int gs3;
-    unsigned int grot1;
-    unsigned int grot2;
     unsigned int maxdegree;
     unsigned int mexp;
+    SFMT sfmt;
+    vec_GF2 vec;
   
     maxdegree = get_rnd_maxdegree();
     mexp = get_rnd_mexp();
+    vec.FixLength(2 * maxdegree);
     for (;;) {
-	gmm = genrand_int32() % (mexp-1)/32;
-	gs2 = genrand_int32() % 32;
-	gs3 = genrand_int32() % 32;
-	grot1 = genrand_int32() % 32;
-	grot2 = genrand_int32() % 32;
-	setup_param(gmm, 0, gs2, gs3, grot1, grot2);
-	init_gen_rand(genrand_int32()+3);
-	bmOk = 1;
+	setup_param(
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32());
+	sfmt.reseed(genrand_int32()+3);
+	bmOk = true;
 	//    for (j = 0; j < 32; j++) {
 	for (j = 0; j < 1; j++) {
-	    berlekampMassey(minpoly, maxdegree, j);
+	    generating_polynomial(sfmt, vec, j, maxdegree);
+	    berlekampMassey(minpoly, maxdegree, vec);
 	    if (deg(minpoly) == -1) {
-		bmOk = 0;
+		bmOk = false;
 		break;
 	    }
 	    all_count++;
 	    if (!non_reducible(minpoly, mexp)) {
-		bmOk = 0;
+		bmOk = false;
 		break;
 	    }
 	}
@@ -177,12 +147,8 @@ void search(unsigned int n) {
 	    printf("----------\n");
 	    printf("succ = %u\n", ++succ);
 	    printf("deg = %ld\n", deg(minpoly));
-	    printf("gmm = %d\n", gmm);
-	    printf("gs2 = %d\n", gs2);
-	    printf("gs3 = %d\n", gs3);
-	    printf("grot1 = %d\n", grot1);
-	    printf("grot2 = %d\n", grot2);
-	    printBinary(cout, minpoly);
+	    print_param(stdout);
+	    printBinary(stdout, minpoly);
 	    fflush(stdout);
 	    if (succ >= n) {
 		break;
@@ -203,7 +169,7 @@ int main(int argc, char* argv[]){
     int n;
     unsigned long seed;
 
-    setup_param(1, 0, 21, 4, 3, 29);
+    setup_param(1, 0, 21, 4, 3, 29, 0, 0, 0, 0, 0, 0, 0);
 
     if (argc != 2) {
 	n = 1;
