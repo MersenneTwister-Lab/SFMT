@@ -43,6 +43,13 @@ void printBinary(FILE *fp, GF2X& poly)
     fprintf(fp, "deg=%ld\n", deg(poly));
 }
 
+void LCM(GF2X& lcm, const GF2X& x, const GF2X& y) {
+    GF2X gcd;
+    mul(lcm, x, y);
+    GCD(gcd, x, y);
+    lcm /= gcd;
+}
+
 int32_t gauss_plus(mat_GF2& mat) {
     int32_t rank;
     int32_t rows;

@@ -11,8 +11,10 @@ NTL_CLIENT;
 
 #define MIN(a,b) ((a)>(b)?(b):(a))
 
+mat_GF2 debug_mat0;
 mat_GF2 debug_mat;
-mat_GF2 debug_mat2;
+bool debug_dependent[128];
+uint32_t debug_count;
 static unsigned int bit_len;
 
 #if 0
@@ -38,34 +40,44 @@ void dprintbase(char *file, int line, int num, in_status *st) {
     fprintf(stderr, "bitlen:%u]\n", bit_len);
 }
 #endif
+
+static void copy_status(in_status *dist, const in_status *src);
+static void copy_status(in_status *dist, const in_status *src) {
+    dist->zero = src->zero;
+    dist->special = src->special;
+    dist->next = src->next;
+    dist->count = src->count;
+    dist->random = src->random;
+}
+
 void set_bit_len(unsigned int len) {
-    if ((len <= 0) || (len > 32)) {
+    if ((len <= 0) || (len > 128)) {
 	printf("bitLength error\n");
 	exit(1);
     }
     bit_len = len;
-    //mask = mask_tab[bit_len - 1];
 }
 
 void set_special(in_status *st, unsigned int special_bit) {
-    /*st->random = NULL;*/
     st->special = true;
     st->zero = false;
     st->count = 0;
-    //st->next = 0x80000000U >> special_bit;
+    st->next.SetMaxLength(128);
+    st->next.SetLength(0);
     st->next.SetLength(bit_len);
     st->next.put(special_bit, 1);
+    memset(&(st->random), 0, sizeof(st->random));
 }
 
 void set_normal(in_status *st, SFMT& sfmt) {
     int zero_count = 0;
-    //DPRINTHT("ht:", ht);
     st->random = sfmt;
     st->special = false;
     st->zero = false;
     st->count = 0;
+    st->next.SetMaxLength(128);
+    st->next.SetLength(0);
     st->next.SetLength(bit_len);
-    //st->next = gen_rand(&(st->random)) & mask;
     st->random.gen_rand(st->next, bit_len);
     st->count++;
     while (IsZero(st->next)) {
@@ -77,7 +89,6 @@ void set_normal(in_status *st, SFMT& sfmt) {
 	st->random.gen_rand(st->next, bit_len);
 	st->count++;
     }
-    //DPRINTHT("ht:", &(st->random));
 }
 
 void add_status(in_status *dist, in_status *src) {
@@ -86,22 +97,42 @@ void add_status(in_status *dist, in_status *src) {
 
     c = dist->count;
     next = dist->next;
-    if (dist->special && (!src->special)) {
-	//DPRINT("before copy", NULL);
-	//DPRINTHT("dist", &(dist->random));
-	//DPRINTHT("src ", &(src->random));
-	*dist = *src;
-	//DPRINT("after copy", NULL);
-	//DPRINTHT("dist", &(dist->random));
-    } else if ((! dist->special) && (! src->special)) {
-	//DPRINT("before add", NULL);
-	//DPRINTHT("dist", &(dist->random));
-	//DPRINTHT("src ", &(src->random));
-	dist->random.add(src->random);
-	//DPRINT("after add", NULL);
-	//DPRINTHT("dist", &(dist->random));
+#if 0
+    if (dist->special && src->special) {
+	printf("add special to special\n");
+	cout << "debug mat =\n" << debug_mat << endl;
+	printf("debug_dependent:");
+	for (uint32_t i = 0; i <= bit_len; i++) {
+	    printf("%d ", debug_dependent[i]);
+	}
+	printf("\n");
+	exit(1);
     }
-    dist->next = next + src->next;
+#endif
+    if (dist->special && (!src->special)) {
+	copy_status(dist, src);
+    } else if ((! dist->special) && (! src->special)) {
+	dist->random.add(src->random);
+    }
+    next += src->next;
+    if ((IsZero(next)) && dist->special) {
+	printf("something wrong!\n");
+	printf("debug count = %u\n", debug_count);
+        cout << "src:" << src << endl;
+        cout << "dist:" << dist << endl;
+	cout << "dist->next:" << dist->next << endl;
+	cout << "src->next:" << src->next << endl;
+	cout << "src->special:" << src->special << endl;
+	cout << "debug mat0:\n" << debug_mat0 << endl;
+	cout << "debug mat:\n" << debug_mat << endl;
+	printf("debug_dependent:");
+	for (uint32_t i = 0; i <= bit_len; i++) {
+	    printf("%d ", debug_dependent[i]);
+	}
+	printf("\n");
+	exit(1);
+    }
+    dist->next = next;
     dist->count = MIN(c, src->count);
 }
 
@@ -140,6 +171,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 
     //DPRINT("in get_shortest_base bit_len:%u", bit_len);
     set_bit_len(bit_len);
+    debug_count = 0;
     for (i = 0; i < bit_len; i++) {
 	set_special(&(bases[i]), i);
     }
@@ -151,6 +183,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 	    //DPRINTBASE(i, &(bases[i]));
 	}
 #endif
+	debug_count++;
 	for (i = 0; i <= bit_len; i++) {
 	    next[i] = bases[i].next;
 	}
@@ -166,7 +199,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 	fprintf(stderr, "\n");
 #endif
 	shortest = get_shortest(dependents, bases);
-	//DPRINT("shortest:%u", shortest);
+	memcpy(debug_dependent, dependents, sizeof(dependents));
 	for (i = 0; i <= bit_len; i++) {
 	    if (i == shortest) {
 		continue;
@@ -180,6 +213,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 	} else {
 	    fprintf(stderr, "next is not zero\n");
 	    cout << "debug_mat:" << debug_mat << endl;
+	    cout << "dependent:";
 	    for (i = 0; i <= bit_len; i++) {
 		cout << dependents[i] ;
 	    }
@@ -205,11 +239,16 @@ uint32_t get_shortest(bool dependents[], in_status bases[]) {
 
     for (i = 0; i <= bit_len; i++) {
 	if (dependents[i]) {
+	    //if ((!bases[i].special) && (bases[i].count < min)) {
 	    if (bases[i].count < min) {
 		min = bases[i].count;
 		index = i;
 	    }
 	}
+    }
+    if (min == UINT_MAX) {
+	printf("can't find shortest\n");
+	exit(1);
     }
     return index;
 }
@@ -219,6 +258,7 @@ bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
     uint32_t rank;
 
     convert(mat, array, bit_len);
+    debug_mat0 = mat;
     rank = (uint32_t) gauss_plus(mat);
     return dependent_rows(dependent, mat);
 }
@@ -247,6 +287,7 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
 	}
 	if (found) {
 	    result[i + pos] = true;
+	    break;
 	} else {
 	    pos++;
 	}
@@ -258,6 +299,7 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
 	exit(1);
 #endif
     }
+    debug_mat = mat;
     return found;
 }
 

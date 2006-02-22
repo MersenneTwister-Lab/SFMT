@@ -5,8 +5,9 @@
 #include <NTL/vec_GF2.h>
 #include <NTL/mat_GF2.h>
 
-NTL_CLIENT
+NTL_CLIENT;
 
 void berlekampMassey(GF2X& minpoly, unsigned int maxdegree, vec_GF2& vec);
 void printBinary(FILE *fp, GF2X& poly);
 int32_t gauss_plus(mat_GF2& mat);
+void LCM(GF2X& lcm, const GF2X& x, const GF2X& y);

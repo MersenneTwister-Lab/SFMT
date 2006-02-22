@@ -133,6 +133,7 @@ void SFMT::init_gen_rand(uint32_t seed)
 	    + i;
     }
     idx = N; // this line is for 128 bit.
+    next_state();
 }
 
 void SFMT::add(const SFMT& src) {
@@ -196,24 +197,35 @@ void read_random_param(FILE *f) {
     SR4 = get_uint(line);
 }
 
-#if 0
-void print_ht_random(FILE *fp, ht_rand *ht) {
-  int i, j;
+ostream& operator<<(ostream& os, const SFMT& sfmt) {
+    int i, j, k;
+    uint32_t a;
 
-  fprintf(fp, "index = %u ", ht->index);
-  fprintf(fp, "gfsr:\n");
-  for (i = 0; i < NN; i++) {
-    for (j = 31; j >= 0; j--) {
-      if ((ht->gx[i] & (1 << j)) != 0) {
-	fprintf(fp, "%c", '1');
-      } else {
-	fprintf(fp, "%c", '0');
-      }
+    os << "address:" << &sfmt << '\n';
+    os <<  "index = " << sfmt.idx << '\n';
+    os << "sfmt:\n";
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 4; j++) {
+	    a = sfmt.sfmt[i][j];
+	    for (k = 31; k >= 0; k--) {
+		if ((a & 0x80000000UL) != 0) {
+		    os << '1';
+		} else {
+		    os << '0';
+		}
+		a = a << 1;
+	    }
+	    if (j == 1) {
+		os << '\n';
+	    }
+	}
+	os << '\n';
     }
-    fprintf(fp, "\n");
-  }
+    os << endl;
+    return os;
 }
 
+#if 0
 void dprint_ht(char *file, int line, char *s, ht_rand *ht) {
   fprintf(stderr, "%s:%d %s", file, line, s);
   print_ht_random(stderr, ht);

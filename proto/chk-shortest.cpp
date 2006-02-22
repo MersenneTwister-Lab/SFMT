@@ -13,7 +13,7 @@
 NTL_CLIENT;
 
 int get_equiv_distrib(int bit, SFMT& sfmt);
-void make_zero_state(SFMT& sfmt, GF2X& poly);
+void make_zero_state(SFMT& sfmt, const GF2X& poly);
 void test_shortest(char *filename);
 
 static int mexp;
@@ -39,6 +39,26 @@ void generating_polynomial(vec_GF2& vec, SFMT& sfmt, unsigned int bitpos,
     }
 }
 
+bool check_minpoly(SFMT& sfmt, const GF2X& minpoly, unsigned int bitpos) {
+    GF2 sum;
+    vec_GF2 rand;
+    int i;
+
+    sum = 0;
+    for (int j = 0; j < 500; j++) {
+	for (i = 0; i <= deg(minpoly); i++) {
+	    sfmt.gen_rand(rand, bitpos + 1);
+	    if (IsOne(coeff(minpoly, i))) {
+		sum += rand.get(bitpos);
+	    }
+	}
+	if (IsOne(sum)) {
+	    return false;
+	}
+    }
+    return true;
+}
+
 void readFile(GF2X& poly, FILE *fp) {
     char c;
     unsigned int j = 0;
@@ -58,13 +78,6 @@ void readFile(GF2X& poly, FILE *fp) {
     }
 }
 
-void LCM(GF2X& lcm, const GF2X& x, const GF2X& y) {
-    GF2X gcd;
-    mul(lcm, x, y);
-    GCD(gcd, x, y);
-    lcm /= gcd;
-}
-
 int get_equiv_distrib(int bit, SFMT& sfmt) {
     static SFMT sfmtnew;
     int shortest;
@@ -76,12 +89,12 @@ int get_equiv_distrib(int bit, SFMT& sfmt) {
     return shortest;
 }
 
-void make_zero_state(SFMT& sfmt, GF2X& poly) {
+void make_zero_state(SFMT& sfmt, const GF2X& poly) {
     SFMT sfmtnew;
     int i;
 
     for (i = 0; i <= deg(poly); i++) {
-	//for (i = deg(poly); i >= 0; i--) {
+    //for (i = deg(poly); i >= 0; i--) {
 	if (coeff(poly, i) != 0) {
 	    sfmtnew.add(sfmt);
 	}
@@ -125,13 +138,28 @@ void test_shortest(char *filename) {
     vec.SetLength(2 * maxdegree);
     generating_polynomial(vec, sfmt, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
+#if 0
+    if (check_minpoly(sfmt, lcmpoly, 0)) {
+	printf("check minpoly OK!\n");
+    } else {
+	printf("check minpoly NG!\n");
+    }
+#endif
     for (i = 0; i < 128; i++) {
+	//sfmt = sfmt_save;
 	generating_polynomial(vec, sfmt, i, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
     }
-  
+#if 0
+    sfmt = sfmt_save;
+    if (check_minpoly(sfmt, lcmpoly, 0)) {
+	printf("check minpoly 2 OK!\n");
+    } else {
+	printf("check minpoly 2 NG!\n");
+    }
+#endif
     printf("deg lcm poly = %ld\n", deg(lcmpoly));
     printf("weight = %ld\n", weight(lcmpoly));
     printBinary(stdout, lcmpoly);
@@ -141,12 +169,21 @@ void test_shortest(char *filename) {
 	printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
 	exit(1);
     }
+#if 0
     sfmt = sfmt_save;
-    make_zero_state(sfmt, tmp);
-#if 1
+    cout << sfmt;
+    make_zero_state(sfmt, lcmpoly);
+    cout << sfmt;
     generating_polynomial(vec, sfmt, 0, maxdegree);
     berlekampMassey(minpoly, maxdegree, vec);
-    printf("deg zero state = %ld\n", deg(lcmpoly));
+    printf("deg zero lcm = %ld\n", deg(minpoly));
+#endif
+    sfmt = sfmt_save;
+    make_zero_state(sfmt, tmp);
+#if 0
+    generating_polynomial(vec, sfmt, 0, maxdegree);
+    berlekampMassey(minpoly, maxdegree, vec);
+    printf("deg zero state = %ld\n", deg(minpoly));
 #endif
     dist_sum = 0;
     count = 0;
@@ -166,6 +203,7 @@ void test_shortest(char *filename) {
 	}
 	//printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
 	printf("k(%d) = %d\n", bit, shortest);
+	fflush(stdout);
     }
     printf("D.D:%7d, DUP:%5d\n", dist_sum, count);
 }
