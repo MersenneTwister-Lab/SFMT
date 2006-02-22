@@ -24,8 +24,11 @@ LINKOPT = -lntl -lgmp
 test_gen521: sfmt.o test_gen.o
 	${CC} -o $@ sfmt.o test_gen.o
 
-test_gen5-521: sfmt5.o test_gen.o
-	${CC} -o $@ sfmt5.o test_gen.o
+test-gen5-521: sfmt5-cls.o test_gen128.o
+	${CPP} -o $@ sfmt5-cls.o test_gen128.o ${LINKOPT}
+
+test-gen128-521: sfmt5-cls.o test_gen128.o
+	${CC} -o $@ sfmt5-cls.o test_gen128.o
 
 param-search521: search.o sfmt.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt.o mt19937ar.o util.o debug.o ${LINKOPT}
@@ -47,6 +50,10 @@ param-search4a128-521: search.o sfmt4a128.o mt19937ar.o util.o debug.o
 
 param-search5-128-521: search2.o sfmt5-cls.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search2.o sfmt5-cls.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+search-dist521: search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o
+	${CPP} -o $@ search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o \
+		${LINKOPT}
 
 param-search4a-19937: search.o sfmt4a.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt4a.o mt19937ar.o util.o debug.o ${LINKOPT}

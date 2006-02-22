@@ -11,10 +11,10 @@ NTL_CLIENT;
 
 #define MIN(a,b) ((a)>(b)?(b):(a))
 
-mat_GF2 debug_mat0;
-mat_GF2 debug_mat;
-bool debug_dependent[128];
-uint32_t debug_count;
+//mat_GF2 debug_mat0;
+//mat_GF2 debug_mat;
+//bool debug_dependent[128];
+//uint32_t debug_count;
 static unsigned int bit_len;
 
 #if 0
@@ -62,7 +62,6 @@ void set_special(in_status *st, unsigned int special_bit) {
     st->special = true;
     st->zero = false;
     st->count = 0;
-    st->next.SetMaxLength(128);
     st->next.SetLength(0);
     st->next.SetLength(bit_len);
     st->next.put(special_bit, 1);
@@ -75,8 +74,7 @@ void set_normal(in_status *st, SFMT& sfmt) {
     st->special = false;
     st->zero = false;
     st->count = 0;
-    st->next.SetMaxLength(128);
-    st->next.SetLength(0);
+    //st->next.SetLength(0);
     st->next.SetLength(bit_len);
     st->random.gen_rand(st->next, bit_len);
     st->count++;
@@ -100,12 +98,12 @@ void add_status(in_status *dist, in_status *src) {
 #if 0
     if (dist->special && src->special) {
 	printf("add special to special\n");
-	cout << "debug mat =\n" << debug_mat << endl;
-	printf("debug_dependent:");
-	for (uint32_t i = 0; i <= bit_len; i++) {
-	    printf("%d ", debug_dependent[i]);
-	}
-	printf("\n");
+	//cout << "debug mat =\n" << debug_mat << endl;
+	//printf("debug_dependent:");
+	//for (uint32_t i = 0; i <= bit_len; i++) {
+	//    printf("%d ", debug_dependent[i]);
+	//}
+	//printf("\n");
 	exit(1);
     }
 #endif
@@ -117,19 +115,19 @@ void add_status(in_status *dist, in_status *src) {
     next += src->next;
     if ((IsZero(next)) && dist->special) {
 	printf("something wrong!\n");
-	printf("debug count = %u\n", debug_count);
+	//printf("debug count = %u\n", debug_count);
         cout << "src:" << src << endl;
         cout << "dist:" << dist << endl;
 	cout << "dist->next:" << dist->next << endl;
 	cout << "src->next:" << src->next << endl;
 	cout << "src->special:" << src->special << endl;
-	cout << "debug mat0:\n" << debug_mat0 << endl;
-	cout << "debug mat:\n" << debug_mat << endl;
-	printf("debug_dependent:");
-	for (uint32_t i = 0; i <= bit_len; i++) {
-	    printf("%d ", debug_dependent[i]);
-	}
-	printf("\n");
+	//cout << "debug mat0:\n" << debug_mat0 << endl;
+	//cout << "debug mat:\n" << debug_mat << endl;
+	//printf("debug_dependent:");
+	//for (uint32_t i = 0; i <= bit_len; i++) {
+	//    printf("%d ", debug_dependent[i]);
+	//}
+	//printf("\n");
 	exit(1);
     }
     dist->next = next;
@@ -162,7 +160,7 @@ void get_next_state(in_status *st) {
 }
   
 int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
-    static in_status bases[32 + 1];
+    static in_status bases[128 + 1];
     vec_GF2 next[bit_len + 1];
     bool dependents[bit_len + 1];
     unsigned int shortest;
@@ -171,7 +169,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 
     //DPRINT("in get_shortest_base bit_len:%u", bit_len);
     set_bit_len(bit_len);
-    debug_count = 0;
+    //debug_count = 0;
     for (i = 0; i < bit_len; i++) {
 	set_special(&(bases[i]), i);
     }
@@ -183,7 +181,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 	    //DPRINTBASE(i, &(bases[i]));
 	}
 #endif
-	debug_count++;
+	//debug_count++;
 	for (i = 0; i <= bit_len; i++) {
 	    next[i] = bases[i].next;
 	}
@@ -199,7 +197,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 	fprintf(stderr, "\n");
 #endif
 	shortest = get_shortest(dependents, bases);
-	memcpy(debug_dependent, dependents, sizeof(dependents));
+	//memcpy(debug_dependent, dependents, sizeof(dependents));
 	for (i = 0; i <= bit_len; i++) {
 	    if (i == shortest) {
 		continue;
@@ -212,7 +210,7 @@ int get_shortest_base(unsigned int bit_len, SFMT& sfmt) {
 	    get_next_state(&(bases[shortest]));
 	} else {
 	    fprintf(stderr, "next is not zero\n");
-	    cout << "debug_mat:" << debug_mat << endl;
+	    //cout << "debug_mat:" << debug_mat << endl;
 	    cout << "dependent:";
 	    for (i = 0; i <= bit_len; i++) {
 		cout << dependents[i] ;
@@ -258,7 +256,7 @@ bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
     uint32_t rank;
 
     convert(mat, array, bit_len);
-    debug_mat0 = mat;
+    //debug_mat0 = mat;
     rank = (uint32_t) gauss_plus(mat);
     return dependent_rows(dependent, mat);
 }
@@ -299,7 +297,7 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
 	exit(1);
 #endif
     }
-    debug_mat = mat;
+    //debug_mat = mat;
     return found;
 }
 
