@@ -101,7 +101,7 @@ void make_zero_state(SFMT& sfmt, const GF2X& poly) {
 	if (coeff(poly, i) != 0) {
 	    sfmtnew.add(sfmt);
 	}
-	sfmt.next_state();
+	sfmt.next_state32();
     }
     sfmt = sfmtnew;
 }
@@ -142,11 +142,11 @@ void test_shortest(char *filename) {
     vec.SetLength(2 * maxdegree);
     generating_polynomial(vec, sfmt, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
-#if 0
+#if 1
     if (check_minpoly(sfmt, lcmpoly, 0)) {
 	printf("check minpoly OK!\n");
     } else {
-	printf("check minpoly NG!\n");
+	printf("check minpoly NG! deg(minpoly) = %ld\n", deg(lcmpoly));
     }
 #endif
     for (i = 0; i < 128; i++) {
@@ -156,7 +156,7 @@ void test_shortest(char *filename) {
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
     }
-#if 0
+#if 1
     sfmt = sfmt_save;
     if (check_minpoly(sfmt, lcmpoly, 0)) {
 	printf("check minpoly 2 OK!\n");
@@ -173,7 +173,7 @@ void test_shortest(char *filename) {
 	printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
 	exit(1);
     }
-#if 0
+#if 1
     sfmt = sfmt_save;
     cout << sfmt;
     make_zero_state(sfmt, lcmpoly);
@@ -185,7 +185,7 @@ void test_shortest(char *filename) {
     sfmt = sfmt_save;
     make_zero_state(sfmt, tmp);
     sfmt.set_mode(mode);
-#if 0
+#if 1
     generating_polynomial(vec, sfmt, 0, maxdegree);
     berlekampMassey(minpoly, maxdegree, vec);
     printf("deg zero state = %ld\n", deg(minpoly));

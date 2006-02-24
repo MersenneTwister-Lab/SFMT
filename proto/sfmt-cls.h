@@ -17,28 +17,49 @@ NTL_CLIENT;
 #define MAXDEGREE (WORDSIZE * N)
 
 class SFMT {
+public:
+    enum MODE_E {BIT32, BIT64, BIT128};
 private:
+    enum MODE_E mode;
     uint32_t sfmt[N][4];
     unsigned int idx;
     void init_gen_rand(uint32_t seed);
 public:
+    void next_state32(void);
+    void next_state64(void);
+    void next_state128(void);
     void next_state(void);
     void add(const SFMT& src);
     vec_GF2& gen_rand(vec_GF2& vec, uint32_t len);
+    uint32_t gen_rand32(void) {
+	next_state32();
+	return sfmt[idx / 4][idx % 4];
+    }
     friend ostream& operator<<(ostream& os, const SFMT& sfmt);
     void reseed(uint32_t seed) {
 	memset(sfmt, 0, sizeof(sfmt));
 	idx = 0;
 	init_gen_rand(seed);
-    };    
+	mode = BIT32;
+    }
+    void set_mode(MODE_E p_mode) {
+	if (idx % 4 == 0) {
+	    mode = p_mode;
+	} else {
+	    printf("ERROR: can't change mode\n");
+	    exit(1);
+	}
+    }
     SFMT(void) {
 	memset(sfmt, 0, sizeof(sfmt));
 	idx = 0;
+	mode = BIT32;
     }
     SFMT(uint32_t seed){
 	memset(sfmt, 0, sizeof(sfmt));
 	idx = 0;
 	init_gen_rand(seed);
+	mode = BIT32;
     }
 };
 

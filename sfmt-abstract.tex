@@ -31,7 +31,7 @@
 %%
 
 \begin{document}
-\Header{Simple and Fast MT: A Two-times faster
+\Header{Simple and Fast MT: A Two times faster
 new variant of Mersenne Twister}{Mutsuo Saito and Makoto Matsumoto
 }{Department of Mathematics Hiroshima University
 }{saito@math.sci.hiroshima-u.ac.jp}{www.math.sci.hiroshima-u.ac.jp/\~{}saito/eng/}
@@ -51,14 +51,13 @@ namely a version of Twisted GFSR, where
 the state space is a simple array. 
 This fits to modern CPU architectures
 better than Mersenne Twister (MT), Pulmonary MT or WELL 
-(where the state space is not a simple array which 
+(where the state space is not a simple array, which 
 breaks the pipeline.)
 
 Our design generates a 128-bit pseudorandom integer
 at one time by SIMD instructions.
 The recursion formula is
-%\[x_{n+1} = Ax_n + Bx_m + Cx_{n-1},\]
-\[x_{n+1} = Ax_n + Bx_m + Cx_{n},\]
+\[x_{n+i} = Ax_{n-1+i} + Bx_{m+i} + Cx_{i},\]
 where each of $x_i$ is a 128-dimensional vector over the two 
 element field ${\mathbb F}_2$ and
 $A$, $B$ and $C$ are $128 \times 128$ matrices over

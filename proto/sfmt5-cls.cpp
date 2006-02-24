@@ -7,6 +7,8 @@
 #include "sfmt-cls.h"
 //#include "debug.h"
 
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
+
 static unsigned int POS1 = 1;
 static unsigned int SL1 = 11;
 static unsigned int SL2 = 7;
@@ -77,24 +79,103 @@ void print_param2(FILE *fp) {
     fflush(fp);
 }
 
-/* for 128 bit */
 void SFMT::next_state(void) {
 
-    if (++idx >= N) {
+    switch (mode) {
+    case BIT32:
+	next_state32();
+	break;
+    case BIT64:
+	next_state64();
+	break;
+    case BIT128:
+	next_state128();
+	break;
+    default:
+	printf("ERROR: ILLEAGAL MODE %d", mode);
+	exit(1);
+    }
+}
+
+/* for 128 bit */
+void SFMT::next_state128(void) {
+    uint32_t i;
+
+    idx += 4;
+    if (idx >= N * 4) {
 	idx = 0;
     }
-    sfmt[idx][0] = (sfmt[idx][0] << SL1) ^ sfmt[idx][0]
-	^ (sfmt[(idx + POS1) % N][0] >> SR1) ^ sfmt[(idx + POS1) % N][1]
-	^ (sfmt[(idx + N - 1) % N][0] << SL5); 
-    sfmt[idx][1] = (sfmt[idx][1] << SL2) ^ sfmt[idx][1]
-	^ (sfmt[(idx + POS1) % N][1] >> SR2) ^ sfmt[(idx + POS1) % N][2]
-	^ (sfmt[(idx + N - 1) % N][1] << SL6) ^ sfmt[(idx + N -1) % N][0];
-    sfmt[idx][2] = (sfmt[idx][2] << SL3) ^ sfmt[idx][2]
-	^ (sfmt[(idx + POS1) % N][2] >> SR3) ^ sfmt[(idx + POS1) % N][3]
-	^ (sfmt[(idx + N - 1) % N][2] << SL7) ^ sfmt[(idx + N -1) % N][1];
-    sfmt[idx][3] = (sfmt[idx][3] << SL4) ^ sfmt[idx][3]
-	^ (sfmt[(idx + POS1) % N][3] >> SR4)
-	^ (sfmt[(idx + N - 1) % N][3] << SL8) ^ sfmt[(idx + N -1) % N][2];
+    i = idx / 4;
+    sfmt[i][0] = (sfmt[i][0] << SL1) ^ sfmt[i][0]
+	^ (sfmt[(i + POS1) % N][0] >> SR1) ^ sfmt[(i + POS1) % N][1]
+	^ (sfmt[(i + N - 1) % N][0] << SL5); 
+    sfmt[i][1] = (sfmt[i][1] << SL2) ^ sfmt[i][1]
+	^ (sfmt[(i + POS1) % N][1] >> SR2) ^ sfmt[(i + POS1) % N][2]
+	^ (sfmt[(i + N - 1) % N][1] << SL6) ^ sfmt[(i + N -1) % N][0];
+    sfmt[i][2] = (sfmt[i][2] << SL3) ^ sfmt[i][2]
+	^ (sfmt[(i + POS1) % N][2] >> SR3) ^ sfmt[(i + POS1) % N][3]
+	^ (sfmt[(i + N - 1) % N][2] << SL7) ^ sfmt[(i + N -1) % N][1];
+    sfmt[i][3] = (sfmt[i][3] << SL4) ^ sfmt[i][3]
+	^ (sfmt[(i + POS1) % N][3] >> SR4)
+	^ (sfmt[(i + N - 1) % N][3] << SL8) ^ sfmt[(i + N -1) % N][2];
+}
+
+/* for 64bit */
+void SFMT::next_state64(void) {
+    uint32_t i;
+
+    idx += 2;
+    if (idx >= N * 4) {
+	idx = 0;
+    }
+    i = idx / 4;
+    if (idx % 4 < 2) {
+	sfmt[i][0] = (sfmt[i][0] << SL1) ^ sfmt[i][0]
+	    ^ (sfmt[(i + POS1) % N][0] >> SR1) ^ sfmt[(i + POS1) % N][1]
+	    ^ (sfmt[(i + N - 1) % N][0] << SL5); 
+	sfmt[i][1] = (sfmt[i][1] << SL2) ^ sfmt[i][1]
+	    ^ (sfmt[(i + POS1) % N][1] >> SR2) ^ sfmt[(i + POS1) % N][2]
+	    ^ (sfmt[(i + N - 1) % N][1] << SL6) ^ sfmt[(i + N -1) % N][0];
+    } else {
+	sfmt[i][2] = (sfmt[i][2] << SL3) ^ sfmt[i][2]
+	    ^ (sfmt[(i + POS1) % N][2] >> SR3) ^ sfmt[(i + POS1) % N][3]
+	    ^ (sfmt[(i + N - 1) % N][2] << SL7) ^ sfmt[(i + N -1) % N][1];
+	sfmt[i][3] = (sfmt[i][3] << SL4) ^ sfmt[i][3]
+	    ^ (sfmt[(i + POS1) % N][3] >> SR4)
+	    ^ (sfmt[(i + N - 1) % N][3] << SL8) ^ sfmt[(i + N -1) % N][2];
+    }
+}
+
+/* for 32bit */
+void SFMT::next_state32(void) {
+    uint32_t i;
+
+    idx += 1;
+    if (idx >= N * 4) {
+	idx = 0;
+    }
+    i = idx / 4;
+    switch (idx % 4) {
+    case 0:
+	sfmt[i][0] = (sfmt[i][0] << SL1) ^ sfmt[i][0]
+	    ^ (sfmt[(i + POS1) % N][0] >> SR1) ^ sfmt[(i + POS1) % N][1]
+	    ^ (sfmt[(i + N - 1) % N][0] << SL5); 
+	break;
+    case 1:
+	sfmt[i][1] = (sfmt[i][1] << SL2) ^ sfmt[i][1]
+	    ^ (sfmt[(i + POS1) % N][1] >> SR2) ^ sfmt[(i + POS1) % N][2]
+	    ^ (sfmt[(i + N - 1) % N][1] << SL6) ^ sfmt[(i + N -1) % N][0];
+	break;
+    case 2:
+	sfmt[i][2] = (sfmt[i][2] << SL3) ^ sfmt[i][2]
+	    ^ (sfmt[(i + POS1) % N][2] >> SR3) ^ sfmt[(i + POS1) % N][3]
+	    ^ (sfmt[(i + N - 1) % N][2] << SL7) ^ sfmt[(i + N -1) % N][1];
+	break;
+    default:
+	sfmt[i][3] = (sfmt[i][3] << SL4) ^ sfmt[i][3]
+	    ^ (sfmt[(i + POS1) % N][3] >> SR4)
+	    ^ (sfmt[(i + N - 1) % N][3] << SL8) ^ sfmt[(i + N -1) % N][2];
+    }
 }
 
 /* beheave as if it were LITTLE ENDIAN */
@@ -102,6 +183,17 @@ vec_GF2& SFMT::gen_rand(vec_GF2& vec, uint32_t len)
 {
     uint32_t i, j, k;
     uint32_t tmp;
+
+    switch (mode) {
+    case BIT32:
+	len = MIN(len, 32);
+	break;
+    case BIT64:
+	len = MIN(len, 64);
+	break;
+    default:
+	len = MIN(len, 128);
+    }
 
     next_state();
     k = 0;
@@ -120,7 +212,6 @@ owari:
     return vec;
 }
 
-/* for 128 bit */
 void SFMT::init_gen_rand(uint32_t seed)
 {
     int i;
@@ -129,11 +220,10 @@ void SFMT::init_gen_rand(uint32_t seed)
     for (i = 1; i < N * 4; i++) {
 	sfmt[i/4][i%4] = 1812433253UL 
 	    * (sfmt[(i - 1) / 4][(i - 1) % 4]
-	       ^ (sfmt[(i - 1) / 4][(i - 1) % 4] >> 30)) 
-	    + i;
+	       ^ (sfmt[(i - 1) / 4][(i - 1) % 4] >> 30)) + i;
     }
-    idx = N; // this line is for 128 bit.
-    next_state();
+    idx = N * 4;
+    next_state128();
 }
 
 void SFMT::add(const SFMT& src) {
@@ -202,6 +292,7 @@ ostream& operator<<(ostream& os, const SFMT& sfmt) {
     uint32_t a;
 
     os << "address:" << &sfmt << '\n';
+    os << "mode:" << sfmt.mode << '\n';
     os <<  "index = " << sfmt.idx << '\n';
     os << "sfmt:\n";
     for (i = 0; i < N; i++) {

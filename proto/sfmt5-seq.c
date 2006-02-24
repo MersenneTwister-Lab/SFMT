@@ -89,6 +89,7 @@ void print_param2(FILE *fp) {
     fflush(fp);
 }
 
+#if 0
 static void gen_rand_all(void) {
     int i;
 
@@ -96,27 +97,49 @@ static void gen_rand_all(void) {
 	sfmt[i][0] = (sfmt[i][0] << SL1) ^ sfmt[i][0]
 	    ^ (sfmt[(i + POS1) % N][0] >> SR1) ^ sfmt[(i + POS1) % N][1]
 	    ^ (sfmt[(i + N - 1) % N][0] << SL5);
-	sfmt[i][1] = (sfmt[i][1] << SL2) ^ sfmt[i][1]
+	sfmt[i][1] = (sfmt[i][1] << SL2) ^ sfmt[i][0]
 	    ^ (sfmt[(i + POS1) % N][1] >> SR2) ^ sfmt[(i + POS1) % N][2]
 	    ^ (sfmt[(i + N - 1) % N][1] << SL6) ^ sfmt[(i + N -1) % N][0];
-	sfmt[i][2] = (sfmt[i][2] << SL3) ^ sfmt[i][2]
+	sfmt[i][2] = (sfmt[i][2] << SL3) ^ sfmt[i][3]
 	    ^ (sfmt[(i + POS1) % N][2] >> SR3) ^ sfmt[(i + POS1) % N][3]
 	    ^ (sfmt[(i + N - 1) % N][2] << SL7) ^ sfmt[(i + N -1) % N][1];
-	sfmt[i][3] = (sfmt[i][3] << SL4) ^ sfmt[i][3]
+	sfmt[i][3] = (sfmt[i][3] << SL4) ^ sfmt[i][2]
 	    ^ (sfmt[(i + POS1) % N][3] >> SR4)
 	    ^ (sfmt[(i + N - 1) % N][3] << SL8) ^ sfmt[(i + N -1) % N][2];
     }
 }
+#endif
 
 uint32_t gen_rand(void)
 {
     uint32_t r;
+    uint32_t i;
 
     if (idx >= N * 4) {
-	gen_rand_all();
 	idx = 0;
     }
-    r = sfmt[idx / 4][idx % 4];
+    i = idx / 4;
+    switch (idx % 4) {
+    case 0:
+	r = sfmt[i][0] = (sfmt[i][0] << SL1) ^ sfmt[i][0]
+	    ^ (sfmt[(i + POS1) % N][0] >> SR1) ^ sfmt[(i + POS1) % N][1]
+	    ^ (sfmt[(i + N - 1) % N][0] << SL5);
+	break;
+    case 1:
+	r = sfmt[i][1] = (sfmt[i][1] << SL2) ^ sfmt[i][1]
+	    ^ (sfmt[(i + POS1) % N][1] >> SR2) ^ sfmt[(i + POS1) % N][2]
+	    ^ (sfmt[(i + N - 1) % N][1] << SL6) ^ sfmt[(i + N -1) % N][0];
+	break;
+    case 2:
+	r = sfmt[i][2] = (sfmt[i][2] << SL3) ^ sfmt[i][2]
+	    ^ (sfmt[(i + POS1) % N][2] >> SR3) ^ sfmt[(i + POS1) % N][3]
+	    ^ (sfmt[(i + N - 1) % N][2] << SL7) ^ sfmt[(i + N -1) % N][1];
+	break;
+    default:
+	r = sfmt[i][3] = (sfmt[i][3] << SL4) ^ sfmt[i][3]
+	    ^ (sfmt[(i + POS1) % N][3] >> SR4)
+	    ^ (sfmt[(i + N - 1) % N][3] << SL8) ^ sfmt[(i + N -1) % N][2];
+    }
     idx++;
     return r;
 }

@@ -24,6 +24,15 @@ LINKOPT = -lntl -lgmp
 test_gen521: sfmt.o test_gen.o
 	${CC} -o $@ sfmt.o test_gen.o
 
+test_gen5_all521: sfmt5.o test_gen.o
+	${CC} -o $@ sfmt5.o test_gen.o
+
+test_gen5_seq521: sfmt5-seq.o test_gen.o
+	${CC} -o $@ sfmt5-seq.o test_gen.o
+
+test_gen5_cls521: sfmt5-cls.o test_gen_cls.o
+	${CPP} -o $@ sfmt5-cls.o test_gen_cls.o ${LINKOPT}
+
 test-gen5-521: sfmt5-cls.o test_gen128.o
 	${CPP} -o $@ sfmt5-cls.o test_gen128.o ${LINKOPT}
 
@@ -63,6 +72,10 @@ shortest-base521: chk-shortest.o shortbase.o sfmt4a-cls.o util.o
 
 shortest-base5-521: chk-shortest.o shortbase.o sfmt5-cls.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase.o sfmt5-cls.o util.o ${LINKOPT}
+
+shortest32-base5-521: chk-shortest32.o shortbase.o sfmt5-cls.o util.o
+	${CPP} -o $@ chk-shortest32.o shortbase.o sfmt5-cls.o util.o \
+		${LINKOPT}
 
 test_bm521: sfmt.o test_bm.o util.o debug.o
 	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}
