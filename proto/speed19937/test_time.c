@@ -5,7 +5,7 @@
 #include <time.h>
 #include <string.h>
 
-#include "random-common.h"
+#include "random-inline.h"
 
 #ifdef __ppc__
 static inline __attribute__((always_inline)) uint64_t get_clock(void) {
@@ -56,6 +56,7 @@ int main(int argc, char *argv[]) {
 		printf("\n");
 	    }
 	}
+	printf("\n");
     }
     for (i = 0; i < 100; i++) {
 	clo = get_clock();

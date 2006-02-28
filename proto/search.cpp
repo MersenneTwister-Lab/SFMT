@@ -35,7 +35,6 @@ int non_reducible(GF2X& fpoly, int degree) {
     int count;
 
     DPRINT("degree = %u", degree);
-    //DPRINTPOLY("fpoly =", fpoly);
     if (deg(fpoly) < degree) {
 	DPRINT("degree = %u", deg(fpoly));
 	return 0;
@@ -45,23 +44,18 @@ int non_reducible(GF2X& fpoly, int degree) {
     t += t2m;
   
     for (m = 1; deg(fpoly) > degree; m++) {
-	//DPRINTPOLY("t =", t);
 	for(;;) {
 	    GCD(alpha, fpoly, t);
-	    //DPRINTPOLY("alpha =", alpha);
 	    if (IsOne(alpha)) {
 		break;
 	    }
 	    fpoly /= alpha;
-	    //DPRINTPOLY("f =", fpoly);
 	    if (deg(fpoly) < degree) {
 		DPRINT("degree = %u", deg(fpoly));
 		return 0;
 	    }
 	}
 	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
-	    //DPRINT("maybe fpoly is larger m = %d, DEG = %u\n", m, 
-	    //     (unsigned int)deg(fpoly));
 	    DPRINT("deg(fpoly) = %u", deg(fpoly));
 	    return 0;
 	}
@@ -76,15 +70,12 @@ int non_reducible(GF2X& fpoly, int degree) {
     }
     pass1_count++;
     for (; m <= limit; m++) {
-	//DPRINTPOLY("t =", t);
 	for(;;) {
 	    GCD(alpha, fpoly, t);
-	    //DPRINTPOLY("alpha =", alpha);
 	    if (IsOne(alpha)) {
 		break;
 	    }
 	    fpoly /= alpha;
-	    //DPRINTPOLY("f =", fpoly);
 	    if (deg(fpoly) < degree) {
 		return 0;
 	    }
@@ -102,11 +93,9 @@ int non_reducible(GF2X& fpoly, int degree) {
     }
     add(t, t1, t2m);
     if (deg(t) == -1) {
-	//DPRINT("check ok fdeg = %u\n", (unsigned int)DEG(fpoly));
 	pass3_count++;
 	return 1;
     } else {
-	//DPRINT("check ng fdeg = %u\n", (unsigned int)DEG(fpoly));
 	return 0;
     }
 }
@@ -151,6 +140,10 @@ void search(unsigned int n) {
 
     for (;;) {
 	setup_param(genrand_int32(),
+		    genrand_int32(),
+		    genrand_int32(),
+		    genrand_int32(),
+		    genrand_int32(),
 		    genrand_int32(),
 		    genrand_int32(),
 		    genrand_int32(),
@@ -209,7 +202,7 @@ int main(int argc, char* argv[]){
     int n;
     unsigned long seed;
 
-    setup_param(1, 0, 21, 4, 3, 29, 2, 2, 2);
+    setup_param(1, 0, 21, 4, 3, 29, 2, 2, 2, 0, 0, 0, 0);
 
     if (argc != 3) {
 	limit = 32;

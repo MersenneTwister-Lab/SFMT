@@ -18,9 +18,6 @@ INLINE static void gen_rand_all(void);
 
 static __m128i sfmt[N];
 static unsigned int idx;
-static const __m128i sl1 = {SL1, SL2, SL3, SL4};
-static const __m128i sl2 = {SL5, SL6, SL7, SL8};
-static const __m128i sr = {SR1, SR2, SR3, SR4};
 
 #define POS1 71
 #define SL1 23
@@ -91,21 +88,24 @@ INLINE void print_state(FILE *fp) {
 
 INLINE void gen_rand_all(void) {
     int i;
-    __m128i a, b, c, r;
+    __m128i a, b, c, r, sl1, sl2, sr;
+    sl1 = _mm_set_epi32(SL1, SL2, SL3, SL4);
+    sl2 = _mm_set_epi32(SL5, SL6, SL7, SL8);
+    sr = _mm_set_epi32(SR1, SR2, SR3, SR4);
 
     a = _mm_load_si128(&sfmt[0]);
     b = _mm_load_si128(&sfmt[POS1]);
     c = _mm_load_si128(&sfmt[N - 1]);
     r = _mm_xor_si128(_mm_xor_si128(
 				    _mm_xor_si128(
-						  _mm_slli_epi32(a, sl1),
+						  _mm_sll_epi32(a, sl1),
 						  a),
 				    _mm_xor_si128(
-						  _mm_srli_epi32(b, sr),
+						  _mm_srl_epi32(b, sr),
 						  _mm_srli_si128(b, 4))
 				    ),
 		      _mm_xor_si128(
-				    _mm_slli_epi32(c, sl2),
+				    _mm_sll_epi32(c, sl2),
 				    _mm_slli_si128(c, 4))
 		      );
     _mm_store_si128(&sfmt[0], r);
@@ -115,14 +115,14 @@ INLINE void gen_rand_all(void) {
 	c = r;
 	r = _mm_xor_si128(_mm_xor_si128(
 					_mm_xor_si128(
-						      _mm_slli_epi32(a, sl1),
+						      _mm_sll_epi32(a, sl1),
 						      a),
 					_mm_xor_si128(
-						      _mm_srli_epi32(b, sr),
+						      _mm_srl_epi32(b, sr),
 						      _mm_srli_si128(b, 4))
 					),
 			  _mm_xor_si128(
-					_mm_slli_epi32(c, sl2),
+					_mm_sll_epi32(c, sl2),
 					_mm_slli_si128(c, 4))
 			  );
 	_mm_store_si128(&sfmt[i], r);
@@ -133,14 +133,14 @@ INLINE void gen_rand_all(void) {
 	c = r;
 	r = _mm_xor_si128(_mm_xor_si128(
 					_mm_xor_si128(
-						      _mm_slli_epi32(a, sl1),
+						      _mm_sll_epi32(a, sl1),
 						      a),
 					_mm_xor_si128(
-						      _mm_srli_epi32(b, sr),
+						      _mm_srl_epi32(b, sr),
 						      _mm_srli_si128(b, 4))
 					),
 			  _mm_xor_si128(
-					_mm_slli_epi32(c, sl2),
+					_mm_sll_epi32(c, sl2),
 					_mm_slli_si128(c, 4))
 			  );
 	_mm_store_si128(&sfmt[i], r);
@@ -149,21 +149,24 @@ INLINE void gen_rand_all(void) {
 
 INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
     int i;
-    __m128i a, b, c, r;
+    __m128i a, b, c, r, sl1, sl2, sr;
+    sl1 = _mm_set_epi32(SL1, SL2, SL3, SL4);
+    sl2 = _mm_set_epi32(SL5, SL6, SL7, SL8);
+    sr = _mm_set_epi32(SR1, SR2, SR3, SR4);
 
     a = _mm_load_si128(&array[0]);
     b = _mm_load_si128(&array[POS1]);
     c = _mm_load_si128(&array[N - 1]);
     r = _mm_xor_si128(_mm_xor_si128(
 				    _mm_xor_si128(
-						  _mm_slli_epi32(a, sl1),
+						  _mm_sll_epi32(a, sl1),
 						  a),
 				    _mm_xor_si128(
-						  _mm_srli_epi32(b, sr),
+						  _mm_srl_epi32(b, sr),
 						  _mm_srli_si128(b, 4))
 				    ),
 		      _mm_xor_si128(
-				    _mm_slli_epi32(c, sl2),
+				    _mm_sll_epi32(c, sl2),
 				    _mm_slli_si128(c, 4))
 		      );
     _mm_store_si128(&array[0], r);
@@ -173,14 +176,14 @@ INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
 	c = r;
 	r = _mm_xor_si128(_mm_xor_si128(
 					_mm_xor_si128(
-						      _mm_slli_epi32(a, sl1),
+						      _mm_sll_epi32(a, sl1),
 						      a),
 					_mm_xor_si128(
-						      _mm_srli_epi32(b, sr),
+						      _mm_srl_epi32(b, sr),
 						      _mm_srli_si128(b, 4))
 					),
 			  _mm_xor_si128(
-					_mm_slli_epi32(c, sl2),
+					_mm_sll_epi32(c, sl2),
 					_mm_slli_si128(c, 4))
 			  );
 	_mm_store_si128(&array[i], r);
@@ -191,14 +194,14 @@ INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
 	c = r;
 	r = _mm_xor_si128(_mm_xor_si128(
 					_mm_xor_si128(
-						      _mm_slli_epi32(a, sl1),
+						      _mm_sll_epi32(a, sl1),
 						      a),
 					_mm_xor_si128(
-						      _mm_srli_epi32(b, sr),
+						      _mm_srl_epi32(b, sr),
 						      _mm_srli_si128(b, 4))
 					),
 			  _mm_xor_si128(
-					_mm_slli_epi32(c, sl2),
+					_mm_sll_epi32(c, sl2),
 					_mm_slli_si128(c, 4))
 			  );
 	_mm_store_si128(&array[i], r);
@@ -209,14 +212,14 @@ INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
 	c = r;
 	r = _mm_xor_si128(_mm_xor_si128(
 					_mm_xor_si128(
-						      _mm_slli_epi32(a, sl1),
+						      _mm_sll_epi32(a, sl1),
 						      a),
 					_mm_xor_si128(
-						      _mm_srli_epi32(b, sr),
+						      _mm_srl_epi32(b, sr),
 						      _mm_srli_si128(b, 4))
 					),
 			  _mm_xor_si128(
-					_mm_slli_epi32(c, sl2),
+					_mm_sll_epi32(c, sl2),
 					_mm_slli_si128(c, 4))
 			  );
 	_mm_store_si128(&array[i], r);
