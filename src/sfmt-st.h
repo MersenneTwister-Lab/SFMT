@@ -33,5 +33,7 @@ void next_state128(sfmt_t *sfmt);
 uint32_t gen_rand32(sfmt_t *sfmt);
 uint64_t gen_rand64(sfmt_t *sfmt);
 uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low);
+void add_rnd(sfmt_t *dist, sfmt_t *src);
+void read_random_param(FILE *fp);
 
 #endif

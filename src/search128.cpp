@@ -42,7 +42,7 @@ bool generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
     gen_rand128(sfmt, &hi, &low);
     mask = (uint64_t)1UL << (63 - bitpos);
     bit = hi & mask;
-    while (bit) {
+    while (!bit) {
 	i++;
 	if(i > 2 * maxdegree){
 	    //printf("generating_polynomial:too much zeros\n");
@@ -78,7 +78,7 @@ bool generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
     gen_rand128(sfmt, &hi, &low);
     mask = (uint64_t)1UL << (63 - bitpos);
     bit = low & mask;
-    while (bit) {
+    while (!bit) {
 	i++;
 	if(i > 2 * maxdegree){
 	    //printf("generating_polynomial:too much zeros\n");
@@ -147,6 +147,8 @@ bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
 	printf("fail in 128bit try next initial state\n");
 	return false;
     }
+#endif
+#if 1
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
 	if (lcmcount > 1000) {
@@ -169,10 +171,14 @@ bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
 	    LCM(tmp, lcmpoly, minpoly);
 	    lcmpoly = tmp;
 	    lcmcount++;
+	    if (deg(lcmpoly) >= (long)maxdegree) {
+		break;
+	    }
 	}
     }
 #endif
     if (deg(lcmpoly) != (long)maxdegree) {
+	printf("fail in 128bit try next initial state\n");
 	return false;
     }
     DivRem(tmp, rempoly, lcmpoly, poly);

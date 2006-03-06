@@ -15,9 +15,10 @@
 #DDEBUG = -DDEBUG=1
 
 DMEXP = -DMEXP=${MEXP}
+OPTI = -O0 -g
 
-CC = gcc -Wall -O9 -Wmissing-prototypes  $(DDEBUG) $(DMEXP) $(DPG)
-CPP = g++ -Wall -O9 $(DDEBUG) $(DMEXP) $(DPG)
+CC = gcc -Wall $(OPTI) -Wmissing-prototypes  $(DDEBUG) $(DMEXP) $(DPG)
+CPP = g++ -Wall $(OPTI) $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -lntl -lgmp
 
@@ -34,8 +35,8 @@ search-dist521: search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o
 	${CPP} -o $@ search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o \
 		${LINKOPT}
 
-shortest-base521: chk-shortest.o shortbase.o sfmt4a-cls.o util.o
-	${CPP} -o $@ chk-shortest.o shortbase.o sfmt4a-cls.o util.o ${LINKOPT}
+shortest128-base521: chk-shortest.o shortbase128.o sfmt-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt-st.o util.o ${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<

@@ -115,3 +115,22 @@ int32_t gauss_plus(mat_GF2& mat) {
     }
     return rank;
 }
+
+void readFile(GF2X& poly, FILE *fp) {
+    char c;
+    unsigned int j = 0;
+
+    while ((c = getc(fp)) != EOF) {
+	if (c < ' ') {
+	    continue;
+	} else if (c == '1') {
+	    SetCoeff(poly, j, 1);
+	    j++;
+	} else if (c == '0') {
+	    SetCoeff(poly, j, 0);
+	    j++;
+	} else {
+	    break;
+	}
+    }
+}

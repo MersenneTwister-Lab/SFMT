@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
+#include <errno.h>
+#include <stdlib.h>
 #include "sfmt-st.h"
 
 static unsigned int POS1 = 1;
@@ -161,3 +163,61 @@ void init_gen_rand(sfmt_t *sfmt, uint32_t seed)
     }
     sfmt->idx = 0;
 }
+
+void add_rnd(sfmt_t *dist, sfmt_t *src) {
+    int i, j, k;
+
+    assert(dist->idx % 4 == 0);
+    assert(src->idx % 4 == 0);
+    
+    k = (src->idx / 4 - dist->idx / 4 + N) % N;
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 4; j++) {
+	    dist->sfmt[i][j] ^= src->sfmt[(k + i) % N][j];
+	}
+    }
+}
+
+static unsigned int get_uint(char *line);
+static unsigned int get_uint(char *line) {
+    unsigned int result;
+
+    for (;(*line) && (*line != '=');line++);
+    if (!*line) {
+	fprintf(stderr, "WARN:can't get = in get_uint\n");
+	return 0;
+    }
+    line++;
+    errno = 0;
+    result = (unsigned int)strtol(line, NULL, 10);
+    if (errno) {
+	fprintf(stderr, "WARN:format error:%s", line);
+    }
+    return result;
+}
+
+void read_random_param(FILE *f) {
+    char line[256];
+
+    fgets(line, 256, f);
+    fgets(line, 256, f);
+    fgets(line, 256, f);
+    POS1 = get_uint(line);
+    fgets(line, 256, f);
+    SL1 = get_uint(line);
+    fgets(line, 256, f);
+    SL2 = get_uint(line);
+    fgets(line, 256, f);
+    SL3 = get_uint(line);
+    fgets(line, 256, f);
+    SL4 = get_uint(line);
+    fgets(line, 256, f);
+    SR1 = get_uint(line);
+    fgets(line, 256, f);
+    SR2 = get_uint(line);
+    fgets(line, 256, f);
+    SR3 = get_uint(line);
+    fgets(line, 256, f);
+    SR4 = get_uint(line);
+}
+
