@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
-#include "sfmt-st.h"
+#include "sfmt32-st.h"
 
 static unsigned int POS1 = 1;
 static unsigned int SL1 = 11;
@@ -62,119 +62,107 @@ void print_param2(FILE *fp) {
     fflush(fp);
 }
 
-#if 0
-static void gen_rand_all(void) {
-    int i;
+void next_state32(sfmt32_t *sfmt) {
+    uint32_t i, r;
 
-    for (i = 0; i < N; i++) {
-	sfmt[i][0] = (sfmt[i][0] << SL1) ^ sfmt[i][0]
-	    ^ sfmt[(i + POS1) % N][1]
-	    ^ (sfmt[(i + N - 1) % N][0] >> SR1) ^ sfmt[(i + N - 1) % N][0];
-	sfmt[i][1] = (sfmt[i][1] << SL2) ^ sfmt[i][1]
-	    ^ sfmt[(i + POS1) % N][2]
-	    ^ (sfmt[(i + N - 1) % N][1] >> SR2) ^ sfmt[(i + N - 1) % N][1];
-	sfmt[i][2] = (sfmt[i][2] << SL3) ^ sfmt[i][2]
-	    ^ sfmt[(i + POS1) % N][3]
-	    ^ (sfmt[(i + N - 1) % N][2] >> SR3) ^ sfmt[(i + N - 1) % N][2];
-	sfmt[i][3] = (sfmt[i][3] << SL4) ^ sfmt[i][3]
-	    ^ sfmt[(i + POS1) % N][0]
-	    ^ (sfmt[(i + N - 1) % N][3] >> SR4) ^ sfmt[(i + N - 1) % N][3];
-    }
-}
-#endif
-
-void next_state128(sfmt_t *sfmt) {
-    uint32_t i;
-
-    assert(sfmt->idx % 4 == 0);
-
-    //sfmt->idx += 4;
+    sfmt->idx++;
     if (sfmt->idx >= N * 4) {
 	sfmt->idx = 0;
     }
     i = sfmt->idx / 4;
-    sfmt->sfmt[i][0] = (sfmt->sfmt[i][0] << SL1) ^ sfmt->sfmt[i][0]
-	^ sfmt->sfmt[(i + POS1) % N][1]
-	^ (sfmt->sfmt[(i + N - 1) % N][0] >> SR1) 
-	^ sfmt->sfmt[(i + N - 1) % N][0];
-    sfmt->sfmt[i][1] = (sfmt->sfmt[i][1] << SL2) ^ sfmt->sfmt[i][1]
-	^ sfmt->sfmt[(i + POS1) % N][2]
-	^ (sfmt->sfmt[(i + N - 1) % N][1] >> SR2) 
-	^ sfmt->sfmt[(i + N - 1) % N][1];
-    sfmt->sfmt[i][2] = (sfmt->sfmt[i][2] << SL3) ^ sfmt->sfmt[i][2]
-	^ sfmt->sfmt[(i + POS1) % N][3]
-	^ (sfmt->sfmt[(i + N - 1) % N][2] >> SR3) 
-	^ sfmt->sfmt[(i + N - 1) % N][2];
-    sfmt->sfmt[i][3] = (sfmt->sfmt[i][3] << SL4) ^ sfmt->sfmt[i][3]
-	^ sfmt->sfmt[(i + POS1) % N][0]
-	^ (sfmt->sfmt[(i + N - 1) % N][3] >> SR4)
-	^ sfmt->sfmt[(i + N - 1) % N][3];
+    r = sfmt->idx % 4;
+    sfmt->sfmt[r][i][0] = (sfmt->sfmt[r][i][0] << SL1) ^ sfmt->sfmt[r][i][0]
+	^ sfmt->sfmt[r][(i + POS1) % N][1]
+	^ (sfmt->sfmt[r][(i + N - 1) % N][0] >> SR1) 
+	^ sfmt->sfmt[r][(i + N - 1) % N][0];
+    sfmt->sfmt[r][i][1] = (sfmt->sfmt[r][i][1] << SL2) ^ sfmt->sfmt[r][i][1]
+	^ sfmt->sfmt[r][(i + POS1) % N][2]
+	^ (sfmt->sfmt[r][(i + N - 1) % N][1] >> SR2) 
+	^ sfmt->sfmt[r][(i + N - 1) % N][1];
+    sfmt->sfmt[r][i][2] = (sfmt->sfmt[r][i][2] << SL3) ^ sfmt->sfmt[r][i][2]
+	^ sfmt->sfmt[r][(i + POS1) % N][3]
+	^ (sfmt->sfmt[r][(i + N - 1) % N][2] >> SR3) 
+	^ sfmt->sfmt[r][(i + N - 1) % N][2];
+    sfmt->sfmt[r][i][3] = (sfmt->sfmt[r][i][3] << SL4) ^ sfmt->sfmt[r][i][3]
+	^ sfmt->sfmt[r][(i + POS1) % N][0]
+	^ (sfmt->sfmt[r][(i + N - 1) % N][3] >> SR4)
+	^ sfmt->sfmt[r][(i + N - 1) % N][3];
 }
 
-uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low)
+uint64_t gen_rand128(sfmt32_t *sfmt, uint64_t *hi, uint64_t *low)
 {
-    uint32_t i;
+    uint32_t i, r;
 
+    assert(sfmt->idx % 4 == 0);
+ 
     i = sfmt->idx / 4;
-    *low = (uint64_t)sfmt->sfmt[i][0] | ((uint64_t)sfmt->sfmt[i][1] << 32);
-    *hi = (uint64_t)sfmt->sfmt[i][2] | ((uint64_t)sfmt->sfmt[i][3] << 32);
-    sfmt->idx += 4;
-    next_state128(sfmt);
+    r = sfmt->idx % 4;
+    *low = (uint64_t)sfmt->sfmt[r][i][0] 
+	| ((uint64_t)sfmt->sfmt[r][i][1] << 32);
+    *hi = (uint64_t)sfmt->sfmt[r][i][2] 
+	| ((uint64_t)sfmt->sfmt[r][i][3] << 32);
+    next_state32(sfmt);
+    next_state32(sfmt);
+    next_state32(sfmt);
+    next_state32(sfmt);
     return *hi;
 }
 
-uint64_t gen_rand64(sfmt_t *sfmt)
+uint64_t gen_rand64(sfmt32_t *sfmt)
 {
-    uint64_t r;
-    uint32_t i;
+    uint64_t result;
+    uint32_t i, r;
 
     assert(sfmt->idx % 2 == 0);
  
     i = sfmt->idx / 4;
-    r = (uint64_t)sfmt->sfmt[i][sfmt->idx % 4] 
-	| ((uint64_t)sfmt->sfmt[i][sfmt->idx % 4 + 1] << 32);
-    sfmt->idx += 2;
-    if (sfmt->idx % 4 == 0) {
-	next_state128(sfmt);
-    }
-    return r;
+    r = sfmt->idx % 4;
+    result = (uint64_t)sfmt->sfmt[r][i][r] 
+	| ((uint64_t)sfmt->sfmt[r][i][r + 1] << 32);
+    next_state32(sfmt);
+    next_state32(sfmt);
+    return result;
 }
 
-uint32_t gen_rand32(sfmt_t *sfmt)
+uint32_t gen_rand32(sfmt32_t *sfmt)
 {
-    uint32_t r;
+    uint32_t result;
+    uint32_t i, r;
 
-    r = sfmt->sfmt[sfmt->idx / 4][sfmt->idx % 4];
-    sfmt->idx++;
-    if (sfmt->idx % 4 == 0) {
-	next_state128(sfmt);
-    }
-    return r;
+    i = sfmt->idx / 4;
+    r = sfmt->idx % 4;
+    result = sfmt->sfmt[r][i][r];
+    next_state32(sfmt);
+    return result;
 }
 
-void init_gen_rand(sfmt_t *sfmt, uint32_t seed)
+void init_gen_rand(sfmt32_t *sfmt, uint32_t seed)
 {
-    int i;
+    uint32_t i;
 
-    sfmt->sfmt[0][0] = seed;
+    sfmt->sfmt[0][0][0] = seed;
+    sfmt->sfmt[1][0][0] = seed;
+    sfmt->sfmt[2][0][0] = seed;
+    sfmt->sfmt[3][0][0] = seed;
     for (i = 1; i < N * 4; i++) {
-	sfmt->sfmt[i / 4][i % 4] = 1812433253UL 
-	    * (sfmt->sfmt[(i - 1) / 4][(i - 1) % 4]
-	       ^ (sfmt->sfmt[(i - 1) / 4][(i - 1) % 4] >> 30)) + i;
+	seed = 1812433253UL * (seed ^ (seed >> 30)) + i;
+	sfmt->sfmt[0][i / 4][i % 4] = seed;
+	sfmt->sfmt[1][i / 4][i % 4] = seed;
+	sfmt->sfmt[2][i / 4][i % 4] = seed;
+	sfmt->sfmt[3][i / 4][i % 4] = seed;
     }
     sfmt->idx = 0;
 }
 
-void add_rnd(sfmt_t *dist, sfmt_t *src) {
-    int i, j, k;
+void add_rnd(sfmt32_t *dist, sfmt32_t *src) {
+    int i, j, k, l;
 
-    assert(dist->idx % 4 == 0);
-    assert(src->idx % 4 == 0);
-    
     k = (src->idx / 4 - dist->idx / 4 + N) % N;
+    l = (src->idx % 4 - dist->idx % 4 + 4) % 4;
     for (i = 0; i < N; i++) {
 	for (j = 0; j < 4; j++) {
-	    dist->sfmt[i][j] ^= src->sfmt[(k + i) % N][j];
+	    dist->sfmt[j][i][j] 
+		^= src->sfmt[(l + j) % 4][(k + i) % N][(l + j) % 4];
 	}
     }
 }

@@ -24,7 +24,7 @@ static unsigned long all_count = 0;
 static unsigned long pass_count = 0;
 static unsigned int maxdegree;
 static unsigned int mexp;
-#if 0
+#if 1
 static FILE *frandom;
 #endif
 
@@ -303,7 +303,7 @@ int main(int argc, char* argv[]){
     init_genrand(seed);
     printf("now search %d times\n", n);
     fflush(stdout);
-#if 0
+#if 1
     frandom = fopen("/dev/random", "r");
     if (errno) {
 	perror("main");
