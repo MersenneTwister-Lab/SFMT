@@ -18,7 +18,7 @@ struct IN_STATUS {
   bool special;
   vec_GF2 next;
   unsigned int count;
-  sfmt_t random;
+  sfmt32_t random;
 };
 typedef struct IN_STATUS in_status;
   

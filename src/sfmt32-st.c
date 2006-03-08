@@ -65,7 +65,6 @@ void print_param2(FILE *fp) {
 void next_state32(sfmt32_t *sfmt) {
     uint32_t i, r;
 
-    sfmt->idx++;
     if (sfmt->idx >= N * 4) {
 	sfmt->idx = 0;
     }
@@ -87,6 +86,7 @@ void next_state32(sfmt32_t *sfmt) {
 	^ sfmt->sfmt[r][(i + POS1) % N][0]
 	^ (sfmt->sfmt[r][(i + N - 1) % N][3] >> SR4)
 	^ sfmt->sfmt[r][(i + N - 1) % N][3];
+    sfmt->idx++;
 }
 
 uint64_t gen_rand128(sfmt32_t *sfmt, uint64_t *hi, uint64_t *low)

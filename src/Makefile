@@ -28,6 +28,9 @@ test_gen521: sfmt.o test_gen.o
 test-gen-st521: sfmt-st.o test-gen-st.o
 	${CC} -o $@ sfmt-st.o test-gen-st.o
 
+test32-gen-st521: sfmt32-st.o test32-gen-st.o
+	${CC} -o $@ sfmt32-st.o test32-gen-st.o
+
 param-search521: search128.o sfmt-st.o mt19937ar.o util.o
 	${CPP} -o $@ search128.o sfmt-st.o mt19937ar.o util.o ${LINKOPT}
 
