@@ -34,6 +34,9 @@ test32-gen-st521: sfmt32-st.o test32-gen-st.o
 param-search521: search128.o sfmt-st.o mt19937ar.o util.o
 	${CPP} -o $@ search128.o sfmt-st.o mt19937ar.o util.o ${LINKOPT}
 
+check-param521: chk-irrs-param.o sfmt.o util.o
+	${CPP} -o $@ chk-irrs-param.o sfmt.o util.o ${LINKOPT}
+
 search-dist521: search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o
 	${CPP} -o $@ search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o \
 		${LINKOPT}

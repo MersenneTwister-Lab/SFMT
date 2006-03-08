@@ -86,8 +86,6 @@ static void gen_rand_all(void) {
 void next_state128(sfmt_t *sfmt) {
     uint32_t i;
 
-    assert(sfmt->idx % 4 == 0);
-
     //sfmt->idx += 4;
     if (sfmt->idx >= N * 4) {
 	sfmt->idx = 0;
@@ -118,8 +116,11 @@ uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low)
     i = sfmt->idx / 4;
     *low = (uint64_t)sfmt->sfmt[i][0] | ((uint64_t)sfmt->sfmt[i][1] << 32);
     *hi = (uint64_t)sfmt->sfmt[i][2] | ((uint64_t)sfmt->sfmt[i][3] << 32);
-    sfmt->idx += 4;
     next_state128(sfmt);
+    sfmt->idx += 4;
+    if (sfmt->idx >= N * 4) {
+	sfmt->idx = 0;
+    }
     return *hi;
 }
 
@@ -133,9 +134,12 @@ uint64_t gen_rand64(sfmt_t *sfmt)
     i = sfmt->idx / 4;
     r = (uint64_t)sfmt->sfmt[i][sfmt->idx % 4] 
 	| ((uint64_t)sfmt->sfmt[i][sfmt->idx % 4 + 1] << 32);
-    sfmt->idx += 2;
-    if (sfmt->idx % 4 == 0) {
+    if (sfmt->idx % 4 == 2) {
 	next_state128(sfmt);
+    }
+    sfmt->idx += 2;
+    if (sfmt->idx >= N * 4) {
+	sfmt->idx = 0;
     }
     return r;
 }
@@ -145,9 +149,12 @@ uint32_t gen_rand32(sfmt_t *sfmt)
     uint32_t r;
 
     r = sfmt->sfmt[sfmt->idx / 4][sfmt->idx % 4];
-    sfmt->idx++;
-    if (sfmt->idx % 4 == 0) {
+    if (sfmt->idx % 4 == 3) {
 	next_state128(sfmt);
+    }
+    sfmt->idx++;
+    if (sfmt->idx >= N * 4) {
+	sfmt->idx = 0;
     }
     return r;
 }

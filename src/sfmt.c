@@ -43,15 +43,15 @@ unsigned int get_rnd_mexp(void)
 void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
 		 unsigned int p4, unsigned int p5, unsigned int p6,
 		 unsigned int p7, unsigned int p8, unsigned int p9) {
-    POS1 = p1 % (N-2) + 1;
-    SL1 = p2 % (32 - 1) + 1;
-    SL2 = p3 % (32 - 1) + 1;
-    SL3 = p4 % (32 - 1) + 1;
-    SL4 = p5 % (32 - 1) + 1;
-    SR1 = p6 % (32 - 1) + 1;
-    SR2 = p7 % (32 - 1) + 1;
-    SR3 = p8 % (32 - 1) + 1;
-    SR4 = p9 % (32 - 1) + 1;
+    POS1 = p1 % N;
+    SL1 = p2 % 32;
+    SL2 = p3 % 32;
+    SL3 = p4 % 32;
+    SL4 = p5 % 32;
+    SR1 = p6 % 32;
+    SR2 = p7 % 32;
+    SR3 = p8 % 32;
+    SR4 = p9 % 32;
     memset(sfmt, 0, sizeof(sfmt));
 }
 

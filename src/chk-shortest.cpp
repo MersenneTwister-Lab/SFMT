@@ -222,7 +222,7 @@ void test_shortest(char *filename) {
     vec.SetLength(2 * maxdegree);
     generating_polynomial128(&sfmt, vec, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
-#if 1
+#if 0
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
 	printf("check minpoly OK!\n");
 	DivRem(tmp, rempoly, lcmpoly, poly);
@@ -240,13 +240,14 @@ void test_shortest(char *filename) {
 	berlekampMassey(minpoly, maxdegree, vec);
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
-#if 1
+#if 0
 	DivRem(tmp, rempoly, lcmpoly, poly);
 	if (deg(rempoly) != -1) {
 	    printf("rem != 0 deg rempoly = %ld: %d\n", deg(rempoly), i);
 	}
 #endif
     }
+#if 0 // 0状態を作るにはこれは不要？
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
 	if (lcmcount > 1000) {
@@ -278,9 +279,10 @@ void test_shortest(char *filename) {
 	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
 	exit(1);
     }
+#endif
 #if 0
     sfmt = sfmt_save;
-    if (check_minpoly128(sfmt, lcmpoly, 0)) {
+    if (check_minpoly128(&sfmt, lcmpoly, 0)) {
 	printf("check minpoly 2 OK!\n");
     } else {
 	printf("check minpoly 2 NG!\n");
@@ -297,24 +299,17 @@ void test_shortest(char *filename) {
     }
     sfmt = sfmt_save;
     make_zero_state(&sfmt, tmp);
-#if 1
     generating_polynomial128(&sfmt, vec, 0, maxdegree);
     berlekampMassey(minpoly, maxdegree, vec);
     if (deg(minpoly) != MEXP) {
 	printf("deg zero state = %ld\n", deg(minpoly));
 	return;
     }
-#endif
     dist_sum = 0;
     count = 0;
     old = 0;
     for (bit = 1; bit <= 128; bit++) {
 	shortest = get_equiv_distrib(bit, &sfmt);
-	if (shortest > mexp) {
-	    printf("k(%d) = %d\n", bit, shortest);
-	    printf("distribution greater than mexp!\n");
-	    exit(1);
-	}
 	dist_sum += mexp / bit - shortest;
 	if (old == shortest) {
 	    count++;
