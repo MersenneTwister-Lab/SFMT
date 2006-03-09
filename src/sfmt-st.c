@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include "sfmt-st.h"
 
+//#define OUT_INITIAL 1
+
 static unsigned int POS1 = 1;
 static unsigned int SL1 = 11;
 static unsigned int SL2 = 7;
@@ -109,6 +111,7 @@ void next_state128(sfmt_t *sfmt) {
 	^ sfmt->sfmt[(i + N - 1) % N][3];
 }
 
+#ifdef OUT_INITIAL
 uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low)
 {
     uint32_t i;
@@ -158,6 +161,61 @@ uint32_t gen_rand32(sfmt_t *sfmt)
     }
     return r;
 }
+
+#else  /* Do not output initial state */
+
+uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low)
+{
+    uint32_t i;
+
+    assert(sfmt->idx % 4 == 0);
+
+    next_state128(sfmt);
+    i = sfmt->idx / 4;
+    *low = (uint64_t)sfmt->sfmt[i][0] | ((uint64_t)sfmt->sfmt[i][1] << 32);
+    *hi = (uint64_t)sfmt->sfmt[i][2] | ((uint64_t)sfmt->sfmt[i][3] << 32);
+    sfmt->idx += 4;
+    if (sfmt->idx >= N * 4) {
+	sfmt->idx = 0;
+    }
+    return *hi;
+}
+
+uint64_t gen_rand64(sfmt_t *sfmt)
+{
+    uint64_t r;
+    uint32_t i;
+
+    assert(sfmt->idx % 2 == 0);
+ 
+    if (sfmt->idx % 4 == 0) {
+	next_state128(sfmt);
+    }
+    i = sfmt->idx / 4;
+    r = (uint64_t)sfmt->sfmt[i][sfmt->idx % 4] 
+	| ((uint64_t)sfmt->sfmt[i][sfmt->idx % 4 + 1] << 32);
+    sfmt->idx += 2;
+    if (sfmt->idx >= N * 4) {
+	sfmt->idx = 0;
+    }
+    return r;
+}
+
+uint32_t gen_rand32(sfmt_t *sfmt)
+{
+    uint32_t r;
+
+    if (sfmt->idx % 4 == 0) {
+	next_state128(sfmt);
+    }
+    r = sfmt->sfmt[sfmt->idx / 4][sfmt->idx % 4];
+    sfmt->idx++;
+    if (sfmt->idx >= N * 4) {
+	sfmt->idx = 0;
+    }
+    return r;
+}
+#endif
 
 void init_gen_rand(sfmt_t *sfmt, uint32_t seed)
 {

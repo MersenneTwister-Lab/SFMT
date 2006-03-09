@@ -32,7 +32,7 @@ static void gen_rand_all(void);
 
 unsigned int get_rnd_maxdegree(void)
 {
-    return MAXDEGREE;
+    return MAXDEGREE + 4;
 }
 
 unsigned int get_rnd_mexp(void)

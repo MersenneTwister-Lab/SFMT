@@ -177,7 +177,7 @@ bool check128(void) {
     vec.FixLength(2 * maxdegree);
     init_gen_rand(123);
     checkOk = true;
-    for (j = 0; j < 1; j++) {
+    for (j = 0; j < 128; j++) {
 	if (!generating_polynomial128(vec, j, maxdegree)) {
 	    checkOk = false;
 	    break;

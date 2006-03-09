@@ -156,17 +156,28 @@ void search(unsigned int n) {
 	//print_param2(stdout);
 	bmOk = 1;
 	//    for (j = 0; j < 32; j++) {
-	for (j = 0; j < 1; j++) {
+	for (j = 0; j < 2; j++) {
 	    generating_polynomial(vec, j, maxdegree);
 	    berlekampMassey(minpoly, maxdegree, vec);
 	    if (deg(minpoly) == -1) {
 		bmOk = 0;
+		if (j == 1) {
+		    printf("failure 1\n");
+		    fflush(stdout);
+		}
 		break;
 	    }
 	    all_count++;
 	    if (!non_reducible(minpoly, mexp)) {
 		bmOk = 0;
+		if (j == 1) {
+		    printf("failure 2 deg = %ld\n", deg(minpoly));
+		    fflush(stdout);
+		}
 		break;
+	    } else {
+		printBinary(stdout, minpoly);
+		fflush(stdout);
 	    }
 	}
 	if (bmOk) {
