@@ -26,22 +26,8 @@ bool generating_polynomial32(vec_GF2& vec, uint32_t bitpos, uint32_t maxdegree)
     uint32_t mask;
     uint32_t bit;
 
-    i = 0;
-    ran = gen_rand32();
     mask = (uint32_t)1UL << (31 - bitpos);
-    bit = ran & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    vec[0] = 1;
-	    return false;
-	}
-	ran = gen_rand32();
-	bit = ran & mask;
-    }
-    vec[0] = 1;
-    
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i = 0; i <= 2 * maxdegree - 1; i++) {
 	ran = gen_rand32();
 	bit = (ran & mask);
 	if (bit) {
@@ -60,22 +46,8 @@ bool generating_polynomial64(vec_GF2& vec, uint32_t bitpos, uint32_t maxdegree)
     uint64_t mask;
     uint64_t bit;
 
-    i = 0;
-    ran = gen_rand64();
     mask = (uint64_t)1ULL << (63 - bitpos);
-    bit = ran & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    vec[0] = 1;
-	    return false;
-	}
-	ran = gen_rand64();
-	bit = ran & mask;
-    }
-    vec[0] = 1;
-
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i = 0 ; i <= 2 * maxdegree - 1; i++) {
 	ran = gen_rand64();
 	bit = (ran & mask);
 	if (bit) {
@@ -95,22 +67,8 @@ bool generating_polynomial128_hi(vec_GF2& vec, uint32_t bitpos,
     uint64_t mask;
     uint64_t bit;
 
-    i = 0;
-    gen_rand128(&hi, &low);
     mask = (uint64_t)1ULL << (63 - bitpos);
-    bit = hi & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    vec[0] = 1;
-	    return false;
-	}
-	gen_rand128(&hi, &low);
-	bit = hi & mask;
-    }
-    vec[0] = 1;
-
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i = 0; i <= 2 * maxdegree - 1; i++) {
 	gen_rand128(&hi, &low);
 	bit = (hi & mask);
 	if (bit) {
@@ -130,22 +88,8 @@ bool generating_polynomial128_low(vec_GF2& vec, uint32_t bitpos,
     uint64_t mask;
     uint64_t bit;
 
-    i = 0;
-    gen_rand128(&hi, &low);
     mask = (uint64_t)1ULL << (63 - bitpos);
-    bit = low & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    vec[0] = 1;
-	    return false;
-	}
-	gen_rand128(&hi, &low);
-	bit = low & mask;
-    }
-    vec[0] = 1;
-
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i = 0; i <= 2 * maxdegree - 1; i++) {
 	gen_rand128(&hi, &low);
 	bit = (low & mask);
 	if (bit) {
@@ -173,16 +117,19 @@ bool check128(void) {
     GF2X minpoly;
     GF2X lcmpoly;
     vec_GF2 vec;
+    long degree;
   
     vec.FixLength(2 * maxdegree);
     init_gen_rand(123);
     checkOk = true;
-    for (j = 0; j < 128; j++) {
+    for (j = 0; j < 10; j++) {
 	if (!generating_polynomial128(vec, j, maxdegree)) {
 	    checkOk = false;
 	    break;
 	}
 	berlekampMassey(minpoly, maxdegree, vec);
+	degree = deg(minpoly);
+	printf("degree = %ld\n", degree);
 	if (deg(minpoly) == -1) {
 	    checkOk = false;
 	    break;
@@ -209,22 +156,31 @@ bool check64(void) {
     GF2X minpoly;
     GF2X lcmpoly;
     vec_GF2 vec;
+    long degree;
   
     vec.FixLength(2 * maxdegree);
     init_gen_rand(123);
     checkOk = true;
-    for (j = 0; j < 1; j++) {
+    for (j = 0; j < 10; j++) {
 	if (!generating_polynomial64(vec, j, maxdegree)) {
 	    checkOk = false;
+	    printf("fail 1\n");
 	    break;
 	}
 	berlekampMassey(minpoly, maxdegree, vec);
+	degree = deg(minpoly);
+	printf("degree = %ld\n", degree);
+	printBinary(stdout, minpoly);
 	if (deg(minpoly) == -1) {
 	    checkOk = false;
+	    printf("fail 2\n");
+	    cout << "vec:" << vec << endl;
 	    break;
 	}
 	if (!non_reducible(minpoly, mexp)) {
 	    checkOk = false;
+	    printf("fail 3 deg=%ld\n", degree);
+	    //cout << "vec:" << vec << endl;
 	    break;
 	}
     }
@@ -245,22 +201,30 @@ bool check32(void) {
     GF2X minpoly;
     GF2X lcmpoly;
     vec_GF2 vec;
+    long degree;
   
     vec.FixLength(2 * maxdegree);
     init_gen_rand(123);
     checkOk = true;
-    for (j = 0; j < 1; j++) {
+    for (j = 0; j < 10; j++) {
 	if (!generating_polynomial32(vec, j, maxdegree)) {
 	    checkOk = false;
+	    printf("fail 1\n");
 	    break;
 	}
 	berlekampMassey(minpoly, maxdegree, vec);
+	degree = deg(minpoly);
+	printf("degree = %ld\n", degree);
+	printBinary(stdout, minpoly);
 	if (deg(minpoly) == -1) {
 	    checkOk = false;
+	    printf("fail 2\n");
 	    break;
 	}
 	if (!non_reducible(minpoly, mexp)) {
 	    checkOk = false;
+	    printf("fail 3 deg=%ld\n", degree);
+	    //cout << "vec:" << vec << endl;
 	    break;
 	}
     }

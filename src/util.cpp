@@ -35,9 +35,9 @@ int non_reducible(GF2X& fpoly, int degree) {
 		return 0;
 	    }
 	}
-	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
-	    return 0;
-	}
+//	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
+//	    return 0;
+//	}
 	t2m *= t2m;
 	t2m %= fpoly;
 	add(t, t2m, t1);

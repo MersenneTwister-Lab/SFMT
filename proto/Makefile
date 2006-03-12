@@ -75,6 +75,9 @@ param-search6x521: search.o sfmt6x.o mt19937ar.o util.o debug.o
 param-search6y521: search.o sfmt6y.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt6y.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-search9-521: search.o sfmt9.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt9.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search-dist521: search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o
 	${CPP} -o $@ search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o \
 		${LINKOPT}

@@ -32,7 +32,7 @@ static void gen_rand_all(void);
 
 unsigned int get_rnd_maxdegree(void)
 {
-    return MAXDEGREE * 4;
+    return MAXDEGREE + 4;
 }
 
 unsigned int get_rnd_mexp(void)
@@ -145,14 +145,11 @@ uint32_t gen_rand32(void)
 /* for 128 bit check */
 void init_gen_rand(uint32_t seed)
 {
-    int i;
+    uint32_t i;
 
-    sfmt[0][0] = seed;
-    for (i = 1; i < N * 4; i++) {
-	sfmt[i/4][i%4] = 1812433253UL 
-	    * (sfmt[(i - 1) / 4][(i - 1) % 4]
-	       ^ (sfmt[(i - 1) / 4][(i - 1) % 4] >> 30)) 
-	    + i;
+    for (i = 0; i < N * 4; i++) {
+	sfmt[i / 4][i % 4] = seed;
+	seed = 1812433253UL * (seed ^ (seed >> 30)) + i;
     }
     idx = N * 4;
 }
