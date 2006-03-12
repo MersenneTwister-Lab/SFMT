@@ -7,9 +7,49 @@
 
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
+#include <NTL/GF2XFactoring.h>
 #include "util.h"
 
-NTL_CLIENT
+NTL_CLIENT;
+
+int non_reducible(GF2X& fpoly, int degree) {
+    static const GF2X t2(2, 1);
+    static const GF2X t1(1, 1);
+    GF2X t2m;
+    GF2X t;
+    GF2X alpha;
+    int m;
+
+    t2m = t2;
+    if (deg(fpoly) < degree) {
+	return 0;
+    }
+    t = t1;
+    t += t2m;
+  
+    for (m = 1; deg(fpoly) > degree; m++) {
+	for(;;) {
+	    GCD(alpha, fpoly, t);
+	    if (IsOne(alpha)) {
+		break;
+	    }
+	    fpoly /= alpha;
+	    if (deg(fpoly) < degree) {
+		return 0;
+	    }
+	}
+	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
+	    return 0;
+	}
+	t2m *= t2m;
+	t2m %= fpoly;
+	add(t, t2m, t1);
+    }
+    if (deg(fpoly) != degree) {
+	return 0;
+    }
+    return IterIrredTest(fpoly);
+}
 
 void berlekampMassey(GF2X& minpoly, unsigned int maxdegree, vec_GF2& genvec) 
 {

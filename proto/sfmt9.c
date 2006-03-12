@@ -12,7 +12,6 @@
 #define WORDSIZE 32
 #define N (MEXP / WORDSIZE + 1)
 #define MAXDEGREE (WORDSIZE * N)
-#define POSX (((N - 4) / 4) * 4)
 
 static uint32_t sfmt[N];
 static unsigned int idx;
@@ -39,16 +38,19 @@ void setup_param(unsigned int p1, unsigned int p2, unsigned int p3,
 		 unsigned int p7, unsigned int p8, unsigned int p9,
 		 unsigned int p10, unsigned int p11, unsigned int p12,
 		 unsigned int p13) {
-    POS1 = p1 % (POSX - 4) + 4;
+    p1 = p1 % (N - 4);
+    if (p1 < 4) {
+	p1 += 4;
+    }
+    POS1 = p1;
     SL1 = p2 % 32;
     SL2 = p3 % 32;
-    SR1 = p10 % 32;
+    SR1 = p4 % 32;
     memset(sfmt, 0, sizeof(sfmt));
 }
 
 void print_param(FILE *fp) {
     fprintf(fp, "POS1 = %u\n", POS1);
-    fprintf(fp, "POSX = %u\n", POSX);
     fprintf(fp, "SL1 = %u\n", SL1);
     fprintf(fp, "SL2 = %u\n", SL2);
     fprintf(fp, "SR1 = %u\n", SR1);
@@ -72,7 +74,7 @@ static void gen_rand_all(void) {
     for (i = 0; i < N; i++) {
 	sfmt[i] = (sfmt[i] << SL1) ^ sfmt[i]
 	    ^ (sfmt[(i + POS1) % N] << SL2) ^ sfmt[(i + POS1) % N]
-	    ^ (sfmt[(i + POSX) % N] >> SR1) ^ sfmt[(i + POSX) % N];
+	    ^ (sfmt[(i + N - 4) % N] >> SR1) ^ sfmt[(i + N - 4) % N];
     }
 }
 
