@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 
 #define QUOTE(str) QUOTE_HELPER(str)
 #define QUOTE_HELPER(str) # str
@@ -57,16 +58,16 @@ static unsigned long long get_clock() {
 #define KAISU 10000
 #ifdef __GNUC__
 //uint32_t dummy[KAISU/4+1] __attribute__((aligned(16)));
-vector unsigned int dummy[KAISU/4+1];
+vector unsigned int dummy[KAISU * TIC_COUNT / 4 + 1];
 #else
 //__declspec(align(16)) uint32_t dummy[KAISU/4+1];
-__m128i dummy[KAISU/4+1];
+__m128i dummy[KAISU * TIC_COUNT / 4 + 1];
 #endif
 
 int main(int argc, char *argv[]) {
     uint32_t i, j;
     uint64_t clo;
-    unsigned long long min = LONG_MAX;
+    uint64_t t;
     uint32_t block;
     uint32_t randoms;
     bool verbose = false;
@@ -90,40 +91,28 @@ int main(int argc, char *argv[]) {
 	    }
 	}
     }
-    for (i = 0; i < 100; i++) {
-	clo = get_clock();
-	for (j = 0; j < TIC_COUNT; j++) {
-	    fill_array_block(array, randoms / block);
-	}
-	clo = get_clock() - clo;
-	if (clo < min) {
-	    min = clo;
-	}
-    }
-    if (min != 0) {
-      printf("%llu", min);
+    clo = get_clock();
+    fill_array_block(array, randoms * TIC_COUNT / block);
+    t = get_clock() - clo;
+    if (t != 0) {
+      printf("%llu", t);
       printf(" tick and %.0f randoms = %04.2f randoms per %dtick\n",
 	       (double)randoms * TIC_COUNT,
-	       (double)randoms * TIC_MAG * TIC_COUNT / min, TIC_MAG);
+	       (double)randoms * TIC_MAG * TIC_COUNT / t, TIC_MAG);
     } else {
 	printf("can't count time too fast\n");
     }
-    min = LONG_MAX;
-    for (i = 0; i < 100; i++) {
-	clo = get_clock();
-	for (j = 0; j < randoms * TIC_COUNT; j++) {
-	    gen_rand();
-	}
-	clo = get_clock() - clo;
-	if (clo < min) {
-	    min = clo;
-	}
+    sleep(1);
+    clo = get_clock();
+    for (j = 0; j < randoms * TIC_COUNT; j++) {
+	gen_rand();
     }
-    if (min != 0) {
-      printf("%llu", min);
+    t = get_clock() - clo;
+    if (t != 0) {
+      printf("%llu", t);
       printf(" tick and %.0f randoms = %04.2f randoms per %dtick\n",
 	       (double)randoms * TIC_COUNT,
-	       (double)randoms * TIC_MAG * TIC_COUNT / min, TIC_MAG);
+	       (double)randoms * TIC_MAG * TIC_COUNT / t, TIC_MAG);
     } else {
 	printf("can't count time too fast\n");
     }

@@ -1,12 +1,15 @@
 #include <stdio.h>
 //#include "mt19937ar.h"
 #include "random-inline.h"
+#include "alti.h"
 /* Period parameters */
 #define N 624
 #define M 397
-#define MATRIX_A 0x9908b0dfUL	/* constant vector a */
+#define MATRIX_A 0x9908b0dfU	/* constant vector a */
 #define UPPER_MASK 0x80000000UL	/* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL	/* least significant r bits */
+#define DST_TOUCH_BLOCK(blk) (64 | (((blk) * 39) << 16) | (4 << 24))
+#define DST_MAX_BLOCK 6
 
 /* the array for the state vector  */
 static unsigned int mt[N + 4] __attribute__ ((aligned (16)));
@@ -65,20 +68,22 @@ INLINE void init_gen_rand(uint32_t s)
 
 INLINE static void gen_rand_all(void)
 {
-    uint32_t y;
-    vector unsigned int a, b, c, r, v, w;
+    //uint32_t y;
+    vector unsigned int a0, a1, a, b0, b1, b, r;
     vector unsigned int u_mask = (vector unsigned int)(UPPER_MASK);
     vector unsigned int l_mask = (vector unsigned int)(LOWER_MASK);
     vector unsigned int one = (vector unsigned int)(1);
     vector unsigned int zero = (vector unsigned int)(0);
     vector unsigned char perm1 = (vector unsigned char)
 	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
+    vector unsigned char perm;
     vector unsigned int mat_a = (vector unsigned int)(MATRIX_A);
-    static uint32_t mag01[2] = { 0x0UL, MATRIX_A };
+    //static uint32_t mag01[2] = { 0x0UL, MATRIX_A };
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-    int i, kk;
+    int i;
 
+    //vec_dst(mt, DST_TOUCH_BLOCK(1), 0);
     a0 = vec_ld(0, &mt[0]);
     b0 = vec_ld(0, &mt[M]);
     for (i = 0; i < N - M - 4; i += 4) {
@@ -93,23 +98,41 @@ INLINE static void gen_rand_all(void)
 	a0 = a1;
 	b0 = b1;
     }
+    perm = (vector unsigned char)
+	(4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23);
     a1 = vec_ld(0, &mt[i + 4]);
     a = vec_perm(a0, a1, perm1);
-    //b1 = vec_ld(0, &mt[i + M + 4]);
-    //b = vec_perm(b0, b1, perm1);
+    b1 = vec_ld(0, &mt[0]);
+    b = vec_perm(b0, b1, perm);
     r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
     r = vec_xor(vec_xor(b, vec_sl(r, one)),
 		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
     vec_st(r, 0, &mt[i]);
+    perm = (vector unsigned char)
+	(8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
     a0 = a1;
     b0 = b1;
     i += 4;
-    for (; kk < N - 1; kk++) {
-	y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
-	mt[kk] = mt[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    for (; i < N - 4; i += 4) {
+	a1 = vec_ld(0, &mt[i + 4]);
+	a = vec_perm(a0, a1, perm1);
+	b1 = vec_ld(0, &mt[i + M - N + 4]);
+	b = vec_perm(b0, b1, perm);
+	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	vec_st(r, 0, &mt[i]);
+	a0 = a1;
+	b0 = b1;
     }
-    y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
-    mt[N - 1] = mt[M - 1] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    a1 = vec_ld(0, &mt[0]);
+    a = vec_perm(a0, a1, perm1);
+    b1 = vec_ld(0, &mt[i + M - N + 4]);
+    b = vec_perm(b0, b1, perm);
+    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+    r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+    vec_st(r, 0, &mt[i]);
 
     mti = 0;
 
@@ -117,26 +140,159 @@ INLINE static void gen_rand_all(void)
 
 INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
 {
-    unsigned long y;
-    static unsigned long mag01[2] = { 0x0UL, MATRIX_A };
+    //unsigned long y;
+    vector unsigned int a0, a1, a, b0, b1, b, r;
+    vector unsigned int u_mask = (vector unsigned int)(UPPER_MASK);
+    vector unsigned int l_mask = (vector unsigned int)(LOWER_MASK);
+    vector unsigned int one = (vector unsigned int)(1);
+    vector unsigned int zero = (vector unsigned int)(0);
+    vector unsigned char perm1 = (vector unsigned char)
+	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
+    vector unsigned char perm;
+    vector unsigned int mat_a = (vector unsigned int)(MATRIX_A);
+    //static unsigned long mag01[2] = { 0x0UL, MATRIX_A };
+    vector unsigned int s11 = (vector unsigned int)(11);
+    vector unsigned int s7 = (vector unsigned int)(7);
+    vector unsigned int s15 = (vector unsigned int)(15);
+    vector unsigned int s18 = (vector unsigned int)(18);
+    vector unsigned int and1 = (vector unsigned int)(0x9d2c5680U);
+    vector unsigned int and2 = (vector unsigned int)(0xefc60000U);
+
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-    int kk;
+    int i, j;
 
-    for (kk = 0; kk < N - M; kk++) {
-	y = (array[kk] & UPPER_MASK) | (array[kk + 1] & LOWER_MASK);
-	array[kk] = array[kk + M] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    //vec_dst(mt, DST_TOUCH_BLOCK(1), 0);
+    memcpy(array, mt, sizeof(mt));
+    a0 = vec_ld(0, &array[0]);
+    b0 = vec_ld(0, &array[M]);
+    for (i = 0; i < N - M - 4; i += 4) {
+	a1 = vec_ld(0, &array[i + 4]);
+	a = vec_perm(a0, a1, perm1);
+	b1 = vec_ld(0, &array[i + M + 4]);
+	b = vec_perm(b0, b1, perm1);
+	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	vec_st(r, 0, &array[i]);
+	a0 = a1;
+	b0 = b1;
     }
-    for (; kk < N - 1; kk++) {
-	y = (array[kk] & UPPER_MASK) | (array[kk + 1] & LOWER_MASK);
-	array[kk] = array[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    perm = (vector unsigned char)
+	(4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23);
+    a1 = vec_ld(0, &array[i + 4]);
+    a = vec_perm(a0, a1, perm1);
+    b1 = vec_ld(0, &array[0]);
+    b = vec_perm(b0, b1, perm);
+    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+    r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+    vec_st(r, 0, &array[i]);
+    perm = (vector unsigned char)
+	(8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
+    a0 = a1;
+    b0 = b1;
+    i += 4;
+    for (; i < N - 4; i += 4) {
+	a1 = vec_ld(0, &mt[i + 4]);
+	a = vec_perm(a0, a1, perm1);
+	b1 = vec_ld(0, &mt[i + M - N + 4]);
+	b = vec_perm(b0, b1, perm);
+	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	vec_st(r, 0, &mt[i]);
+	a0 = a1;
+	b0 = b1;
     }
-    y = (array[N - 1] & UPPER_MASK) | (array[0] & LOWER_MASK);
-    array[N - 1] = array[M - 1] ^ (y >> 1) ^ mag01[y & 0x1UL];
-    kk++;
-    for (; kk < N * blocks - M; kk++) {
-	y = (array[kk - N] & UPPER_MASK) | (array[kk + 1 - N] & LOWER_MASK);
-	array[kk] = array[kk + M - N] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    a1 = vec_ld(0, &array[0]);
+    a = vec_perm(a0, a1, perm1);
+    b1 = vec_ld(0, &array[i + M - N + 4]);
+    b = vec_perm(b0, b1, perm);
+    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+    r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+    vec_st(r, 0, &array[i]);
+    a0 = a1;
+    b0 = b1;
+    i += 4;
+    for (j = 0; j < M; j += 4) {
+	// tempering
+	r = vec_ld(0, &array[j]);
+	r = vec_xor(r, vec_sr(r, s11));
+	r = vec_xor(r, vec_and(vec_sl(r, s7), and1));
+	r = vec_xor(r, vec_and(vec_sl(r, s15), and2));
+	r = vec_xor(r, vec_sr(r, s18));
+	vec_st(r, 0, &array[j]);
+    }
+    for (j = 2; j < blocks - 1 - DST_MAX_BLOCK; j += DST_MAX_BLOCK) {
+	dcbt(&array[i], 32);
+	//vec_dstst(&array[i], DST_TOUCH_BLOCK(DST_MAX_BLOCK), 0);
+	for (; i < N * j; i += 4) {
+	    a1 = vec_ld(0, &array[i - N + 4]);
+	    a = vec_perm(a0, a1, perm1);
+	    b1 = vec_ld(0, &array[i + M - N + 4]);
+	    b = vec_perm(b0, b1, perm);
+	    // tempering
+	    b0 = vec_xor(b0, vec_sr(b0, s11));
+	    b0 = vec_xor(b0, vec_and(vec_sl(b0, s7), and1));
+	    b0 = vec_xor(b0, vec_and(vec_sl(b0, s15), and2));
+	    b0 = vec_xor(b0, vec_sr(b0, s18));
+	    vec_st(b0, 0, &array[i + M - N]);
+	    // end of tempering
+	    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	    r = vec_xor(vec_xor(b, vec_sl(r, one)),
+			vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	    vec_st(r, 0, &array[i]);
+	    a0 = a1;
+	    b0 = b1;
+	}
+    }
+    if (blocks > j) {
+	//vec_dst(&array[i], DST_TOUCH_BLOCK(blocks - j), 0);
+    } else {
+	//vec_dst(&array[i], DST_TOUCH_BLOCK(1), 0);
+    }
+    for (; i < N * blocks - M; i += 4) {
+	a1 = vec_ld(0, &array[i - N + 4]);
+	a = vec_perm(a0, a1, perm1);
+	b1 = vec_ld(0, &array[i + M - N + 4]);
+	b = vec_perm(b0, b1, perm);
+	// tempering
+	b0 = vec_xor(b0, vec_sr(b0, s11));
+	b0 = vec_xor(b0, vec_and(vec_sl(b0, s7), and1));
+	b0 = vec_xor(b0, vec_and(vec_sl(b0, s15), and2));
+	b0 = vec_xor(b0, vec_sr(b0, s18));
+	vec_st(b0, 0, &array[i + M - N]);
+	// end of tempering
+	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	vec_st(r, 0, &array[i]);
+	a0 = a1;
+	b0 = b1;
+    }
+    for (; i < N * blocks; i += 4) {
+	a1 = vec_ld(0, &array[i - N + 4]);
+	a = vec_perm(a0, a1, perm1);
+	b1 = vec_ld(0, &array[i + M - N + 4]);
+	b = vec_perm(b0, b1, perm);
+	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	r = vec_xor(vec_xor(b, vec_sl(r, one)),
+		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	vec_st(r, 0, &array[i]);
+	a0 = a1;
+	b0 = b1;
+    }
+    memcpy(mt, &array[N * (blocks - 1)], sizeof(mt));
+    for (j = (N - 1) * blocks; j < N * blocks; j += 4) {
+	// tempering
+	r = vec_ld(0, &array[j]);
+	r = vec_xor(r, vec_sr(r, s11));
+	r = vec_xor(r, vec_and(vec_sl(r, s7), and1));
+	r = vec_xor(r, vec_and(vec_sl(r, s15), and2));
+	r = vec_xor(r, vec_sr(r, s18));
+	vec_st(r, 0, &array[j]);
     }
 }
 
@@ -165,12 +321,12 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
     int i;
     uint32_t y;
 
-#if 0
-    while (block_num > MAX_BLOCKS) {
+    if (block_num == 0) {
+	return;
+    } else if (block_num == 1) {
+	gen_rand_all();
 	memcpy(array, mt, sizeof(mt));
-	gen_rand_array(array, MAX_BLOCKS);
-	memcpy(mt, &array[N * (MAX_BLOCKS - 1)], sizeof(mt));
-	for (i = 0; i < N * MAX_BLOCKS; i++) {
+	for (i = 0; i < N * block_num; i++) {
 	    y = array[i];
 	    y ^= (y >> 11);
 	    y ^= (y << 7) & 0x9d2c5680UL;
@@ -178,27 +334,8 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 	    y ^= (y >> 18);
 	    array[i] = y;
 	}
-	array += N * MAX_BLOCKS;
-	block_num -= MAX_BLOCKS;
-    }
-#endif
-    if (block_num == 0) {
-	return;
-    } else if (block_num == 1) {
-	gen_rand_all();
-	memcpy(array, mt, sizeof(mt));
     } else {
-	memcpy(array, mt, sizeof(mt));
 	gen_rand_array(array, block_num);
-	memcpy(mt, &array[N * (block_num-1)], sizeof(mt));
-    }
-    for (i = 0; i < N * block_num; i++) {
-	y = array[i];
-	y ^= (y >> 11);
-	y ^= (y << 7) & 0x9d2c5680UL;
-	y ^= (y << 15) & 0xefc60000UL;
-	y ^= (y >> 18);
-	array[i] = y;
     }
 }
 

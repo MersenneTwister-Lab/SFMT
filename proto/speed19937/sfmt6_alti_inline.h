@@ -9,6 +9,8 @@
 #define WORDSIZE 128
 #define N (MEXP / WORDSIZE + 1)
 #define MAXDEGREE (WORDSIZE * N)
+#define DST_TOUCH_BLOCK(blk) (64 | (((blk) * 39) << 16) | (4 << 24))
+#define DST_MAX_BLOCK 6
 
 static vector unsigned int sfmt[N];
 static unsigned int idx;
@@ -80,6 +82,7 @@ INLINE void gen_rand_all(void) {
     vector unsigned char perm = (vector unsigned char)
 	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3);
 
+    vec_dst(sfmt, DST_TOUCH_BLOCK(1), 0);
     a = sfmt[0];
     b = sfmt[POS1];
     c = sfmt[N - 1];
@@ -124,6 +127,7 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
 		vec_xor(vec_sr(c, sr), c));
     array[0] = r;
     for (i = 1; i < N - POS1; i++) {
+	//__dcbt(&array[i], 32);
 	a = array[i];
 	b = array[i + POS1];
 	c = r;
@@ -133,6 +137,7 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
 	array[i] = r;
     }
     for (; i < N; i++) {
+	//__dcbt(&array[i], 32);
 	a = array[i];
 	b = array[i + POS1 - N];
 	c = r;
@@ -142,6 +147,7 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
 	array[i] = r;
     }
     for (; i < N * blocks; i++) {
+	//__dcbtst(&array[i], 32);
 	a = array[i - N];
 	b = array[i + POS1 - N];
 	c = r;

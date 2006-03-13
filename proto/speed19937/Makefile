@@ -50,6 +50,12 @@ sfmt9b_alti_inline: test_time_inline.c sfmt9b_alti_inline.h
 sfmt9b_alti_inline2: test_time2_inline.c sfmt9b_alti_inline.h
 	${CC} -DRANDOM=sfmt9b_alti_inline.h -o $@ test_time2_inline.c
 
+mt19937ar_alti_inline: test_time_inline.c mt19937ar_alti_inline.h
+	${CC} -DRANDOM=mt19937ar_alti_inline.h -o $@ test_time_inline.c
+
+mt19937ar_alti_inline2: test_time2_inline.c mt19937ar_alti_inline.h
+	${CC} -DRANDOM=mt19937ar_alti_inline.h -o $@ test_time2_inline.c
+
 testalti: test_alti.o
 	${CC} -o $@ test_alti.o
 
