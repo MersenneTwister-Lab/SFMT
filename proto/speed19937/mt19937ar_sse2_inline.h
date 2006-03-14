@@ -69,7 +69,7 @@ INLINE void init_gen_rand(uint32_t s)
 INLINE static void gen_rand_all(void)
 {
     //uint32_t y;
-    vector unsigned int a0, a1, a, b0, b1, b, r;
+    __m128i a0, a1, b, r;
     vector unsigned int u_mask = (vector unsigned int)(UPPER_MASK);
     vector unsigned int l_mask = (vector unsigned int)(LOWER_MASK);
     vector unsigned int one = (vector unsigned int)(1);
@@ -83,24 +83,18 @@ INLINE static void gen_rand_all(void)
 
     int i;
 
-    __dcbt(&mt[0], 32);
-    __dcbt(&mt[M], 32);
-    a0 = vec_ld(0, &mt[0]);
-    b0 = vec_ld(0, &mt[M]);
+    _mm_prefetch(&mt[0 + 8], MM_HINT_NTA);
+    _mm_prefetch(&mt[M + 8], MM_HINT_NTA);
+    a0 = _mm_load_si128(&mt[0]);
     for (i = 0; i < N - M - 4; i += 4) {
-	__dcbt(&mt[i + 4], 32);
-	__dcbt(&mt[i + M + 4], 32);
-	__dcbtst(&mt[i], 32);
-	a1 = vec_ld(0, &mt[i + 4]);
-	a = vec_perm(a0, a1, perm1);
-	b1 = vec_ld(0, &mt[i + M + 4]);
-	b = vec_perm(b0, b1, perm1);
-	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	a1 = _mm_load_si128(0, &mt[i + 4]);
+	a0 = _mm_shuffle_epi32(a1, SHUFFLE1);
+	b = _mm_loadu_si128(&mt[M]);
+	r = _mm_or_si128(_mm_and_si128(a0, u_mask), vec_and(a, l_mask));
 	r = vec_xor(vec_xor(b, vec_sl(r, one)),
 		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
 	vec_st(r, 0, &mt[i]);
 	a0 = a1;
-	b0 = b1;
     }
     __dcbt(&mt[i + 4], 32);
     __dcbtst(&mt[i], 32);

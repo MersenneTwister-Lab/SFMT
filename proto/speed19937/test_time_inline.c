@@ -27,7 +27,7 @@ static INLINE __attribute__((always_inline)) uint64_t get_clock(void) {
     return (((uint64_t)tbu)<<32) + tbl;
 }
 #define TIC_MAG 1
-#define TIC_COUNT 1
+#define TIC_COUNT 100
 #elif defined(__GNUC__)
 static INLINE __attribute__((always_inline)) uint64_t get_clock() {
      uint64_t x;
@@ -35,8 +35,8 @@ static INLINE __attribute__((always_inline)) uint64_t get_clock() {
      return x;
 }
 #define TIC_MAG 100
-#define TIC_COUNT 1
-#else
+#define TIC_COUNT 100
+#else  /* WIN Intel Compiler */
 #if 1
 #include <ia32intrin.h>
 static __int64 get_clock() {

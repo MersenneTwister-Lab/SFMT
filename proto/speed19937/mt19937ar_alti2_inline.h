@@ -1,3 +1,4 @@
+/* POINTER VERSION */
 #include <stdio.h>
 #include <ppc_intrinsics.h>
 //#include "mt19937ar.h"
@@ -8,14 +9,14 @@
 #define MATRIX_A 0x9908b0dfU	/* constant vector a */
 #define UPPER_MASK 0x80000000UL	/* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL	/* least significant r bits */
-#define DST_TOUCH_BLOCK(blk) (32 | (((blk) * 20) << 16) | (2 << 24))
-#define DST_MAX_BLOCK 12
+#define DST_TOUCH_BLOCK(blk) (64 | (((blk) * 39) << 16) | (4 << 24))
+#define DST_MAX_BLOCK 6
 
 /* the array for the state vector  */
 static unsigned int mt[N + 4] __attribute__ ((aligned (16)));
 static int mti = N + 1;		/* mti==N+1 means mt[N] is not initialized */
 
-#define MAX_BLOCKS (DST_MAX_BLOCK + 2)
+//#define MAX_BLOCKS 10
 
 INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks);
 INLINE static void gen_rand_all(void);
@@ -169,27 +170,32 @@ INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
     int i, j;
+    uint32_t *ap = &array[0];
+    uint32_t *am = &array[M];
 
     //vec_dst(mt, DST_TOUCH_BLOCK(1), 0);
     memcpy(array, mt, sizeof(mt));
     //__dcbt(&array[0], 32);
     //__dcbt(&array[M], 32);
-    a0 = vec_ld(0, &array[0]);
-    b0 = vec_ld(0, &array[M]);
+    a0 = vec_ld(0, ap);
+    b0 = vec_ld(0, am);
+    am += 4;
     for (i = 0; i < N - M - 4; i += 4) {
 	//__dcbt(&array[i + 4], 32);
 	//__dcbt(&array[i + M + 4], 32);
-	a1 = vec_ld(0, &array[i + 4]);
+	a1 = vec_ld(0, ap + 4);
 	//__dcbtst(&array[i], 32);
 	a = vec_perm(a0, a1, perm1);
-	b1 = vec_ld(0, &array[i + M + 4]);
+	b1 = vec_ld(0, am);
 	b = vec_perm(b0, b1, perm1);
 	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
 	r = vec_xor(vec_xor(b, vec_sl(r, one)),
 		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-	vec_st(r, 0, &array[i]);
+	vec_st(r, 0, ap);
 	a0 = a1;
 	b0 = b1;
+	ap += 4;
+	am += 4;
     }
     //__dcbt(&array[i + 4], 32);
     perm = (vector unsigned char)
@@ -294,13 +300,6 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
     int i;
     uint32_t y;
 
-#if 1
-    while (block_num > MAX_BLOCKS) {
-	gen_rand_array(array, MAX_BLOCKS);
-	array += N * MAX_BLOCKS;
-	block_num -= MAX_BLOCKS;
-    }
-#endif
     if (block_num == 0) {
 	return;
     } else if (block_num == 1) {

@@ -1,6 +1,7 @@
 #for GNU make
 
-CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  -fprefetch-loop-arrays $(DDEBUG) $(DMEXP) $(DPG)
+CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  $(DDEBUG) $(DMEXP) $(DPG)
+#CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  -fprefetch-loop-arrays $(DDEBUG) $(DMEXP) $(DPG)
 CPP = g++ -Wall -fast $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -lntl -lgmp
@@ -31,6 +32,9 @@ sfmt5_alti_inline2: test_time2_inline.c sfmt5_alti_inline.h
 
 sfmt6_alti_inline: test_time_inline.c sfmt6_alti_inline.h
 	${CC} -DRANDOM=sfmt6_alti_inline.h -o $@ test_time_inline.c
+
+sfmt6_alti2_inline: test_time_inline.c sfmt6_alti2_inline.h
+	${CC} -DRANDOM=sfmt6_alti2_inline.h -o $@ test_time_inline.c
 
 sfmt6_alti_inline2: test_time2_inline.c sfmt6_alti_inline.h
 	${CC} -DRANDOM=sfmt6_alti_inline.h -o $@ test_time2_inline.c
