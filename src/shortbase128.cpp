@@ -20,32 +20,10 @@ NTL_CLIENT;
 //uint32_t debug_count;
 int debug_flag = 0;
 static unsigned int bit_len;
+static unsigned int mode;	// 0-3 状態空間のどこを見るか
+static vec_GF2 norm_mask;	// 0-3 ノルムの加重をどこにするか
 
-#if 0
-void dprintnext(in_status *st) {
-    unsigned int i;
-
-    for (i = 0; i < bit_len; i++) {
-	//if ((st->next & (0x80000000U >> i)) != 0) {
-	if ((st->next & NTH_BIT(i)) != 0) {
-	    fprintf(stderr, "1");
-	} else {
-	    fprintf(stderr, "0");
-	}
-    }
-}
-
-void dprintbase(char *file, int line, int num, in_status *st) {
-    fprintf(stderr, "%s:%d SB[", file, line);
-    fprintf(stderr, "special:%c ", st->special ? 'S' : 'N');
-    fprintf(stderr, "next:");
-    dprintnext(st);
-    fprintf(stderr, " count:%u ", st->count);
-    fprintf(stderr, "bitlen:%u]\n", bit_len);
-}
-#endif
-
-uint64_t print_vec(vec_GF2& vec) {
+uint64_t vecto64(vec_GF2& vec) {
     uint64_t v = 0;
     int i;
     for (i = 0; i < vec.length(); i++) {
@@ -62,12 +40,25 @@ static void copy_status(in_status *dist, const in_status *src) {
     dist->random = src->random;
 }
 
-void set_bit_len(unsigned int len) {
-    if ((len <= 0) || (len > 128)) {
-	printf("bitLength error\n");
-	exit(1);
+void set_bit_len(uint32_t bit_mode, uint32_t len, 
+		 unit32_t p_mode, uint32_t weight_pos) {
+    if (bit_mode == 128) {
+	if ((len <= 0) || (len > 128)) {
+	    printf("bitLength error\n");
+	    exit(1);
+	}
+	bit_len = len;
+	get_next_random = get_next_random128;
+	mode = 0;
+    } else {
+	if ((len <= 0) || (len > 32)) {
+	    printf("bitLength error\n");
+	    exit(1);
+	}
+	bit_len = len * 4;
+	get_next_random = get_next_random32;
+	mode = p_mode;
     }
-    bit_len = len;
 }
 
 void set_special(in_status *st, unsigned int special_bit) {
@@ -80,7 +71,9 @@ void set_special(in_status *st, unsigned int special_bit) {
     memset(&(st->random), 0, sizeof(st->random));
 }
 
-static void get_next_random(vec_GF2& vec, sfmt_t *sfmt) {
+void (*get_next_random)(vec_GF2& vec, sfmt_t *sfmt);
+
+static void get_next_random128(vec_GF2& vec, sfmt_t *sfmt) {
     uint64_t hi, low;
     uint64_t mask;
     unsigned int i;
@@ -104,6 +97,30 @@ static void get_next_random(vec_GF2& vec, sfmt_t *sfmt) {
 	    vec.put(i + 64, 0);
 	}
 	mask = mask >> 1;
+    }
+#if 0
+    if (debug_flag) {
+	cout << vec << endl;
+    }
+#endif
+}
+
+static void get_next_random32(vec_GF2& vec, sfmt_t *sfmt) {
+    uint32_t array[4];
+    uint32_t mask;
+    unsigned int i, j;
+
+    gen_rand128(sfmt, array, mode);
+    for (i = 0; i < 4; i++) {
+	mask = 0x80000000UL;
+	for (j = 0; j < bit_len / 4; j++) {
+	    if (array[i] & mask) {
+		vec.put(i * 4 + j, 1);
+	    } else {
+		vec.put(i * 4 + j, 0);
+	    }
+	    mask = mask >> 1;
+	}
     }
 #if 0
     if (debug_flag) {
@@ -281,12 +298,16 @@ int get_shortest_base(unsigned int bit_len, sfmt_t *sfmt) {
 uint32_t get_shortest(bool dependents[], in_status bases[]) {
     uint32_t index = 0;
     uint32_t min = UINT_MAX;
+    uint32_t count;
     uint32_t i;
 
     for (i = 0; i <= bit_len; i++) {
 	if (dependents[i]) {
-	    //if ((!bases[i].special) && (bases[i].count < min)) {
-	    if (bases[i].count < min) {
+	    count = bases[i].count;
+	    if (IsZero(bases[i].next + norm_mask)) {
+		count++;
+	    }
+	    if (count < min) {
 		min = bases[i].count;
 		index = i;
 	    }
