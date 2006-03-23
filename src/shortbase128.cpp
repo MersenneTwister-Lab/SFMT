@@ -21,7 +21,12 @@ NTL_CLIENT;
 int debug_flag = 0;
 static unsigned int bit_len;
 static unsigned int mode;	// 0-3 状態空間のどこを見るか
-static vec_GF2 norm_mask;	// 0-3 ノルムの加重をどこにするか
+static unsigned int active_len;	// 0-3 ノルムの加重をどこにするか
+static void (*get_next_random)(vec_GF2& vec, sfmt_t *sfmt);
+
+static void get_next_random128(vec_GF2& vec, sfmt_t *sfmt);
+static void get_next_random64(vec_GF2& vec, sfmt_t *sfmt);
+static void get_next_random32(vec_GF2& vec, sfmt_t *sfmt);
 
 uint64_t vecto64(vec_GF2& vec) {
     uint64_t v = 0;
@@ -40,24 +45,35 @@ static void copy_status(in_status *dist, const in_status *src) {
     dist->random = src->random;
 }
 
-void set_bit_len(uint32_t bit_mode, uint32_t len, 
-		 unit32_t p_mode, uint32_t weight_pos) {
+void set_up(uint32_t bit_mode, uint32_t len, 
+	    uint32_t p_mode, uint32_t weight_pos) {
     if (bit_mode == 128) {
 	if ((len <= 0) || (len > 128)) {
-	    printf("bitLength error\n");
+	    printf("bitLength error mode 128\n");
 	    exit(1);
 	}
 	bit_len = len;
 	get_next_random = get_next_random128;
 	mode = 0;
+	active_len = len;
+    } else if (bit_mode == 64) {
+	if ((len <= 0) || (len > 64)) {
+	    printf("bitLength error mode 64\n");
+	    exit(1);
+	}
+	bit_len = len * 2;
+	get_next_random = get_next_random64;
+	mode = p_mode;
+	active_len = len * (2 - weight_pos);
     } else {
 	if ((len <= 0) || (len > 32)) {
-	    printf("bitLength error\n");
+	    printf("bitLength error mode 32\n");
 	    exit(1);
 	}
 	bit_len = len * 4;
 	get_next_random = get_next_random32;
 	mode = p_mode;
+	active_len = len * (4 - weight_pos);
     }
 }
 
@@ -70,8 +86,6 @@ void set_special(in_status *st, unsigned int special_bit) {
     st->next.put(special_bit, 1);
     memset(&(st->random), 0, sizeof(st->random));
 }
-
-void (*get_next_random)(vec_GF2& vec, sfmt_t *sfmt);
 
 static void get_next_random128(vec_GF2& vec, sfmt_t *sfmt) {
     uint64_t hi, low;
@@ -105,12 +119,40 @@ static void get_next_random128(vec_GF2& vec, sfmt_t *sfmt) {
 #endif
 }
 
+static void get_next_random64(vec_GF2& vec, sfmt_t *sfmt) {
+    uint32_t array32[4];
+    uint64_t array64[2];
+    uint64_t mask;
+    unsigned int i, j;
+
+    assert(mode % 2 == 0);
+    gen_rand128sp(sfmt, array32, mode);
+    array64[0] = (uint64_t)array32[0] | (uint64_t)array32[1] << 32;
+    array64[1] = (uint64_t)array32[2] | (uint64_t)array32[3] << 32;
+    for (i = 0; i < 2; i++) {
+	mask = 0x8000000000000000ULL;
+	for (j = 0; j < bit_len / 2; j++) {
+	    if (array64[i] & mask) {
+		vec.put(i * 2 + j, 1);
+	    } else {
+		vec.put(i * 2 + j, 0);
+	    }
+	    mask = mask >> 1;
+	}
+    }
+#if 0
+    if (debug_flag) {
+	cout << vec << endl;
+    }
+#endif
+}
+
 static void get_next_random32(vec_GF2& vec, sfmt_t *sfmt) {
     uint32_t array[4];
     uint32_t mask;
     unsigned int i, j;
 
-    gen_rand128(sfmt, array, mode);
+    gen_rand128sp(sfmt, array, mode);
     for (i = 0; i < 4; i++) {
 	mask = 0x80000000UL;
 	for (j = 0; j < bit_len / 4; j++) {
@@ -224,7 +266,7 @@ void get_next_state(in_status *st) {
     //DPRINTHT("after next", &(st->random));
 }
   
-int get_shortest_base(unsigned int bit_len, sfmt_t *sfmt) {
+int get_shortest_base(sfmt_t *sfmt) {
     static in_status bases[128 + 1];
     vec_GF2 next[bit_len + 1];
     bool dependents[bit_len + 1];
@@ -233,7 +275,7 @@ int get_shortest_base(unsigned int bit_len, sfmt_t *sfmt) {
     bool dependent_found;
 
     //DPRINT("in get_shortest_base bit_len:%u", bit_len);
-    set_bit_len(bit_len);
+    //set_bit_len(bit_len);
     //debug_count = 0;
     for (i = 0; i < bit_len; i++) {
 	set_special(&(bases[i]), i);
@@ -300,15 +342,18 @@ uint32_t get_shortest(bool dependents[], in_status bases[]) {
     uint32_t min = UINT_MAX;
     uint32_t count;
     uint32_t i;
+    vec_GF2 next;
 
     for (i = 0; i <= bit_len; i++) {
 	if (dependents[i]) {
 	    count = bases[i].count;
-	    if (IsZero(bases[i].next + norm_mask)) {
+	    next = bases[i].next;
+	    next.SetLength(active_len);
+	    if (IsZero(next)) {
 		count++;
 	    }
 	    if (count < min) {
-		min = bases[i].count;
+		min = count;
 		index = i;
 	    }
 	}

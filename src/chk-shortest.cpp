@@ -23,7 +23,7 @@ static int mexp;
 static int maxdegree;
 static FILE *frandom;
 
-bool generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
+void generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
 				 unsigned int bitpos, 
 				 unsigned int maxdegree)
 {
@@ -33,33 +33,16 @@ bool generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
     uint64_t bit;
 
     //DPRINTHT("in gene:", rand);
-    i = 0;
-    gen_rand128(sfmt, &hi, &low);
     mask = (uint64_t)1UL << (63 - bitpos);
-    bit = hi & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    //printf("generating_polynomial:too much zeros\n");
-	    vec[0] = 1;
-	    return false;
-	}
-	gen_rand128(sfmt, &hi, &low);
-	bit = hi & mask;
-    }
-    //DPRINTHT("middle gene:", rand);
-    vec[0] = 1;
-
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i=0; i<= 2 * maxdegree-1; i++) {
 	gen_rand128(sfmt, &hi, &low);
 	bit = (hi & mask);
 	vec[i] = (bit != 0);
     }
     //DPRINTHT("end gene:", rand);
-    return true;
 }
 
-bool generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
+void generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
 				 unsigned int bitpos, 
 				 unsigned int maxdegree)
 {
@@ -69,38 +52,21 @@ bool generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
     uint64_t bit;
 
     //DPRINTHT("in gene:", rand);
-    i = 0;
-    gen_rand128(sfmt, &hi, &low);
     mask = (uint64_t)1UL << (63 - bitpos);
-    bit = low & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    //printf("generating_polynomial:too much zeros\n");
-	    vec[0] = 1;
-	    return false;
-	}
-	gen_rand128(sfmt, &hi, &low);
-	bit = low & mask;
-    }
-    //DPRINTHT("middle gene:", rand);
-    vec[0] = 1;
-
     for (i=1; i<= 2 * maxdegree-1; i++) {
 	gen_rand128(sfmt, &hi, &low);
 	bit = (low & mask);
 	vec[i] = (bit != 0);
     }
     //DPRINTHT("end gene:", rand);
-    return true;
 }
 
-bool generating_polynomial128(sfmt_t *sfmt, vec_GF2& vec, unsigned int bitpos, 
+void generating_polynomial128(sfmt_t *sfmt, vec_GF2& vec, unsigned int bitpos, 
 			   unsigned int maxdegree) {
     if (bitpos < 64) {
-	return generating_polynomial128_hi(sfmt, vec, bitpos, maxdegree);
+	generating_polynomial128_hi(sfmt, vec, bitpos, maxdegree);
     } else {
-	return generating_polynomial128_low(sfmt, vec, bitpos - 64, maxdegree);
+	generating_polynomial128_low(sfmt, vec, bitpos - 64, maxdegree);
     }
 }
 
@@ -165,13 +131,14 @@ int get_equiv_distrib(int bit, sfmt_t *sfmt) {
 
     //fprintf(stderr, "now start get_equiv %d\n", bit);
     sfmtnew = *sfmt;
-    set_bit_len(bit);
-    shortest = get_shortest_base(bit, &sfmtnew);
+    set_up(128, bit, 0, 0);
+    shortest = get_shortest_base(&sfmtnew);
     return shortest;
 }
 
 void make_zero_state(sfmt_t *sfmt, const GF2X& poly) {
     sfmt_t sfmtnew;
+    uint64_t hi, low;
     int i;
 
     memset(&sfmtnew, 0, sizeof(sfmtnew));
@@ -179,7 +146,7 @@ void make_zero_state(sfmt_t *sfmt, const GF2X& poly) {
 	if (coeff(poly, i) != 0) {
 	    add_rnd(&sfmtnew, sfmt);
 	}
-	next_state128(sfmt);
+	gen_rand128(sfmt, &hi, &low);
     }
     *sfmt = sfmtnew;
 }
@@ -201,7 +168,6 @@ void test_shortest(char *filename) {
     int count;
     int old;
     int lcmcount;
-    bool rc;
 
     cout << "filename:" << filename << endl;
     fp = fopen(filename, "r");
@@ -222,7 +188,7 @@ void test_shortest(char *filename) {
     vec.SetLength(2 * maxdegree);
     generating_polynomial128(&sfmt, vec, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
-#if 0
+#if 1
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
 	printf("check minpoly OK!\n");
 	DivRem(tmp, rempoly, lcmpoly, poly);
@@ -262,8 +228,8 @@ void test_shortest(char *filename) {
 	    exit(1);
 	}
 	for (int j = 0; j < 128; j++) {
-	    rc = generating_polynomial128(&sfmt, vec, j, maxdegree);
-	    if (!rc) {
+	    generating_polynomial128(&sfmt, vec, j, maxdegree);
+	    if (IsZero(vec)) {
 		break;
 	    }
 	    berlekampMassey(minpoly, maxdegree, vec);
@@ -280,7 +246,7 @@ void test_shortest(char *filename) {
 	exit(1);
     }
 #endif
-#if 0
+#if 1
     sfmt = sfmt_save;
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
 	printf("check minpoly 2 OK!\n");
@@ -331,7 +297,7 @@ int main(int argc, char *argv[]) {
     mexp = get_rnd_mexp();
     maxdegree = get_rnd_maxdegree();
     printf("mexp = %d\n", mexp);
-    frandom = fopen("/dev/random", "r");
+    frandom = fopen("/dev/urandom", "r");
     if (errno) {
 	perror("main");
 	exit(1);

@@ -88,6 +88,9 @@ void next_state(sfmt_t *sfmt) {
 	^ sfmt->sfmt[(i + POS1) % N][0]
 	^ (sfmt->sfmt[(i + N - 1) % N][3] >> SR4)
 	^ sfmt->sfmt[(i + N - 1) % N][3];
+
+#ifdef OUT_INITIAL
+#endif
 }
 
 /*------------------------------------
@@ -103,6 +106,7 @@ uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low)
     *hi = (uint64_t)sfmt->sfmt[i][2] | ((uint64_t)sfmt->sfmt[i][3] << 32);
     next_state(sfmt);
     sfmt->idx += 4;
+    sfmt->idx = (sfmt->idx / 4) * 4;
     if (sfmt->idx >= N * 4) {
 	sfmt->idx = 0;
     }
@@ -126,6 +130,7 @@ uint64_t gen_rand64(sfmt_t *sfmt)
     if (sfmt->idx >= N * 4) {
 	sfmt->idx = 0;
     }
+
     return r;
 }
 
@@ -203,7 +208,7 @@ uint32_t gen_rand32(sfmt_t *sfmt)
 #endif
 
 /* これは初期状態を出力する */
-uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t arrary[4], uint32_t mode)
+uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t array[4], uint32_t mode)
 {
     uint32_t i, p;
 
@@ -245,7 +250,7 @@ uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t arrary[4], uint32_t mode)
     if (sfmt->idx >= N * 4) {
 	sfmt->idx = 0;
     }
-    return *hi;
+    return array[0];
 }
 
 void init_gen_rand(sfmt_t *sfmt, uint32_t seed)
