@@ -1,7 +1,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
-#include <iostream>
+#include <limits.h>
+//#include <iostream>
 
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
@@ -136,6 +137,34 @@ int get_equiv_distrib(int bit, sfmt_t *sfmt) {
     return shortest;
 }
 
+int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
+    static sfmt_t sfmtnew;
+    int dist, min, max;
+    uint32_t mode;
+    uint32_t pos;
+
+    sfmtnew = *sfmt;
+    min = INT_MAX;
+    for (mode = 0; mode < 4; mode += 2) {
+	max = 0;
+	for (pos = 0; pos < 2; pos++) {
+	    set_up(64, bit, mode, pos);
+	    dist = get_shortest_base(&sfmtnew) * 2 - pos;
+	    printf("dist:%d,", dist);
+	    dist = dist * 2 - pos;
+	    printf("%d\n", dist);
+	    if (dist > max) {
+		max = dist;
+	    }
+	}
+	dist = max;
+	if (dist < min) {
+	    min = dist;
+	}
+    }
+    return min;
+}
+
 void make_zero_state(sfmt_t *sfmt, const GF2X& poly) {
     sfmt_t sfmtnew;
     uint64_t hi, low;
@@ -169,7 +198,7 @@ void test_shortest(char *filename) {
     int old;
     int lcmcount;
 
-    cout << "filename:" << filename << endl;
+    printf("filename:%s\n", filename);
     fp = fopen(filename, "r");
     errno = 0;
     if ((fp == NULL) || errno) {
@@ -188,7 +217,7 @@ void test_shortest(char *filename) {
     vec.SetLength(2 * maxdegree);
     generating_polynomial128(&sfmt, vec, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
-#if 1
+#if 0
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
 	printf("check minpoly OK!\n");
 	DivRem(tmp, rempoly, lcmpoly, poly);
@@ -213,7 +242,7 @@ void test_shortest(char *filename) {
 	}
 #endif
     }
-#if 0 // 0状態を作るにはこれは不要？
+#if 1 // 0状態を作るにはこれは不要？
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
 	if (lcmcount > 1000) {
@@ -246,7 +275,7 @@ void test_shortest(char *filename) {
 	exit(1);
     }
 #endif
-#if 1
+#if 0
     sfmt = sfmt_save;
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
 	printf("check minpoly 2 OK!\n");
@@ -271,6 +300,7 @@ void test_shortest(char *filename) {
 	printf("deg zero state = %ld\n", deg(minpoly));
 	return;
     }
+#if 0
     dist_sum = 0;
     count = 0;
     old = 0;
@@ -286,7 +316,24 @@ void test_shortest(char *filename) {
 	printf("k(%d) = %d\n", bit, shortest);
 	fflush(stdout);
     }
-    printf("D.D:%7d, DUP:%5d\n", dist_sum, count);
+    printf("128bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+#endif
+    dist_sum = 0;
+    count = 0;
+    old = 0;
+    for (bit = 1; bit <= 64; bit++) {
+	shortest = get_equiv_distrib64(bit, &sfmt);
+	dist_sum += mexp / bit - shortest;
+	if (old == shortest) {
+	    count++;
+	} else {
+	    old = shortest;
+	}
+	//printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
+	printf("k(%d) = %d\n", bit, shortest);
+	fflush(stdout);
+    }
+    printf("64bit D.D:%7d, DUP:%5d\n", dist_sum, count);
 }
 
 int main(int argc, char *argv[]) {

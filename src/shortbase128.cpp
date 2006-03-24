@@ -75,6 +75,7 @@ void set_up(uint32_t bit_mode, uint32_t len,
 	mode = p_mode;
 	active_len = len * (4 - weight_pos);
     }
+    printf("active_len = %u\n", active_len);
 }
 
 void set_special(in_status *st, unsigned int special_bit) {
@@ -131,11 +132,11 @@ static void get_next_random64(vec_GF2& vec, sfmt_t *sfmt) {
     array64[1] = (uint64_t)array32[2] | (uint64_t)array32[3] << 32;
     for (i = 0; i < 2; i++) {
 	mask = 0x8000000000000000ULL;
-	for (j = 0; j < bit_len / 2; j++) {
+	for (j = 0; j < bit_len; j += 2) {
 	    if (array64[i] & mask) {
-		vec.put(i * 2 + j, 1);
+		vec.put(i + j, 1);
 	    } else {
-		vec.put(i * 2 + j, 0);
+		vec.put(i + j, 0);
 	    }
 	    mask = mask >> 1;
 	}
@@ -155,11 +156,11 @@ static void get_next_random32(vec_GF2& vec, sfmt_t *sfmt) {
     gen_rand128sp(sfmt, array, mode);
     for (i = 0; i < 4; i++) {
 	mask = 0x80000000UL;
-	for (j = 0; j < bit_len / 4; j++) {
+	for (j = 0; j < bit_len; j += 4) {
 	    if (array[i] & mask) {
-		vec.put(i * 4 + j, 1);
+		vec.put(i + j, 1);
 	    } else {
-		vec.put(i * 4 + j, 0);
+		vec.put(i + j, 0);
 	    }
 	    mask = mask >> 1;
 	}
@@ -272,6 +273,7 @@ int get_shortest_base(sfmt_t *sfmt) {
     bool dependents[bit_len + 1];
     unsigned int shortest;
     unsigned int i;
+    unsigned int count;
     bool dependent_found;
 
     //DPRINT("in get_shortest_base bit_len:%u", bit_len);
@@ -329,8 +331,13 @@ int get_shortest_base(sfmt_t *sfmt) {
     shortest = INT_MAX;
     for (i = 0; i <= bit_len; i++) {
 	if (!bases[i].zero) {
-	    if (bases[i].count < shortest) {
-		shortest = bases[i].count;
+	    count = bases[i].count;
+	    bases[i].next.SetLength(active_len);
+	    if (IsZero(bases[i].next)) {
+		count++;
+	    }
+	    if (count < shortest) {
+		shortest = count;
 	    }
 	}
     }
