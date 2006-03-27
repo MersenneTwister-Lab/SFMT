@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
-//#include <iostream>
 
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
@@ -256,13 +255,16 @@ void test_shortest(char *filename) {
 	    fclose(frandom);
 	    exit(1);
 	}
-	for (int j = 0; j < 128; j++) {
+	for (int j = 0; j < 1; j++) {
 	    generating_polynomial128(&sfmt, vec, j, maxdegree);
 	    if (IsZero(vec)) {
 		break;
 	    }
 	    berlekampMassey(minpoly, maxdegree, vec);
 	    LCM(tmp, lcmpoly, minpoly);
+	    if (deg(tmp) > (long)maxdegree) {
+		break;
+	    }
 	    lcmpoly = tmp;
 	    lcmcount++;
 	    if (deg(lcmpoly) >= (long)maxdegree) {
