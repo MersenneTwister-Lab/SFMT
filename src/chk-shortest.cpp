@@ -148,7 +148,7 @@ int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
 	max = 0;
 	for (pos = 0; pos < 2; pos++) {
 	    set_up(64, bit, mode, pos);
-	    dist = get_shortest_base(&sfmtnew) * 2 - pos;
+	    dist = get_shortest_base(&sfmtnew);
 	    printf("dist:%d,", dist);
 	    dist = dist * 2 - pos;
 	    printf("%d\n", dist);
@@ -157,6 +157,39 @@ int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
 	    }
 	}
 	dist = max;
+	if (dist < min) {
+	    min = dist;
+	}
+    }
+    return min;
+}
+
+int get_equiv_distrib32(int bit, sfmt_t *sfmt) {
+    static sfmt_t sfmtnew;
+    int dist, min, max;
+    uint32_t mode;
+    uint32_t pos;
+
+    sfmtnew = *sfmt;
+    min = INT_MAX;
+    for (mode = 0; mode < 4; mode++) {
+#if 0
+	max = 0;
+	for (pos = 0; pos < 4; pos++) {
+	    set_up(32, bit, mode, pos);
+	    dist = get_shortest_base(&sfmtnew);
+	    printf("dist:%d,", dist);
+	    dist = dist * 4 - pos;
+	    printf("%d\n", dist);
+	    if (dist > max) {
+		max = dist;
+	    }
+	}
+	dist = max;
+#else
+	set_up(32, bit, mode, 0);
+	dist = get_shortest_base(&sfmtnew) * 4;
+#endif
 	if (dist < min) {
 	    min = dist;
 	}
@@ -320,6 +353,7 @@ void test_shortest(char *filename) {
     }
     printf("128bit D.D:%7d, DUP:%5d\n", dist_sum, count);
 #endif
+#if 0
     dist_sum = 0;
     count = 0;
     old = 0;
@@ -336,6 +370,23 @@ void test_shortest(char *filename) {
 	fflush(stdout);
     }
     printf("64bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+#endif
+    dist_sum = 0;
+    count = 0;
+    old = 0;
+    for (bit = 1; bit <= 32; bit++) {
+	shortest = get_equiv_distrib32(bit, &sfmt);
+	dist_sum += mexp / bit - shortest;
+	if (old == shortest) {
+	    count++;
+	} else {
+	    old = shortest;
+	}
+	//printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
+	printf("k(%d) = %d\n", bit, shortest);
+	fflush(stdout);
+    }
+    printf("32bit D.D:%7d, DUP:%5d\n", dist_sum, count);
 }
 
 int main(int argc, char *argv[]) {

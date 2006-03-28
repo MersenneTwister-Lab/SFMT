@@ -29,7 +29,6 @@ void print_param(FILE *fp);
 void print_param2(FILE *fp);
 
 void init_gen_rand(sfmt_t *sfmt, uint32_t seed);
-void next_state(sfmt_t *sfmt);
 uint32_t gen_rand32(sfmt_t *sfmt);
 uint64_t gen_rand64(sfmt_t *sfmt);
 uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low);

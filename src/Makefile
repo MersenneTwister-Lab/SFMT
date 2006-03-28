@@ -28,9 +28,6 @@ test_gen521: sfmt.o test_gen.o
 test-gen-st521: sfmt-st.o test-gen-st.o
 	${CC} -o $@ sfmt-st.o test-gen-st.o
 
-test32-gen-st521: sfmt32-st.o test32-gen-st.o
-	${CC} -o $@ sfmt32-st.o test32-gen-st.o
-
 param-search521: search128.o sfmt-st.o mt19937ar.o util.o
 	${CPP} -o $@ search128.o sfmt-st.o mt19937ar.o util.o ${LINKOPT}
 
@@ -46,10 +43,6 @@ search-dist521: search-dist.o sfmt5-cls.o mt19937ar.o util.o shortbase.o
 
 shortest128-base521: chk-shortest.o shortbase128.o sfmt-st.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt-st.o util.o ${LINKOPT}
-
-shortest32-base521: chk32-shortest.o shortbase32.o sfmt32-st.o util.o
-	${CPP} -o $@ chk32-shortest.o shortbase32.o sfmt32-st.o util.o \
-		${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<

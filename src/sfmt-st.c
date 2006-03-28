@@ -64,7 +64,10 @@ void print_param2(FILE *fp) {
     fflush(fp);
 }
 
-void next_state(sfmt_t *sfmt) {
+/*
+ * これは直接呼び出さないでgenrandを呼び出している。
+ */
+static void next_state(sfmt_t *sfmt) {
     uint32_t i;
 
     //sfmt->idx += 4;
@@ -88,9 +91,6 @@ void next_state(sfmt_t *sfmt) {
 	^ sfmt->sfmt[(i + POS1) % N][0]
 	^ (sfmt->sfmt[(i + N - 1) % N][3] >> SR4)
 	^ sfmt->sfmt[(i + N - 1) % N][3];
-
-#ifdef OUT_INITIAL
-#endif
 }
 
 /*------------------------------------

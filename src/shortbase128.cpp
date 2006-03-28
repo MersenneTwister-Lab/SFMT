@@ -75,7 +75,7 @@ void set_up(uint32_t bit_mode, uint32_t len,
 	mode = p_mode;
 	active_len = len * (4 - weight_pos);
     }
-    printf("active_len = %u\n", active_len);
+    //printf("active_len = %u\n", active_len);
 }
 
 void set_special(in_status *st, unsigned int special_bit) {
