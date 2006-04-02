@@ -1,0 +1,108 @@
+\documentclass{article}
+%%
+%% Please do not modify in the preamble !
+%%
+\usepackage{amsmath, amssymb}
+
+\newcommand{\Header}[5]{\vspace*{0.8cm}%
+\begin{centering}%
+\section*{#1}%
+{\bf#2}\\%
+{\bf#3}\\%
+{\bf \tt mailto:#4}\\%
+{\bf \tt http://#5}\\%
+\end{centering}\vspace*{0.3cm}%
+\addcontentsline{toc}{section}{#1\\{\rm #2}}%
+}
+
+%%
+%% Insert your title, name, and affiliation
+%%
+%% In case of a special session proposal
+%% an abstract for each speaker has to be
+%% submitted (in a separate file) and
+%% an additional session abstract, where
+%% "title" is the session title, "speaker"
+%% will be the session organizer with
+%% "affiliation" the affiliation of the
+%% session organizer.
+%%
+%% \Header{Title of your Sepecial Session}{Organizer}{Affiliation}
+%%
+
+\begin{document}
+\Header{Simple and Fast MT: A Two times faster
+new variant of Mersenne Twister}{Mutsuo Saito
+}{Department of Mathematics Hiroshima University
+}{saito@math.sci.hiroshima-u.ac.jp}{www.math.sci.hiroshima-u.ac.jp/\~{}saito/eng/}
+
+%% Type your abstract here
+
+Randomness should be the first requirement to 
+pseudorandom number generators (PRNGs),
+but the speed is another important factor.
+Here we propose a high speed PRNG which fits to recent CPU
+architectures with long pipelines and SIMD instructions,
+e.g., Intel Pentium 4, AMD64 and PowerPC G5, with 
+retaining the good randomness. 
+
+We choose a simplest design,
+namely a version of Twisted GFSR, where 
+the state space is a simple array. 
+This fits to modern CPU architectures
+better than Mersenne Twister (MT), Pulmonary MT or WELL 
+(where the state space is not a simple array, which 
+breaks the pipeline.)
+
+Our design generates a 128-bit pseudorandom integer
+at one time by SIMD instructions.
+The recursion formula is
+\[x_{n+i} = Ax_{n-1+i} + Bx_{m+i} + Cx_{i},\]
+where each of $x_i$ is a 128-dimensional vector over the two 
+element field ${\mathbb F}_2$ and
+$A$, $B$ and $C$ are $128 \times 128$ matrices over
+${\mathbb F}_2$.
+
+We separate the generated 128-bit integer 
+into two 64-bit integers or four 32-bit integers.
+In this case,
+there arises some difficulty in using lattice method
+to compute the higher dimensional distribution property:
+we solve this by using a weighted norm.
+
+Another speed-up is realized by 
+``fill\_array function,'' that fills 
+a user-specified length of array with pseudorandom numbers. 
+This is much faster than returning one number per one call.
+%In addition, we use a larger state 
+%than MT, namely 44497,
+%which takes full advantage of pipeline
+%and can be accomodated in modern CPU's cache.
+
+%Lastly, we explicitly use SIMD-instrution generation 
+%capability of Intel C++ Compiler and GCC: we expected that 
+%C-compiler optimizers would be enough smart
+%to generate SIMD instructions for dealing 128-bit 
+%integers, but those tested are not. 
+
+As a result, we obtain a 
+new PRNG SFMT (Simple and Fast MT), 
+roughly 2 times faster than MT, as shown in the next table.
+We also show that the quality of randomness of SFMT 
+is comparable with MT.
+
+\vspace*{-.5\baselineskip}
+\begin{table}[hb]
+\begin{center}
+\caption{generation time of $10^8$ random numbers\label{speed}}
+\begin{tabular}{|c|c|c|c|c|} \hline
+& MT & MT(SIMD) & PMT & SFMT \\ \hline
+PowerPC G4 1.33GHz & 1.10s & 0.56s & 1.04s & 0.18s \\ \hline
+PentiumM 1.4GHz & 0.75s & 0.62s & 0.71s & 0.24s \\ \hline
+%AMD64 & & & & & \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+\vspace*{-.5\baselineskip}
+This is a joint work with Makoto Matsumoto.
+\end{document}
