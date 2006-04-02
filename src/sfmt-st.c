@@ -226,23 +226,23 @@ uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t array[4], uint32_t mode)
 	array[3] = sfmt->sfmt[i][3];
 	break;
     case 1:
-	array[0] = sfmt->sfmt[p][0];
-	array[1] = sfmt->sfmt[i][1];
-	array[2] = sfmt->sfmt[i][2];
-	array[3] = sfmt->sfmt[i][3];
+	array[0] = sfmt->sfmt[i][1];
+	array[1] = sfmt->sfmt[i][2];
+	array[2] = sfmt->sfmt[i][3];
+	array[3] = sfmt->sfmt[p][0];
 	break;
     case 2:
-	array[0] = sfmt->sfmt[p][0];
-	array[1] = sfmt->sfmt[p][1];
-	array[2] = sfmt->sfmt[i][2];
-	array[3] = sfmt->sfmt[i][3];
+	array[0] = sfmt->sfmt[i][2];
+	array[1] = sfmt->sfmt[i][3];
+	array[2] = sfmt->sfmt[p][0];
+	array[3] = sfmt->sfmt[p][1];
 	break;
     case 3:
     default:
-	array[0] = sfmt->sfmt[p][0];
-	array[1] = sfmt->sfmt[p][1];
-	array[2] = sfmt->sfmt[p][2];
-	array[3] = sfmt->sfmt[i][3];
+	array[0] = sfmt->sfmt[i][3];
+	array[1] = sfmt->sfmt[p][0];
+	array[2] = sfmt->sfmt[p][1];
+	array[3] = sfmt->sfmt[p][2];
     }
 
     next_state(sfmt);

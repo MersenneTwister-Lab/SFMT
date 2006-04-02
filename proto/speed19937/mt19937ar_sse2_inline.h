@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <ppc_intrinsics.h>
+#include <emmintrin.h>
 //#include "mt19937ar.h"
 #include "random-inline.h"
 /* Period parameters */
@@ -12,7 +12,8 @@
 #define DST_MAX_BLOCK 12
 
 /* the array for the state vector  */
-static unsigned int mt[N + 4] __attribute__ ((aligned (16)));
+__m128i dmy[1];
+unsigned int mt[N + 4];
 static int mti = N + 1;		/* mti==N+1 means mt[N] is not initialized */
 
 #define MAX_BLOCKS (DST_MAX_BLOCK + 2)
@@ -69,72 +70,83 @@ INLINE void init_gen_rand(uint32_t s)
 INLINE static void gen_rand_all(void)
 {
     //uint32_t y;
-    __m128i a0, a1, b, r;
-    vector unsigned int u_mask = (vector unsigned int)(UPPER_MASK);
-    vector unsigned int l_mask = (vector unsigned int)(LOWER_MASK);
-    vector unsigned int one = (vector unsigned int)(1);
-    vector unsigned int zero = (vector unsigned int)(0);
-    vector unsigned char perm1 = (vector unsigned char)
-	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
-    vector unsigned char perm;
-    vector unsigned int mat_a = (vector unsigned int)(MATRIX_A);
+    __m128i a0, a1, b, r, u_mask, l_mask, mat_a, one;
     //static uint32_t mag01[2] = { 0x0UL, MATRIX_A };
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
     int i;
+    u_mask = _mm_set_epi32(UPPER_MASK, UPPER_MASK, UPPER_MASK, UPPER_MASK);
+    l_mask = _mm_set_epi32(LOWER_MASK, LOWER_MASK, LOWER_MASK, LOWER_MASK);
+    mat_a = _mm_set_epi32(MATRIX_A, MATRIX_A, MATRIX_A, MATRIX_A);
+    one = _mm_set_epi32(1, 1, 1, 1);
 
-    _mm_prefetch(&mt[0 + 8], MM_HINT_NTA);
-    _mm_prefetch(&mt[M + 8], MM_HINT_NTA);
-    a0 = _mm_load_si128(&mt[0]);
     for (i = 0; i < N - M - 4; i += 4) {
-	a1 = _mm_load_si128(0, &mt[i + 4]);
-	a0 = _mm_shuffle_epi32(a1, SHUFFLE1);
-	b = _mm_loadu_si128(&mt[M]);
-	r = _mm_or_si128(_mm_and_si128(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-	vec_st(r, 0, &mt[i]);
-	a0 = a1;
+	a0 = _mm_load_si128((__m128i *)&mt[i]);
+	a1 = _mm_loadu_si128((__m128i *)&mt[i + 1]);
+	b = _mm_loadu_si128((__m128i *)&mt[i + M]);
+	a0 = _mm_and_si128(a0, u_mask);
+	a1 = _mm_and_si128(a1, l_mask);
+	r = _mm_or_si128(a0, a1);
+	a0 = _mm_and_si128(a0, one);
+	a0 = _mm_cmpeq_epi32(a0, one);
+	a0 = _mm_and_si128(a0, mat_a);
+	a1 = _mm_slli_epi32(r, 1);
+	r = _mm_xor_si128(b, a1);
+	r = _mm_xor_si128(r, a0);
+	_mm_store_si128((__m128i *)&mt[i], r);
     }
-    __dcbt(&mt[i + 4], 32);
-    __dcbtst(&mt[i], 32);
-    perm = (vector unsigned char)
-	(4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23);
-    a1 = vec_ld(0, &mt[i + 4]);
-    a = vec_perm(a0, a1, perm1);
-    b1 = vec_ld(0, &mt[0]);
-    b = vec_perm(b0, b1, perm);
-    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-    vec_st(r, 0, &mt[i]);
-    perm = (vector unsigned char)
-	(8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
-    a0 = a1;
-    b0 = b1;
+    a0 = _mm_load_si128((__m128i *)&mt[i]);
+    a1 = _mm_loadu_si128((__m128i *)&mt[i + 1]);
+    b = _mm_loadu_si128((__m128i *)&mt[i + M]);
+    r = _mm_cvtsi32_si128(mt[0]);
+    b = _mm_slli_si128(b, 4);
+    r = _mm_slli_si128(r, 12);
+    b = _mm_srli_si128(b, 4);
+    b = _mm_or_si128(b, r);
+    a0 = _mm_and_si128(a0, u_mask);
+    a1 = _mm_and_si128(a1, l_mask);
+    r = _mm_or_si128(a0, a1);
+    a0 = _mm_and_si128(a0, one);
+    a0 = _mm_cmpeq_epi32(a0, one);
+    a0 = _mm_and_si128(a0, mat_a);
+    a1 = _mm_slli_epi32(r, 1);
+    r = _mm_xor_si128(b, a1);
+    r = _mm_xor_si128(r, a0);
+    _mm_store_si128((__m128i *)&mt[i], r);
     i += 4;
     for (; i < N - 4; i += 4) {
-	__dcbt(&mt[i + 4], 32);
-	__dcbtst(&mt[i], 32);
-	a1 = vec_ld(0, &mt[i + 4]);
-	a = vec_perm(a0, a1, perm1);
-	b1 = vec_ld(0, &mt[i + M - N + 4]);
-	b = vec_perm(b0, b1, perm);
-	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-	vec_st(r, 0, &mt[i]);
-	a0 = a1;
-	b0 = b1;
+	a0 = _mm_load_si128((__m128i *)&mt[i]);
+	a1 = _mm_loadu_si128((__m128i *)&mt[i + 1]);
+	b = _mm_loadu_si128((__m128i *)&mt[i + M - N]);
+	a0 = _mm_and_si128(a0, u_mask);
+	a1 = _mm_and_si128(a1, l_mask);
+	r = _mm_or_si128(a0, a1);
+	a0 = _mm_and_si128(a0, one);
+	a0 = _mm_cmpeq_epi32(a0, one);
+	a0 = _mm_and_si128(a0, mat_a);
+	a1 = _mm_slli_epi32(r, 1);
+	r = _mm_xor_si128(b, a1);
+	r = _mm_xor_si128(r, a0);
+	_mm_store_si128((__m128i *)&mt[i], r);
     }
-    a1 = vec_ld(0, &mt[0]);
-    a = vec_perm(a0, a1, perm1);
-    b1 = vec_ld(0, &mt[i + M - N + 4]);
-    b = vec_perm(b0, b1, perm);
-    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-    vec_st(r, 0, &mt[i]);
+    a0 = _mm_load_si128((__m128i *)&mt[i]);
+    a1 = _mm_loadu_si128((__m128i *)&mt[i + 1]);
+    r = _mm_cvtsi32_si128(mt[0]);
+    a1 = _mm_slli_si128(a1, 4);
+    r = _mm_slli_si128(r, 12);
+    a1 = _mm_srli_si128(a1, 4);
+    a1 = _mm_or_si128(a1, r);
+    b = _mm_loadu_si128((__m128i *)&mt[i + M - N]);
+    a0 = _mm_and_si128(a0, u_mask);
+    a1 = _mm_and_si128(a1, l_mask);
+    r = _mm_or_si128(a0, a1);
+    a0 = _mm_and_si128(a0, one);
+    a0 = _mm_cmpeq_epi32(a0, one);
+    a0 = _mm_and_si128(a0, mat_a);
+    a1 = _mm_slli_epi32(r, 1);
+    r = _mm_xor_si128(b, a1);
+    r = _mm_xor_si128(r, a0);
+    _mm_store_si128((__m128i *)&mt[i], r);
 
     mti = 0;
 
@@ -142,124 +154,137 @@ INLINE static void gen_rand_all(void)
 
 INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
 {
-    //unsigned long y;
-    vector unsigned int a0, a1, a, b0, b1, b, r;
-    vector unsigned int u_mask = (vector unsigned int)(UPPER_MASK);
-    vector unsigned int l_mask = (vector unsigned int)(LOWER_MASK);
-    vector unsigned int one = (vector unsigned int)(1);
-    vector unsigned int zero = (vector unsigned int)(0);
-    vector unsigned char perm1 = (vector unsigned char)
-	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
-    vector unsigned char perm;
-    vector unsigned int mat_a = (vector unsigned int)(MATRIX_A);
-    //static unsigned long mag01[2] = { 0x0UL, MATRIX_A };
-    vector unsigned int s11 = (vector unsigned int)(11);
-    vector unsigned int s7 = (vector unsigned int)(7);
-    vector unsigned int s15 = (vector unsigned int)(15);
-    vector unsigned int s18 = (vector unsigned int)(18);
-    vector unsigned int and1 = (vector unsigned int)(0x9d2c5680U);
-    vector unsigned int and2 = (vector unsigned int)(0xefc60000U);
+    __m128i a0, a1, b, r, u_mask, l_mask, mat_a, one;
+    int i;
 
-    /* mag01[x] = x * MATRIX_A  for x=0,1 */
+    u_mask = _mm_set_epi32(UPPER_MASK, UPPER_MASK, UPPER_MASK, UPPER_MASK);
+    l_mask = _mm_set_epi32(LOWER_MASK, LOWER_MASK, LOWER_MASK, LOWER_MASK);
+    mat_a = _mm_set_epi32(MATRIX_A, MATRIX_A, MATRIX_A, MATRIX_A);
+    one = _mm_set_epi32(1, 1, 1, 1);
 
-    int i, j;
-
-    //vec_dst(mt, DST_TOUCH_BLOCK(1), 0);
     memcpy(array, mt, sizeof(mt));
-    //__dcbt(&array[0], 32);
-    //__dcbt(&array[M], 32);
-    a0 = vec_ld(0, &array[0]);
-    b0 = vec_ld(0, &array[M]);
     for (i = 0; i < N - M - 4; i += 4) {
-	//__dcbt(&array[i + 4], 32);
-	//__dcbt(&array[i + M + 4], 32);
-	a1 = vec_ld(0, &array[i + 4]);
-	//__dcbtst(&array[i], 32);
-	a = vec_perm(a0, a1, perm1);
-	b1 = vec_ld(0, &array[i + M + 4]);
-	b = vec_perm(b0, b1, perm1);
-	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-	vec_st(r, 0, &array[i]);
-	a0 = a1;
-	b0 = b1;
+	a0 = _mm_load_si128((__m128i *)&array[i]);
+	a1 = _mm_loadu_si128((__m128i *)&array[i + 1]);
+	b = _mm_loadu_si128((__m128i *)&array[i + M]);
+	a0 = _mm_and_si128(a0, u_mask);
+	a1 = _mm_and_si128(a1, l_mask);
+	r = _mm_or_si128(a0, a1);
+	a0 = _mm_and_si128(a0, one);
+	a0 = _mm_cmpeq_epi32(a0, one);
+	a0 = _mm_and_si128(a0, mat_a);
+	a1 = _mm_slli_epi32(r, 1);
+	r = _mm_xor_si128(b, a1);
+	r = _mm_xor_si128(r, a0);
+	_mm_store_si128((__m128i *)&array[i], r);
     }
-    //__dcbt(&array[i + 4], 32);
-    perm = (vector unsigned char)
-	(4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23);
-    a1 = vec_ld(0, &array[i + 4]);
-    //__dcbtst(&array[i], 32);
-    a = vec_perm(a0, a1, perm1);
-    b1 = vec_ld(0, &array[0]);
-    b = vec_perm(b0, b1, perm);
-    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-    vec_st(r, 0, &array[i]);
-    perm = (vector unsigned char)
-	(8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
-    a0 = a1;
-    b0 = b1;
+    a0 = _mm_load_si128((__m128i *)&array[i]);
+    a1 = _mm_loadu_si128((__m128i *)&array[i + 1]);
+    b = _mm_loadu_si128((__m128i *)&array[i + M]);
+    r = _mm_cvtsi32_si128(array[0]);
+    b = _mm_slli_si128(b, 4);
+    r = _mm_slli_si128(r, 12);
+    b = _mm_srli_si128(b, 4);
+    b = _mm_or_si128(b, r);
+    a0 = _mm_and_si128(a0, u_mask);
+    a1 = _mm_and_si128(a1, l_mask);
+    r = _mm_or_si128(a0, a1);
+    a0 = _mm_and_si128(a0, one);
+    a0 = _mm_cmpeq_epi32(a0, one);
+    a0 = _mm_and_si128(a0, mat_a);
+    a1 = _mm_slli_epi32(r, 1);
+    r = _mm_xor_si128(b, a1);
+    r = _mm_xor_si128(r, a0);
+    _mm_store_si128((__m128i *)&array[i], r);
     i += 4;
     for (; i < N - 4; i += 4) {
-	//__dcbt(&array[i + 4], 32);
-	a1 = vec_ld(0, &array[i + 4]);
-	//__dcbtst(&array[i], 32);
-	a = vec_perm(a0, a1, perm1);
-	b1 = vec_ld(0, &array[i + M - N + 4]);
-	b = vec_perm(b0, b1, perm);
-	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-	vec_st(r, 0, &array[i]);
-	a0 = a1;
-	b0 = b1;
+	a0 = _mm_load_si128((__m128i *)&array[i]);
+	a1 = _mm_loadu_si128((__m128i *)&array[i + 1]);
+	b = _mm_loadu_si128((__m128i *)&array[i + M - N]);
+	a0 = _mm_and_si128(a0, u_mask);
+	a1 = _mm_and_si128(a1, l_mask);
+	r = _mm_or_si128(a0, a1);
+	a0 = _mm_and_si128(a0, one);
+	a0 = _mm_cmpeq_epi32(a0, one);
+	a0 = _mm_and_si128(a0, mat_a);
+	a1 = _mm_slli_epi32(r, 1);
+	r = _mm_xor_si128(b, a1);
+	r = _mm_xor_si128(r, a0);
+	_mm_store_si128((__m128i *)&array[i], r);
     }
-    //__dcbtst(&array[i], 32);
-    a1 = vec_ld(0, &array[0]);
-    a = vec_perm(a0, a1, perm1);
-    b1 = vec_ld(0, &array[i + M - N + 4]);
-    b = vec_perm(b0, b1, perm);
-    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-    vec_st(r, 0, &array[i]);
-    a0 = a1;
-    b0 = b1;
+    a0 = _mm_load_si128((__m128i *)&mt[i]);
+    a1 = _mm_loadu_si128((__m128i *)&mt[i + 1]);
+    r = _mm_cvtsi32_si128(array[0]);
+    a1 = _mm_slli_si128(a1, 4);
+    r = _mm_slli_si128(r, 12);
+    a1 = _mm_srli_si128(a1, 4);
+    a1 = _mm_or_si128(a1, r);
+    b = _mm_loadu_si128((__m128i *)&mt[i + M - N]);
+    a0 = _mm_and_si128(a0, u_mask);
+    a1 = _mm_and_si128(a1, l_mask);
+    r = _mm_or_si128(a0, a1);
+    a0 = _mm_and_si128(a0, one);
+    a0 = _mm_cmpeq_epi32(a0, one);
+    a0 = _mm_and_si128(a0, mat_a);
+    a1 = _mm_slli_epi32(r, 1);
+    r = _mm_xor_si128(b, a1);
+    r = _mm_xor_si128(r, a0);
+    _mm_store_si128((__m128i *)&mt[i], r);
     i += 4;
     for (; i < N * blocks; i += 4) {
-	__dcbtst(&array[i], 64);
-	//__dcbtst(&array[i - N], 32);
-	a1 = vec_ld(0, &array[i - N + 4]);
-	a = vec_perm(a0, a1, perm1);
-	// tempering
-	a0 = a;
-	a0 = vec_xor(a0, vec_sr(a0, s11));
-	a0 = vec_xor(a0, vec_and(vec_sl(a0, s7), and1));
-	a0 = vec_xor(a0, vec_and(vec_sl(a0, s15), and2));
-	a0 = vec_xor(a0, vec_sr(a0, s18));
-	vec_st(a0, 0, &array[i - N]);
-	//__dcbf(&array[i - N], 0);
-	// end of tempering
-	b1 = vec_ld(0, &array[i + M - N + 4]);
-	b = vec_perm(b0, b1, perm);
-	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
-	vec_st(r, 0, &array[i]);
-	a0 = a1;
-	b0 = b1;
+	a0 = _mm_load_si128((__m128i *)&array[i]);
+	a1 = _mm_loadu_si128((__m128i *)&array[i + 1 - N]);
+	b = _mm_loadu_si128((__m128i *)&array[i + M - N]);
+	a0 = _mm_and_si128(a0, u_mask);
+	a1 = _mm_and_si128(a1, l_mask);
+	r = _mm_or_si128(a0, a1);
+	a0 = _mm_and_si128(a0, one);
+	a0 = _mm_cmpeq_epi32(a0, one);
+	a0 = _mm_and_si128(a0, mat_a);
+	a1 = _mm_slli_epi32(r, 1);
+	r = _mm_xor_si128(b, a1);
+	r = _mm_xor_si128(r, a0);
+	_mm_store_si128((__m128i *)&array[i], r);
     }
     memcpy(mt, &array[N * (blocks - 1)], sizeof(mt));
-    for (j = (N - 1) * blocks; j < N * blocks; j += 4) {
-	// tempering
-	r = vec_ld(0, &array[j]);
-	r = vec_xor(r, vec_sr(r, s11));
-	r = vec_xor(r, vec_and(vec_sl(r, s7), and1));
-	r = vec_xor(r, vec_and(vec_sl(r, s15), and2));
-	r = vec_xor(r, vec_sr(r, s18));
-	vec_st(r, 0, &array[j]);
+ }
+
+// tempering
+INLINE static void tempering(uint32_t array[], uint32_t blocks)
+{
+    __m128i a0, a1, b0, b1, and1, and2;
+    int i;
+
+    and1 = _mm_set_epi32(0x9d2c5680UL, 0x9d2c5680UL, 
+			 0x9d2c5680UL, 0x9d2c5680UL);
+    and2 = _mm_set_epi32(0xefc60000UL, 0xefc60000UL, 
+			 0xefc60000UL, 0xefc60000UL);
+
+    for (i = 0; i < N * blocks; i += 8) {
+	a0 = _mm_load_si128((__m128i *)&array[i]);
+	b0 = _mm_load_si128((__m128i *)&array[i + 4]);
+	a1 = _mm_srli_epi32(a0, 11);
+	b1 = _mm_srli_epi32(b0, 11);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	a1 = _mm_slli_epi32(a0, 7);
+	b1 = _mm_slli_epi32(b0, 7);
+	a1 = _mm_and_si128(a1, and1);
+	b1 = _mm_and_si128(b1, and1);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	a1 = _mm_slli_epi32(a0, 15);
+	b1 = _mm_slli_epi32(b0, 15);
+	a1 = _mm_and_si128(a1, and2);
+	b1 = _mm_and_si128(b1, and2);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	a1 = _mm_srli_epi32(a0, 18);
+	b1 = _mm_srli_epi32(b0, 18);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	_mm_store_si128((__m128i *)&array[i], a0);
+	_mm_store_si128((__m128i *)&array[i + 4], b0);
     }
 }
 
@@ -288,9 +313,10 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
     int i;
     uint32_t y;
 
-#if 1
+#if 0
     while (block_num > MAX_BLOCKS) {
 	gen_rand_array(array, MAX_BLOCKS);
+	tempering(array, MAX_BLOCKS);
 	array += N * MAX_BLOCKS;
 	block_num -= MAX_BLOCKS;
     }
@@ -300,16 +326,10 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
     } else if (block_num == 1) {
 	gen_rand_all();
 	memcpy(array, mt, sizeof(mt));
-	for (i = 0; i < N * block_num; i++) {
-	    y = array[i];
-	    y ^= (y >> 11);
-	    y ^= (y << 7) & 0x9d2c5680UL;
-	    y ^= (y << 15) & 0xefc60000UL;
-	    y ^= (y >> 18);
-	    array[i] = y;
-	}
+	tempering(array, 1);
     } else {
 	gen_rand_array(array, block_num);
+	tempering(array, block_num);
     }
 }
 

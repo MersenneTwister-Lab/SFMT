@@ -21,7 +21,6 @@ NTL_CLIENT;
 int debug_flag = 0;
 static unsigned int bit_len;
 static unsigned int mode;	// 0-3 状態空間のどこを見るか
-static unsigned int active_len;	// 0-3 ノルムの加重をどこにするか
 static void (*get_next_random)(vec_GF2& vec, sfmt_t *sfmt);
 
 static void get_next_random128(vec_GF2& vec, sfmt_t *sfmt);
@@ -55,7 +54,6 @@ void set_up(uint32_t bit_mode, uint32_t len,
 	bit_len = len;
 	get_next_random = get_next_random128;
 	mode = 0;
-	active_len = len;
     } else if (bit_mode == 64) {
 	if ((len <= 0) || (len > 64)) {
 	    printf("bitLength error mode 64\n");
@@ -64,7 +62,7 @@ void set_up(uint32_t bit_mode, uint32_t len,
 	bit_len = len * 2;
 	get_next_random = get_next_random64;
 	mode = p_mode;
-	active_len = len * (2 - weight_pos);
+	//active_len = len * (2 - weight_pos);
     } else {
 	if ((len <= 0) || (len > 32)) {
 	    printf("bitLength error mode 32\n");
@@ -73,9 +71,8 @@ void set_up(uint32_t bit_mode, uint32_t len,
 	bit_len = len * 4;
 	get_next_random = get_next_random32;
 	mode = p_mode;
-	active_len = len * (4 - weight_pos);
+	//active_len = len * (4 - weight_pos);
     }
-    //printf("active_len = %u\n", active_len);
 }
 
 void set_special(in_status *st, unsigned int special_bit) {
@@ -275,6 +272,7 @@ int get_shortest_base(sfmt_t *sfmt) {
     unsigned int i;
     unsigned int count;
     bool dependent_found;
+    unsigned int active_len;	// 0-3 ノルムの加重をどこにするか
 
     //DPRINT("in get_shortest_base bit_len:%u", bit_len);
     //set_bit_len(bit_len);
@@ -347,20 +345,12 @@ int get_shortest_base(sfmt_t *sfmt) {
 uint32_t get_shortest(bool dependents[], in_status bases[]) {
     uint32_t index = 0;
     uint32_t min = UINT_MAX;
-    uint32_t count;
     uint32_t i;
-    vec_GF2 next;
 
     for (i = 0; i <= bit_len; i++) {
 	if (dependents[i]) {
-	    count = bases[i].count;
-	    next = bases[i].next;
-	    next.SetLength(active_len);
-	    if (IsZero(next)) {
-		count++;
-	    }
-	    if (count < min) {
-		min = count;
+	    if (bases[i].count < min) {
+		min = bases[i].count;
 		index = i;
 	    }
 	}

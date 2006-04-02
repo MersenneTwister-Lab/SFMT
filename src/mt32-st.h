@@ -54,10 +54,8 @@
 #define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
 struct MT_RAND {
-  unsigned long mt[MT_N]; /* the array for the state vector  */
-  int p;
-  int q;
-  int r;
+  uint32_t mt[MT_N]; /* the array for the state vector  */
+  uint32_t idx;
 };
 
 typedef struct MT_RAND mt_rand;
@@ -71,11 +69,5 @@ void init_by_array(mt_rand *rand, unsigned long init_key[], int key_length);
 unsigned long genrand_int32(mt_rand *rand);
 
 void add(mt_rand *a, mt_rand *b);
-
-void generating_polynomial(mt_rand *rand, uint64_t poly[], unsigned int bitpos);
-
-void dprint_mt(char *file, int line, char *s, mt_rand *mt);
-
-void print_mt_random(FILE *fp, mt_rand *mt);
 
 #endif
