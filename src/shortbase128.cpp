@@ -44,8 +44,7 @@ static void copy_status(in_status *dist, const in_status *src) {
     dist->random = src->random;
 }
 
-void set_up(uint32_t bit_mode, uint32_t len, 
-	    uint32_t p_mode, uint32_t weight_pos) {
+void set_up(uint32_t bit_mode, uint32_t len, uint32_t p_mode) {
     if (bit_mode == 128) {
 	if ((len <= 0) || (len > 128)) {
 	    printf("bitLength error mode 128\n");
@@ -200,37 +199,22 @@ void add_status(in_status *dist, in_status *src) {
 #if 0
     if (dist->special && src->special) {
 	printf("add special to special\n");
-	//cout << "debug mat =\n" << debug_mat << endl;
-	//printf("debug_dependent:");
-	//for (uint32_t i = 0; i <= bit_len; i++) {
-	//    printf("%d ", debug_dependent[i]);
-	//}
-	//printf("\n");
 	exit(1);
     }
 #endif
     if (dist->special && (!src->special)) {
 	copy_status(dist, src);
     } else if ((! dist->special) && (! src->special)) {
-	//dist->random.add(src->random);
 	add_rnd(&(dist->random), &(src->random));
     }
     next += src->next;
     if ((IsZero(next)) && dist->special) {
 	printf("something wrong!\n");
-	//printf("debug count = %u\n", debug_count);
         cout << "src:" << src << endl;
         cout << "dist:" << dist << endl;
 	cout << "dist->next:" << dist->next << endl;
 	cout << "src->next:" << src->next << endl;
 	cout << "src->special:" << src->special << endl;
-	//cout << "debug mat0:\n" << debug_mat0 << endl;
-	//cout << "debug mat:\n" << debug_mat << endl;
-	//printf("debug_dependent:");
-	//for (uint32_t i = 0; i <= bit_len; i++) {
-	//    printf("%d ", debug_dependent[i]);
-	//}
-	//printf("\n");
 	exit(1);
     }
     dist->next = next;

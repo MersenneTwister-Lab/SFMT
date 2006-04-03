@@ -24,8 +24,7 @@ typedef struct IN_STATUS in_status;
   
 void dprintnext(in_status *st);
 void dprintbase(char *file, int line, int num, in_status *st);
-void set_up(uint32_t bit_mode, uint32_t len, 
-	    uint32_t p_mode, uint32_t weight_pos);
+void set_up(uint32_t bit_mode, uint32_t len, uint32_t p_mode);
 void set_special(in_status *st, unsigned int special_bit);
 void set_normal(in_status *st, sfmt_t *sfmt);
 void add_status(in_status *dist, in_status *src);
