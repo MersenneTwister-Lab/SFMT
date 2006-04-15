@@ -7,7 +7,7 @@
 
 #define QUOTE(str) QUOTE_HELPER(str)
 #define QUOTE_HELPER(str) # str
-#include QUOTE(RANDOM)
+//#include QUOTE(RANDOM)
 
 #define KAISU 100000
 #define TIC_MAG 1

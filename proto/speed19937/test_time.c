@@ -47,8 +47,10 @@ int main(int argc, char *argv[]) {
     randoms = get_onetime_rnds() * 1000;
     init_gen_rand(1234);
     if (verbose) {
+#if 0
 	printf("init states\n");
 	print_state(stdout);
+#endif
 	printf("generated randoms\n");
 	for (i = 0; i < 1000; i++) {
 	    printf("%10u ", gen_rand());

@@ -29,17 +29,7 @@ void generating_polynomial(vec_GF2& vec, unsigned int bitpos,
 
     i = 0;
     clear(vec);
-    while ((gen_rand() & mask) == 0) {
-	i++;
-	if(i > 2 * maxdegree){
-	    printf("generating_polynomial:too much zeros\n");
-	    vec[0] = 1;
-	    return;
-	}
-    }
-    vec[0] = 1;
-
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i = 0; i <= 2 * maxdegree - 1; i++) {
 	if ((gen_rand() & mask) == mask){
 	    vec[i] = 1;
 	}
