@@ -87,6 +87,9 @@ param-search7x-521: search.o sfmt7x.o mt19937ar.o util.o debug.o
 param-search7x1-521: search.o sfmt7x1.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt7x1.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-search7x1b-521: search.o sfmt7x1b.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt7x1b.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 param-search7x2-521: search.o sfmt7x2.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt7x2.o mt19937ar.o util.o debug.o ${LINKOPT}
 

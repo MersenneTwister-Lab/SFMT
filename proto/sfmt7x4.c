@@ -90,10 +90,12 @@ void print_param2(FILE *fp) {
 }
 
 static inline void do_recursion(uint32_t a[4], uint32_t b[4], uint32_t c[4]) {
+    uint32_t t;
+    t = a[0];
     a[0] = a[1] ^ (b[0] & MSK1) ^ (c[0] << SL1) ^ (c[0] >> SR1);
     a[1] = a[2] ^ (b[1] & MSK2) ^ (c[1] << SL1) ^ (c[1] >> SR1);
     a[2] = a[3] ^ (b[2] & MSK3) ^ (c[2] << SL1) ^ (c[2] >> SR1);
-    a[3] = a[0] ^ (b[3] & MSK4) ^ (c[3] << SL1) ^ (c[3] >> SR1);
+    a[3] = t ^ (b[3] & MSK4) ^ (c[3] << SL1) ^ (c[3] >> SR1);
 }
 
 static void gen_rand_all(void) {
