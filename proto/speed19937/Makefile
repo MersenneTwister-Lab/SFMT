@@ -48,6 +48,12 @@ sfmt7x1_alti_inline: test_time_inline.c sfmt7x1_alti_inline.c
 sfmt7x1_alti_inline2: test_time_inline.c sfmt7x1_alti_inline.c
 	${CC} -o $@ sfmt7x1_alti_inline.c
 
+sfmt7x1b_alti_inline: test_time_inline.c sfmt7x1b_alti_inline.c
+	${CC} -DTICK=1 -o $@ sfmt7x1b_alti_inline.c
+
+sfmt7x1b_alti_inline2: test_time_inline.c sfmt7x1b_alti_inline.c
+	${CC} -o $@ sfmt7x1b_alti_inline.c
+
 sfmt7x2_alti_inline: test_time_inline.c sfmt7x2_alti_inline.c
 	${CC} -DTICK=1 -o $@ sfmt7x2_alti_inline.c
 

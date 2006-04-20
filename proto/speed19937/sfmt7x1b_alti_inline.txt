@@ -1,0 +1,2 @@
+1165 tick and 9984 randoms = 8.57 randoms per 1tick
+1511 tick and 9984 randoms = 6.61 randoms per 1tick
