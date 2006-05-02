@@ -131,32 +131,22 @@ int get_equiv_distrib(int bit, sfmt_t *sfmt) {
 
     //fprintf(stderr, "now start get_equiv %d\n", bit);
     sfmtnew = *sfmt;
-    set_up(128, bit, 0, 0);
+    set_up(128, bit, 0);
     shortest = get_shortest_base(&sfmtnew);
     return shortest;
 }
 
 int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
     static sfmt_t sfmtnew;
-    int dist, min, max;
+    int dist, min;
     uint32_t mode;
-    uint32_t pos;
 
-    sfmtnew = *sfmt;
     min = INT_MAX;
     for (mode = 0; mode < 4; mode += 2) {
-	max = 0;
-	for (pos = 0; pos < 2; pos++) {
-	    set_up(64, bit, mode, pos);
-	    dist = get_shortest_base(&sfmtnew);
-	    printf("dist:%d,", dist);
-	    dist = dist * 2 - pos;
-	    printf("%d\n", dist);
-	    if (dist > max) {
-		max = dist;
-	    }
-	}
-	dist = max;
+	sfmtnew = *sfmt;
+	set_up(64, bit, mode);
+	dist = get_shortest_base(&sfmtnew);
+	printf("%d\n", dist);
 	if (dist < min) {
 	    min = dist;
 	}
@@ -166,34 +156,21 @@ int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
 
 int get_equiv_distrib32(int bit, sfmt_t *sfmt) {
     static sfmt_t sfmtnew;
-    int dist, min, max;
+    int dist, min;
     uint32_t mode;
-    uint32_t pos;
 
-    sfmtnew = *sfmt;
     min = INT_MAX;
+    //printf("dist = ");
     for (mode = 0; mode < 4; mode++) {
-#if 0
-	max = 0;
-	for (pos = 0; pos < 4; pos++) {
-	    set_up(32, bit, mode, pos);
-	    dist = get_shortest_base(&sfmtnew);
-	    printf("dist:%d,", dist);
-	    dist = dist * 4 - pos;
-	    printf("%d\n", dist);
-	    if (dist > max) {
-		max = dist;
-	    }
-	}
-	dist = max;
-#else
-	set_up(32, bit, mode, 0);
-	dist = get_shortest_base(&sfmtnew) * 4;
-#endif
+	sfmtnew = *sfmt;
+	set_up(32, bit, mode);
+	dist = get_shortest_base(&sfmtnew);
+	printf("dist = %d\n", dist);
 	if (dist < min) {
 	    min = dist;
 	}
     }
+    //printf("\n");
     return min;
 }
 

@@ -12,6 +12,16 @@ extern "C" {
 
 NTL_CLIENT;
 
+/* internal status */
+struct IN_STATUS {
+  bool zero;
+  bool special;
+  vec_GF2 next;
+  unsigned int count;
+  sfmt_t random;
+};
+typedef struct IN_STATUS in_status;
+
 #define MIN(a,b) ((a)>(b)?(b):(a))
 
 //mat_GF2 debug_mat0;
@@ -26,6 +36,18 @@ static void (*get_next_random)(vec_GF2& vec, sfmt_t *sfmt);
 static void get_next_random128(vec_GF2& vec, sfmt_t *sfmt);
 static void get_next_random64(vec_GF2& vec, sfmt_t *sfmt);
 static void get_next_random32(vec_GF2& vec, sfmt_t *sfmt);
+static uint32_t get_shortest(in_status bases[]);
+static void set_special(in_status *st, unsigned int special_bit);
+static void set_normal(in_status *st, sfmt_t *sfmt);
+static void add_status(in_status *dist, in_status *src);
+static void get_next_state(in_status *st);
+void dprintnext(in_status *st);
+void dprintbase(char *file, int line, int num, in_status *st);
+static uint32_t get_shortest(bool dependents[], in_status bases[]);
+static bool get_dependent_trans(bool dependent[], vec_GF2 array[]);
+static bool dependent_rows(bool result[], mat_GF2& mat);
+static void convert(mat_GF2& mat, vec_GF2 array[], uint32_t bit_len);
+static uint32_t last_process(in_status bases[], vec_GF2 next[]);
 
 uint64_t vecto64(vec_GF2& vec) {
     uint64_t v = 0;
@@ -168,7 +190,7 @@ static void get_next_random32(vec_GF2& vec, sfmt_t *sfmt) {
 #endif
 }
 
-void set_normal(in_status *st, sfmt_t *sfmt) {
+static void set_normal(in_status *st, sfmt_t *sfmt) {
     int zero_count = 0;
     st->random = *sfmt;
     st->special = false;
@@ -190,7 +212,7 @@ void set_normal(in_status *st, sfmt_t *sfmt) {
     }
 }
 
-void add_status(in_status *dist, in_status *src) {
+static void add_status(in_status *dist, in_status *src) {
     unsigned int c;
     vec_GF2 next;
 
@@ -221,7 +243,7 @@ void add_status(in_status *dist, in_status *src) {
     dist->count = MIN(c, src->count);
 }
 
-void get_next_state(in_status *st) {
+static void get_next_state(in_status *st) {
     int zero_count = 0;
 
     //DPRINTHT("before next", &(st->random));
@@ -254,9 +276,7 @@ int get_shortest_base(sfmt_t *sfmt) {
     bool dependents[bit_len + 1];
     unsigned int shortest;
     unsigned int i;
-    unsigned int count;
     bool dependent_found;
-    unsigned int active_len;	// 0-3 ノルムの加重をどこにするか
 
     //DPRINT("in get_shortest_base bit_len:%u", bit_len);
     //set_bit_len(bit_len);
@@ -266,12 +286,6 @@ int get_shortest_base(sfmt_t *sfmt) {
     }
     set_normal(&(bases[bit_len]), sfmt);
     for (;;) {
-#ifdef DEBUG
-	//DPRINT("base", NULL);
-	for (i = 0; i <= bit_len; i++) {
-	    //DPRINTBASE(i, &(bases[i]));
-	}
-#endif
 	//debug_count++;
 	for (i = 0; i <= bit_len; i++) {
 	    next[i] = bases[i].next;
@@ -310,23 +324,66 @@ int get_shortest_base(sfmt_t *sfmt) {
 	    exit(1);
 	}
     }
-    shortest = INT_MAX;
+    shortest = last_process(bases, next);
+    return shortest;
+}
+
+/*
+ * 以下とりあえず、32bitを仮定する。
+ * まず減らし、１次独立かチェックし、
+ * 従属なら最短が従属関係に含まれるかチェックする。
+ */
+static uint32_t last_process(in_status bases[], vec_GF2 next[]) {
+    uint32_t shortest, count, i, sc, index;
+    bool dependents[bit_len + 1];
+    bool dependent_found;
+
+    shortest = get_shortest(bases);
+    for (count = 1; count < 4; count++) {
+	for (i = 0; i <= bit_len; i++) {
+	    next[i].SetLength(bit_len * (4 - count) / 4);
+	    next[i].SetLength(bit_len);
+	}
+	dependent_found = get_dependent_trans(dependents, next);
+	if (!dependent_found) {
+	    printf("dependent not found\n");
+	    continue;
+	}
+	sc = 0;
+	for (i = 0; i <= bit_len; i++) {
+	    if (bases[i].count == shortest) {
+		sc++;
+		index = i;
+	    }
+	}
+	if (sc != 1) {
+	    printf("sc = %d\n", sc);
+	    continue;
+	}
+	if (dependents[index]) {
+	    break;
+	}
+	printf("index not in dependents\n");
+    }
+    printf("count = %d, shortest = %d\n", count, (shortest + 1) * 4 - count);
+    return (shortest + 1) * 4 - count;
+}
+
+static uint32_t get_shortest(in_status bases[]) {
+    uint32_t shortest = INT_MAX;
+    uint32_t i;
+
     for (i = 0; i <= bit_len; i++) {
 	if (!bases[i].zero) {
-	    count = bases[i].count;
-	    bases[i].next.SetLength(active_len);
-	    if (IsZero(bases[i].next)) {
-		count++;
-	    }
-	    if (count < shortest) {
-		shortest = count;
+	    if (bases[i].count < shortest) {
+		shortest = bases[i].count;
 	    }
 	}
     }
     return shortest;
 }
 
-uint32_t get_shortest(bool dependents[], in_status bases[]) {
+static uint32_t get_shortest(bool dependents[], in_status bases[]) {
     uint32_t index = 0;
     uint32_t min = UINT_MAX;
     uint32_t i;
@@ -346,7 +403,7 @@ uint32_t get_shortest(bool dependents[], in_status bases[]) {
     return index;
 }
 
-bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
+static bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
     mat_GF2 mat;
     uint32_t rank;
 
@@ -356,7 +413,7 @@ bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
     return dependent_rows(dependent, mat);
 }
 
-bool dependent_rows(bool result[], mat_GF2& mat) {
+static bool dependent_rows(bool result[], mat_GF2& mat) {
     int32_t rows;
     int32_t cols;
     int i, j, pos;
@@ -396,7 +453,7 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
     return found;
 }
 
-void convert(mat_GF2& mat, vec_GF2 array[], uint32_t size) {
+static void convert(mat_GF2& mat, vec_GF2 array[], uint32_t size) {
     uint32_t i, j;
 
     mat.SetDims(size + 1, size + 1);
