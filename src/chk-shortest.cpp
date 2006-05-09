@@ -254,7 +254,7 @@ void test_shortest(char *filename) {
 #if 1 // 0状態を作るにはこれは不要？
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
-	if (lcmcount > 1000) {
+	if (lcmcount > 5000) {
 	    printf("failure\n");
 	    return;
 	}

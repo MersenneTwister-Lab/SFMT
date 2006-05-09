@@ -332,6 +332,7 @@ int get_shortest_base(sfmt_t *sfmt) {
  * 以下とりあえず、32bitを仮定する。
  * まず減らし、１次独立かチェックし、
  * 従属なら最短が従属関係に含まれるかチェックする。
+ * 最短が複数あった場合、
  */
 static uint32_t last_process(in_status bases[], vec_GF2 next[]) {
     uint32_t shortest, count, i, sc, index;
@@ -339,31 +340,61 @@ static uint32_t last_process(in_status bases[], vec_GF2 next[]) {
     bool dependent_found;
 
     shortest = get_shortest(bases);
+#if 1
+    sc = 0;
+    for (i = 0; i <= bit_len; i++) {
+	if (bases[i].count == shortest) {
+	    sc++;
+	    index = i;
+	}
+    }
+    printf("orig sc = %d\n", sc);
+#endif
     for (count = 1; count < 4; count++) {
 	for (i = 0; i <= bit_len; i++) {
 	    next[i].SetLength(bit_len * (4 - count) / 4);
 	    next[i].SetLength(bit_len);
 	}
-	dependent_found = get_dependent_trans(dependents, next);
-	if (!dependent_found) {
-	    printf("dependent not found\n");
-	    continue;
-	}
-	sc = 0;
-	for (i = 0; i <= bit_len; i++) {
-	    if (bases[i].count == shortest) {
-		sc++;
-		index = i;
+	// loop starat
+	for(;;){
+	    dependent_found = get_dependent_trans(dependents, next);
+	    if (!dependent_found) {
+		printf("dependent not found\n");
+		break;
 	    }
+	    sc = 0;
+	    for (i = 0; i <= bit_len; i++) {
+		if (bases[i].count == shortest) {
+		    sc++;
+		    index = i;
+		}
+	    }
+	    if (!dependents[index]) {
+		printf("dependent not found in shortest sc = %d\n", sc);
+		break;
+	    }
+	    if (sc == 1) {
+		printf("count = %d, shortest = %d\n", count, 
+		       (shortest + 1) * 4 - count);
+		return (shortest + 1) * 4 - count;
+	    } else if (sc == 0) {
+		printf("never happen!\n");
+		break;
+	    }
+	    for (i = 0; i <= bit_len; i++) {
+		if (i == index) {
+		    continue;
+		}
+		if (dependents[i]) {
+		    add_status(&(bases[index]), &(bases[i]));
+		}
+	    }
+	    get_next_state(&(bases[index]));
+	    next[index] = bases[index].next;
+	    next[index].SetLength(bit_len * (4 - count) / 4);
+	    next[index].SetLength(bit_len);
 	}
-	if (sc != 1) {
-	    printf("sc = %d\n", sc);
-	    continue;
-	}
-	if (dependents[index]) {
-	    break;
-	}
-	printf("index not in dependents\n");
+	// loop end
     }
     printf("count = %d, shortest = %d\n", count, (shortest + 1) * 4 - count);
     return (shortest + 1) * 4 - count;
