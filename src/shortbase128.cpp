@@ -369,12 +369,14 @@ static uint32_t last_process(in_status bases[], vec_GF2 next[]) {
 		    index = i;
 		}
 	    }
-	    if (!dependents[index]) {
+#if 0
+	    if ((sc > 0) && (!dependents[index])) {
 		printf("dependent not found in shortest sc = %d\n", sc);
 		break;
 	    }
+#endif
 	    if (sc == 1) {
-		printf("count = %d, shortest = %d\n", count, 
+		printf("success count = %d, shortest = %d\n", count, 
 		       (shortest + 1) * 4 - count);
 		return (shortest + 1) * 4 - count;
 	    } else if (sc == 0) {
@@ -386,6 +388,7 @@ static uint32_t last_process(in_status bases[], vec_GF2 next[]) {
 		    continue;
 		}
 		if (dependents[i]) {
+		    printf("adding status\n");
 		    add_status(&(bases[index]), &(bases[i]));
 		}
 	    }
