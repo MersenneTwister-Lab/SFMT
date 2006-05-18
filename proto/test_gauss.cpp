@@ -14,7 +14,9 @@ int main(void) {
 
     cout << "Input Matrix" << endl;
     cin >> mat;
+    cout << mat << endl;
     bool dependent[mat.NumCols()];
+    cout << "-----------------" << endl;
     gauss_plus(mat);
     cout << mat << endl;
     cout << "-----------------" << endl;
@@ -60,7 +62,7 @@ int32_t gauss_plus(mat_GF2& mat) {
 bool dependent_rows(bool result[], mat_GF2& mat) {
     int32_t rows;
     int32_t cols;
-    int i, j, pos;
+    int i, j, k, pos;
     bool found = false;
 
     rows = mat.NumRows();
@@ -69,20 +71,27 @@ bool dependent_rows(bool result[], mat_GF2& mat) {
 	result[i] = false;
     }
     pos = 0;
-    for (i = 0; i < cols; i++) {
+    for (i = 0; (i < cols - pos) && (i < rows); i++) {
 	if (IsOne(mat.get(i, i + pos))) {
 	    continue;
 	}
 	for (j = 0; j < i; j++) {
 	    if (IsOne(mat.get(j, i + pos))) {
-		found = true;
-		result[j] = true;
+		for (k = 0; k < i + pos; k++) {
+		    if (IsOne(mat.get(j, k))) {
+			found = true;
+			result[k] = true;
+			break;
+		    }
+		}
 	    }
 	}
 	if (found) {
 	    result[i + pos] = true;
+	    break;
 	} else {
 	    pos++;
+	    i--;
 	}
     }
     if (!found) {

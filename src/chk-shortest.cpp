@@ -165,6 +165,7 @@ int get_equiv_distrib32(int bit, sfmt_t *sfmt) {
 	sfmtnew = *sfmt;
 	set_up(32, bit, mode);
 	dist = get_shortest_base(&sfmtnew);
+	//printf("%d ", dist);
 	printf("dist = %d\n", dist);
 	if (dist < min) {
 	    min = dist;
