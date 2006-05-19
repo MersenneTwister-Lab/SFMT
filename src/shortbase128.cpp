@@ -162,16 +162,18 @@ static void get_next_random128(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 }
 
 /*
- *まだ未対応
+ *まだ未対応 -> 対応済み
  */
 static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 			      sfmt_t *sfmt) {
     uint32_t array32[4];
     uint64_t array64[2];
+    vec_GF2 tmp;
     uint64_t mask;
     unsigned int i, j;
 
     assert(mode % 2 == 0);
+    tmp.SetLength(bit_len);
     gen_rand128sp(sfmt, array32, mode);
     array64[0] = (uint64_t)array32[0] | (uint64_t)array32[1] << 32;
     array64[1] = (uint64_t)array32[2] | (uint64_t)array32[3] << 32;
@@ -186,6 +188,15 @@ static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 	    mask = mask >> 1;
 	}
     }
+    /* weight 付きノルムの計算 */
+    for (i = 0; i < bit_len * norm_mode / 2 ; i++) {
+	vec.put(i, tmp.get(i));
+    }
+    for (; i < bit_len; i++) {
+	vec.put(i, prev.get(i));
+    }
+    prev2 = prev;
+    prev = tmp;
 #if 0
     if (debug_flag) {
 	cout << vec << endl;
@@ -215,12 +226,10 @@ static void get_next_random32(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
     }
     /* weight 付きノルムの計算 */
     for (i = 0; i < bit_len * norm_mode / 4 ; i++) {
-	//prev.put(i, vec.get(i));
 	vec.put(i, tmp.get(i));
     }
     for (; i < bit_len; i++) {
 	vec.put(i, prev.get(i));
-	//prev.put(i, tmp.get(i));
     }
     prev2 = prev;
     prev = tmp;
@@ -417,7 +426,7 @@ int get_shortest_base(sfmt_t *sfmt) {
 	    }
 	}
     }
-#if 1
+#if 0
     for (i = 0; i <= bit_len; i++) {
 	if (bases[i].count == shortest) {
 	    printf("%d:mode(%d):count(%d) = %d\n", i, bases[i].last_norm_mode,
@@ -454,96 +463,6 @@ static void change_norm_mode(in_status bases[], vec_GF2 next[]) {
 #endif
     }
 }
-/*
- * 以下とりあえず、32bitを仮定する。
- * まず減らし、１次独立かチェックし、
- * 従属なら最短が従属関係に含まれるかチェックする。
- * 最短が複数あった場合、
- */
-#if 0
-static uint32_t last_process(in_status bases[], vec_GF2 next[]) {
-    uint32_t shortest, count, i, sc, index;
-    bool dependents[bit_len + 1];
-    bool dependent_found;
-
-    shortest = get_shortest(bases);
-#if 1
-    sc = 0;
-    for (i = 0; i <= bit_len; i++) {
-	if (bases[i].count == shortest) {
-	    sc++;
-	    index = i;
-	}
-    }
-    printf("orig sc = %d\n", sc);
-#endif
-    for (count = 1; count < 4; count++) {
-	for (i = 0; i <= bit_len; i++) {
-	    next[i].SetLength(bit_len * (4 - count) / 4);
-	    next[i].SetLength(bit_len);
-	}
-	// loop starat
-	for(;;){
-	    dependent_found = get_dependent_trans(dependents, next);
-	    if (!dependent_found) {
-		printf("dependent not found\n");
-		break;
-	    }
-	    sc = 0;
-	    for (i = 0; i <= bit_len; i++) {
-		if (bases[i].count == shortest) {
-		    sc++;
-		    index = i;
-		}
-	    }
-#if 0
-	    if ((sc > 0) && (!dependents[index])) {
-		printf("dependent not found in shortest sc = %d\n", sc);
-		break;
-	    }
-#endif
-	    if (sc == 1) {
-		printf("success count = %d, shortest = %d\n", count, 
-		       (shortest + 1) * 4 - count);
-		return (shortest + 1) * 4 - count;
-	    } else if (sc == 0) {
-		printf("never happen!\n");
-		break;
-	    }
-	    for (i = 0; i <= bit_len; i++) {
-		if (i == index) {
-		    continue;
-		}
-		if (dependents[i]) {
-		    printf("adding status\n");
-		    add_status(&(bases[index]), &(bases[i]));
-		}
-	    }
-	    get_next_state(&(bases[index]));
-	    next[index] = bases[index].next;
-	    next[index].SetLength(bit_len * (4 - count) / 4);
-	    next[index].SetLength(bit_len);
-	}
-	// loop end
-    }
-    printf("count = %d, shortest = %d\n", count, (shortest + 1) * 4 - count);
-    return (shortest + 1) * 4 - count;
-}
-
-static uint32_t get_shortest(in_status bases[]) {
-    uint32_t shortest = INT_MAX;
-    uint32_t i;
-
-    for (i = 0; i <= bit_len; i++) {
-	if (!bases[i].zero) {
-	    if (bases[i].count < shortest) {
-		shortest = bases[i].count;
-	    }
-	}
-    }
-    return shortest;
-}
-#endif
 
 static uint32_t get_shortest(bool dependents[], in_status bases[]) {
     uint32_t index = 0;
