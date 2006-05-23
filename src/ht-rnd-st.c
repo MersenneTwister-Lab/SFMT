@@ -7,6 +7,8 @@
 #include "ht-st.h"
 //#include "debug.h"
 
+static void next_state1(ht_rand *rand);
+static void next_state(ht_rand *rand);
 static unsigned int gmm;
 static unsigned int gs0;
 static unsigned int gs2;
@@ -30,7 +32,8 @@ unsigned int get_rnd_nn(void) {
 
 void setup_param(unsigned int p_gmm, unsigned int p_gs0, unsigned int p_gs2, 
 		 unsigned int p_gs3, unsigned int p_grot1, 
-		 unsigned int p_grot2) {
+		 unsigned int p_grot2, unsigned int dmy1, unsigned int dmy2,
+		 unsigned int dmy3) {
     gmm = p_gmm % (N - 1) + 1;
     gs0 = p_gs0 % (32 - 1) + 1;
     gs2 = p_gs2 % (32 - 1) + 1;
@@ -48,37 +51,73 @@ void print_param(FILE *fp) {
     fflush(fp);
 }
 
-void next_state(ht_rand *rand) {
+void print_param2(FILE *fp) {
+    fprintf(fp, "[GMM, GS2, GS3, GROT1, GROT2] = "
+            "[%u,%u,%u,%u,%u]＼n", 
+            gmm, gs2, gs3, grot1, grot2);
+    fflush(fp);
+}
+
+static void next_state1(ht_rand *rand) {
     uint32_t u;
 
     u = rand->gx[N];
-    u ^= (rand->gx[rand->index] >> grot1) 
-	^ (rand->gx[rand->index] << grot2);
+    u ^= (rand->gx[rand->index % N] >> grot1) 
+	^ (rand->gx[rand->index % N] << grot2);
     u ^= rand->gx[(rand->index + gmm) % N];
     u ^= u << gs2;
-    rand->gx[rand->index] ^=  u ^ (u << gs3);
+    rand->gx[rand->index % N] ^=  u ^ (u << gs3);
     rand->gx[N] = u;
-
-    rand->index++;
-    if (rand->index >= N) {
-	rand->index = 0;
-    }
 }
 
-uint32_t gen_rand(ht_rand *rand)
+static void next_state(ht_rand *rand) {
+    uint32_t u;
+    uint32_t i;
+
+    u = rand->gx[N];
+    for (i = rand->index; i < rand->index + 4; i++) {
+	u ^= (rand->gx[i % N] >> grot1) 
+	    ^ (rand->gx[i % N] << grot2);
+	u ^= rand->gx[(i + gmm) % N];
+	u ^= u << gs2;
+	rand->gx[i % N] ^=  u ^ (u << gs3);
+    }
+    rand->gx[N] = u;
+}
+
+/* これは初期状態を出力する */
+uint32_t gen_rand128sp(ht_rand *rand, uint32_t array[4], uint32_t mode)
+{
+    uint32_t i;
+
+    i = rand->index + mode;
+    array[0] = rand->gx[i];
+    array[1] = rand->gx[(i + 1) % N];
+    array[2] = rand->gx[(i + 2) % N];
+    array[3] = rand->gx[(i + 3) % N];
+
+    next_state(rand);
+    rand->index = (rand->index + 4) % N;
+    return array[0];
+}
+
+uint32_t gen_rand32(ht_rand *rand)
 {
     uint32_t r;
 
     r = rand->gx[rand->index];
-    next_state(rand);
+    next_state1(rand);
+    rand->index = (rand->index + 1) % N;
     return r;
 }
 
+#if 0
 uint32_t get_lung(ht_rand *rand)
 {
     //next_state(rand);
     return rand->gx[N];
 }
+#endif
 
 /*
   unsigned uint32_t peek_next(ht_rand *rand) {
@@ -103,6 +142,7 @@ void init_gen_rand(ht_rand *rand, int seed)
 #endif
 }
 
+#if 0
 /* for debug */
 void print_sequence(FILE *f, ht_rand *ht, unsigned int bitpos) {
     ht_rand copy;
@@ -122,8 +162,9 @@ void print_sequence(FILE *f, ht_rand *ht, unsigned int bitpos) {
     }
     fputc('\n', f);
 }
+#endif
 
-void add(ht_rand *a, ht_rand *b) {
+void add_rnd(ht_rand *a, ht_rand *b) {
     int i;
     int ap;
     int bp;
@@ -161,7 +202,7 @@ unsigned int get_uint(char *line) {
     return result;
 }
 
-void read_ht_random(FILE *f) {
+void read_random_param(FILE *f) {
     char line[256];
 
     fgets(line, 256, f);
@@ -194,7 +235,7 @@ void print_ht_random(FILE *fp, ht_rand *ht) {
 	fprintf(fp, "\n");
     }
 }
-
+#if 0
 void dprint_ht(char *file, int line, char *s, ht_rand *ht) {
     fprintf(stderr, "%s:%d %s", file, line, s);
     print_ht_random(stderr, ht);
@@ -209,3 +250,4 @@ void dprintseq(char *file, int line, char *s, ht_rand *ht, unsigned int bitpos)
 	print_sequence(stderr, ht, bitpos);
     }
 }
+#endif

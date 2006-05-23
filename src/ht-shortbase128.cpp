@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "shortbase128.h"
+#include "ht-shortbase128.h"
 #include "util.h"
 
 extern "C" {
-#include "sfmt-st.h"
+#include "ht-st.h"
 }
 
 NTL_CLIENT;
@@ -22,7 +22,7 @@ struct IN_STATUS {
     vec_GF2 next;
     unsigned int count;
     unsigned int last_norm_mode;
-    sfmt_t random;
+    ht_rand random;
 };
 typedef struct IN_STATUS in_status;
 
@@ -37,17 +37,17 @@ static unsigned int bit_len;
 static unsigned int mode;	// 0-3 状態空間のどこを見るか
 static unsigned int norm_mode;	// 0-3 ノルムにweighetをかける位置
 static void (*get_next_random)(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-			       sfmt_t *sfmt);
+			       ht_rand *sfmt);
 
 static void get_next_random128(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-			       sfmt_t *sfmt);
+			       ht_rand *sfmt);
 static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-			      sfmt_t *sfmt);
+			      ht_rand *sfmt);
 static void get_next_random32(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			      sfmt_t *sfmt);
+			      ht_rand *sfmt);
 //static uint32_t get_shortest(in_status bases[]);
 static void set_special(in_status *st, unsigned int special_bit);
-static void set_normal(in_status *st, sfmt_t *sfmt);
+static void set_normal(in_status *st, ht_rand *sfmt);
 static void add_status(in_status *dist, in_status *src);
 static void get_next_state(in_status *st);
 void dprintnext(in_status *st);
@@ -129,13 +129,16 @@ void set_special(in_status *st, unsigned int special_bit) {
  * prevは使わないからこれでよい。
  */
 static void get_next_random128(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			       sfmt_t *sfmt) {
+			       ht_rand *sfmt) {
     uint64_t hi, low;
+    uint32_t array32[4];
     uint64_t mask;
     unsigned int i;
 
     //clear(vec);
-    gen_rand128(sfmt, &hi, &low);
+    gen_rand128sp(sfmt, array32, 0);
+    hi = (uint64_t)array32[0] | (uint64_t)array32[1] << 32;
+    low = (uint64_t)array32[2] | (uint64_t)array32[3] << 32;
     mask = 0x8000000000000000ULL;
     for (i = 0; (i < 64) && (i < bit_len); i++) {
 	if (hi & mask) {
@@ -165,7 +168,7 @@ static void get_next_random128(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
  *まだ未対応 -> 対応済み
  */
 static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			      sfmt_t *sfmt) {
+			      ht_rand *sfmt) {
     uint32_t array32[4];
     uint64_t array64[2];
     vec_GF2 tmp;
@@ -205,7 +208,7 @@ static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 }
 
 static void get_next_random32(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			      sfmt_t *sfmt) {
+			      ht_rand *sfmt) {
     uint32_t array[4];
     uint32_t mask;
     vec_GF2 tmp;
@@ -240,7 +243,7 @@ static void get_next_random32(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 #endif
 }
 
-static void set_normal(in_status *st, sfmt_t *sfmt) {
+static void set_normal(in_status *st, ht_rand *sfmt) {
     int zero_count = 0;
     st->random = *sfmt;
     st->special = false;
@@ -328,7 +331,7 @@ static void get_next_state(in_status *st) {
     //DPRINTHT("after next", &(st->random));
 }
   
-int get_shortest_base(sfmt_t *sfmt) {
+int get_shortest_base(ht_rand *sfmt) {
     static in_status bases[128 + 1];
     vec_GF2 next[bit_len + 1];
     bool dependents[bit_len + 1];
@@ -350,15 +353,17 @@ int get_shortest_base(sfmt_t *sfmt) {
 	}
 	dependent_found = get_dependent_trans(dependents, next);
 	while ((!dependent_found) && (norm_mode > 1)) {
-#if 0
+#if 1
 	    for (i = 0; i <= bit_len; i++) {
-		cout << next[i] << endl;
+		cout << "p2:" << bases[i].previous2 << endl;
+		cout << "p :" << bases[i].previous << endl;
+		cout << "n :" << next[i] << endl;
 	    }
 #endif
 	    norm_mode--;
 	    change_norm_mode(bases, next);
 	    dependent_found = get_dependent_trans(dependents, next);
-#if 0
+#if 1
 	    printf("dependent_foud:%d\n", dependent_found);
 	    cout << "dependent:";
 	    for (i = 0; i <= bit_len; i++) {
@@ -408,13 +413,14 @@ int get_shortest_base(sfmt_t *sfmt) {
 	}
     }
     //shortest = last_process(bases, next);
-#if 0
+#if 1
     for (i = 0; i <= bit_len; i++) {
 	if (bases[i].zero) {
 	    printf("%d:zero\n", i);
 	} else {
-	    printf("%d:mode(%d):count(%d)\n", i, bases[i].last_norm_mode,
-		   bases[i].count);
+	    printf("%d:mode(%d):count(%d) = %d\n", i, bases[i].last_norm_mode,
+		   bases[i].count, 
+		   bases[i].count * 4 - (4 - bases[i].last_norm_mode)) ;
 	}
     }
 #endif
@@ -467,9 +473,10 @@ static void change_norm_mode(in_status bases[], vec_GF2 next[]) {
 static uint32_t get_shortest(bool dependents[], in_status bases[]) {
     uint32_t index = 0;
     uint32_t min = UINT_MAX;
-    uint32_t i;
+    int32_t i;
 
-    for (i = 0; i <= bit_len; i++) {
+    //for (i = 0; i <= bit_len; i++) {
+    for (i = bit_len; i >= 0; i--) {
 	if (dependents[i]) {
 	    if (bases[i].count < min) {
 		min = bases[i].count;
