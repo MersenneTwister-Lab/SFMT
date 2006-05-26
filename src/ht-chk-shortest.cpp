@@ -9,9 +9,7 @@
 #include "ht-shortbase128.h"
 #include "util.h"
 
-extern "C" {
 #include "ht-st.h"
-}
 
 NTL_CLIENT;
 
@@ -179,18 +177,18 @@ int get_equiv_distrib32(int bit, ht_rand *sfmt) {
     uint32_t mode;
 
     min = INT_MAX;
-    //printf("dist = ");
+    printf("dist = ");
     for (mode = 0; mode < 4; mode++) {
 	sfmtnew = *sfmt;
 	set_up(32, bit, mode);
 	dist = get_shortest_base(&sfmtnew);
-	//printf("%d ", dist);
-	printf("dist = %d\n", dist);
+	printf("%d ", dist);
+	//printf("dist = %d\n", dist);
 	if (dist < min) {
 	    min = dist;
 	}
     }
-    //printf("\n");
+    printf("\n");
     return min;
 }
 
@@ -201,7 +199,7 @@ void make_zero_state(ht_rand *sfmt, const GF2X& poly) {
     memset(&sfmtnew, 0, sizeof(sfmtnew));
     for (i = 0; i <= deg(poly); i++) {
 	if (coeff(poly, i) != 0) {
-	    add_rnd(&sfmtnew, sfmt);
+	    add_rnd(&sfmtnew, sfmt, 0);
 	}
 	gen_rand32(sfmt);
     }
@@ -375,9 +373,11 @@ void test_shortest(char *filename) {
     dist_sum = 0;
     count = 0;
     old = 0;
+    printf("start calc distribution\n");
+    fflush(stdout);
+    for (bit = 1; bit <= 32; bit++) {
     // DEBUG DEBUG DEBUG
-    //for (bit = 1; bit <= 32; bit++) {
-    for (bit = 3; bit <= 3; bit++) {
+    //for (bit = 1; bit <= 1; bit++) {
 	shortest = get_equiv_distrib32(bit, &sfmt);
 	dist_sum += mexp / bit - shortest;
 	if (old == shortest) {

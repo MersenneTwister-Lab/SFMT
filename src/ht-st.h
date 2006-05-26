@@ -3,6 +3,10 @@
 #define __HT_H__
 
 #include <stdint.h>
+#include <NTL/vec_GF2.h>
+
+NTL_CLIENT;
+
 #ifndef MEXP
 #define MEXP 19937
 #endif
@@ -20,8 +24,10 @@
 #define MAXDEGWD (DMAXDEGREE/WORDLL+1)
 
 struct HT_RAND {
-  uint32_t gx[NN]; /* the array for the state vector */
-  unsigned int index; /* how many among gx[0]..gx[N-1] have been used */ 
+    uint32_t gx[NN]; /* the array for the state vector */
+    unsigned int index; /* how many among gx[0]..gx[N-1] have been used */ 
+    int special_bit;
+    bool special;
 };
 typedef struct HT_RAND ht_rand;
 
@@ -35,16 +41,15 @@ unsigned int get_rnd_nn(void);
 void print_param(FILE *fp);
 void print_param2(FILE *fp);
 
-void init_gen_rand(ht_rand *ht, int seed);
 uint32_t gen_rand32(ht_rand *ht);
-uint32_t gen_rand128sp(ht_rand *rand, uint32_t array[4], uint32_t mode);
-uint32_t get_lung(ht_rand *rand);
-void print_sequence(FILE *f, ht_rand *ht, unsigned int bitpos);
-void dprint_ht(char *file, int line, char *s, ht_rand *ht);
-void add_rnd(ht_rand *a, ht_rand *b);
+void init_gen_rand(ht_rand *ht, int seed);
+void set_special(ht_rand *ht, int special);
+int get_vector32(vec_GF2& vec, ht_rand *ht, int state_mode, int weight_mode, 
+		 int v_bit);
+void add_rnd(ht_rand *a, ht_rand *b, int n);
+bool is_zero(ht_rand *a);
+
 void read_random_param(FILE *f);
 void print_ht_random(FILE *fp, ht_rand *ht);
-void dprint_ht(char *file, int line, char *s, ht_rand *ht);
-void dprintseq(char *file, int line, char *s, ht_rand *ht, unsigned int bitpos);
 
 #endif

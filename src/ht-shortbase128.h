@@ -6,9 +6,7 @@
 #include <NTL/vec_GF2.h>
 #include <NTL/mat_GF2.h>
 
-extern "C" {
 #include "ht-st.h"
-}
 
 NTL_CLIENT;
 
