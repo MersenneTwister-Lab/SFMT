@@ -75,7 +75,8 @@ int get_shortest_base(ht_rand *sfmt) {
 		continue;
 	    }
 	    if (dependents[i]) {
-		add_rnd(&(bases[shortest]), &(bases[i]), 0);
+		add_rnd1(&(bases[shortest]), &(bases[i]),
+			 count[i] - count[shortest]);
 	    }
 	}
 #if 0

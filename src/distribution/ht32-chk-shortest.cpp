@@ -191,42 +191,6 @@ void test_shortest(char *filename) {
 	cout << "minpoly = " << minpoly << endl; 
 	return;
     }
-#if 0
-    dist_sum = 0;
-    count = 0;
-    old = 0;
-    for (bit = 1; bit <= 128; bit++) {
-	shortest = get_equiv_distrib(bit, &sfmt);
-	dist_sum += mexp / bit - shortest;
-	if (old == shortest) {
-	    count++;
-	} else {
-	    old = shortest;
-	}
-	//printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
-	printf("k(%d) = %d\n", bit, shortest);
-	fflush(stdout);
-    }
-    printf("128bit D.D:%7d, DUP:%5d\n", dist_sum, count);
-#endif
-#if 0
-    dist_sum = 0;
-    count = 0;
-    old = 0;
-    for (bit = 1; bit <= 64; bit++) {
-	shortest = get_equiv_distrib64(bit, &sfmt);
-	dist_sum += mexp / bit - shortest;
-	if (old == shortest) {
-	    count++;
-	} else {
-	    old = shortest;
-	}
-	//printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
-	printf("k(%d) = %d\n", bit, shortest);
-	fflush(stdout);
-    }
-    printf("64bit D.D:%7d, DUP:%5d\n", dist_sum, count);
-#endif
     dist_sum = 0;
     count = 0;
     old = 0;

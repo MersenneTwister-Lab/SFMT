@@ -17,6 +17,7 @@ int get_equiv_distrib(int bit, ht_rand *sfmt);
 void make_zero_state(ht_rand *sfmt, const GF2X& poly);
 void test_shortest(char *filename);
 
+static uint32_t seed;
 static int mexp;
 static int maxdegree;
 static FILE *frandom;
@@ -233,7 +234,7 @@ void test_shortest(char *filename) {
 	exit(1);
     }
     read_random_param(fp);
-    init_gen_rand(&sfmt, 123);
+    init_gen_rand(&sfmt, seed);
     sfmt_save = sfmt;
     print_param(stdout);
     readFile(poly, fp);
@@ -393,8 +394,17 @@ void test_shortest(char *filename) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-	printf("usage:%s filename\n", argv[0]);
+    if (argc < 2) {
+	printf("usage:%s filename [seed]\n", argv[0]);
+	exit(1);
+    }
+    if (argc >= 3) {
+	seed = strtol(argv[2], NULL, 10);
+    } else {
+	seed = 123;
+    }
+    if (errno) {
+	perror("main");
 	exit(1);
     }
     mexp = get_rnd_mexp();
