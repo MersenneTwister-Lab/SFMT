@@ -198,7 +198,7 @@ void test_shortest(char *filename) {
     fflush(stdout);
     for (bit = 1; bit <= 32; bit++) {
     // DEBUG DEBUG DEBUG
-    //for (bit = 1; bit <= 1; bit++) {
+    //for (bit = 32; bit <= 32; bit++) {
 	shortest = get_equiv_distrib32(bit, &sfmt);
 	dist_sum += mexp / bit - shortest;
 	if (old == shortest) {

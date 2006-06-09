@@ -10,7 +10,7 @@
 
 NTL_CLIENT;
 
-//mat_GF2 debug_mat0;
+mat_GF2 debug_mat0;
 //mat_GF2 debug_mat;
 //bool debug_dependent[128];
 //uint32_t debug_count;
@@ -86,17 +86,19 @@ int get_shortest_base(ht_rand *sfmt) {
     }
     shortest = INT_MAX;
     for (i = 0; i <= bit_len; i++) {
-	if (!is_zero(&bases[i])) {
-	    if (count[i] < shortest) {
-		shortest = count[i];
-	    }
+	//if (!is_zero(&bases[i])) {
+	if (count[i] < shortest) {
+	    shortest = count[i];
 	}
+	//}
     }
 #if 0
+    //cout << "next:" << endl;
     for (i = 0; i <= bit_len; i++) {
-	if (count[i] == shortest) {
-	    printf("%d:count(%d)\n", i, count[i]);
-	}
+	//if (count[i] == shortest) {
+	printf("%d:count(%d)\n", i, count[i]);
+	//cout << next[i] << endl;
+	//}
     }
 #endif
     return shortest;
@@ -128,7 +130,7 @@ static bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
     uint32_t rank;
 
     convert(mat, array, bit_len);
-    //debug_mat0 = mat;
+    debug_mat0 = mat;
     rank = (uint32_t) gauss_plus(mat);
     return dependent_rows(dependent, mat);
 }
@@ -170,7 +172,9 @@ static bool dependent_rows(bool result[], mat_GF2& mat) {
     }
     if (!found) {
 #if 0
-	cout << "not found" << endl;
+	cout << "not found debug_mat:" << endl;
+	cout << debug_mat0 << endl;
+	cout << "mat:" << endl;
 	cout << mat << endl;
 	exit(1);
 #endif
