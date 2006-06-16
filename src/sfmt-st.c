@@ -1,5 +1,5 @@
 /* SFMT Search Code, M.Saito 2006/2/28 */
-/* (1234) 巡回置換１回のみ */
+/* sfmt7x7 */
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,16 +9,16 @@
 #include "sfmt-st.h"
 
 //#define OUT_INITIAL 1
+static inline void do_recursion(uint32_t a[4], uint32_t b[4], uint32_t c[4]);
+
 
 static unsigned int POS1 = 1;
 static unsigned int SL1 = 11;
-static unsigned int SL2 = 7;
-static unsigned int SL3 = 7;
-static unsigned int SL4 = 7;
-static unsigned int SR1 = 17;
-static unsigned int SR2 = 9;
-static unsigned int SR3 = 9;
-static unsigned int SR4 = 9;
+static unsigned int SR1 = 7;
+static unsigned int MSK1 = 7;
+static unsigned int MSK2 = 7;
+static unsigned int MSK3 = 7;
+static unsigned int MSK4 = 7;
 
 unsigned int get_rnd_maxdegree(void)
 {
@@ -32,36 +32,41 @@ unsigned int get_rnd_mexp(void)
 
 void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
 		 unsigned int p4, unsigned int p5, unsigned int p6,
-		 unsigned int p7, unsigned int p8, unsigned int p9) {
+		 unsigned int p7, unsigned int p8, unsigned int p9,
+		 unsigned int p10, unsigned int p11, unsigned int p12,
+		 unsigned int p13) {
     POS1 = p1 % (N-2) + 1;
     SL1 = p2 % (32 - 1) + 1;
-    SL2 = p3 % (32 - 1) + 1;
-    SL3 = p4 % (32 - 1) + 1;
-    SL4 = p5 % (32 - 1) + 1;
-    SR1 = p6 % (32 - 1) + 1;
-    SR2 = p7 % (32 - 1) + 1;
-    SR3 = p8 % (32 - 1) + 1;
-    SR4 = p9 % (32 - 1) + 1;
+    SR1 = p3 % (32 - 1) + 1;
+    MSK1= p4 | p5;
+    MSK2= p6 | p7;
+    MSK3= p8 | p9;
+    MSK4= p10 | p11;
 }
 
 void print_param(FILE *fp) {
     fprintf(fp, "POS1 = %u\n", POS1);
     fprintf(fp, "SL1 = %u\n", SL1);
-    fprintf(fp, "SL2 = %u\n", SL2);
-    fprintf(fp, "SL3 = %u\n", SL3);
-    fprintf(fp, "SL4 = %u\n", SL4);
     fprintf(fp, "SR1 = %u\n", SR1);
-    fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "SR3 = %u\n", SR3);
-    fprintf(fp, "SR4 = %u\n", SR4);
+    fprintf(fp, "MSK1 = %08x\n", MSK1);
+    fprintf(fp, "MSK2 = %08x\n", MSK2);
+    fprintf(fp, "MSK3 = %08x\n", MSK3);
+    fprintf(fp, "MSK4 = %08x\n", MSK4);
     fflush(fp);
 }
 
 void print_param2(FILE *fp) {
-    fprintf(fp, "[POS1, SL1, SL2, SL3, SL4, SR1, SR2, SR3, SR4] = "
-	    "[%u,%u,%u,%u,%u,%u,%u,%u,%u]\n", 
-	    POS1, SL1, SL2, SL3, SL4, SR1, SR2, SR3, SR4);
+    fprintf(fp, "[POS1, SL1, SR1, MSK1, MSK2, MSK3, MSK4] = "
+	    "[%u,%u,%u,%u,%u,%u,%u]\n", 
+	    POS1, SL1, SR1, MSK1, MSK2, MSK3, MSK4);
     fflush(fp);
+}
+
+static inline void do_recursion(uint32_t a[4], uint32_t b[4], uint32_t c[4]) {
+    a[0] = a[0] ^ (b[1] & MSK1) ^ (b[0] << SL1) ^ (c[0] >> SR1);
+    a[1] = a[1] ^ (b[2] & MSK2) ^ (b[1] << SL1) ^ (c[1] >> SR1);
+    a[2] = a[2] ^ (b[3] & MSK3) ^ (b[2] << SL1) ^ (c[2] >> SR1);
+    a[3] = a[3] ^ (b[0] & MSK4) ^ (b[3] << SL1) ^ (c[3] >> SR1);
 }
 
 /*
@@ -75,22 +80,8 @@ static void next_state(sfmt_t *sfmt) {
 	sfmt->idx = 0;
     }
     i = sfmt->idx / 4;
-    sfmt->sfmt[i][0] = (sfmt->sfmt[i][0] << SL1) ^ sfmt->sfmt[i][0]
-	^ sfmt->sfmt[(i + POS1) % N][1]
-	^ (sfmt->sfmt[(i + N - 1) % N][0] >> SR1) 
-	^ sfmt->sfmt[(i + N - 1) % N][0];
-    sfmt->sfmt[i][1] = (sfmt->sfmt[i][1] << SL2) ^ sfmt->sfmt[i][1]
-	^ sfmt->sfmt[(i + POS1) % N][2]
-	^ (sfmt->sfmt[(i + N - 1) % N][1] >> SR2) 
-	^ sfmt->sfmt[(i + N - 1) % N][1];
-    sfmt->sfmt[i][2] = (sfmt->sfmt[i][2] << SL3) ^ sfmt->sfmt[i][2]
-	^ sfmt->sfmt[(i + POS1) % N][3]
-	^ (sfmt->sfmt[(i + N - 1) % N][2] >> SR3) 
-	^ sfmt->sfmt[(i + N - 1) % N][2];
-    sfmt->sfmt[i][3] = (sfmt->sfmt[i][3] << SL4) ^ sfmt->sfmt[i][3]
-	^ sfmt->sfmt[(i + POS1) % N][0]
-	^ (sfmt->sfmt[(i + N - 1) % N][3] >> SR4)
-	^ sfmt->sfmt[(i + N - 1) % N][3];
+    do_recursion(sfmt->sfmt[i], sfmt->sfmt[(i + POS1) % N],
+		 sfmt->sfmt[(i + N - 1) % N]);
 }
 
 /*------------------------------------
@@ -280,8 +271,12 @@ void add_rnd(sfmt_t *dist, sfmt_t *src) {
     }
 }
 
-static unsigned int get_uint(char *line);
-static unsigned int get_uint(char *line) {
+uint32_t get_lung(sfmt_t *sfmt) {
+    return sfmt->sfmt[N - 1][3];
+}
+
+static unsigned int get_uint(char *line, int radix);
+static unsigned int get_uint(char *line, int radix) {
     unsigned int result;
 
     for (;(*line) && (*line != '=');line++);
@@ -291,7 +286,7 @@ static unsigned int get_uint(char *line) {
     }
     line++;
     errno = 0;
-    result = (unsigned int)strtol(line, NULL, 10);
+    result = (unsigned int)strtol(line, NULL, radix);
     if (errno) {
 	fprintf(stderr, "WARN:format error:%s", line);
     }
@@ -304,22 +299,18 @@ void read_random_param(FILE *f) {
     fgets(line, 256, f);
     fgets(line, 256, f);
     fgets(line, 256, f);
-    POS1 = get_uint(line);
+    POS1 = get_uint(line, 10);
     fgets(line, 256, f);
-    SL1 = get_uint(line);
+    SL1 = get_uint(line, 10);
     fgets(line, 256, f);
-    SL2 = get_uint(line);
+    SR1 = get_uint(line, 10);
     fgets(line, 256, f);
-    SL3 = get_uint(line);
+    MSK1 = get_uint(line, 16);
     fgets(line, 256, f);
-    SL4 = get_uint(line);
+    MSK2 = get_uint(line, 16);
     fgets(line, 256, f);
-    SR1 = get_uint(line);
+    MSK3 = get_uint(line, 16);
     fgets(line, 256, f);
-    SR2 = get_uint(line);
-    fgets(line, 256, f);
-    SR3 = get_uint(line);
-    fgets(line, 256, f);
-    SR4 = get_uint(line);
+    MSK4 = get_uint(line, 16);
 }
 

@@ -22,7 +22,9 @@ typedef struct SFMT_TAG sfmt_t;
 
 void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
 		 unsigned int p4, unsigned int p5, unsigned int p6,
-		 unsigned int p7, unsigned int p8, unsigned int p9);
+		 unsigned int p7, unsigned int p8, unsigned int p9,
+		 unsigned int p10, unsigned int p11, unsigned int p12,
+		 unsigned int p13);
 unsigned int get_rnd_maxdegree(void);
 unsigned int get_rnd_mexp(void);
 void print_param(FILE *fp);
@@ -33,6 +35,7 @@ uint32_t gen_rand32(sfmt_t *sfmt);
 uint64_t gen_rand64(sfmt_t *sfmt);
 uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low);
 uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t arrary[4], uint32_t mode);
+uint32_t get_lung(sfmt_t *sfmt);
 void add_rnd(sfmt_t *dist, sfmt_t *src);
 void read_random_param(FILE *fp);
 
