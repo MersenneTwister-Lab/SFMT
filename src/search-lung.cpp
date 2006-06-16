@@ -155,8 +155,8 @@ void search_lung (GF2X& f) {
 }
 
 void check_init_lung(in_status base[], int size) {
-    static char* initial[] = {"MSNH", "MMTM", "SFMT",
-			      "msnh", "mmtm", "sfmt",
+    static char* initial[] = {"MSNH", "MsNH", "MSnh", "MMTM", "MmTm", "SFMT",
+			      "msnh", "msNH", "msnH", "mmtm", "mMtM", "sfmt",
 			      NULL};
     mat_GF2 matrix;
     int i, j;

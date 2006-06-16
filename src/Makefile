@@ -51,6 +51,9 @@ ht-shortest128-base521: ht-chk-shortest.o ht-shortbase128.o ht-rnd-st.o util.o
 search-initial-lung521: search-lung.o sfmt-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-lung.o sfmt-st.o mt19937ar.o util.o ${LINKOPT}
 
+search-initial-lung19937: search-lung.o sfmt-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-lung.o sfmt-st.o mt19937ar.o util.o ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 

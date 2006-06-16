@@ -286,9 +286,10 @@ static unsigned int get_uint(char *line, int radix) {
     }
     line++;
     errno = 0;
-    result = (unsigned int)strtol(line, NULL, radix);
+    result = (unsigned int)strtoll(line, NULL, radix);
     if (errno) {
 	fprintf(stderr, "WARN:format error:%s", line);
+	perror("get_unit");
     }
     return result;
 }
