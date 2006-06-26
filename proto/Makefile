@@ -114,6 +114,24 @@ param-search7x8-521: search.o sfmt7x8.o mt19937ar.o util.o debug.o
 param-search7y-521: search.o sfmt7y.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt7y.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-search8-521: search.o sfmt8.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8x-521: search.o sfmt8x.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8x.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8y-521: search.o sfmt8y.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8y.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8z-521: search.o sfmt8z.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8z.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8v-521: search.o sfmt8v.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8v.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8t-521: search.o sfmt8t.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8t.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}
@@ -153,3 +171,6 @@ test_gauss: test_gauss.cpp
 
 .c.o:
 	${CC} -c $<
+
+clean:
+	rm -f *.o
