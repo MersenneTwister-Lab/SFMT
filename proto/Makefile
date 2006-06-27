@@ -4,7 +4,7 @@
 %107:MEXP=107
 %127:MEXP=127
 %521:MEXP=521
-#%607:MEXP=607
+%607:MEXP=607
 %19937:MEXP=19937
 #%44497:MEXP=44497
 #%86243:MEXP=86243
@@ -131,6 +131,18 @@ param-search8v-521: search.o sfmt8v.o mt19937ar.o util.o debug.o
 
 param-search8t-521: search.o sfmt8t.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt8t.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8p1-521: search.o sfmt8p1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8p1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8q1-521: search.o sfmt8q1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8q1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8q1-607: search.o sfmt8q1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8q1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-search8q2-521: search.o sfmt8q2.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt8q2.o mt19937ar.o util.o debug.o ${LINKOPT}
 
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
