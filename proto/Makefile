@@ -144,6 +144,9 @@ param-search8q1-607: search.o sfmt8q1.o mt19937ar.o util.o debug.o
 param-search8q2-521: search.o sfmt8q2.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt8q2.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-search88q1-521: search.o sfmt88q1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt88q1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}

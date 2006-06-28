@@ -101,16 +101,16 @@ static inline void do_recursion(uint32_t a[4], uint32_t b[4], uint32_t c[4]) {
     } else {
 	t = t >> SL1;
     }
-    bb[0] = (uint32_t)(t >> 32);
-    bb[1] = (uint32_t)t;
+    bb[1] = (uint32_t)(t >> 32);
+    bb[0] = (uint32_t)t;
     t = ((uint64_t)b[3] << 32) | ((uint64_t)b[2]);
     if (SR1 == 0) {
 	t = t << SL1;
     } else {
 	t = t >> SL1;
     }
-    bb[2] = (uint32_t)(t >> 32);
-    bb[3] = (uint32_t)t;
+    bb[3] = (uint32_t)(t >> 32);
+    bb[2] = (uint32_t)t;
     for (i = 0; i < 4; i++) {
 	aa[i] = a[i];
     }

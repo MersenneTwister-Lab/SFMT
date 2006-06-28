@@ -22,7 +22,7 @@ NTL_CLIENT;
 
 int non_reducible(GF2X& fpoly, int degree);
 void search(unsigned int n);
-void get_distribution(SFMT& sfmt, GF2X& poly);
+int get_distribution(SFMT& sfmt, GF2X& poly);
 int get_equiv_distrib(int bit, SFMT& sfmt);
 
 static unsigned long all_count = 0;
@@ -33,50 +33,6 @@ static unsigned int mexp;
 
 const GF2X t2 = GF2X(2, 1);
 const GF2X t1 = GF2X(1, 1);
-
-int non_reducible(GF2X& fpoly, int degree) {
-    GF2X t2m;
-    GF2X t;
-    GF2X alpha;
-    int m;
-
-    t2m = t2;
-    //DPRINT("degree = %u\n", degree);
-    //DPRINTPOLY("fpoly =", fpoly);
-    if (deg(fpoly) < degree) {
-	return 0;
-    }
-    t = t1;
-    t += t2m;
-  
-    for (m = 1; deg(fpoly) > degree; m++) {
-	//DPRINTPOLY("t =", t);
-	for(;;) {
-	    GCD(alpha, fpoly, t);
-	    //DPRINTPOLY("alpha =", alpha);
-	    if (IsOne(alpha)) {
-		break;
-	    }
-	    fpoly /= alpha;
-	    //DPRINTPOLY("f =", fpoly);
-	    if (deg(fpoly) < degree) {
-		return 0;
-	    }
-	}
-	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
-	    //DPRINT("maybe fpoly is larger m = %d, DEG = %u\n", m, 
-	    //     (unsigned int)deg(fpoly));
-	    return 0;
-	}
-	t2m *= t2m;
-	t2m %= fpoly;
-	add(t, t2m, t1);
-    }
-    if (deg(fpoly) != degree) {
-	return 0;
-    }
-    return IterIrredTest(fpoly);
-}
 
 void generating_polynomial(SFMT& sfmt, vec_GF2& vec, unsigned int bitpos, 
 			   unsigned int maxdegree)
@@ -110,6 +66,7 @@ void search(unsigned int n) {
     GF2X minpoly;
     SFMT sfmt;
     vec_GF2 vec;
+    int rc;
   
     vec.FixLength(2 * maxdegree);
     for (;;) {
@@ -151,7 +108,10 @@ void search(unsigned int n) {
 	    print_param(stdout);
 	    printBinary(stdout, minpoly);
 	    fflush(stdout);
-	    get_distribution(sfmt, minpoly);
+	    rc = get_distribution(sfmt, minpoly);
+	    if (rc == 0) {
+		succ--;
+	    }
 	    if (succ >= n) {
 		break;
 	    }
@@ -192,7 +152,7 @@ void make_zero_state(SFMT& sfmt, const GF2X& poly) {
     sfmt = sfmtnew;
 }
 
-void get_distribution(SFMT& sfmt, GF2X& poly) {
+int get_distribution(SFMT& sfmt, GF2X& poly) {
     unsigned int bit;
     GF2X lcmpoly;
     GF2X minpoly;
@@ -219,6 +179,11 @@ void get_distribution(SFMT& sfmt, GF2X& poly) {
 	lcmpoly = tmp;
     }
     printf("deg lcm poly = %ld\n", deg(lcmpoly));
+    if (deg(lcmpoly) != (long)maxdegree) {
+	printf("failure!\n");
+	fflush(stdout);
+	return 0;
+    }
     printf("weight = %ld\n", weight(lcmpoly));
     printBinary(stdout, lcmpoly);
     DivRem(tmp, rempoly, lcmpoly, poly);
@@ -250,6 +215,7 @@ void get_distribution(SFMT& sfmt, GF2X& poly) {
 	fflush(stdout);
     }
     printf("D.D:%7d, DUP:%5d\n", dist_sum, count);
+    return 1;
 }
 
 int main(int argc, char* argv[]){
