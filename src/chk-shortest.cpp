@@ -23,6 +23,27 @@ static int mexp;
 static int maxdegree;
 static FILE *frandom;
 
+void fill_state_random(sfmt_t *sfmt) {
+    int i, j;
+    int w;
+
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 4; j++) {
+	    w = getw(frandom);
+	    if (feof(frandom) || ferror(frandom)) {
+		if (errno != 0) {
+		    printf("test_shortest:%s\n", strerror(errno));
+		} else {
+		    printf("test_shortest:/dev/urandom reached to EOF!\n");
+		}
+		fclose(frandom);
+		exit(1);
+	    }
+	    sfmt->sfmt[i][j] = w;
+	}
+    }
+}
+
 void generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
 				 unsigned int bitpos, 
 				 unsigned int maxdegree)
@@ -30,14 +51,17 @@ void generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
     unsigned int i;
     uint64_t hi, low;
     uint64_t mask;
-    uint64_t bit;
+    //uint64_t bit;
 
     //DPRINTHT("in gene:", rand);
     mask = (uint64_t)1UL << (63 - bitpos);
     for (i=0; i<= 2 * maxdegree-1; i++) {
 	gen_rand128(sfmt, &hi, &low);
-	bit = (hi & mask);
-	vec[i] = (bit != 0);
+	if ((hi & mask) == mask) {
+	    vec[i] = 1;
+	} else {
+	    vec[i] = 0;
+	}
     }
     //DPRINTHT("end gene:", rand);
 }
@@ -49,14 +73,17 @@ void generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
     unsigned int i;
     uint64_t hi, low;
     uint64_t mask;
-    uint64_t bit;
+    //uint64_t bit;
 
     //DPRINTHT("in gene:", rand);
     mask = (uint64_t)1UL << (63 - bitpos);
     for (i=1; i<= 2 * maxdegree-1; i++) {
 	gen_rand128(sfmt, &hi, &low);
-	bit = (low & mask);
-	vec[i] = (bit != 0);
+	if ((low & mask) == mask) {
+	    vec[i] = 1;
+	} else {
+	    vec[i] = 0;
+	}
     }
     //DPRINTHT("end gene:", rand);
 }
@@ -255,17 +282,12 @@ void test_shortest(char *filename) {
 #if 1 // 0状態を作るにはこれは不要？
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
-	if (lcmcount > 5000) {
+	if (lcmcount > mexp * 10) {
 	    printf("failure\n");
 	    return;
 	}
 	errno = 0;
-	fread(sfmt.sfmt, sizeof(uint32_t), N * 4, frandom);
-	if (errno) {
-	    perror("set_bit");
-	    fclose(frandom);
-	    exit(1);
-	}
+	fill_state_random(&sfmt);
 	for (int j = 0; j < 1; j++) {
 	    generating_polynomial128(&sfmt, vec, j, maxdegree);
 	    if (IsZero(vec)) {
@@ -313,7 +335,7 @@ void test_shortest(char *filename) {
 	printf("deg zero state = %ld\n", deg(minpoly));
 	return;
     }
-#if 0
+#if 1
     dist_sum = 0;
     count = 0;
     old = 0;
@@ -349,6 +371,7 @@ void test_shortest(char *filename) {
     }
     printf("64bit D.D:%7d, DUP:%5d\n", dist_sum, count);
 #endif
+#if 0
     dist_sum = 0;
     count = 0;
     old = 0;
@@ -365,6 +388,7 @@ void test_shortest(char *filename) {
 	fflush(stdout);
     }
     printf("32bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+#endif
 }
 
 int main(int argc, char *argv[]) {
