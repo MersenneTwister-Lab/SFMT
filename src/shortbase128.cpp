@@ -443,7 +443,8 @@ int get_shortest_base(sfmt_t *sfmt) {
 	    }
 	}
     }
-    return shortest * 4 - (4 - min_norm_mode);
+    //return shortest * 4 - (4 - min_norm_mode);
+    return shortest;
 }
 
 static void change_norm_mode(in_status bases[], vec_GF2 next[]) {

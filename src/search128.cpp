@@ -37,25 +37,7 @@ bool generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
     uint64_t mask;
     uint64_t bit;
 
-    //DPRINTHT("in gene:", rand);
-    i = 0;
-    gen_rand128(sfmt, &hi, &low);
-    mask = (uint64_t)1UL << (63 - bitpos);
-    bit = hi & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    //printf("generating_polynomial:too much zeros\n");
-	    vec[0] = 1;
-	    return false;
-	}
-	gen_rand128(sfmt, &hi, &low);
-	bit = hi & mask;
-    }
-    //DPRINTHT("middle gene:", rand);
-    vec[0] = 1;
-
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i=0; i<= 2 * maxdegree-1; i++) {
 	gen_rand128(sfmt, &hi, &low);
 	bit = (hi & mask);
 	vec[i] = (bit != 0);
@@ -73,25 +55,7 @@ bool generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
     uint64_t mask;
     uint64_t bit;
 
-    //DPRINTHT("in gene:", rand);
-    i = 0;
-    gen_rand128(sfmt, &hi, &low);
-    mask = (uint64_t)1UL << (63 - bitpos);
-    bit = low & mask;
-    while (!bit) {
-	i++;
-	if(i > 2 * maxdegree){
-	    //printf("generating_polynomial:too much zeros\n");
-	    vec[0] = 1;
-	    return false;
-	}
-	gen_rand128(sfmt, &hi, &low);
-	bit = low & mask;
-    }
-    //DPRINTHT("middle gene:", rand);
-    vec[0] = 1;
-
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i=0; i<= 2 * maxdegree-1; i++) {
 	gen_rand128(sfmt, &hi, &low);
 	bit = (low & mask);
 	vec[i] = (bit != 0);

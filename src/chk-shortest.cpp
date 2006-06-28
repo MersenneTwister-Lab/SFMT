@@ -77,7 +77,7 @@ void generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
 
     //DPRINTHT("in gene:", rand);
     mask = (uint64_t)1UL << (63 - bitpos);
-    for (i=1; i<= 2 * maxdegree-1; i++) {
+    for (i=0; i<= 2 * maxdegree-1; i++) {
 	gen_rand128(sfmt, &hi, &low);
 	if ((low & mask) == mask) {
 	    vec[i] = 1;
@@ -244,7 +244,8 @@ void test_shortest(char *filename) {
 	exit(1);
     }
     read_random_param(fp);
-    init_gen_rand(&sfmt, 123);
+    fill_state_random(&sfmt);
+    //init_gen_rand(&sfmt, 123);
     sfmt_save = sfmt;
     print_param(stdout);
     readFile(poly, fp);
@@ -270,6 +271,7 @@ void test_shortest(char *filename) {
 	//sfmt = sfmt_save;
 	generating_polynomial128(&sfmt, vec, i, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
+	//printf("%d: deg min, lcm = %ld, %ld\n", i, deg(minpoly), deg(lcmpoly));
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
 #if 0
@@ -282,14 +284,15 @@ void test_shortest(char *filename) {
 #if 1 // 0状態を作るにはこれは不要？
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
-	if (lcmcount > mexp * 10) {
+	if (lcmcount > 1000) {
 	    printf("failure\n");
 	    return;
 	}
 	errno = 0;
 	fill_state_random(&sfmt);
 	for (int j = 0; j < 1; j++) {
-	    generating_polynomial128(&sfmt, vec, j, maxdegree);
+	    int z = (unsigned int)getw(frandom) % 128;
+	    generating_polynomial128(&sfmt, vec, z, maxdegree);
 	    if (IsZero(vec)) {
 		break;
 	    }
