@@ -41,6 +41,7 @@ void set_up(uint32_t bit_mode, uint32_t len, uint32_t p_mode) {
   
 int get_shortest_base(ht_rand *sfmt) {
     vec_GF2 next[bit_len + 1];
+    vec_GF2 debug_next;
     int count[bit_len + 1];
     int last_mode[bit_len + 1];
     bool dependents[bit_len + 1];
@@ -99,6 +100,7 @@ int get_shortest_base(ht_rand *sfmt) {
 	     << " " << bases[shortest].special << endl;
 #endif
 	debug_count = count[shortest];
+	debug_next = next[shortest];
 	if (debug_count > 0) {
 	    debug_count = 1;
 	}
@@ -110,7 +112,11 @@ int get_shortest_base(ht_rand *sfmt) {
 		add_rnd(&(bases[shortest]), &(bases[i]),
 			count[i] - count[shortest]);
 		last_mode[shortest] = weight_mode;
+		debug_next += next[i];
 	    }
+	}
+	if (!IsZero(debug_next)) {
+	    printf("next is not zero!\n");
 	}
 #if 0
 	count[0] = get_vector32(next[0], &bases[shortest], status_mode,
@@ -133,11 +139,11 @@ int get_shortest_base(ht_rand *sfmt) {
 #endif
     shortest = INT_MAX;
     for (i = 0; i <= bit_len; i++) {
-	if (!is_zero(&bases[i])) {
+	//if (!is_zero(&bases[i])) {
 	    if (count[i] < shortest) {
 		shortest = count[i];
 	    }
-	}
+	    //}
     }
 #if 0
     for (i = 0; i <= bit_len; i++) {

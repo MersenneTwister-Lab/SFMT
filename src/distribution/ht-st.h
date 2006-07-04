@@ -49,7 +49,6 @@ int get_vector32(vec_GF2& vec, ht_rand *ht, int state_mode, int weight_mode,
 int get_vector32(vec_GF2& vec, ht_rand *rand, int bit_len);
 void add_rnd(ht_rand *a, ht_rand *b, int n);
 void add_rnd1(ht_rand *a, ht_rand *b, int n);
-bool is_zero(ht_rand *a);
 
 void read_random_param(FILE *f);
 void print_ht_random(FILE *fp, ht_rand *ht);

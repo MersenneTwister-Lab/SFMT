@@ -10,7 +10,7 @@
 NTL_CLIENT;
 
 static void private_next_state1(ht_rand *rand);
-static void private_next_state(ht_rand *rand);
+static bool is_zero(ht_rand *rand);
 static unsigned int gmm;
 static unsigned int gs0;
 static unsigned int gs2;
@@ -72,34 +72,25 @@ static void private_next_state1(ht_rand *rand) {
     rand->gx[N] = u;
 }
 
-static void private_next_state(ht_rand *rand) {
-    uint32_t u;
-    uint32_t i;
-
-    u = rand->gx[N];
-    for (i = rand->index; i < rand->index + 4; i++) {
-	u ^= (rand->gx[i % N] >> grot1) 
-	    ^ (rand->gx[i % N] << grot2);
-	u ^= rand->gx[(i + gmm) % N];
-	u ^= u << gs2;
-	rand->gx[i % N] ^=  u ^ (u << gs3);
-    }
-    rand->gx[N] = u;
-}
-
 /* これは初期状態を出力する */
 uint32_t private_gen_rand128sp(ht_rand *rand, uint32_t array[4], uint32_t mode)
 {
     uint32_t i;
 
     i = rand->index + mode;
-    array[0] = rand->gx[i];
+    array[0] = rand->gx[i % N];
     array[1] = rand->gx[(i + 1) % N];
     array[2] = rand->gx[(i + 2) % N];
     array[3] = rand->gx[(i + 3) % N];
 
-    private_next_state(rand);
-    rand->index = (rand->index + 4) % N;
+    private_next_state1(rand);
+    rand->index = (rand->index + 1) % N;
+    private_next_state1(rand);
+    rand->index = (rand->index + 1) % N;
+    private_next_state1(rand);
+    rand->index = (rand->index + 1) % N;
+    private_next_state1(rand);
+    rand->index = (rand->index + 1) % N;
     return array[0];
 }
 
@@ -110,7 +101,7 @@ void set_special(ht_rand *rand, int special) {
     rand->special_bit = special;
 }
 
-bool is_zero(ht_rand *rand) {
+static bool is_zero(ht_rand *rand) {
     int i;
 
     for (i = 0; i < NN; i++) {
@@ -126,7 +117,7 @@ int get_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
     uint32_t array[4];
     uint32_t mask;
     ht_rand tmp_rand;
-    int i, j, count;
+    int i, j, k, count;
     vec_GF2 tmp_vec;
     vec_GF2 prev_vec;
 
@@ -152,8 +143,10 @@ int get_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
 	prev_vec = tmp_vec;
 	tmp_vec.SetLength(0);
 	tmp_vec.SetLength(bit_len);
+	k = 0;
 	for (i = 0; i < 4; i++) {
 	    mask = 0x80000000UL;
+#if 0
 	    for (j = 0; j < bit_len; j += 4) {
 		if (array[i] & mask) {
 		    tmp_vec.put(i + j, 1);
@@ -162,6 +155,17 @@ int get_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
 		}
 		mask = mask >> 1;
 	    }
+#else
+	    for (j = 0; j < bit_len / 4; j++) {
+		if (array[i] & mask) {
+		    tmp_vec.put(k, 1);
+		} else {
+		    tmp_vec.put(k, 0);
+		}
+		mask = mask >> 1;
+		k++;
+	    }
+#endif
 	}
 	/* weight 付きノルムの計算 */
 	for (i = 0; i < bit_len * weight_mode / 4 ; i++) {
@@ -231,6 +235,7 @@ void init_gen_rand(ht_rand *rand, int seed)
 #if 0
     for (i = 0; i < N; i++) {
 	private_next_state1(rand);
+	rand->index = (rand->index + 1) % N;
     }
 #endif
 }
@@ -246,8 +251,14 @@ void add_rnd(ht_rand *a, ht_rand *b, int n) {
     }
     c = *b;
     for (i = 0; i < n; i++) {
-	private_next_state(&c);
-	c.index = (c.index + 4) % N;
+	private_next_state1(&c);
+	c.index = (c.index + 1) % N;
+	private_next_state1(&c);
+	c.index = (c.index + 1) % N;
+	private_next_state1(&c);
+	c.index = (c.index + 1) % N;
+	private_next_state1(&c);
+	c.index = (c.index + 1) % N;
     }
     if (a->special) {
 	*a = c;
