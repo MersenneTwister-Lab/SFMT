@@ -19,7 +19,7 @@ NTL_CLIENT;
 //static void get_next_state(in_status *st);
 //void dprintnext(in_status *st);
 //void dprintbase(char *file, int line, int num, in_status *st);
-static uint32_t get_shortest(bool dependents[], int count[]);
+static uint32_t get_shortest(bool dependents[], int count[], int last_mode[]);
 static bool get_dependent_trans(bool dependent[], vec_GF2 array[]);
 static bool dependent_rows(bool result[], mat_GF2& mat);
 static void convert(mat_GF2& mat, vec_GF2 array[], uint32_t bit_len);
@@ -87,7 +87,7 @@ int get_shortest_base(ht_rand *sfmt) {
 	if (!dependent_found) {
 	    break;
 	}
-	shortest = get_shortest(dependents, count);
+	shortest = get_shortest(dependents, count, last_mode);
 #if 0
 	for (i = 0; i <= bit_len; i++) {
 	    cout << dependents[i];
@@ -128,29 +128,29 @@ int get_shortest_base(ht_rand *sfmt) {
     }
 #if 0
     for (i = 0; i <= bit_len; i++) {
-	if (is_zero(&bases[i])) {
+	if (count[i] == INT_MAX) {
 	    printf("%d:zero\n", i);
 	} else {
-	    printf("%d:mode(%d):count(%d) = %d\n", i, bases[i].last_norm_mode,
-		   bases[i].count, 
-		   bases[i].count * 4 - (4 - bases[i].last_norm_mode)) ;
+	    printf("%d:mode(%d):count(%d) = %d\n", i, last_mode[i],
+		   count[i], count[i] * 4 - (4 - last_mode[i]));
 	}
     }
 #endif
     shortest = INT_MAX;
     for (i = 0; i <= bit_len; i++) {
-	//if (!is_zero(&bases[i])) {
-	    if (count[i] < shortest) {
-		shortest = count[i];
-	    }
-	    //}
+	if (count[i] < shortest) {
+	    shortest = count[i];
+	}
     }
 #if 0
     for (i = 0; i <= bit_len; i++) {
-	if (count[i] == shortest) {
+	//if (count[i] == shortest) {
+	if (count[i] != INT_MAX) {
 	    printf("%d:mode(%d):count(%d) = %d\n", i, last_mode[i],
 		   count[i], 
-		   shortest * 4 - (4 - last_mode[i])) ;
+		   count[i] * 4 - (4 - last_mode[i])) ;
+	} else {
+	    printf("%d:mode(%d):zero\n", i, last_mode[i]);
 	}
     }
 #endif
@@ -165,15 +165,14 @@ int get_shortest_base(ht_rand *sfmt) {
     return shortest * 4 - (4 - min_mode);
 }
 
-static uint32_t get_shortest(bool dependents[], int count[]) {
+static uint32_t get_shortest(bool dependents[], int count[], int last_mode[]) {
     int index = 0;
     int min = INT_MAX;
     int i;
 
     for (i = 0; i <= bit_len; i++) {
-    //for (i = bit_len; i >= 0; i--) {
 	if (dependents[i]) {
-	    if (count[i] < min) {
+	    if (last_mode[i] == 4 && count[i] < min) {
 		min = count[i];
 		index = i;
 	    }

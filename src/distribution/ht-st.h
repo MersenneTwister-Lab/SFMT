@@ -46,6 +46,8 @@ void init_gen_rand(ht_rand *ht, int seed);
 void set_special(ht_rand *ht, int special);
 int get_vector32(vec_GF2& vec, ht_rand *ht, int state_mode, int weight_mode, 
 		 int v_bit);
+int debug_vector32(vec_GF2& vec, ht_rand *ht, int state_mode, int weight_mode, 
+		 int v_bit);
 int get_vector32(vec_GF2& vec, ht_rand *rand, int bit_len);
 void add_rnd(ht_rand *a, ht_rand *b, int n);
 void add_rnd1(ht_rand *a, ht_rand *b, int n);

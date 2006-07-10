@@ -169,6 +169,63 @@ int get_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
     return count;
 }
 
+int debug_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
+		   int bit_len) {
+    uint32_t array[4];
+    uint32_t mask;
+    ht_rand tmp_rand;
+    int i, j, k, count;
+    vec_GF2 tmp_vec;
+    vec_GF2 prev_vec;
+
+    vec.SetLength(0);
+    vec.SetLength(bit_len);
+    if (rand->special) {
+	if (rand->special_bit < bit_len * weight_mode / 4) {
+	    vec.put(rand->special_bit, 1);
+	} else {
+	    vec.put(rand->special_bit, 0);
+	}
+	return 0;
+    }
+    if (is_zero(rand)) {
+	return INT_MAX;
+    }
+    tmp_rand = *rand;
+    tmp_vec.SetLength(0);
+    tmp_vec.SetLength(bit_len);
+    for (count = 0; count < 1; count++) {
+	if (count > 2 * MEXP) {
+	    return INT_MAX;
+	}
+	private_gen_rand128sp(&tmp_rand, array, state_mode);
+	prev_vec = tmp_vec;
+	tmp_vec.SetLength(0);
+	tmp_vec.SetLength(bit_len);
+	k = 0;
+	for (i = 0; i < 4; i++) {
+	    mask = 0x80000000UL;
+	    for (j = 0; j < bit_len / 4; j++) {
+		if (array[i] & mask) {
+		    tmp_vec.put(k, 1);
+		} else {
+		    tmp_vec.put(k, 0);
+		}
+		mask = mask >> 1;
+		k++;
+	    }
+	}
+	/* weight 付きノルムの計算 */
+	for (i = 0; i < (bit_len * weight_mode) / 4 ; i++) {
+	    vec.put(i, tmp_vec.get(i));
+	}
+	for (; i < bit_len; i++) {
+	    vec.put(i, prev_vec.get(i));
+	}
+    }
+    return count;
+}
+
 int get_vector32(vec_GF2& vec, ht_rand *rand, int bit_len) {
     uint32_t mask;
     uint32_t r;

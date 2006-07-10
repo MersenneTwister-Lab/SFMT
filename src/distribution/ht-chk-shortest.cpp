@@ -38,6 +38,67 @@ void generating_polynomial32(ht_rand *sfmt, vec_GF2& vec,
     }
 }
 
+void check_vector128(ht_rand *sfmt) {
+    int i, j, k, l;
+    vec_GF2 v, vec;
+    GF2X poly;
+    uint32_t r;
+
+    printf("check vector128 start\n");
+    v.SetLength(4);
+
+    vec.SetLength(0);
+    vec.SetLength(2 * maxdegree);
+    for (i = 0; i <= 2 * maxdegree -1; i++) {
+	r = gen_rand32(sfmt);
+	gen_rand32(sfmt);
+	gen_rand32(sfmt);
+	gen_rand32(sfmt);
+	if (r & 0x80000000UL != 0) {
+	    vec[i] = 1;
+	} else {
+	    vec[i] = 0;
+	}
+    }
+    berlekampMassey(poly, maxdegree, vec);
+    printf("deg poly = %ld\n", deg(poly));
+    gen_rand32(sfmt);
+    for (i = 0; i <= 2 * maxdegree -1; i++) {
+	r = gen_rand32(sfmt);
+	gen_rand32(sfmt);
+	gen_rand32(sfmt);
+	gen_rand32(sfmt);
+	if (r & 0x80000000UL != 0) {
+	    vec[i] = 1;
+	} else {
+	    vec[i] = 0;
+	}
+    }
+    berlekampMassey(poly, maxdegree, vec);
+    printf("deg poly = %ld\n", deg(poly));
+    for (i = 0; i < 4; i++) {
+	for (j = 4; j > 0; j--) {
+	    for (k = 0; k < 4; k++) {
+		vec.SetLength(0);
+		vec.SetLength(2 * maxdegree);
+		for (l = 0; l <= 2 * maxdegree -1; l++) {
+		    debug_vector32(v, sfmt, k, j, 4);
+		    gen_rand32(sfmt);
+		    gen_rand32(sfmt);
+		    gen_rand32(sfmt);
+		    gen_rand32(sfmt);
+		    vec[l] = v[i];
+		}
+		berlekampMassey(poly, maxdegree, vec);
+		if (deg(poly) != mexp) {
+		    printf("[%d,%d,%d]: deg = %ld\n", i, k, j, deg(poly));
+		}
+	    }
+	}
+    }
+    printf("check vector128 end\n");
+}
+
 int get_equiv_distrib32(int bit, ht_rand *sfmt) {
     static ht_rand sfmtnew;
     int dist, min;
@@ -85,7 +146,7 @@ void test_shortest(char *filename) {
     ht_rand sfmt_save;
     vec_GF2 vec;
     int shortest;
-    uint32_t i;
+    uint32_t i, j;
     int dist_sum;
     int count;
     int old;
@@ -95,7 +156,7 @@ void test_shortest(char *filename) {
     fp = fopen(filename, "r");
     errno = 0;
     if ((fp == NULL) || errno) {
-	perror("main");
+	printf("main:%s\n", strerror(errno));
 	fclose(fp);
 	exit(1);
     }
@@ -145,11 +206,11 @@ void test_shortest(char *filename) {
 	errno = 0;
 	fread(sfmt.gx, sizeof(uint32_t), NN, frandom);
 	if (errno) {
-	    perror("set_bit");
+	    printf("set_bit:%s\n", strerror(errno));
 	    fclose(frandom);
 	    exit(1);
 	}
-	for (int j = 0; j < 1; j++) {
+	for (j = 0; j < 1; j++) {
 	    generating_polynomial32(&sfmt, vec, j, maxdegree);
 	    if (IsZero(vec)) {
 		break;
@@ -190,17 +251,23 @@ void test_shortest(char *filename) {
     }
     sfmt = sfmt_save;
     make_zero_state(&sfmt, tmp);
-    generating_polynomial32(&sfmt, vec, 0, maxdegree);
-    berlekampMassey(minpoly, maxdegree, vec);
-    if (deg(minpoly) != MEXP) {
-	printf("deg zero state = %ld\n", deg(minpoly));
-	for (i = 0; i < 10; i++) {
-	    printf("%d \n", gen_rand32(&sfmt));
+    sfmt_save = sfmt;
+    // チェック
+    for (i = 0; i < 32; i++) {
+	generating_polynomial32(&sfmt, vec, i, maxdegree);
+	berlekampMassey(minpoly, maxdegree, vec);
+	if (deg(minpoly) != MEXP) {
+	    printf("deg zero state = %ld\n", deg(minpoly));
+	    for (j = 0; j < 10; j++) {
+		printf("%d \n", gen_rand32(&sfmt));
+	    }
+	    cout << "vec =" << vec << endl;
+	    cout << "minpoly = " << minpoly << endl; 
+	    return;
 	}
-	cout << "vec =" << vec << endl;
-	cout << "minpoly = " << minpoly << endl; 
-	return;
     }
+    //check_vector128(&sfmt);
+
 #if 0
     dist_sum = 0;
     count = 0;
@@ -242,9 +309,9 @@ void test_shortest(char *filename) {
     old = 0;
     printf("start calc distribution\n");
     fflush(stdout);
-    for (bit = 1; bit <= 32; bit++) {
+    //for (bit = 1; bit <= 32; bit++) {
     // DEBUG DEBUG DEBUG
-    //for (bit = 1; bit <= 1; bit++) {
+    for (bit = 1; bit <= 32; bit++) {
 	shortest = get_equiv_distrib32(bit, &sfmt);
 	dist_sum += mexp / bit - shortest;
 	if (old == shortest) {
@@ -270,7 +337,7 @@ int main(int argc, char *argv[]) {
 	seed = 123;
     }
     if (errno) {
-	perror("main");
+	printf("main:%s\n", strerror(errno));
 	exit(1);
     }
     mexp = get_rnd_mexp();
@@ -278,7 +345,7 @@ int main(int argc, char *argv[]) {
     printf("mexp = %d\n", mexp);
     frandom = fopen("/dev/urandom", "r");
     if (errno) {
-	perror("main");
+	printf("main:%s\n", strerror(errno));
 	exit(1);
     }
     test_shortest(argv[1]);
