@@ -46,7 +46,7 @@ int get_shortest_base(ht_rand *sfmt) {
     int last_mode[bit_len + 1];
     bool dependents[bit_len + 1];
     int shortest, min_mode;
-    int i;
+    int i, j;
     bool dependent_found;
     int weight_mode = 4;
     int debug_count;
@@ -65,11 +65,33 @@ int get_shortest_base(ht_rand *sfmt) {
 				    weight_mode, bit_len);
 	}
 	dependent_found = get_dependent_trans(dependents, next);
+#if 0
+	if (weight_mode < 4) {
+	    printf("dependent_foud:%d\n", dependent_found);
+	    cout << "dependent:";
+	    for (i = 0; i <= bit_len; i++) {
+		cout << dependents[i];
+	    }
+	    cout << endl;
+	    for (i = 0; i <= bit_len; i++) {
+		cout << next[i] << " " << count[i] << " " 
+		     << last_mode[i]<< endl;
+	    }
+	}
+#endif
 	while ((!dependent_found) && (weight_mode > 1)) {
 	    weight_mode--;
 	    for (i = 0; i <= bit_len; i++) {
 		count[i] = get_vector32(next[i], &bases[i], status_mode,
 					weight_mode, bit_len);
+		if (last_mode[i] == 4) {
+		    for (j = (bit_len * weight_mode / 4); j < bit_len; j++) {
+			if (!IsZero(next[i][j])) {
+			    last_mode[i] = weight_mode;
+			    break;
+			}
+		    }
+		}
 	    }
 	    dependent_found = get_dependent_trans(dependents, next);
 #if 0
@@ -80,7 +102,8 @@ int get_shortest_base(ht_rand *sfmt) {
 	    }
 	    cout << endl;
 	    for (i = 0; i <= bit_len; i++) {
-		cout << next[i] << " " << count[i] << endl;
+		cout << next[i] << " " << count[i] << " "
+		     << last_mode[i]<< endl;
 	    }
 #endif
 	}

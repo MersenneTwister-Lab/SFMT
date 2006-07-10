@@ -309,9 +309,9 @@ void test_shortest(char *filename) {
     old = 0;
     printf("start calc distribution\n");
     fflush(stdout);
-    //for (bit = 1; bit <= 32; bit++) {
-    // DEBUG DEBUG DEBUG
     for (bit = 1; bit <= 32; bit++) {
+    // DEBUG DEBUG DEBUG
+    //for (bit = 1; bit <= 3; bit++) {
 	shortest = get_equiv_distrib32(bit, &sfmt);
 	dist_sum += mexp / bit - shortest;
 	if (old == shortest) {
