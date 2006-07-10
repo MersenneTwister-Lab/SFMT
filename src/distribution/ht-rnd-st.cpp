@@ -126,6 +126,8 @@ int get_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
     if (rand->special) {
 	if (rand->special_bit < bit_len * weight_mode / 4) {
 	    vec.put(rand->special_bit, 1);
+	} else {
+	    vec.put(rand->special_bit, 0);
 	}
 	return 0;
     }
@@ -146,16 +148,6 @@ int get_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
 	k = 0;
 	for (i = 0; i < 4; i++) {
 	    mask = 0x80000000UL;
-#if 0
-	    for (j = 0; j < bit_len; j += 4) {
-		if (array[i] & mask) {
-		    tmp_vec.put(i + j, 1);
-		} else {
-		    tmp_vec.put(i + j, 0);
-		}
-		mask = mask >> 1;
-	    }
-#else
 	    for (j = 0; j < bit_len / 4; j++) {
 		if (array[i] & mask) {
 		    tmp_vec.put(k, 1);
@@ -165,10 +157,9 @@ int get_vector32(vec_GF2& vec, ht_rand *rand, int state_mode, int weight_mode,
 		mask = mask >> 1;
 		k++;
 	    }
-#endif
 	}
 	/* weight 付きノルムの計算 */
-	for (i = 0; i < bit_len * weight_mode / 4 ; i++) {
+	for (i = 0; i < (bit_len * weight_mode) / 4 ; i++) {
 	    vec.put(i, tmp_vec.get(i));
 	}
 	for (; i < bit_len; i++) {
@@ -241,6 +232,10 @@ void init_gen_rand(ht_rand *rand, int seed)
 }
 
 void add_rnd(ht_rand *a, ht_rand *b, int n) {
+    add_rnd1(a, b, n * 4);
+}
+#if 0
+void add_rnd(ht_rand *a, ht_rand *b, int n) {
     int i;
     int ap;
     int cp;
@@ -273,7 +268,7 @@ void add_rnd(ht_rand *a, ht_rand *b, int n) {
     }
     a->gx[N] ^= c.gx[N];
 }
-
+#endif
 void add_rnd1(ht_rand *a, ht_rand *b, int n) {
     int i;
     int ap;
@@ -302,8 +297,8 @@ void add_rnd1(ht_rand *a, ht_rand *b, int n) {
     a->gx[N] ^= c.gx[N];
 }
 
-unsigned int get_uint(char *line);
-unsigned int get_uint(char *line) {
+static unsigned int get_uint(char *line);
+static unsigned int get_uint(char *line) {
     unsigned int result;
 
     for (;(*line) && (*line != '=');line++);
