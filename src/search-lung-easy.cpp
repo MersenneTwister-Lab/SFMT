@@ -41,7 +41,6 @@ int dependent_rows(uint8_t result[], mat_GF2& mat);
 void convert(mat_GF2& mat, unsigned int array[], uint32_t bit_len);
 void make_zero_state(sfmt_t *sfmt, GF2X& poly);
 void check_init_lung(in_status *st, int size);
-void set_bit(in_status *st, GF2X& f, uint32_t *bit_pos);
 
 static uint32_t mexp;
 static uint32_t maxdegree;
@@ -74,24 +73,22 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void set_bit(in_status *st, GF2X& f, uint32_t *bit_pos) {
-  uint32_t i, j, k;
-  uint32_t mask;
+void set_bit(in_status *st, GF2X& f, uint32_t bit_pos) {
+    uint32_t i, j;
 
-  for (;*bit_pos <= maxdegree;) {
-    k = *bit_pos % 32;
-    j = (*bit_pos / 32) % 4;
-    i = *bit_pos / (32 * 4);
     memset(st, 0, sizeof(in_status));
-    mask = 1U << k;
-    st->random.sfmt[i][j] = mask;
-    (*bit_pos)++;
-    make_zero_state(&(st->random), f);
-    set_status(st);
-    if (!st->zero) {
-      break;
+    for (;;) {
+	for (i = 0; i < N; i++) {
+	    for (j = 0; j < 4; j++) {
+		st->random.sfmt[i][j] = genrand_int32();
+	    }
+	}
+	make_zero_state(&(st->random), f);
+	set_status(st);
+	if (!st->zero) {
+	    break;
+	}
     }
-  }
 }
 
 void make_zero_state(sfmt_t *sfmt, GF2X& poly) {
@@ -113,14 +110,14 @@ void search_lung (GF2X& f) {
     static in_status bases[32];
     int i, j;
     int count;
-    uint32_t bit_pos = 0;
+    int bit_pos;
     int size = 2;
     int base_num = (32 - mexp % 32);
 
-    set_bit(&(bases[0]), f, &bit_pos);
-    set_bit(&(bases[1]), f, &bit_pos);
-    //while(size <= base_num) {
-    while((bit_pos < maxdegree) && (size <= base_num)) {
+    set_bit(&(bases[0]), f, 0);
+    set_bit(&(bases[1]), f, 1);
+    bit_pos = 2;
+    while(size <= base_num) {
 	get_base(bases, size);
 	count = 0;
 	for (i = 0; i < size; i++) {
@@ -130,31 +127,31 @@ void search_lung (GF2X& f) {
 	}
 	if (count == size) {
 	    if (size + 1 <= base_num) {
-		set_bit(&bases[size++], f, &bit_pos);
+		set_bit(&bases[size++], f, bit_pos++);
 	    } else {
 		break;
 	    }
 	} else {
 	    for (i = 0; i < size; i++) {
 		if (bases[i].zero) {
-		    set_bit(&bases[i], f, &bit_pos);
+		    set_bit(&bases[i], f, bit_pos++);
 		}
 	    }
 	}
-#if 0
+#if 1
 	fprintf(stderr, "size = %d\n", size);
 	fprintf(stderr, "count = %d\n", count);
 	fprintf(stderr, "bit_pos = %d\n", bit_pos);
 #endif
     }
     printf("----\n");
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < base_num; i++) {
 	for (j = 0; j < 32; j++) {
 	    printf("%d", (bases[i].next >> (31 - j)) & 1);
 	}
 	printf("\n");
     }
-    check_init_lung(bases, size);
+    check_init_lung(bases, base_num);
 }
 
 void check_init_lung(in_status base[], int size) {

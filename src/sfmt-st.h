@@ -4,6 +4,9 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <NTL/vec_GF2.h>
+
+NTL_CLIENT;
 
 #ifndef MEXP
 #define MEXP 19937
@@ -16,6 +19,8 @@
 struct SFMT_TAG {
     uint32_t sfmt[N][4];
     uint32_t idx;
+    int special_bit;
+    bool special;
 };
 
 typedef struct SFMT_TAG sfmt_t;
@@ -34,9 +39,11 @@ void init_gen_rand(sfmt_t *sfmt, uint32_t seed);
 uint32_t gen_rand32(sfmt_t *sfmt);
 uint64_t gen_rand64(sfmt_t *sfmt);
 uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low);
-uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t arrary[4], uint32_t mode);
+void set_special(sfmt_t *sfmt, int special);
+int get_vector(vec_GF2& vec, sfmt_t *sfmt, int state_mode, int weight_mode,
+	       int bit_len, int max_weight_mode);
 uint32_t get_lung(sfmt_t *sfmt);
-void add_rnd(sfmt_t *dist, sfmt_t *src);
+void add_rnd(sfmt_t *dist, sfmt_t *src, int n);
 void read_random_param(FILE *fp);
 
 #endif

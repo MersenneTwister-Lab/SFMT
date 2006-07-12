@@ -6,11 +6,20 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <iostream>
 #include "sfmt-st.h"
 
-//#define OUT_INITIAL 1
+#define OUT_INITIAL 1
 static inline void do_recursion(uint32_t a[4], uint32_t b[4], uint32_t c[4]);
-
+static uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t arrary[4], uint32_t mode);
+static void next_state(sfmt_t *sfmt);
+static bool is_zero(sfmt_t *sfmt);
+static void get_vector32(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
+			 int bit_len);
+static void get_vector64(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
+			 int bit_len);
+static void get_vector128(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
+			  int bit_len);
 
 static unsigned int POS1 = 1;
 static unsigned int SL1 = 11;
@@ -198,8 +207,11 @@ uint32_t gen_rand32(sfmt_t *sfmt)
 }
 #endif
 
+/*------------------------------------
+ * For distribution calculation
+ ------------------------------------*/
 /* これは初期状態を出力する */
-uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t array[4], uint32_t mode)
+static uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t array[4], uint32_t mode)
 {
     uint32_t i, p;
 
@@ -244,30 +256,224 @@ uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t array[4], uint32_t mode)
     return array[0];
 }
 
+
+void set_special(sfmt_t *sfmt, int special) {
+    memset(sfmt, 0, sizeof(sfmt_t));
+    sfmt->idx = 0;
+    sfmt->special = true;
+    sfmt->special_bit = special;
+}
+
+static bool is_zero(sfmt_t *sfmt) {
+    int i, j;
+
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 4; j++) {
+	    if (sfmt->sfmt[i][j] != 0) {
+		return false;
+	    }
+	}
+    }
+    return true;
+}
+
+/*
+ * state_mode: 0, 1, 2, 3
+ */
+static void get_vector32(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
+			 int bit_len) {
+    uint32_t array[4];
+    uint32_t mask;
+    int i, j, k;
+
+    vec.SetLength(0);
+    vec.SetLength(bit_len);
+    gen_rand128sp(sfmt, array, state_mode);
+    k = 0;
+    for (i = 0; i < 4; i++) {
+	mask = (uint32_t)0x80000000UL;
+	for (j = 0; j < bit_len / 4; j++) {
+	    if (array[i] & mask) {
+		vec.put(k, 1);
+	    } else {
+		vec.put(k, 0);
+	    }
+	    mask = mask >> 1;
+	    k++;
+	}
+    }
+#if 0
+    cout << "get_vector32:";
+    cout << vec << endl;
+#endif
+}
+
+/*
+ * state_mode : 0, 2
+ */
+static void get_vector64(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
+			 int bit_len) {
+    uint32_t array[4];
+    uint32_t mask;
+    int i, j, k;
+
+    assert(state_mode == 0 || state_mode == 2);
+
+    vec.SetLength(0);
+    vec.SetLength(bit_len);
+    gen_rand128sp(sfmt, array, 0);
+    k = 0;
+    for (i = 0; (i < 2) && (k < bit_len / 2); i++) {
+	mask = (uint32_t)0x80000000UL;
+	for (j = 0; (j < 32) && (k < bit_len / 2); j++) {
+	    if (array[i] & mask) {
+		vec.put(k, 1);
+	    } else {
+		vec.put(k, 0);
+	    }
+	    mask = mask >> 1;
+	    k++;
+	}
+    }
+    for (i = 2; (i < 4) && (k < bit_len); i++) {
+	mask = (uint32_t)0x80000000UL;
+	for (j = 0; (j < 32) && (k < bit_len); j++) {
+	    if (array[i] & mask) {
+		vec.put(k, 1);
+	    } else {
+		vec.put(k, 0);
+	    }
+	    mask = mask >> 1;
+	    k++;
+	}
+    }
+}
+
+/*
+ * state_mode : 0
+ */
+static void get_vector128(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
+			  int bit_len) {
+    uint32_t array[4];
+    uint32_t mask;
+    int i, j, k;
+
+    assert(state_mode == 0);
+
+    vec.SetLength(0);
+    vec.SetLength(bit_len);
+    gen_rand128sp(sfmt, array, 0);
+    k = 0;
+    for (i = 0; (i < 4) && (k < bit_len); i++) {
+	mask = (uint32_t)0x80000000UL;
+	for (j = 0; (j < 32) && (k < bit_len); j++) {
+	    if (array[i] & mask) {
+		vec.put(k, 1);
+	    } else {
+		vec.put(k, 0);
+	    }
+	    mask = mask >> 1;
+	    k++;
+	}
+    }
+}
+
+int get_vector(vec_GF2& vec, sfmt_t *sfmt, int state_mode, int weight_mode,
+	       int bit_len, int max_weight_mode) {
+    sfmt_t tmp_sfmt;
+    int i, count;
+    vec_GF2 tmp_vec;
+    vec_GF2 prev_vec;
+
+    vec.SetLength(0);
+    vec.SetLength(bit_len);
+    if (sfmt->special) {
+	if (sfmt->special_bit < bit_len * weight_mode / max_weight_mode) {
+	    vec.put(sfmt->special_bit, 1);
+	} else {
+	    vec.put(sfmt->special_bit, 0);
+	}
+	return 0;
+    }
+    if (is_zero(sfmt)) {
+	return INT_MAX;
+    }
+    tmp_sfmt = *sfmt;
+    tmp_vec.SetLength(0);
+    tmp_vec.SetLength(bit_len);
+    for (count = 0; IsZero(vec); count++) {
+	if (count > 2 * MEXP) {
+	    return INT_MAX;
+	}
+	prev_vec = tmp_vec;
+	switch (max_weight_mode) {
+	case 1:
+	    get_vector128(tmp_vec, &tmp_sfmt, state_mode, bit_len);
+	    break;
+	case 2:
+	    get_vector64(tmp_vec, &tmp_sfmt, state_mode, bit_len);
+	    break;
+	case 4:
+	default:
+	    get_vector32(tmp_vec, &tmp_sfmt, state_mode, bit_len);
+	    break;
+	}
+	/* calculate weighted norm */
+	for (i = 0; i < (bit_len * weight_mode) / max_weight_mode ; i++) {
+	    vec.put(i, tmp_vec.get(i));
+	}
+	for (; i < bit_len; i++) {
+	    vec.put(i, prev_vec.get(i));
+	}
+    }
+    return count;
+}
+
 void init_gen_rand(sfmt_t *sfmt, uint32_t seed)
 {
     int i;
 
     sfmt->sfmt[0][0] = seed;
     for (i = 1; i < N * 4; i++) {
-	sfmt->sfmt[i / 4][i % 4] = 1812433253UL 
+	sfmt->sfmt[i / 4][i % 4] = (uint32_t)1812433253UL 
 	    * (sfmt->sfmt[(i - 1) / 4][(i - 1) % 4]
 	       ^ (sfmt->sfmt[(i - 1) / 4][(i - 1) % 4] >> 30)) + i;
     }
     sfmt->idx = 0;
 }
 
-void add_rnd(sfmt_t *dist, sfmt_t *src) {
-    int i, j, k;
+void add_rnd(sfmt_t *a, sfmt_t *b, int n) {
+    int i, j;
+    int ap;
+    int cp;
+    sfmt_t c;
 
-    assert(dist->idx % 4 == 0);
-    assert(src->idx % 4 == 0);
-    
-    k = (src->idx / 4 - dist->idx / 4 + N) % N;
+    assert(a->idx % 4 == 0);
+    assert(b->idx % 4 == 0);
+
+    if (b->special) {
+	return;
+    }
+    c = *b;
+    for (i = 0; i < n; i++) {
+	next_state(&c);
+	c.idx += 4;
+	if (c.idx >= N * 4) {
+	    c.idx = 0;
+	}
+    }
+    if (a->special) {
+	*a = c;
+	return;
+    }
+    ap = a->idx / 4;
+    cp = c.idx / 4;
     for (i = 0; i < N; i++) {
 	for (j = 0; j < 4; j++) {
-	    dist->sfmt[i][j] ^= src->sfmt[(k + i) % N][j];
+	    a->sfmt[ap][j] ^= c.sfmt[cp][j];
 	}
+	ap = (ap + 1) % N;
+	cp = (cp + 1) % N;
     }
 }
 

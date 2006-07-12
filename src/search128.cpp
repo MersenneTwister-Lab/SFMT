@@ -4,10 +4,10 @@
 #include <limits.h>
 #include <errno.h>
 #include <iostream>
+#include "sfmt-st.h"
 
 extern "C" {
 #include "mt19937ar.h"
-#include "sfmt-st.h"
 }
 //#include "debug.h"
 
@@ -28,39 +28,45 @@ static unsigned int mexp;
 static FILE *frandom;
 #endif
 
-bool generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
-				 unsigned int bitpos, 
-				 unsigned int maxdegree)
+bool generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec, uint32_t bitpos, 
+				 uint32_t maxdegree)
 {
     unsigned int i;
     uint64_t hi, low;
     uint64_t mask;
     uint64_t bit;
 
-    for (i=0; i<= 2 * maxdegree-1; i++) {
+    mask = (uint64_t)1ULL << (63 - bitpos);
+    for (i = 0; i <= 2 * maxdegree - 1; i++) {
 	gen_rand128(sfmt, &hi, &low);
 	bit = (hi & mask);
-	vec[i] = (bit != 0);
+	if (bit) {
+	    vec[i] = 1;
+	} else {
+	    vec[i] = 0;
+	}
     }
-    //DPRINTHT("end gene:", rand);
     return true;
 }
 
-bool generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
-				 unsigned int bitpos, 
-				 unsigned int maxdegree)
+bool generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec, uint32_t bitpos, 
+				 uint32_t maxdegree)
 {
     unsigned int i;
     uint64_t hi, low;
     uint64_t mask;
     uint64_t bit;
 
-    for (i=0; i<= 2 * maxdegree-1; i++) {
+    mask = (uint64_t)1ULL << (63 - bitpos);
+    for (i = 0; i <= 2 * maxdegree - 1; i++) {
 	gen_rand128(sfmt, &hi, &low);
 	bit = (low & mask);
-	vec[i] = (bit != 0);
+	if (bit) {
+	    vec[i] = 1;
+	} else {
+	    vec[i] = 0;
+	}
     }
-    //DPRINTHT("end gene:", rand);
     return true;
 }
 
@@ -75,16 +81,11 @@ bool generating_polynomial128(sfmt_t *sfmt, vec_GF2& vec, unsigned int bitpos,
 }
 
 bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
-    unsigned int bit;
     GF2X minpoly;
     GF2X tmp;
     GF2X rempoly;
     sfmt_t sfmt_save;
-    uint32_t shortest;
     int i;
-    int dist_sum;
-    int count;
-    uint32_t old;
     vec_GF2 vec;
     int rc;
     int lcmcount;
@@ -94,12 +95,14 @@ bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
     sfmt_save = *sfmt;
     rc = generating_polynomial128(sfmt, vec, 0, maxdegree);
     if (!rc) {
+	printf("getLCM faile\n");
 	return false;
     }
     berlekampMassey(lcmpoly, maxdegree, vec);
     for (i = 1; i < 128; i++) {
 	rc = generating_polynomial128(sfmt, vec, i, maxdegree);
 	if (!rc) {
+	    printf("getLCM faile\n");
 	    return false;
 	}
 	berlekampMassey(minpoly, maxdegree, vec);
@@ -116,13 +119,13 @@ bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
 	if (lcmcount > 1000) {
-	    printf("failure\n");
+	    printf("getLCM faile\n");
 	    return false;
 	}
 	errno = 0;
 	fread(sfmt->sfmt, sizeof(uint32_t), N * 4, frandom);
 	if (errno) {
-	    perror("set_bit");
+	    printf("set_bit:%s\n", strerror(errno));
 	    fclose(frandom);
 	    exit(1);
 	}
@@ -200,6 +203,10 @@ void search(unsigned int n) {
 	    genrand_int32(),
 	    genrand_int32(),
 	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
+	    genrand_int32(),
 	    genrand_int32());
 	init_gen_rand(&sfmt, genrand_int32()+3);
 	checkOk = true;
@@ -251,7 +258,7 @@ int main(int argc, char* argv[]){
     int n;
     unsigned long seed;
 
-    setup_param(1, 0, 21, 4, 3, 29, 0, 0, 0);
+    //setup_param(1, 0, 21, 4, 3, 29, 0, 0, 0);
 
     if (argc != 2) {
 	n = 1;

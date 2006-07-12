@@ -1,0 +1,19 @@
+2006.07.11
+遅ればせながらデバッグログを書く。
+昨日修正したところ：
+ht-shortbase128.cpp
+get_shortest_baseで、get_vector32を呼び出しているところ。
+weight_modeが変わった瞬間に0になった場合、カウントが増えるが、
+last_modeが変わっていなかった。
+last_modeが4で、vectorの後ろの方に1がある場合は、weight_modeを
+セットするように修正。
+この修正でよいか、やや疑問。
+
+2006.07.04
+ht-rnd-st.cpp
+get_vector32でtmp_vecを作っているところ。
+bitの集め方が、次のweight_modeと整合性がなかった。
+
+不明
+ht-rnd-st.cpp
+is_zero の判定をmemcmpから変更した。

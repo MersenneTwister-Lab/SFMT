@@ -1,0 +1,20 @@
+2006.07.12
+distribution のコンパイルは終わったが、結果が出ない。
+sfmt-st.cpp と sfmt7x7.c が違うのか。
+チェック中...同じだった。
+search.cppが違うということか。
+protoからsearch-dist.cppをコピー
+search-dist.cppは古かったので消す。
+search.cpp のバグが判明。
+param-search521はdistributionの前まで動く。
+chk-shortest.cppのバグ発見
+LCMを求めるときgenerating_polynomial32を使っていた。
+generating_polynomial128に修正
+make_zero_stateでgen_rand32を呼び出していた。
+gen_rand128に修正
+32 bit distribution が全部0になる。
+make_zero_state で0になっていた。
+sfmtのspecialフラグをoffにしていなかったのが間違い。
+
+2006.07.11
+SFMTのdistribution 修正開始
