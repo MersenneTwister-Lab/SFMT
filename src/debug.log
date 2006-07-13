@@ -1,3 +1,7 @@
+2006.07.13
+search-allを作るために、ソース構成を修正。
+sfmt-util.cpp を作成
+
 2006.07.12
 distribution のコンパイルは終わったが、結果が出ない。
 sfmt-st.cpp と sfmt7x7.c が違うのか。
@@ -6,6 +10,7 @@ search.cppが違うということか。
 protoからsearch-dist.cppをコピー
 search-dist.cppは古かったので消す。
 search.cpp のバグが判明。
+maskが設定されていなかった。
 param-search521はdistributionの前まで動く。
 chk-shortest.cppのバグ発見
 LCMを求めるときgenerating_polynomial32を使っていた。

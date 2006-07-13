@@ -7,6 +7,7 @@
 #include "shortbase128.h"
 #include "util.h"
 #include "sfmt-st.h"
+#include "sfmt-util.h"
 
 NTL_CLIENT;
 
@@ -31,6 +32,59 @@ static sfmt_t bases[128 + 1];
 static int bit_len;
 static int status_mode;
 static int max_weight_mode;
+
+int get_equiv_distrib32(int bit, sfmt_t *sfmt) {
+    static sfmt_t sfmtnew;
+    int dist, min;
+    uint32_t mode;
+
+    min = INT_MAX;
+    //printf("dist = ");
+    for (mode = 0; mode < 4; mode++) {
+	sfmtnew = *sfmt;
+	set_up(32, bit, mode);
+	dist = get_shortest_base(&sfmtnew);
+	//printf("%d ", dist);
+	//printf("dist = %d\n", dist);
+	if (dist < min) {
+	    min = dist;
+	}
+    }
+    //printf("\n");
+    return min;
+}
+
+int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
+    static sfmt_t sfmtnew;
+    int dist, min;
+    uint32_t mode;
+
+    min = INT_MAX;
+    //printf("dist = ");
+    for (mode = 0; mode < 4; mode += 2) {
+	sfmtnew = *sfmt;
+	set_up(64, bit, mode);
+	dist = get_shortest_base(&sfmtnew);
+	//printf("%d ", dist);
+	//printf("dist = %d\n", dist);
+	if (dist < min) {
+	    min = dist;
+	}
+    }
+    //printf("\n");
+    return min;
+}
+
+int get_equiv_distrib128(int bit, sfmt_t *sfmt) {
+    static sfmt_t sfmtnew;
+    int dist;
+
+    sfmtnew = *sfmt;
+    set_up(128, bit, 0);
+    dist = get_shortest_base(&sfmtnew);
+    return dist;
+}
+
 void set_up(uint32_t bit_mode, uint32_t len, uint32_t p_mode) {
     switch (bit_mode) {
     case 32:

@@ -44,8 +44,9 @@ search-dist521: search-dist.o sfmt-st.o mt19937ar.o util.o shortbase.o
 	${CPP} -o $@ search-dist.o sfmt-st.o mt19937ar.o util.o shortbase.o \
 		${LINKOPT}
 
-shortest128-base521: chk-shortest.o shortbase128.o sfmt-st.o util.o
-	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt-st.o util.o ${LINKOPT}
+shortest128-base521: chk-shortest.o shortbase128.o sfmt-st.o sfmt-util.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt-st.o sfmt-util.o \
+		util.o ${LINKOPT}
 
 shortest128-88q1-base521: chk-shortest.o shortbase128.o sfmt-st88q1.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt-st88q1.o util.o ${LINKOPT}

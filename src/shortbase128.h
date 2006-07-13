@@ -12,5 +12,8 @@ NTL_CLIENT;
 
 void set_up(uint32_t bit_mode, uint32_t len, uint32_t p_mode);
 int get_shortest_base(sfmt_t *sfmt);
+int get_equiv_distrib32(int bit, sfmt_t *sfmt);
+int get_equiv_distrib64(int bit, sfmt_t *sfmt);
+int get_equiv_distrib128(int bit, sfmt_t *sfmt);
 
 #endif
