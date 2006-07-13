@@ -40,7 +40,7 @@ unsigned int get_rnd_mexp(void)
 }
 
 void print_version(FILE *fp) {
-    fprintf(fp, "version:SFMT7x7\n");
+    fprintf(fp, "version:SFMT88q1\n");
 }
 
 void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
@@ -49,12 +49,12 @@ void setup_param(unsigned int p1, unsigned int p2, unsigned int p3,
 		 unsigned int p10, unsigned int p11, unsigned int p12,
 		 unsigned int p13) {
     POS1 = p1 % (N-2) + 1;
-    SL1 = p2 % (32 - 1) + 1;
-    SR1 = p3 % (32 - 1) + 1;
-    MSK1= p4 | p5;
-    MSK2= p6 | p7;
-    MSK3= p8 | p9;
-    MSK4= p10 | p11;
+    SR1 = p2 % 2;
+    SL1 = p3 % (8 - 1) + 1;
+    MSK1= p4 | p5 | p6;
+    MSK2= p6 | p7 | p8;
+    MSK3= p9 | p10 | p11;
+    MSK4= p11 | p12 | p13;
 }
 
 void print_param(FILE *fp) {
@@ -76,10 +76,34 @@ void print_param2(FILE *fp) {
 }
 
 static inline void do_recursion(uint32_t a[4], uint32_t b[4], uint32_t c[4]) {
-    a[0] = a[0] ^ (b[1] & MSK1) ^ (b[0] << SL1) ^ (c[0] >> SR1);
-    a[1] = a[1] ^ (b[2] & MSK2) ^ (b[1] << SL1) ^ (c[1] >> SR1);
-    a[2] = a[2] ^ (b[3] & MSK3) ^ (b[2] << SL1) ^ (c[2] >> SR1);
-    a[3] = a[3] ^ (b[0] & MSK4) ^ (b[3] << SL1) ^ (c[3] >> SR1);
+    uint64_t t;
+    uint32_t bb[4];
+    uint32_t aa[4];
+    int i;
+
+    t = ((uint64_t)b[1] << 32) | ((uint64_t)b[0]);
+    if (SR1 == 0) {
+	t = t << SL1;
+    } else {
+	t = t >> SL1;
+    }
+    bb[1] = (uint32_t)(t >> 32);
+    bb[0] = (uint32_t)t;
+    t = ((uint64_t)b[3] << 32) | ((uint64_t)b[2]);
+    if (SR1 == 0) {
+	t = t << SL1;
+    } else {
+	t = t >> SL1;
+    }
+    bb[3] = (uint32_t)(t >> 32);
+    bb[2] = (uint32_t)t;
+    for (i = 0; i < 4; i++) {
+	aa[i] = a[i];
+    }
+    a[0] = aa[1] ^ b[1] ^ bb[0] ^ (c[0] & MSK1);
+    a[1] = aa[2] ^ b[3] ^ bb[1] ^ (c[1] & MSK2);
+    a[2] = aa[3] ^ b[0] ^ bb[2] ^ (c[2] & MSK3);
+    a[3] = aa[0] ^ b[2] ^ bb[3] ^ (c[3] & MSK4);
 }
 
 /*

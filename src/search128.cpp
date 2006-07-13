@@ -14,6 +14,8 @@ extern "C" {
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
 #include "util.h"
+#include "sfmt-util.h"
+#include "shortbase128.h"
 
 NTL_CLIENT;
 
@@ -24,118 +26,77 @@ static unsigned long all_count = 0;
 static unsigned long pass_count = 0;
 static unsigned int maxdegree;
 static unsigned int mexp;
+static unsigned int succ = 0;
+
 #if 1
 static FILE *frandom;
 #endif
 
-bool generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec, uint32_t bitpos, 
-				 uint32_t maxdegree)
-{
-    unsigned int i;
-    uint64_t hi, low;
-    uint64_t mask;
-    uint64_t bit;
-
-    mask = (uint64_t)1ULL << (63 - bitpos);
-    for (i = 0; i <= 2 * maxdegree - 1; i++) {
-	gen_rand128(sfmt, &hi, &low);
-	bit = (hi & mask);
-	if (bit) {
-	    vec[i] = 1;
-	} else {
-	    vec[i] = 0;
-	}
-    }
-    return true;
-}
-
-bool generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec, uint32_t bitpos, 
-				 uint32_t maxdegree)
-{
-    unsigned int i;
-    uint64_t hi, low;
-    uint64_t mask;
-    uint64_t bit;
-
-    mask = (uint64_t)1ULL << (63 - bitpos);
-    for (i = 0; i <= 2 * maxdegree - 1; i++) {
-	gen_rand128(sfmt, &hi, &low);
-	bit = (low & mask);
-	if (bit) {
-	    vec[i] = 1;
-	} else {
-	    vec[i] = 0;
-	}
-    }
-    return true;
-}
-
-bool generating_polynomial128(sfmt_t *sfmt, vec_GF2& vec, unsigned int bitpos, 
-			   unsigned int maxdegree)
-{
-    if (bitpos < 64) {
-	return generating_polynomial128_hi(sfmt, vec, bitpos, maxdegree);
-    } else {
-	return generating_polynomial128_low(sfmt, vec, bitpos - 64, maxdegree);
-    }
-}
-
-bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
+bool print_shortest(sfmt_t *sfmt, GF2X& poly) {
+    unsigned int bit;
+    GF2X lcmpoly;
     GF2X minpoly;
     GF2X tmp;
     GF2X rempoly;
     sfmt_t sfmt_save;
-    int i;
     vec_GF2 vec;
-    int rc;
+    int shortest;
+    uint32_t i, j;
+    int dist_sum;
+    int count;
+    int old;
     int lcmcount;
 
-    vec.SetLength(2 * maxdegree);
-    //init_gen_rand(&sfmt, 12345678901ULL);
+    sfmt->special = false;
     sfmt_save = *sfmt;
-    rc = generating_polynomial128(sfmt, vec, 0, maxdegree);
-    if (!rc) {
-	printf("getLCM faile\n");
-	return false;
-    }
+    vec.SetLength(2 * maxdegree);
+    generating_polynomial128(sfmt, vec, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
-    for (i = 1; i < 128; i++) {
-	rc = generating_polynomial128(sfmt, vec, i, maxdegree);
-	if (!rc) {
-	    printf("getLCM faile\n");
-	    return false;
+#if 0
+    if (check_minpoly128(sfmt, lcmpoly, 0)) {
+	printf("check minpoly OK!\n");
+	DivRem(tmp, rempoly, lcmpoly, poly);
+	if (deg(rempoly) != -1) {
+	    printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
 	}
+
+    } else {
+	printf("check minpoly NG!\n");
+    }
+#endif
+    for (i = 1; i < 128; i++) {
+	//sfmt = sfmt_save;
+	generating_polynomial128(sfmt, vec, i, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
-    }
 #if 0
-    if (deg(lcmpoly) != (long)maxdegree) {
-	printf("fail in 128bit try next initial state\n");
-	return false;
-    }
+	DivRem(tmp, rempoly, lcmpoly, poly);
+	if (deg(rempoly) != -1) {
+	    printf("rem != 0 deg rempoly = %ld: %d\n", deg(rempoly), i);
+	}
 #endif
-#if 1
+    }
+#if 1 // 0状態を作るにはこれは不要？
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
 	if (lcmcount > 1000) {
-	    printf("getLCM faile\n");
+	    printf("failure: deg = %ld\n", deg(lcmpoly));
 	    return false;
 	}
 	errno = 0;
-	fread(sfmt->sfmt, sizeof(uint32_t), N * 4, frandom);
-	if (errno) {
-	    printf("set_bit:%s\n", strerror(errno));
-	    fclose(frandom);
-	    exit(1);
-	}
-	for (int j = 0; j < 128; j++) {
-	    rc = generating_polynomial128(sfmt, vec, j, maxdegree);
-	    if (!rc) {
+	fill_state_random(sfmt, frandom);
+	for (j = 0; j < 10; j++) {
+	    int z = (unsigned int)getw(frandom) % 128;
+	    generating_polynomial128(sfmt, vec, z, maxdegree);
+	    if (IsZero(vec)) {
 		break;
 	    }
 	    berlekampMassey(minpoly, maxdegree, vec);
 	    LCM(tmp, lcmpoly, minpoly);
+	    if (deg(tmp) > (long)maxdegree) {
+		break;
+	    }
 	    lcmpoly = tmp;
 	    lcmcount++;
 	    if (deg(lcmpoly) >= (long)maxdegree) {
@@ -143,30 +104,82 @@ bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
 	    }
 	}
     }
-#endif
     if (deg(lcmpoly) != (long)maxdegree) {
-	printf("fail in 128bit try next initial state\n");
+	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
 	return false;
     }
+#endif
+    printf("----------\n");
+    printf("succ = %u\n", ++succ);
+    printf("deg = %ld\n", deg(poly));
+    print_param(stdout);
+    //print_param2(stdout);
+    printBinary(stdout, poly);
+#if 0
+    *sfmt = sfmt_save;
+    if (check_minpoly128(sfmt, lcmpoly, 0)) {
+	printf("check minpoly 2 OK!\n");
+    } else {
+	printf("check minpoly 2 NG!\n");
+    }
+#endif
+    printf("deg lcm poly = %ld\n", deg(lcmpoly));
+    printf("weight = %ld\n", weight(lcmpoly));
+    printBinary(stdout, lcmpoly);
     DivRem(tmp, rempoly, lcmpoly, poly);
+    printf("deg tmp = %ld\n", deg(tmp));
     if (deg(rempoly) != -1) {
 	printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
 	return false;
     }
-    return true;
-#if 0
     *sfmt = sfmt_save;
-    make_zero_state_inv(sfmt, tmp);
+#if 0
+    printf("chek sfmt status \n");
+    for (i = 0; i < 10; i++) {
+	printf("%u ", sfmt->sfmt[i / 4][i % 4]);
+	if (i % 5 == 4) {
+	    printf("\n");
+	}
+    }
+    printf("\n");
+#endif
+    make_zero_state(sfmt, tmp);
+#if 0
+    printf("chek sfmt status \n");
+    for (i = 0; i < 10; i++) {
+	printf("%u ", sfmt->sfmt[i / 4][i % 4]);
+	if (i % 5 == 4) {
+	    printf("\n");
+	}
+    }
+    printf("\n");
+#endif
+    sfmt_save = *sfmt;
+    // チェック
+#if 0
+    for (i = 0; i < 128; i++) {
+	generating_polynomial128(sfmt, vec, i, maxdegree);
+	berlekampMassey(minpoly, maxdegree, vec);
+	if (deg(minpoly) != MEXP) {
+	    printf("deg zero state = %ld\n", deg(minpoly));
+	    for (j = 0; j < 10; j++) {
+		printf("%d \n", gen_rand32(sfmt));
+	    }
+	    cout << "vec =" << vec << endl;
+	    cout << "minpoly = " << minpoly << endl; 
+	    return false;
+	}
+    }
+#endif
+    //check_vector128(sfmt);
+
+#if 1
     dist_sum = 0;
     count = 0;
     old = 0;
-    for (bit = 1; bit <= 32; bit++) {
-	shortest = get_equiv_distrib(bit, sfmt);
-	if (shortest > mexp) {
-	    printf("k(%d) = %d\n", bit, shortest);
-	    printf("distribution greater than mexp!\n");
-	    return false;
-	}
+    printf("128 bit k-distribution\n");
+    for (bit = 1; bit <= 128; bit++) {
+	shortest = get_equiv_distrib128(bit, sfmt);
 	dist_sum += mexp / bit - shortest;
 	if (old == shortest) {
 	    count++;
@@ -177,15 +190,53 @@ bool getLCM(GF2X& lcmpoly, sfmt_t *sfmt, const GF2X& poly) {
 	printf("k(%d) = %d\n", bit, shortest);
 	fflush(stdout);
     }
-    printf("D.D:%7d, DUP:%5d\n", dist_sum, count);
-    fflush(stdout);
-    return true;
+    printf("128bit D.D:%7d, DUP:%5d\n", dist_sum, count);
 #endif
+#if 1
+    dist_sum = 0;
+    count = 0;
+    old = 0;
+    printf("64 bit k-distribution\n");
+    for (bit = 1; bit <= 64; bit++) {
+	shortest = get_equiv_distrib64(bit, sfmt);
+	dist_sum += mexp / bit - shortest;
+	if (old == shortest) {
+	    count++;
+	} else {
+	    old = shortest;
+	}
+	//printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
+	printf("k(%d) = %d\n", bit, shortest);
+	fflush(stdout);
+    }
+    printf("64bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+#endif
+    dist_sum = 0;
+    count = 0;
+    old = 0;
+    printf("32 bit k-distribution\n");
+    //printf("start calc distribution\n");
+    //fflush(stdout);
+    for (bit = 1; bit <= 32; bit++) {
+    // DEBUG DEBUG DEBUG
+    //for (bit = 1; bit <= 1; bit++) {
+	shortest = get_equiv_distrib32(bit, sfmt);
+	dist_sum += mexp / bit - shortest;
+	if (old == shortest) {
+	    count++;
+	} else {
+	    old = shortest;
+	}
+	//printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
+	printf("k(%d) = %d\n", bit, shortest);
+	fflush(stdout);
+    }
+    printf("32bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+    return true;
 }
 
 void search(unsigned int n) {
     int j;
-    unsigned int succ = 0;
     bool checkOk;
     GF2X minpoly;
     GF2X lcmpoly;
@@ -227,7 +278,7 @@ void search(unsigned int n) {
 		break;
 	    }
 	}
-	if (checkOk && getLCM(lcmpoly, &sfmt, minpoly)) {
+	if (checkOk && print_shortest(&sfmt, minpoly)) {
 	    printf("----------\n");
 	    printf("succ = %u\n", ++succ);
 	    printf("deg = %ld\n", deg(minpoly));
@@ -235,9 +286,9 @@ void search(unsigned int n) {
 	    //print_param2(stdout);
 	    printBinary(stdout, minpoly);
 	    fflush(stdout);
-	    printf("lcm:\n");
-	    printBinary(stdout, lcmpoly);
-	    printf("weight = %ld\n", weight(lcmpoly));
+	    //printf("lcm:\n");
+	    //printBinary(stdout, lcmpoly);
+	    //printf("weight = %ld\n", weight(lcmpoly));
 	    pass_count++;
 	    if (succ >= n) {
 		break;
@@ -272,12 +323,13 @@ int main(int argc, char* argv[]){
     seed = (long)time(NULL);
     printf("seed = %lu\n", seed);
     init_genrand(seed);
+    print_version(stdout);
     printf("now search %d times\n", n);
     fflush(stdout);
 #if 1
     frandom = fopen("/dev/random", "r");
     if (errno) {
-	perror("main");
+	printf("main:%s\n", strerror(errno));
 	exit(1);
     }
 #endif

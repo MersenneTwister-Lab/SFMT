@@ -31,8 +31,15 @@ test_gen521: sfmt.o test_gen.o
 test-gen-st521: sfmt-st.o test-gen-st-cpp.o
 	${CPP} -o $@ sfmt-st.o test-gen-st-cpp.o ${LINKOPT}
 
-param-search521: search128.o sfmt-st.o mt19937ar.o util.o
-	${CPP} -o $@ search128.o sfmt-st.o mt19937ar.o util.o ${LINKOPT}
+param-search521: search128.o sfmt-st.o mt19937ar.o util.o shortbase128.o \
+		sfmt-util.o
+	${CPP} -o $@ search128.o sfmt-st.o mt19937ar.o util.o shortbase128.o \
+		sfmt-util.o ${LINKOPT}
+
+param88q1-search521: search128.o sfmt88q1-st.o mt19937ar.o util.o \
+	shortbase128.o sfmt-util.o
+	${CPP} -o $@ search128.o sfmt88q1-st.o mt19937ar.o util.o \
+		shortbase128.o sfmt-util.o ${LINKOPT}
 
 param32-search521: search32.o sfmt-st.o mt19937ar.o util.o
 	${CPP} -o $@ search32.o sfmt-st.o mt19937ar.o util.o ${LINKOPT}

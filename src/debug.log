@@ -1,6 +1,9 @@
 2006.07.13
 search-allを作るために、ソース構成を修正。
 sfmt-util.cpp を作成
+search128.cpp に統合してしまった。
+sfmt88q1-st.cppを作成。
+magi のMakefileが最適化されていなかった。
 
 2006.07.12
 distribution のコンパイルは終わったが、結果が出ない。

@@ -34,6 +34,7 @@ unsigned int get_rnd_maxdegree(void);
 unsigned int get_rnd_mexp(void);
 void print_param(FILE *fp);
 void print_param2(FILE *fp);
+void print_version(FILE *fp);
 
 void init_gen_rand(sfmt_t *sfmt, uint32_t seed);
 uint32_t gen_rand32(sfmt_t *sfmt);
