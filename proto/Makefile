@@ -147,6 +147,21 @@ param-search8q2-521: search.o sfmt8q2.o mt19937ar.o util.o debug.o
 param-search88q1-521: search.o sfmt88q1.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmt88q1.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-search88q1-607: search.o sfmt88q1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmt88q1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX1-521: search.o sfmtX1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX1-607: search.o sfmtX1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX2-607: search.o sfmtX2.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX2.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX3-607: search.o sfmtX3.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX3.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}
@@ -167,6 +182,21 @@ shortest-base521: chk-shortest.o shortbase.o sfmt4a-cls.o util.o
 
 shortest-base5-521: chk-shortest.o shortbase.o sfmt5-cls.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase.o sfmt5-cls.o util.o ${LINKOPT}
+
+shortest-baseX1-521: chk-shortest.o shortbase128.o sfmtX1-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX1-st.o util.o ${LINKOPT}
+
+shortest-baseX1-607: chk-shortest.o shortbase128.o sfmtX1-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX1-st.o util.o ${LINKOPT}
+
+shortest-baseX2-607: chk-shortest.o shortbase128.o sfmtX2-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX2-st.o util.o ${LINKOPT}
+
+shortest-baseX3-607: chk-shortest.o shortbase128.o sfmtX3-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX3-st.o util.o ${LINKOPT}
+
+shortest-base88q1-607: chk-shortest.o shortbase128.o sfmt88q1-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt88q1-st.o util.o ${LINKOPT}
 
 shortest32-base5-521: chk-shortest32.o shortbase.o sfmt5-cls.o util.o
 	${CPP} -o $@ chk-shortest32.o shortbase.o sfmt5-cls.o util.o \

@@ -1,8 +1,5 @@
 /* Hearty Twister Search Code, Makoto Matsumoto 2005/5/6 */
 
-//#include <string.h>
-//#include <limits.h>
-//#include <errno.h>
 #include <stdio.h>
 
 #include <NTL/GF2X.h>
@@ -38,9 +35,9 @@ int non_reducible(GF2X& fpoly, int degree) {
 		return 0;
 	    }
 	}
-	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
-	    return 0;
-	}
+//	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
+//	    return 0;
+//	}
 	t2m *= t2m;
 	t2m %= fpoly;
 	add(t, t2m, t1);
@@ -117,4 +114,23 @@ int32_t gauss_plus(mat_GF2& mat) {
 	}
     }
     return rank;
+}
+
+void readFile(GF2X& poly, FILE *fp) {
+    char c;
+    unsigned int j = 0;
+
+    while ((c = getc(fp)) != EOF) {
+	if (c < ' ') {
+	    continue;
+	} else if (c == '1') {
+	    SetCoeff(poly, j, 1);
+	    j++;
+	} else if (c == '0') {
+	    SetCoeff(poly, j, 0);
+	    j++;
+	} else {
+	    break;
+	}
+    }
 }

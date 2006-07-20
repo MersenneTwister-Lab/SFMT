@@ -87,8 +87,8 @@ void search(unsigned int n) {
 		}
 		break;
 	    } else {
-		printBinary(stdout, minpoly);
-		fflush(stdout);
+		//printBinary(stdout, minpoly);
+		//fflush(stdout);
 	    }
 	}
 	if (bmOk) {
@@ -110,6 +110,7 @@ void search(unsigned int n) {
     printf("count = %llu\n", all_count);
     fflush(stdout);
 }
+
 
 int main(int argc, char* argv[]){
     int n;
@@ -133,6 +134,5 @@ int main(int argc, char* argv[]){
     printf("now search %d times\n", n);
     fflush(stdout);
     search(n);
-
     return 0;
 }
