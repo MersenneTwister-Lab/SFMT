@@ -165,6 +165,21 @@ param-searchX3-607: search.o sfmtX3.o mt19937ar.o util.o debug.o
 param-searchX4-607: search.o sfmtX4.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtX4.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-searchX5-607: search.o sfmtX5.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX5.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX6-607: search.o sfmtX6.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX6.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX7-607: search.o sfmtX7.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX7.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX71-607: search.o sfmtX71.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX71.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX72-607: search.o sfmtX72.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX72.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}
@@ -200,6 +215,23 @@ shortest-baseX3-607: chk-shortest.o shortbase128.o sfmtX3-st.o util.o
 
 shortest-baseX4-607: chk-shortest.o shortbase128.o sfmtX4-st.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX4-st.o util.o ${LINKOPT}
+
+shortest-baseX5-607: chk-shortest.o shortbase128.o sfmtX5-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX5-st.o util.o ${LINKOPT}
+
+shortest-baseX6-607: chk-shortest.o shortbase128.o sfmtX6-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX6-st.o util.o ${LINKOPT}
+
+shortest-baseX7-607: chk-shortest.o shortbase128.o sfmtX7-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX7-st.o util.o ${LINKOPT}
+
+shortest-baseX71-607: chk-shortest.o shortbase128.o sfmtX71-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX71-st.o util.o \
+		${LINKOPT}
+
+shortest-baseX72-607: chk-shortest.o shortbase128.o sfmtX72-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX72-st.o util.o \
+		${LINKOPT}
 
 shortest-base88q1-607: chk-shortest.o shortbase128.o sfmt88q1-st.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt88q1-st.o util.o ${LINKOPT}
