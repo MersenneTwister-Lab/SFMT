@@ -4,7 +4,7 @@
 %107:MEXP=107
 %127:MEXP=127
 %521:MEXP=521
-#%607:MEXP=607
+%607:MEXP=607
 %19937:MEXP=19937
 #%44497:MEXP=44497
 #%86243:MEXP=86243
@@ -57,6 +57,10 @@ shortest128-base521: chk-shortest.o shortbase128.o sfmt-st.o sfmt-util.o util.o
 
 shortest128-88q1-base521: chk-shortest.o shortbase128.o sfmt-st88q1.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt-st88q1.o util.o ${LINKOPT}
+
+shortestX7-base607: chk-shortest.o shortbase128.o sfmtX7-st.o util.o sfmt-util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX7-st.o util.o \
+	sfmt-util.o ${LINKOPT}
 
 ht-shortest128-base521: ht-chk-shortest.o ht-shortbase128.o ht-rnd-st.o util.o
 	${CPP} -o $@ ht-chk-shortest.o ht-shortbase128.o ht-rnd-st.o \
