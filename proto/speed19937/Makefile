@@ -84,6 +84,12 @@ sfmtX2_alti_inline: test_time_inline.c sfmtX2_alti_inline.c
 sfmtX2_alti_inline2: test_time_inline.c sfmtX2_alti_inline.c
 	${CC} -o $@ sfmtX2_alti_inline.c
 
+sfmtX7_alti_inline: test_time_inline.c sfmtX7_alti_inline.c
+	${CC} -DTICK=1 -o $@ sfmtX7_alti_inline.c
+
+sfmtX7_alti_inline2: test_time_inline.c sfmtX7_alti_inline.c
+	${CC} -o $@ sfmtX7_alti_inline.c
+
 sfmt4a_alti44497_inline: test_time_inline.c sfmt4a_alti44497_inline.h
 	${CC} -DRANDOM=sfmt4a_alti44497_inline.h -o $@ test_time_inline.c
 
@@ -138,6 +144,9 @@ sfmt6_std: sfmt6_std.o test_time.o
 
 sfmt7_std: sfmt7_std.o test_time.o
 	${CC} -o $@ sfmt7_std.o test_time.o
+
+sfmtX7_std: sfmtX7_std.o test_time.o
+	${CC} -o $@ sfmtX7_std.o test_time.o
 
 pmt_fastc: ht-rnd.o test_time.o
 	${CC} -o $@ ht-rnd.o test_time.o
