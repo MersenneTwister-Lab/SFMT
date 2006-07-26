@@ -60,7 +60,7 @@ void print_param(FILE *fp) {
 
 void print_param2(FILE *fp) {
     fprintf(fp, "[POS1, SL1, SL2, SL3, SR1, MSK1, MSK2, MSK3, MSK4] = "
-	    "[%u,%u,%u,%lu,%lu,%lu,%lu, %lu, %lu]\n", 
+	    "[%u,%u,%u,%u,%u,%lu,%lu, %lu, %lu]\n", 
 	    POS1, SL1, SL2, SL3, SR1, MSK1, MSK2, MSK3, MSK4);
     fflush(fp);
 }
@@ -71,7 +71,7 @@ INLINE void print_state(FILE *fp) {
 
     psfmt = (uint32_t *)sfmt;
     for (i = 0; i < N; i++) {
-	fprintf(fp, "%08x ", psfmt[i]);
+	fprintf(fp, "%08lx ", psfmt[i]);
 	if (i % 8 == 7) {
 	    fprintf(fp, "\n");
 	}

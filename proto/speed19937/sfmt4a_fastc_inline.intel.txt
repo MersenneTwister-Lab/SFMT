@@ -1,0 +1,2 @@
+3556093tick and 624000 randoms = 17.55 randoms per 100tick
+9815025tick and 624000 randoms = 6.36 randoms per 100tick

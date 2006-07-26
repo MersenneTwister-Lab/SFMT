@@ -1,0 +1,2 @@
+31354 tick and 9984 randoms = 31.84 randoms per 100tick
+120516 tick and 9984 randoms = 8.28 randoms per 100tick

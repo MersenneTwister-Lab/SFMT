@@ -1,0 +1,2 @@
+BURST:160 ms and 9984000 randoms = 1.603 ms per 10000000randoms
+SEQUE:110 ms and 9984000 randoms = 1.102 ms per 10000000randoms

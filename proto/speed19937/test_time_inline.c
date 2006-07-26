@@ -55,7 +55,7 @@ static unsigned long long get_clock() {
 #endif
 
 #define KAISU 10000
-#ifdef __GNUC__
+#if defined(__GNUC__) && defined(__ppc__)
 //uint32_t dummy[KAISU/4+1] __attribute__((aligned(16)));
 vector unsigned int dummy[KAISU/4+1];
 #else
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 	printf("generated randoms\n");
 	fill_array_block(array, 1000 / block + 1);
 	for (i = 0; i < 1000; i++) {
-	    printf("%10u ", array[i]);
+	    printf("%10lu ", array[i]);
 	    if (i % 5 == 4) {
 		printf("\n");
 	    }

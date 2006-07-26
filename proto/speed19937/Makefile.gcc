@@ -1,6 +1,8 @@
 #for GNU make
 
-CC = gcc -Wall -O9 -Wmissing-prototypes $(DDEBUG) $(DMEXP) $(DPG)
+#INC = /lib/gcc/i686-pc-cygwin/3.4.4/include
+#CC = gcc -Wall -O9 -mtune=pentium3 -Wmissing-prototypes -I$(INC)
+CC = gcc -Wall -O9 -Wmissing-prototypes -finline-functions -march=prescott -fomit-frame-pointer
 CPP = g++ -Wall -fast $(DDEBUG) $(DMEXP) $(DPG)
 
 
@@ -12,6 +14,19 @@ sfmt4a_sse2_inline: sfmt4a_sse2_inline.h test_time_inline.c
 
 sfmt4a_sse2_inline2: sfmt4a_sse2_inline.h test_time2_inline.c
 	${CC} -DRANDOM=sfmt4a_sse2_inline.h -o $@ test_time2_inline.c
+
+sfmtX7_sse2_inline: sfmtX7_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmtX7_sse2_inline.c
+
+sfmtX7_sse2_inline2: sfmtX7_sse2_inline.c 
+	${CC} -o $@ sfmtX7_sse2_inline.c
+
+mt19937ar_sse2_inline: mt19937ar_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ mt19937ar_sse2_inline.c
+
+mt19937ar_sse2_inline2: mt19937ar_sse2_inline.c 
+	${CC} -o $@ mt19937ar_sse2_inline.c
+
 
 #### NORMAL C ####
 sfmt_fastc: sfmt.o test_time.o

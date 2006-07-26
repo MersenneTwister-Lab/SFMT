@@ -1,0 +1,2 @@
+645 tick and 9984 randoms = 15.48 randoms per 1tick
+2020 tick and 9984 randoms = 4.94 randoms per 1tick
