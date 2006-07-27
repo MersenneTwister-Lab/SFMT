@@ -180,6 +180,18 @@ param-searchX71-607: search.o sfmtX71.o mt19937ar.o util.o debug.o
 param-searchX72-607: search.o sfmtX72.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtX72.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-searchX73-607: search.o sfmtX73.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX73.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX74-607: search.o sfmtX74.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX74.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX75-607: search.o sfmtX75.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX75.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchX76-607: search.o sfmtX76.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX76.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}
@@ -233,6 +245,22 @@ shortest-baseX72-607: chk-shortest.o shortbase128.o sfmtX72-st.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX72-st.o util.o \
 		${LINKOPT}
 
+shortest-baseX73-607: chk-shortest.o shortbase128.o sfmtX73-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX73-st.o util.o \
+		${LINKOPT}
+
+shortest-baseX74-607: chk-shortest.o shortbase128.o sfmtX74-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX74-st.o util.o \
+		${LINKOPT}
+
+shortest-baseX75-607: chk-shortest.o shortbase128.o sfmtX75-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX75-st.o util.o \
+		${LINKOPT}
+
+shortest-baseX76-607: chk-shortest.o shortbase128.o sfmtX76-st.o util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX76-st.o util.o \
+		${LINKOPT}
+
 shortest-base88q1-607: chk-shortest.o shortbase128.o sfmt88q1-st.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmt88q1-st.o util.o ${LINKOPT}
 
@@ -256,4 +284,4 @@ test_gauss: test_gauss.cpp
 	${CC} -c $<
 
 clean:
-	rm -f *.o
+	rm -f *.o *~
