@@ -1,0 +1,515 @@
+\documentclass[a4j,12pt,landscape]{jarticle}
+\topmargin=3mm \headheight=0mm \headsep=0mm
+\textheight=170mm 
+\textwidth=220mm
+\evensidemargin=0mm \oddsidemargin=0mm
+\footskip=0mm
+\parindent=0cm
+
+\usepackage[all]{xy}
+\usepackage{amssymb}
+\usepackage{amscd}
+\usepackage{amsmath}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{amsthm}
+
+\pagestyle{empty}
+
+\def\modulo{{\rm mod}}
+\def\F2{{\mathbb F}_2}
+\def\wt{{\rm wt}}
+\def\wo{{\rm wt}_o}
+\def\wf{{\rm wt}_f}
+\def\UL{{\rm ul}}
+\def\bx{{{\mathbf x}}}
+\def\by{{{\mathbf y}}}
+\def\bw{{{\mathbf w}}}
+\def\bu{{{\mathbf u}}}
+
+
+\title{}
+\author{}
+\date{\today}
+
+\begin{document}
+{\Huge
+
+\vspace*{2cm}
+\begin{center}
+{\bf Hearty Twister: a new random number generator}
+\vspace{1cm}
+
+Hiroshi Haramoto (Hiroshima Univ.), \\
+Francois Panneton(Caisse centrale Desjardins), \\
+Takuji Nishimura(Yamagata Univ.), \\
+and \\
+Makoto Matsumoto (Hiroshima Univ.).
+\end{center}
+\newpage
+
+\newpage
+\noindent
+{\bf 1. Pseudo Random Number Genarator}\\
+
+In this talk, PRNG is a (finite state) automaton consisting of:
+\begin{itemize}
+\item State set $S$. 
+\item Transition function $f:S \to S$.
+\item Initial state $s_0 \in S$.
+\item (No imput considered.)
+\end{itemize}
+Change the state as follows:
+$$
+s_0 \mapsto s_1:= f(s_0) \mapsto s_2:=f(s_1) \mapsto \cdots.
+$$
+
+\newpage
+Let $O$ be the set of output symbols.
+
+(In this talk, we assume $O$=32-bit integers.)
+
+\vskip 1cm
+At each state $s$, 
+the output is determined by 
+\begin{itemize}
+\item an output function $o:S \to O$.
+\end{itemize}
+The output sequence becomes
+$$
+o(s_0),o(s_1),o(s_2),\ldots.
+$$
+We use this as a pseudo-random sequence.
+\newpage
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure01.eps}
+\\
+Figure 1: Automaton.
+\end{center}
+
+ 
+\newpage
+\noindent
+{\bf 2. Feedbacked Shift Regiter}\\
+In the above automaton, 
+its period is bounded  \\
+by the number of the states $\#(S)$.
+
+\vskip 5mm
+We want large $S$ (like 20000 bits), \\
+which admits fast computation of $f$ \\
+in a software implementation.
+
+\vskip 5mm
+Feedbacked Shift Register (FSR) permits $f$ \\
+with $O(1)$-time complexity.
+
+\newpage
+Feedbacked Shift Register.
+\begin{itemize}
+\item
+$S=$an array of words(=32-bit integers) of length $N$:
+$$
+S = \{(\bw_0,\ldots,\bw_{N-1})| \bw_i \mbox{: 32-bit integer}\}.
+$$
+\item
+$f:(\bw_0,\ldots,\bw_{N-1}) \mapsto (\bw_1,\ldots,\bw_{N-1}, \by)$,
+
+where $\by$ is given by a function $g$
+$$\by:=g(\bw_0,\ldots,\bw_{N-1}).$$
+\end{itemize}
+
+Round robin reduces the computation of $f$ to that of $g$. 
+
+For high speed generation, $g$ looks at only a few words \\
+in the state array.
+\newpage
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure02.eps}
+\\
+Figure 2: Feedbacked Shift Register.
+\\
+\end{center}
+\newpage
+\noindent
+{\bf 3 Linear Generator}
+
+We identify: 
+\begin{itemize}
+\item 
+a bit $\{0,1\}$ with the two element field $\F2$, and
+\item 
+a word (32-bit integer) with horizontal vector $\F2^{32}$.
+\item 
+Regard $S$ as an $\F2$-vector space.
+\end{itemize}
+An automaton is said to be {\em $\F2$-linear} if 
+the transition function $f$ and 
+the output function $o$ are both $\F2$-linear. \\
+~~~We consider only this kind of automata, with 
+justification:
+\begin{itemize}
+\item the period is computable
+\item some kinds of assurance on the distribution \\
+(such as the dimension of equidistribution) can be given
+\item can be converted to a non-linear sequence 
+by using a non-linear transform. 
+\end{itemize}
+
+\newpage
+\noindent
+{\bf 4. Examples of Linear FSR}
+
+{\bf GFSR} ('73, Lewis-Payne)
+$$
+g(\bw_0,\ldots,\bw_{N-1}) = g(\bw_0, \bw_M) = \bw_0 + \bw_M.
+$$
+The function $g$ reads only two words, so this is called \\
+a two-tap FSR.
+
+Period is $2^N-1$.
+
+\newpage
+{\bf Twisted GFSR} ('92, '94, Matsumoto-Kurita)
+$$
+g(\bw_0,\ldots,\bw_{N-1}) = g(\bw_0, \bw_M) = \bw_0A + \bw_M,
+$$
+where $A$ is a ($32\times 32$)-matrix over $\F2$, defined by
+$$
+\bx A = 
+\left\{\begin{array}{ll}
+  \mbox{shiftright}({\bf x}) & (\mbox{if LSB of $\bx$ is 0}) \\
+  \mbox{shiftright}({\bf x})\oplus{\bf a} & 
+  (\mbox{if LSB of $\bx$ is 1}),
+\end{array}\right.
+$$
+where ${\bf a}$ is a constant vector.
+Period is $2^{32N}-1$. 
+\begin{center}
+\includegraphics[width=0.6\linewidth]{figure03.eps}
+\\
+Figure 3: Twisted GFSR
+\end{center}
+\newpage
+{\bf Mersenne Twister} ('98 Matsumoto-Nishimura)
+$$
+g(\bw_0,\ldots,\bw_{N-1}) = g(\bw_0, \bw_1, \bw_M) = (\bw_0|\bw_1)A + \bw_M,
+$$
+where $(\bw_0|\bw_1)$ denotes
+the concatenation of $32-r$ MSBs of $\bw_0$ and $r$ LSBs of $\bw_1$,
+and $A$ is the same as above.
+
+Period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
+
+\newpage
+\noindent
+{\bf 5. Zero excess state problem.}
+
+FSRs with small number of taps has the following problem: \\
+If the state space contains too many zeroes, \\
+then the tendency continues for long time.
+\begin{center}
+\includegraphics[width=0.6\linewidth]{figure03.eps}
+\\
+\vskip -5mm
+Figure 3': Twisted GFSR as a FSR with few taps.
+\end{center}
+ From Figure 3', one can see that if the almost 
+all words are zero, then the next incorporated word
+tends to be zero.
+
+
+
+\newpage
+A possible improvement: 
+As in Figure 4, add one more tap.
+Then, once $\bw_{N-1}$ becomes nonzero, the state
+quickly recovers from zero-excess state.
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure04.eps}
+\\
+Figure 4: A possible improvement for zero-excess
+\end{center}
+
+\newpage 
+\noindent
+{\bf 6 Hearty Twister}
+
+In the previous Figure 4, 
+$\bw_{N-1}$ is both read and written, \\
+so it is faster to prepare one variable $\bu$ instead of
+$\bw_{N-1}$. 
+
+~~~Then, Figure 4 is the same with Figure 5.
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure05.eps}
+\\
+Figure 5: separate the variable $\bw_{N-1}$
+\\
+\end{center}
+
+\newpage
+Now we may feedback to $\bw_{N-2}$ not only from $\bu$;
+thus obtain Figure~6, the {\bf Hearty Twister}.
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure06.eps}
+\\
+Figure 6: Hearty Twister.
+\\
+\end{center}
+
+\newpage
+Figure 7 discribes the blood circulation system of \\
+Fish (FSR type) and Frog (Hearty Twister type). \\
+The variable $\bu$ serves as a lung, which generates new 1's quickly. 
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure07.eps}\\
+Figure 7: Blood circulation system: \\
+FSR type (left) and Hearty Twister (right).
+\\
+\end{center}
+
+
+\newpage
+Figure 8 shows an implementation HT800 with period $2^{800}-1$.
+The function $T_{<< n}$ is defined by 
+$\bx \mapsto \bx + {\mathrm{shiftleft}(\bx, n)}$.
+
+($>> n$ shift right)
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure08.eps}
+\\
+Figure 8: Detailed description of HT800.
+\end{center}
+
+\newpage
+Below is WELL generator (Panneton-L'Ecuyer-Matsumoto, '05). \\
+It has an excellent performance at the cost of speed.
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure09.eps}
+\\
+Figure 9: WELL prn generator.
+\\
+Each $T$ denotes (distinct) linear transformation.
+\end{center}
+
+\newpage
+\noindent
+{\bf 7 Comparison of performances}
+\\
+{\bf 7-1} Compared Generators 
+\begin{description}
+\item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
+\item TT800: Tempered Twisted GFSR with period $2^{800}-1$. \\
+Matsumoto-Kurita ('92, '94)
+\item XS800: A FSR-type generator XORSHIFT by Marsaglia ('03).
+ An optimal parameter searched by Panneton-L'Ecuyer('04).
+\item WELL1024: WELL generator by Panneton-L'Ecuyer-Matsumoto with period $2^{1024}-1$ ('05).
+\item WELL44497b: WELL generator with period $2^{44497}-1$ ('05).
+\item HT800: Hearty Twister with period $2^{800}-1$.
+\item HT1279: Hearty Twister with period $2^{1279}-1$.
+\end{description}
+\newpage
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure10.eps}
+\\
+Figure 10: XOR-SHIFT XS800
+\\
+Proposed by Marsaglia (2003), a best parameter
+found by Panneton and L'Ecuyer (2004). 
+\end{center}
+
+\newpage
+\noindent
+{\bf 7-2} High dimensional distribution.
+
+{\bf Definition.} 
+A periodic sequence with period $P$
+$$\bx_0, \bx_1, \ldots, \bx_{P-1}, \bx_P=\bx_0, \ldots$$
+of $v$-bit integers is said to be {\em $k$-dimensionally equidistributed}
+if any $kv$-bit pattern occurs equally often as a $k$-tuple
+$$
+(\bx_i, \bx_{i+1}, \ldots, \bx_{i+k-1})
+$$
+for a period $i=0,\ldots, P-1$. 
+
+(The all-zero pattern occurs once less often.)
+
+\newpage
+A periodic sequence of 32-bit integers is said to be
+{\em $k$-dimensionally equidistributed with $v$-bit accuracy}
+if the most significant $v$ bits of each integer are
+$k$-dimensionally equidistributed. 
+
+We denote by $k(v)$ the maximum such $k$. 
+
+\vskip 5mm
+We have an upperbound 
+$$
+k(v) \leq \lfloor \log_2 (P+1) / v \rfloor, 
+$$
+and define the dimension defect as the summation of the gaps 
+$$
+\Delta_1 := \sum_{v=1}^{32}(\lfloor \log_2 (P+1) / v \rfloor -k(v)).
+$$
+
+%%%*** change 05/05/10
+\newpage
+\begin{center}
+%\label{table:dist}
+\begin{tabular}{|c||c|c|c|c|c|}
+\hline
+{\Huge Generator}& {\Huge $\Delta_1$} 
+  & {\Huge Linux} & {\Huge MacOSX} & {\Huge FreeBSD} & {\Huge Windows} \\ \hline \hline
+{\Huge MT19937} & {\Huge 6750}
+  & {\Huge 0.92} & {\Huge 1.63} & {\Huge 1.41} & {\Huge 1.42} \\ \hline
+{\Huge TT800}  & {\Huge 261} 
+  & {\Huge 0.82} & {\Huge 1.51} & {\Huge 1.28} & {\Huge 1.14} \\ \hline
+{\Huge XS800} & {\Huge 186}
+  & {\Huge 0.79} & {\Huge 1.44} & {\Huge 0.96} & {\Huge 0.89} \\ \hline
+{\Huge WELL1024} & {\Huge 0}
+  & {\Huge 1.48} & {\Huge 2.23} & {\Huge 1.34} & {\Huge 1.44} \\ \hline
+{\Huge WELL44497b} & {\Huge 0}
+  & {\Huge 2.13} & {\Huge 3.48} & {\Huge 2.38} & {\Huge 2.52} \\ \hline
+{\Huge HT800} & {\Huge 72} 
+  & {\Huge 0.95} & {\Huge 1.51} & {\Huge 1.10} & {\Huge 1.02} \\\hline
+{\Huge HT1279} & {\Huge 113}
+  & {\Huge 0.80} & {\Huge 1.36} & {\Huge 1.06} & {\Huge 0.92} \\ \hline
+\end{tabular}
+\\
+\vskip 5mm
+Table 1. Comparison of the dimension defects $\Delta_1$ 
+\\
+and the time (sec.) to generate $10^8$ prns (gcc -O2). 
+\end{center}
+%\end{table}
+
+WELL has the optimal equidistribution property, 
+but slower than the other generators. 
+
+\newpage
+\noindent
+{\bf 7-3 Recovery time from zero-excess state}\\
+
+\begin{enumerate}
+\item Choose an initial state $\in S$ with only one bit being 1.
+\item Generate $k$ pseudorandom numbers, and discard them.
+\item Compute the ratio of 1's among the 
+next 3200 bits 
+\\
+(i.e. in the next 100 pseudorandom numbers).
+\item Let $\gamma_k$ be the average of the ratio over
+all such initial states.
+\end{enumerate}
+
+\newpage
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{gamma4.eps}
+\\
+Figure~11. 
+$\gamma_k \quad (k=0,\ldots,1000)$
+\\
+The order of the recovery speed: \\
+WELL1024 (Salmon Pink, Best), HT800 (Blue), \\
+HT1279 (Purple), XS800 (Red), TT800 (Black).
+\end{center}
+
+
+\newpage
+\noindent
+{\bf 7-4} Coin-tossing gambling test
+\begin{itemize}
+\item Simulate 32 times coin-tossings by a 32-bit integer.
+\item Observe the number of 1s in the past ($\dim S$)-times coin-tossings. 
+\item Decide to bet or not, on ``all zero for the next 16 tossings.''
+
+ If win, get $2^{16}$ dollars. If lost, lose $1$ dollar. 
+\item Choose ``the best strategy'' using the MacWilliams identity
+(Haramoto-Matsumoto-Nishimura, submitted 2004).
+\item Compute the expected value of the gained money.
+\end{itemize}
+
+%%%*** change 05/05/10
+\newpage
+
+The result is as follows:
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+{\Huge Genarator} &{\Huge Expected \$ per bet}  \\ \hline \hline
+{\Huge TT800} & {\Huge $1.155\times 10^{-5}$} \\ \hline
+{\Huge XS800} & {\Huge $0.511\times 10^{-5}$} \\ \hline
+{\Huge WELL1024} & {\Huge $0.3372 \times 10^{-151}$} \\ \hline 
+{\Huge HT800} & {\Huge $0.335\times 10^{-11}$}  \\ \hline
+{\Huge HT1279} & {\Huge $0.363 \times 10^{-14}$} \\ \hline
+\hline
+\end{tabular}
+\\
+\vskip 5mm
+Table 2. The expected gained money per one bet. \\
+MT19937 and WELL44497b exceeded \\
+the capacity of our program. 
+
+\end{center}
+
+
+\newpage
+\noindent
+{\bf 8 HT with Mersenne Prime Period}\\
+\begin{itemize}
+\item To realize HT1279, we searched for $f$ whose
+characteristic polynomial is reducible: 
+$(t+1)\times \phi(t)$ with $\phi(t)$ irreducible of degree 1279.
+\item We found HT4423, whose characteristic polynomial is \\
+$(t+1)\times \mbox{(degree 4423)}$. The $k(v)$'s are not yet computed. 
+\item We have been searching for higher degree Hearty Twisters,
+e.g. HT19937 with $\mbox{(degree 31)} \times \mbox{(degree 19937)}$
+but not yet succeeded (because of some bugs).
+\end{itemize}
+
+\newpage
+\noindent
+{\bf 9 Concluding Remarks}
+\begin{itemize}
+\item We proposed Hearty Twister. 
+\item Faster than Twister GFSR TT800 and WELL.
+\item Faster recovery from zero-excess states \\
+than TT800 (but inferior to WELL). 
+\item Better $k(v)$ than TT800 \\
+(but worse than WELL).
+\item Better coin-tossing distribution than TT800 \\
+(but worse than WELL).
+\end{itemize}
+We conclude that Hearty Twister is a good compromise
+between speed and quality. 
+
+%\newpage
+%
+%remark that these improvements (except for the speed) \\
+%might be somehow illusive:
+%
+%\begin{itemize}
+%\item 
+%The dimension defects hardly cause problems \\
+%in MonteCarlo simulation. 
+%
+%\item 
+%The zero-excess states hardly occur \\
+%in the actual random number generation process \\
+%(except for those caused by a bad initialization scheme).
+%\end{itemize}
+
+}
+\end{document}
+
+
+
+
