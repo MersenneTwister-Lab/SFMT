@@ -1,0 +1,32 @@
+\documentclass[landscape]{slides}
+\begin{document}
+\begin{slide}
+  \title{Simple and Fast MT:\\
+    A Two times faster new variant of Mersenne Twister}
+
+  \author{Mutsuo Saito and Makoto Matsumoto}
+  \date{Augast 13, 2006}
+  \maketitle
+\end{slide}
+\begin{slide}
+  Our Goal is to get the Pseudo-Random Number Generator, which is
+  \begin{itemize}
+    \item Faster than Mersenne Twister
+    \item almost same quality of randomness as Mersenne Twister
+  \end{itemize}
+\end{slide}
+\begin{slide}
+  Single Instruction Multiple Data (SIMD)
+  \begin{itemize}
+  \item It has tipically 128 bit registers which is divided into 4
+    32-bit registers or 8 16-bit registers or 16 8-bit registers.
+  \item Pentium IV CPU has SIMD instructions called SSE2.
+  \item PowerPC G4, G5 has alti
+  \end{itemize}
+\end{slide}
+\begin{slide}
+  What is Simple?
+
+  128-bit recursion formula is described below:
+\end{slide}
+\end{document}

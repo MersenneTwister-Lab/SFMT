@@ -96,6 +96,12 @@ sfmtX74_alti_inline: test_time_inline.c sfmtX74_alti_inline.c
 sfmtX74_alti_inline2: test_time2_inline.c sfmtX74_alti_inline.c
 	${CC} -o $@ sfmtX74_alti_inline.c
 
+sfmtX75_alti_inline: test_time_inline.c sfmtX75_alti_inline.c
+	${CC} -DTICK=1 -o $@ sfmtX75_alti_inline.c
+
+sfmtX75_alti_inline2: test_time2_inline.c sfmtX75_alti_inline.c
+	${CC} -o $@ sfmtX75_alti_inline.c
+
 sfmt4a_alti44497_inline: test_time_inline.c sfmt4a_alti44497_inline.h
 	${CC} -DRANDOM=sfmt4a_alti44497_inline.h -o $@ test_time_inline.c
 
@@ -111,11 +117,11 @@ sfmt9b_alti_inline: test_time_inline.c sfmt9b_alti_inline.h
 sfmt9b_alti_inline2: test_time2_inline.c sfmt9b_alti_inline.h
 	${CC} -DRANDOM=sfmt9b_alti_inline.h -o $@ test_time2_inline.c
 
-mt19937ar_alti_inline: test_time_inline.c mt19937ar_alti_inline.h
-	${CC} -DRANDOM=mt19937ar_alti_inline.h -o $@ test_time_inline.c
+mt19937ar_alti_inline: test_time_inline.c mt19937ar_alti_inline.c
+	${CC} -DTICK=1 -o $@ mt19937ar_alti_inline.c
 
-mt19937ar_alti_inline2: test_time2_inline.c mt19937ar_alti_inline.h
-	${CC} -DRANDOM=mt19937ar_alti_inline.h -o $@ test_time2_inline.c
+mt19937ar_alti_inline2: test_time2_inline.c mt19937ar_alti_inline.c
+	${CC} -o $@ mt19937ar_alti_inline.c 
 
 testalti: test_alti.o
 	${CC} -o $@ test_alti.o
@@ -174,3 +180,6 @@ mt_fastc_inline2: mt19937ar_inline.h test_time2_inline.c
 
 .c.o:
 	${CC} -c $<
+
+clean:
+	rm -f *.o *~
