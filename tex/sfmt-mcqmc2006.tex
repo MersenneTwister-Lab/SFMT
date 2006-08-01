@@ -6,7 +6,7 @@
 \footskip=0mm
 \parindent=0cm
 
-\usepackage[all]{xy}
+%\usepackage[all]{xy}
 \usepackage{amssymb}
 \usepackage{amscd}
 \usepackage{amsmath}
@@ -33,19 +33,20 @@
 \date{\today}
 
 \begin{document}
-{\Huge
+\Huge
 
 \vspace*{2cm}
 \begin{center}
-{\bf Hearty Twister: a new random number generator}
+{\bf Simple and Fast MT:\\
+  A Two times faster new variant of Mersenne Twister}
 \vspace{1cm}
 
-Hiroshi Haramoto (Hiroshima Univ.), \\
-Francois Panneton(Caisse centrale Desjardins), \\
-Takuji Nishimura(Yamagata Univ.), \\
+Mutsuo Saito (Hiroshima Univ.) \\
 and \\
 Makoto Matsumoto (Hiroshima Univ.).
 \end{center}
+\vspace{\fill}
+This research is granted by 
 \newpage
 
 \newpage
@@ -140,7 +141,9 @@ We identify:
 \item 
 a bit $\{0,1\}$ with the two element field $\F2$, and
 \item 
-a word (32-bit integer) with horizontal vector $\F2^{32}$.
+32-bit integer with horizontal vector $\F2^{32}$.
+%\item 
+%128-bit integer with horizontal vector $\F2^{128}$.
 \item 
 Regard $S$ as an $\F2$-vector space.
 \end{itemize}
@@ -233,24 +236,66 @@ quickly recovers from zero-excess state.
 Figure 4: A possible improvement for zero-excess
 \end{center}
 
-\newpage 
+\newpage
 \noindent
-{\bf 6 Hearty Twister}
+{\bf 6 Speed Up of pseudo-random number generation}
 
-In the previous Figure 4, 
-$\bw_{N-1}$ is both read and written, \\
-so it is faster to prepare one variable $\bu$ instead of
-$\bw_{N-1}$. 
+{\bf 6-1 Speed Up of transition function}
 
-~~~Then, Figure 4 is the same with Figure 5.
+The speed of pesudo-random number generation mainly depends on
+the speed of transition function.\\
+~~~~Recent CPU archetecture has SIMD(Single Instruction Multiple
+Data) instruction set with 128-bit SIMD registers.
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{figure04.eps}
+\\
+Figure 5: Sample of SIMD instructon.
+\end{center}
+Some people implement MT19937ar using SIMD instruction set.
+It fast. But we think it's much faster when the recursion formula is
+designed to fit for SIMD instruction set.
+
+\newpage
+{\bf 6-2 Speed Up of output function}
+
+MT19937ar calculates next 624 states at once,
+and output pseudo-random numbers sequencially.
+It is fast. 
+
+if (mti >= N) {
+  calculate next 624 states.
+}
+tempering...
+output.
+
+The condition part of {\bf if} statement is evaluated every time.
+And jump instruction may be executed every time.
+It is slow.
+We think it's much faster when PRNG outputs
+some blocks of numbers at once.
+
+\newpage
+\noindent
+{\bf 7 Simple and Fast MT}
+
+Now one word is 128-bit width,
+and we read $\bw_{N-1}$ and $\bw_{N-2}$.
+
 \begin{center}
 \includegraphics[width=0.7\linewidth]{figure05.eps}
 \\
-Figure 5: separate the variable $\bw_{N-1}$
+Figure 6: The transition function of Simple and Fast MT
 \\
 \end{center}
+SFMT is currently implemented for Intel's SSE2 and PowerPC's altivec SIMD
+instruction set.
 
 \newpage
+Now we provide {\bf fill\_array\_block} interface for the application programs.
+INPUT:address of array to fill. This address must be aligned multiple of 16.
+INPUT:number of blocks
+OUTPUT: the input array is filled by 32-bit pseudo-random numbers.
 Now we may feedback to $\bw_{N-2}$ not only from $\bu$;
 thus obtain Figure~6, the {\bf Hearty Twister}.
 
@@ -262,20 +307,7 @@ Figure 6: Hearty Twister.
 \end{center}
 
 \newpage
-Figure 7 discribes the blood circulation system of \\
-Fish (FSR type) and Frog (Hearty Twister type). \\
-The variable $\bu$ serves as a lung, which generates new 1's quickly. 
-
-\begin{center}
-\includegraphics[width=0.7\linewidth]{figure07.eps}\\
-Figure 7: Blood circulation system: \\
-FSR type (left) and Hearty Twister (right).
-\\
-\end{center}
-
-
-\newpage
-Figure 8 shows an implementation HT800 with period $2^{800}-1$.
+Figure 8 shows an implementation SFMT19937 with period $2^{19937}-1$.
 The function $T_{<< n}$ is defined by 
 $\bx \mapsto \bx + {\mathrm{shiftleft}(\bx, n)}$.
 
@@ -284,47 +316,9 @@ $\bx \mapsto \bx + {\mathrm{shiftleft}(\bx, n)}$.
 \begin{center}
 \includegraphics[width=0.7\linewidth]{figure08.eps}
 \\
-Figure 8: Detailed description of HT800.
+Figure 8: Detailed description of SFMT19937.
 \end{center}
 
-\newpage
-Below is WELL generator (Panneton-L'Ecuyer-Matsumoto, '05). \\
-It has an excellent performance at the cost of speed.
-
-\begin{center}
-\includegraphics[width=0.7\linewidth]{figure09.eps}
-\\
-Figure 9: WELL prn generator.
-\\
-Each $T$ denotes (distinct) linear transformation.
-\end{center}
-
-\newpage
-\noindent
-{\bf 7 Comparison of performances}
-\\
-{\bf 7-1} Compared Generators 
-\begin{description}
-\item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
-\item TT800: Tempered Twisted GFSR with period $2^{800}-1$. \\
-Matsumoto-Kurita ('92, '94)
-\item XS800: A FSR-type generator XORSHIFT by Marsaglia ('03).
- An optimal parameter searched by Panneton-L'Ecuyer('04).
-\item WELL1024: WELL generator by Panneton-L'Ecuyer-Matsumoto with period $2^{1024}-1$ ('05).
-\item WELL44497b: WELL generator with period $2^{44497}-1$ ('05).
-\item HT800: Hearty Twister with period $2^{800}-1$.
-\item HT1279: Hearty Twister with period $2^{1279}-1$.
-\end{description}
-\newpage
-
-\begin{center}
-\includegraphics[width=0.7\linewidth]{figure10.eps}
-\\
-Figure 10: XOR-SHIFT XS800
-\\
-Proposed by Marsaglia (2003), a best parameter
-found by Panneton and L'Ecuyer (2004). 
-\end{center}
 
 \newpage
 \noindent
@@ -360,6 +354,23 @@ $$
 \Delta_1 := \sum_{v=1}^{32}(\lfloor \log_2 (P+1) / v \rfloor -k(v)).
 $$
 
+\newpage
+{\bf 7 Calculate 32-bit $k(v)$ of 128-bit recursion formula PRMG}
+
+\newpage
+\noindent
+{\bf 7 Comparison of performances}
+\\
+{\bf 7-1} Compared Generators 
+\begin{description}
+\item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
+\end{description}
+{\bf 7-1} CPU's
+\begin{description}
+\item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
+\end{description}
+\newpage
+
 %%%*** change 05/05/10
 \newpage
 \begin{center}
@@ -393,73 +404,6 @@ and the time (sec.) to generate $10^8$ prns (gcc -O2).
 
 WELL has the optimal equidistribution property, 
 but slower than the other generators. 
-
-\newpage
-\noindent
-{\bf 7-3 Recovery time from zero-excess state}\\
-
-\begin{enumerate}
-\item Choose an initial state $\in S$ with only one bit being 1.
-\item Generate $k$ pseudorandom numbers, and discard them.
-\item Compute the ratio of 1's among the 
-next 3200 bits 
-\\
-(i.e. in the next 100 pseudorandom numbers).
-\item Let $\gamma_k$ be the average of the ratio over
-all such initial states.
-\end{enumerate}
-
-\newpage
-
-\begin{center}
-\includegraphics[width=0.7\linewidth]{gamma4.eps}
-\\
-Figure~11. 
-$\gamma_k \quad (k=0,\ldots,1000)$
-\\
-The order of the recovery speed: \\
-WELL1024 (Salmon Pink, Best), HT800 (Blue), \\
-HT1279 (Purple), XS800 (Red), TT800 (Black).
-\end{center}
-
-
-\newpage
-\noindent
-{\bf 7-4} Coin-tossing gambling test
-\begin{itemize}
-\item Simulate 32 times coin-tossings by a 32-bit integer.
-\item Observe the number of 1s in the past ($\dim S$)-times coin-tossings. 
-\item Decide to bet or not, on ``all zero for the next 16 tossings.''
-
- If win, get $2^{16}$ dollars. If lost, lose $1$ dollar. 
-\item Choose ``the best strategy'' using the MacWilliams identity
-(Haramoto-Matsumoto-Nishimura, submitted 2004).
-\item Compute the expected value of the gained money.
-\end{itemize}
-
-%%%*** change 05/05/10
-\newpage
-
-The result is as follows:
-\begin{center}
-\begin{tabular}{|c|c|}
-\hline
-{\Huge Genarator} &{\Huge Expected \$ per bet}  \\ \hline \hline
-{\Huge TT800} & {\Huge $1.155\times 10^{-5}$} \\ \hline
-{\Huge XS800} & {\Huge $0.511\times 10^{-5}$} \\ \hline
-{\Huge WELL1024} & {\Huge $0.3372 \times 10^{-151}$} \\ \hline 
-{\Huge HT800} & {\Huge $0.335\times 10^{-11}$}  \\ \hline
-{\Huge HT1279} & {\Huge $0.363 \times 10^{-14}$} \\ \hline
-\hline
-\end{tabular}
-\\
-\vskip 5mm
-Table 2. The expected gained money per one bet. \\
-MT19937 and WELL44497b exceeded \\
-the capacity of our program. 
-
-\end{center}
-
 
 \newpage
 \noindent
@@ -507,7 +451,7 @@ between speed and quality.
 %(except for those caused by a bad initialization scheme).
 %\end{itemize}
 
-}
+
 \end{document}
 
 
