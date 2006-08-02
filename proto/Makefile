@@ -198,6 +198,9 @@ param-searchX77-607: search.o sfmtX77.o mt19937ar.o util.o debug.o
 param-searchX78-607: search.o sfmtX78.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtX78.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-searchX78a-607: search.o sfmtX78a.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX78a.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 param-searchX79-607: search.o sfmtX79.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtX79.o mt19937ar.o util.o debug.o ${LINKOPT}
 
@@ -284,6 +287,9 @@ shortest-base88q1-607: chk-shortest.o shortbase128.o sfmt88q1-st.o util.o
 shortest32-base5-521: chk-shortest32.o shortbase.o sfmt5-cls.o util.o
 	${CPP} -o $@ chk-shortest32.o shortbase.o sfmt5-cls.o util.o \
 		${LINKOPT}
+
+searchX78-lung607: search-lung.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-lung.o sfmtX78-st.o mt19937ar.o util.o ${LINKOPT}
 
 test_bm521: sfmt.o test_bm.o util.o debug.o
 	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}

@@ -8,8 +8,8 @@
 #include <errno.h>
 #include <iostream>
 
-extern "C" {
 #include "sfmt-st.h"
+extern "C" {
 #include "mt19937ar.h"
 }
 
@@ -102,7 +102,7 @@ void make_zero_state(sfmt_t *sfmt, GF2X& poly) {
   memset(&sfmtnew, 0, sizeof(sfmtnew));
   for (i = 0; i <= deg(poly); i++) {
     if (coeff(poly, i) != 0) {
-	add_rnd(&sfmtnew, sfmt);
+	add_rnd(&sfmtnew, sfmt, 0);
     }
     gen_rand128(sfmt, &hi, &low);
   }
@@ -158,9 +158,11 @@ void search_lung (GF2X& f) {
 }
 
 void check_init_lung(in_status base[], int size) {
-    static char* initial[] = {"MSNH", "MsNH", "MSnh", "MMTM", "MmTm", "SFMT",
-			      "msnh", "msNH", "msnH", "mmtm", "mMtM", "sfmt",
-			      NULL};
+    //static char* initial[] = {"MSNH", "MsNH", "MSnh", "MMTM", "MmTm", "SFMT",
+    //		      "msnh", "msNH", "msnH", "mmtm", "mMtM", "sfmt",
+    //		      NULL};
+    static char* initial[] = {"MSMM", "SFMT", "msmm", "sfmt", "MsMm", "SfMt",
+			      "mSmM", "sFmT", NULL};
     mat_GF2 matrix;
     int i, j;
     int rank;

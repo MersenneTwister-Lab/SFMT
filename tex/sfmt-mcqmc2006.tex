@@ -26,7 +26,8 @@
 \def\by{{{\mathbf y}}}
 \def\bw{{{\mathbf w}}}
 \def\bu{{{\mathbf u}}}
-
+\newcommand{\lshift}[1]{{\large $\mbox{#1}\atop<<$}}
+\newcommand{\rshift}[1]{{\large $\mbox{#1}\atop >>$}}
 
 \title{}
 \author{}
@@ -283,10 +284,10 @@ Now one word is 128-bit width,
 and we read $\bw_{N-1}$ and $\bw_{N-2}$.
 
 \begin{center}
-\includegraphics[width=0.7\linewidth]{figure05.eps}
+%\includegraphics[width=0.7\linewidth]{sfmt-a.eps}
+\includegraphics[width=0.7\linewidth]{sfmt-a2.eps}
 \\
 Figure 6: The transition function of Simple and Fast MT
-\\
 \end{center}
 SFMT is currently implemented for Intel's SSE2 and PowerPC's altivec SIMD
 instruction set.
@@ -296,25 +297,16 @@ Now we provide {\bf fill\_array\_block} interface for the application programs.
 INPUT:address of array to fill. This address must be aligned multiple of 16.
 INPUT:number of blocks
 OUTPUT: the input array is filled by 32-bit pseudo-random numbers.
-Now we may feedback to $\bw_{N-2}$ not only from $\bu$;
-thus obtain Figure~6, the {\bf Hearty Twister}.
-
-\begin{center}
-\includegraphics[width=0.7\linewidth]{figure06.eps}
-\\
-Figure 6: Hearty Twister.
-\\
-\end{center}
 
 \newpage
-Figure 8 shows an implementation SFMT19937 with period $2^{19937}-1$.
-The function $T_{<< n}$ is defined by 
-$\bx \mapsto \bx + {\mathrm{shiftleft}(\bx, n)}$.
-
-($>> n$ shift right)
+Figure 8 shows an implementation SFMT19937 with period
+$2^{19937}-1$.  The function \lshift{128} $n$ is left shift $n$ bit
+regarding the word as 128 bit integer, and the function \lshift{32} $n$ is
+lesft shift $n$ bit regarding the word as four 32-bit integers
+(\rshift{128} and \rshift{32} are shift right).
 
 \begin{center}
-\includegraphics[width=0.7\linewidth]{figure08.eps}
+\includegraphics[width=0.7\linewidth]{sfmt-b2.eps}
 \\
 Figure 8: Detailed description of SFMT19937.
 \end{center}
@@ -407,20 +399,6 @@ but slower than the other generators.
 
 \newpage
 \noindent
-{\bf 8 HT with Mersenne Prime Period}\\
-\begin{itemize}
-\item To realize HT1279, we searched for $f$ whose
-characteristic polynomial is reducible: 
-$(t+1)\times \phi(t)$ with $\phi(t)$ irreducible of degree 1279.
-\item We found HT4423, whose characteristic polynomial is \\
-$(t+1)\times \mbox{(degree 4423)}$. The $k(v)$'s are not yet computed. 
-\item We have been searching for higher degree Hearty Twisters,
-e.g. HT19937 with $\mbox{(degree 31)} \times \mbox{(degree 19937)}$
-but not yet succeeded (because of some bugs).
-\end{itemize}
-
-\newpage
-\noindent
 {\bf 9 Concluding Remarks}
 \begin{itemize}
 \item We proposed Hearty Twister. 
@@ -434,23 +412,6 @@ than TT800 (but inferior to WELL).
 \end{itemize}
 We conclude that Hearty Twister is a good compromise
 between speed and quality. 
-
-%\newpage
-%
-%remark that these improvements (except for the speed) \\
-%might be somehow illusive:
-%
-%\begin{itemize}
-%\item 
-%The dimension defects hardly cause problems \\
-%in MonteCarlo simulation. 
-%
-%\item 
-%The zero-excess states hardly occur \\
-%in the actual random number generation process \\
-%(except for those caused by a bad initialization scheme).
-%\end{itemize}
-
 
 \end{document}
 

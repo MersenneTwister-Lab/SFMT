@@ -75,6 +75,9 @@ search-initial-lung19937: search-lung.o sfmt-st.o mt19937ar.o util.o
 search-crypt-lung19937: search-lung.o sfmt-st88q1.o mt19937ar.o util.o
 	${CPP} -o $@ search-lung.o sfmt-st88q1.o mt19937ar.o util.o ${LINKOPT}
 
+searchX78-lung19937: search-lung.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-lung.o sfmtX78-st.o mt19937ar.o util.o ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
