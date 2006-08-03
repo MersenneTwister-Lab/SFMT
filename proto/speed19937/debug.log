@@ -2,3 +2,7 @@
 mt_fastc_inline2 の出力結果がおかしい。
 そしてblockの方が遅い。
 sfmtX78_alti_inline の出力結果がおかしい。
+これはやはり128bit のENDIANのせいと思う。
+sse2と一致しないが、それはパラメータが違うからだと思う。
+distribution いい加減方式はshiftを変えただけでOK
+ちゃんとしたのは要検討

@@ -154,6 +154,12 @@ sfmt4a_fastc_inlineb: sfmt4a_inlineb.h test_time_inline.c
 sfmt4a_fastc_inlinec: sfmt4a_inlinec.h test_time_inline.c
 	${CC} -DRANDOM=sfmt4a_inlinec.h -o $@ test_time_inline.c
 
+sfmtX78_fastc_inline: sfmtX78_fastc_inline.c test_time_inline.c
+	${CC} -DTICK=1 -o $@ sfmtX78_fastc_inline.c
+
+sfmtX78_fastc_inline2: sfmtX78_fastc_inline.c test_time2_inline.c
+	${CC} -o $@ sfmtX78_fastc_inline.c
+
 sfmt4a_std: sfmt4a_std.o test_time.o
 	${CC} -o $@ sfmt4a_std.o test_time.o
 

@@ -1,6 +1,10 @@
 #ifndef __C99_H__
 #define __C99_H__
 
+#if ! defined(__ppc__)
+  #include <emmintrin.h>
+#endif
+
 #ifdef __GNUC__
 
 #include <stdint.h>
@@ -8,7 +12,6 @@
 #define INLINE inline
 #else /* not GNU C */
 
-#include <emmintrin.h>
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
 #define UINT64_MAX ULLONG_MAX

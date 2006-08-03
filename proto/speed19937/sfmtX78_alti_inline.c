@@ -18,7 +18,7 @@ static uint32_t sfmt32[0];
 static vector unsigned int sfmt[N];
 static unsigned int idx;
 
-#define POS1 70
+#define POS1 4
 #define SL1 20
 #define SL2 1
 #define SR1 1

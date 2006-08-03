@@ -81,36 +81,36 @@ void print_param2(FILE *fp) {
     fflush(fp);
 }
 
-static inline void rshift128(uint32_t out[4], const uint32_t in[4],
+inline static void rshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
-    uint64_t t1, t2, o1, o2;
+    uint64_t th, tl, oh, ol;
 
-    t1 = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
-    t2 = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
+    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
+    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
 
-    o1 = t1 >> (shift * 8);
-    o1 |= t2 << (64 - shift * 8);
-    o2 = t2 >> (shift * 8);
-    out[1] = (uint32_t)(o1 >> 32);
-    out[0] = (uint32_t)o1;
-    out[3] = (uint32_t)(o2 >> 32);
-    out[2] = (uint32_t)o2;
+    oh = th >> (shift * 8);
+    ol = tl >> (shift * 8);
+    ol |= th << (64 - shift * 8);
+    out[1] = (uint32_t)(ol >> 32);
+    out[0] = (uint32_t)ol;
+    out[3] = (uint32_t)(oh >> 32);
+    out[2] = (uint32_t)oh;
 }
 
-static inline void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
-    uint64_t t1, t2, o1, o2;
+    uint64_t th, tl, oh, ol;
 
-    t1 = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
-    t2 = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
+    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
+    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
 
-    o1 = t1 << (shift * 8);
-    o2 = t2 << (shift * 8);
-    o2 |= t1 >> (64 - shift * 8);
-    out[1] = (uint32_t)(o1 >> 32);
-    out[0] = (uint32_t)o1;
-    out[3] = (uint32_t)(o2 >> 32);
-    out[2] = (uint32_t)o2;
+    oh = th << (shift * 8);
+    ol = tl << (shift * 8);
+    oh |= tl >> (64 - shift * 8);
+    out[1] = (uint32_t)(ol >> 32);
+    out[0] = (uint32_t)ol;
+    out[3] = (uint32_t)(oh >> 32);
+    out[2] = (uint32_t)oh;
 }
 
 static inline void do_recursion(uint32_t a[4], uint32_t b[4],
