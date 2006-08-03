@@ -208,48 +208,17 @@ Period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
 
 \newpage
 \noindent
-{\bf 5. Zero excess state problem.}
+{\bf 6 Speed Up PRNG}
 
-FSRs with small number of taps has the following problem: \\
-If the state space contains too many zeroes, \\
-then the tendency continues for long time.
-\begin{center}
-\includegraphics[width=0.6\linewidth]{figure03.eps}
-\\
-\vskip -5mm
-Figure 3': Twisted GFSR as a FSR with few taps.
-\end{center}
- From Figure 3', one can see that if the almost 
-all words are zero, then the next incorporated word
-tends to be zero.
+{\bf 6-1 Speed Up transition function}
 
-
-
-\newpage
-A possible improvement: 
-As in Figure 4, add one more tap.
-Then, once $\bw_{N-1}$ becomes nonzero, the state
-quickly recovers from zero-excess state.
-
-\begin{center}
-\includegraphics[width=0.7\linewidth]{figure04.eps}
-\\
-Figure 4: A possible improvement for zero-excess
-\end{center}
-
-\newpage
-\noindent
-{\bf 6 Speed Up of pseudo-random number generation}
-
-{\bf 6-1 Speed Up of transition function}
-
-The speed of pesudo-random number generation mainly depends on
+The speed of PRNG mainly depends on
 the speed of transition function.\\
-~~~~Recent CPU archetecture has SIMD(Single Instruction Multiple
+~~~~Recent CPU archetecture has SIMD (Single Instruction Multiple
 Data) instruction set with 128-bit SIMD registers.
 
 \begin{center}
-\includegraphics[width=0.7\linewidth]{figure04.eps}
+\includegraphics[width=0.7\linewidth]{simd-shift.eps}
 \\
 Figure 5: Sample of SIMD instructon.
 \end{center}
@@ -262,23 +231,53 @@ designed to fit for SIMD instruction set.
 
 MT19937ar calculates next 624 states at once,
 and output pseudo-random numbers sequencially.
-It is fast. 
 
-if (mti >= N) {
-  calculate next 624 states.
-}
-tempering...
-output.
+\vspace{\baselineskip}
+if (mti $>$= N) \{\\
+~~~~calculate next 624 states.\\
+\}\\
+tempering...\\
+output.\\
 
 The condition part of {\bf if} statement is evaluated every time.
 And jump instruction may be executed every time.
-It is slow.
+
 We think it's much faster when PRNG outputs
 some blocks of numbers at once.
 
 \newpage
+Here is the rough scketch of {\bf fill\_array\_block} function.
+
+The idea of {\bf fill\_array\_block}
+\begin{center}
+\includegraphics[width=0.7\linewidth,height=0.7\textheight,
+keepaspectratio]{fill_array.eps}
+\\
+Figure 6: fill\_array
+\end{center}
+\newpage
+And Figure 6 is same as following steps.
+
+
+Step 1. (first N - M words) \\
+~~~~Read from the internal memory and write to the given array.
+
+Step 2. (N - M + 1 to N words) \\
+~~~~Read from the internal memory and given array, and 
+write to the given array.
+
+Step 3. (some multiple of 624 words + 624 - M words)\\
+~~~~Read from the given array and write to the given array.
+
+Step 4. (last N words)\\
+~~~~Read from the given array and write to the given array and
+ the internal memory.
+
+Step 5. (MT only)\\
+~~~~Temper the all elements of given array. 
+\newpage
 \noindent
-{\bf 7 Simple and Fast MT}
+{\bf 7 Simple and Fast MT (SFMT)}
 
 Now one word is 128-bit width,
 and we read $\bw_{N-1}$ and $\bw_{N-2}$.
@@ -292,11 +291,6 @@ Figure 6: The transition function of Simple and Fast MT
 SFMT is currently implemented for Intel's SSE2 and PowerPC's altivec SIMD
 instruction set.
 
-\newpage
-Now we provide {\bf fill\_array\_block} interface for the application programs.
-INPUT:address of array to fill. This address must be aligned multiple of 16.
-INPUT:number of blocks
-OUTPUT: the input array is filled by 32-bit pseudo-random numbers.
 
 \newpage
 Figure 8 shows an implementation SFMT19937 with period
@@ -311,6 +305,33 @@ lesft shift $n$ bit regarding the word as four 32-bit integers
 Figure 8: Detailed description of SFMT19937.
 \end{center}
 
+\newpage
+{\bf 7-1} Initial Value\\
+The internal state S of SFMT is decomposed to:
+$$
+S = S_{19937} \oplus S_{31}
+$$
+
+If start with some special internal status,
+it may occur that $S_{19937}$ is zero.
+And the period of PRN becoms less than $2^{31}-1$.
+
+To avoid this special internal status and to assure
+the period greater than $2^{19937}-1$,
+we set the special 32-bit value (initila value) in 
+initial internal state.
+
+The initial value for SFMT19937 of Figure 8 is 0x4d734d6d.
+
+\newpage
+{\bf 7-2} The period of 32-bit output.\\
+SFMT has the period of least $2^{19937}-1$ as 128-bit output PRNG.
+Every 128-bit output can be used four 32-bit output, then
+SFMT has the period at least $2^{19937+4}-1$ as 32-bit output PRNG.
+
+The reason of additional length of the period is additional 
+internal state by the counter which indecates the position of
+the output 32-bit in the 128-bit. 
 
 \newpage
 \noindent
@@ -347,23 +368,54 @@ $$
 $$
 
 \newpage
-{\bf 7 Calculate 32-bit $k(v)$ of 128-bit recursion formula PRMG}
+{\bf 7-3} Calculate 32-bit $k(v)$ of 128-bit recursion formula PRMG
 
+\newpage
+{\bf 8 Comparison of Randomness}
+\begin{center}
+\includegraphics[width=0.7\linewidth,height=0.6\textheight,
+keepaspectratio]{delta.eps}
+\\
+Figure 9: gaps form upperbound
+\end{center}
+\begin{center}
+\LARGE
+\begin{tabular}{crr} \hline
+  & MT19937 & SFMT19937 \\ \hline\hline
+  $\Delta_1$ & 6750 & 5089 \\
+  $k(1)$ & 19937 & 19931 \\
+  $k(32)$ & 623 & 622 \\ \hline
+\end{tabular}
+\end{center}
 \newpage
 \noindent
-{\bf 7 Comparison of performances}
-\\
-{\bf 7-1} Compared Generators 
+{\bf 9 Comparison of speed}
 \begin{description}
-\item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
-\end{description}
-{\bf 7-1} CPU's
-\begin{description}
-\item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
-\end{description}
+  \item Generators
+    \begin{itemize}
+    \item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
+    \item MT19937(SIMD): MT19937 using SIMD instruction set.
+    \item SFMT19937: Simple and Fast MT with period $2^{19937}-1$.
+    \end{itemize}
+  \item CPUs
+    \begin{itemize}
+    \item Intel Pentium M 1.4GHz
+    \item AMD Athlon64 
+    \item Freescale Power PC 1.33GHz
+    \end{itemize}
+  \item Output functions
+    \begin{itemize}
+    \item fill\_array\_block output
+    \item sequencial output (old normal style)
+    \end{itemize}
+  \end{description}
 \newpage
+We used RDTSC (Read Time Stamp Counter) instruction for Intel and AMD CPU,
+and MFTB () and MFTBU () instruction for Power PC.
+These instructions return CPU clock cycles.
+In the following section, we call this clock cycles as {\bf tick}.
 
-%%%*** change 05/05/10
+create 9984 of 32-bit integers to 
 \newpage
 \begin{center}
 %\label{table:dist}
@@ -401,17 +453,12 @@ but slower than the other generators.
 \noindent
 {\bf 9 Concluding Remarks}
 \begin{itemize}
-\item We proposed Hearty Twister. 
-\item Faster than Twister GFSR TT800 and WELL.
-\item Faster recovery from zero-excess states \\
-than TT800 (but inferior to WELL). 
-\item Better $k(v)$ than TT800 \\
-(but worse than WELL).
-\item Better coin-tossing distribution than TT800 \\
-(but worse than WELL).
+\item We proposed Simple and Fast Mersenne Twister (SFMT). 
+\item Almost two times faster than Mersenne Twister.
+\item Better $k(v)$ than MT19937 \\
+(totally better, but in some point worse than MT).
 \end{itemize}
-We conclude that Hearty Twister is a good compromise
-between speed and quality. 
+We conclude that SFMT is fast version of Mersenne Twister.
 
 \end{document}
 

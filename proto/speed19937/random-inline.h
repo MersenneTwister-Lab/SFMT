@@ -1,7 +1,7 @@
 /* Simple and Fast MT 2006/1/21 */
 #ifndef __SFMT_H__
 #define __SFMT_H__
-
+#include "string.h"
 #include "c99.h"
 
 INLINE void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
