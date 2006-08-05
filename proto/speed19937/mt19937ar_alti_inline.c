@@ -84,14 +84,14 @@ INLINE static void gen_rand_all(void)
 
     int i;
 
-    __dcbt(&mt[0], 32);
-    __dcbt(&mt[M], 32);
+    //__dcbt(&mt[0], 32);
+    //__dcbt(&mt[M], 32);
     a0 = vec_ld(0, &mt[0]);
     b0 = vec_ld(0, &mt[M]);
     for (i = 0; i < N - M - 4; i += 4) {
-	__dcbt(&mt[i + 4], 32);
-	__dcbt(&mt[i + M + 4], 32);
-	__dcbtst(&mt[i], 32);
+	//__dcbt(&mt[i + 4], 32);
+	//__dcbt(&mt[i + M + 4], 32);
+	//__dcbtst(&mt[i], 32);
 	a1 = vec_ld(0, &mt[i + 4]);
 	a = vec_perm(a0, a1, perm1);
 	b1 = vec_ld(0, &mt[i + M + 4]);
@@ -103,8 +103,8 @@ INLINE static void gen_rand_all(void)
 	a0 = a1;
 	b0 = b1;
     }
-    __dcbt(&mt[i + 4], 32);
-    __dcbtst(&mt[i], 32);
+    //__dcbt(&mt[i + 4], 32);
+    //__dcbtst(&mt[i], 32);
     perm = (vector unsigned char)
 	(4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23);
     a1 = vec_ld(0, &mt[i + 4]);
@@ -121,8 +121,8 @@ INLINE static void gen_rand_all(void)
     b0 = b1;
     i += 4;
     for (; i < N - 4; i += 4) {
-	__dcbt(&mt[i + 4], 32);
-	__dcbtst(&mt[i], 32);
+	//__dcbt(&mt[i + 4], 32);
+	//__dcbtst(&mt[i], 32);
 	a1 = vec_ld(0, &mt[i + 4]);
 	a = vec_perm(a0, a1, perm1);
 	b1 = vec_ld(0, &mt[i + M - N + 4]);
