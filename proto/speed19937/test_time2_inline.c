@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 	printf("generated randoms\n");
 	fill_array_block(array, 1000 / block + 1);
 	for (i = 0; i < 1000; i++) {
-	    printf("%10lu ", array[i]);
+	    printf("%10u ", array[i]);
 	    if (i % 5 == 4) {
 		printf("\n");
 	    }
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     //printf("min %.0f\n", (double)min);
     //printf("max %.0f\n", (double)max);
     printf("BURST:%.0f", (double)min * 1000/ CLOCKS_PER_SEC);
-    printf(" ms and %lu randoms = %.3f ms per %drandoms\n",
+    printf("ms and %u randoms = %.3fs per %drandoms\n",
 	   randoms * TIC_COUNT, 
 	   (double)min * 1000 * KAISU / CLOCKS_PER_SEC / randoms / TIC_COUNT,
 	   KAISU * TIC_COUNT);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     //printf("min %.0f\n", (double)min);
     //printf("max %.0f\n", (double)max);
     printf("SEQUE:%.0f", (double)min * 1000 / CLOCKS_PER_SEC);
-    printf(" ms and %lu randoms = %.3f ms per %drandoms\n",
+    printf("ms and %u randoms = %.3fs per %drandoms\n",
 	   randoms * TIC_COUNT,
 	   (double)min * 1000 * KAISU / CLOCKS_PER_SEC / randoms / TIC_COUNT,
 	   KAISU * TIC_COUNT);

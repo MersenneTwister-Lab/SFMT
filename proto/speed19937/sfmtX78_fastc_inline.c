@@ -1,7 +1,9 @@
 /* Simple and Fast Twister */
 
 #include <string.h>
-#include <stdint.h>
+#if defined(__GNUC__)
+  #include <stdint.h>
+#endif
 #include <stdio.h>
 #include "random-inline.h"
 

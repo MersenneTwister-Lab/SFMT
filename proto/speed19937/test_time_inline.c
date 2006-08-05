@@ -69,6 +69,7 @@ int main(int argc, char *argv[]) {
     unsigned long long min = LONG_MAX;
     uint32_t block;
     uint32_t randoms;
+    uint32_t r;
     bool verbose = false;
     uint32_t *array = (uint32_t *)dummy;
 
@@ -77,19 +78,29 @@ int main(int argc, char *argv[]) {
     }
     block = get_onetime_rnds();
     randoms = (KAISU / block) * block;
-    init_gen_rand(1234);
     if (verbose) {
 	//printf("init states\n");
 	//print_state(stdout);
 	printf("generated randoms\n");
-	fill_array_block(array, 1000 / block + 1);
-	for (i = 0; i < 1000; i++) {
-	    printf("%10lu ", array[i]);
-	    if (i % 5 == 4) {
-		printf("\n");
+	init_gen_rand(1234);
+	fill_array_block(array, 5000 / block + 1);
+	init_gen_rand(1234);
+	for (i = 0; i < 5000; i++) {
+	    r = gen_rand();
+	    if (r != array[i]) {
+		printf("\nmismatch i = %d: r = %u, array = %u\n",
+		       i, r, array[i]);
+		return -1;
+	    }
+	    if (i < 1000) {
+		printf("%10u ", array[i]);
+		if (i % 5 == 4) {
+		    printf("\n");
+		}
 	    }
 	}
     }
+    init_gen_rand(1234);
     for (i = 0; i < 100; i++) {
 	clo = get_clock();
 	for (j = 0; j < TIC_COUNT; j++) {

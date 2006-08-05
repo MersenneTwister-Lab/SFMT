@@ -1,3 +1,8 @@
+2006.08.04
+sfmtX78_alti_inlineはaltivec コードの単純なコーディング
+ミスであった。
+sse2にコーディングミスがあった。っていうかrecursionがX78でなかった。
+
 2006.08.03
 mt_fastc_inline2 の出力結果がおかしい。
 そしてblockの方が遅い。

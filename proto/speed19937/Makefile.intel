@@ -2,7 +2,7 @@
 
 #CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  $(DDEBUG) $(DMEXP) $(DPG)
 #CC = icl /Wcheck /fast 
-CC = icl /Wcheck /O3 /QxB /Qc99
+CC = icl /Wcheck /O3 /QxB /Qc99 /Qprefetch /Fa
 #CC = icl /Wcheck /O1 /debug /Qc99
 #CPP = g++ -Wall -fast $(DDEBUG) $(DMEXP) $(DPG)
 
@@ -22,6 +22,78 @@ sfmt5_sse2_inline: sfmt5_sse2_inline.h test_time_inline.c
 
 sfmt5_sse2_inline2: sfmt5_sse2_inline.h test_time2_inline.c
 	${CC} -DRANDOM=sfmt5_sse2_inline.h -o $@ test_time2_inline.c
+
+sfmt6_sse2_inline: sfmt6_sse2_inline.h test_time_inline.c
+	${CC} -DRANDOM=sfmt6_sse2_inline.h -o $@ test_time_inline.c
+
+sfmt6_sse2_inline2: sfmt6_sse2_inline.h test_time2_inline.c
+	${CC} -DRANDOM=sfmt6_sse2_inline.h -o $@ test_time2_inline.c
+
+sfmt7x1_sse2_inline: sfmt7x1_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmt7x1_sse2_inline.c
+
+sfmt7x1_sse2_inline2: sfmt7x1_sse2_inline.c 
+	${CC} -o $@ sfmt7x1_sse2_inline.c
+
+sfmt7x1a_sse2_inline: sfmt7x1a_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmt7x1a_sse2_inline.c
+
+sfmt7x1a_sse2_inline2: sfmt7x1a_sse2_inline.c 
+	${CC} -o $@ sfmt7x1a_sse2_inline.c
+
+sfmt7x2_sse2_inline: sfmt7x2_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmt7x2_sse2_inline.c
+
+sfmt7x2_sse2_inline2: sfmt7x2_sse2_inline.c 
+	${CC} -o $@ sfmt7x2_sse2_inline.c
+
+sfmt7x4_sse2_inline: sfmt7x4_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmt7x4_sse2_inline.c
+
+sfmt7x4_sse2_inline2: sfmt7x4_sse2_inline.c 
+	${CC} -o $@ sfmt7x4_sse2_inline.c
+
+sfmt7x7_sse2_inline: sfmt7x7_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmt7x7_sse2_inline.c
+
+sfmt7x7_sse2_inline2: sfmt7x7_sse2_inline.c 
+	${CC} -o $@ sfmt7x7_sse2_inline.c
+
+sfmt7x8_sse2_inline: sfmt7x8_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmt7x8_sse2_inline.c
+
+sfmt7x8_sse2_inline2: sfmt7x8_sse2_inline.c 
+	${CC} -o $@ sfmt7x8_sse2_inline.c
+
+sfmtX7_sse2_inline: sfmtX7_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmtX7_sse2_inline.c
+
+sfmtX7_sse2_inline2: sfmtX7_sse2_inline.c 
+	${CC} -o $@ sfmtX7_sse2_inline.c
+
+sfmtX74_sse2_inline: sfmtX74_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmtX74_sse2_inline.c
+
+sfmtX74_sse2_inline2: sfmtX74_sse2_inline.c 
+	${CC} -o $@ sfmtX74_sse2_inline.c
+
+sfmtX75_sse2_inline: sfmtX75_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmtX75_sse2_inline.c
+
+sfmtX75_sse2_inline2: sfmtX75_sse2_inline.c 
+	${CC} -o $@ sfmtX75_sse2_inline.c
+
+sfmtX78_sse2_inline: sfmtX78_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmtX78_sse2_inline.c
+
+sfmtX78_sse2_inline2: sfmtX78_sse2_inline.c 
+	${CC} -o $@ sfmtX78_sse2_inline.c
+
+mt19937ar_sse2_inline: mt19937ar_sse2_inline.h test_time_inline.c
+	${CC} -DRANDOM=mt19937ar_sse2_inline.h -o $@ test_time_inline.c
+
+mt19937ar_sse2_inline2: mt19937ar_sse2_inline.h test_time2_inline.c
+	${CC} -DRANDOM=mt19937ar_sse2_inline.h -o $@ test_time2_inline.c
 
 #### NORMAL C ####
 sfmt_fastc: sfmt.o test_time.o
@@ -45,8 +117,15 @@ sfmt4a_fastc_inlineb: sfmt4a_inlineb.h test_time_inline.c
 sfmt4a_fastc_inlinec: sfmt4a_inlinec.h test_time_inline.c
 	${CC} -DRANDOM=sfmt4a_inlinec.h -o $@ test_time_inline.c
 
+
 sfmt4a_std: sfmt4a_std.o test_time.o
 	${CC} -o $@ sfmt4a_std.o test_time.o
+
+sfmtX78_fastc_inline: sfmtX78_fastc_inline.c 
+	${CC} -DTICK=1 -o $@ sfmtX78_fastc_inline.c
+
+sfmtX78_fastc_inline2: sfmtX78_fastc_inline.c 
+	${CC} -o $@ sfmtX78_fastc_inline.c
 
 pmt_fastc: ht-rnd.o test_time.o
 	${CC} -o $@ ht-rnd.o test_time.o
@@ -66,5 +145,5 @@ mt_fastc_inline: mt19937ar_inline.h test_time_inline.c
 mt_fastc_inline2: mt19937ar_inline.h test_time2_inline.c
 	${CC} -DRANDOM=mt19937ar_inline.h -o $@ test_time2_inline.c
 
-.c.o:
+%.obj: %.c
 	${CC} -c $<

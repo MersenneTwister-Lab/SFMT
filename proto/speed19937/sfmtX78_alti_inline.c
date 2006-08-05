@@ -13,20 +13,19 @@
 #define DST_TOUCH_BLOCK(blk) (32 | (((blk) * 20) << 16) | (2 << 24))
 #define DST_MAX_BLOCK 12
 
-static vector unsigned int XXX[1];
-static uint32_t sfmt32[0];
 static vector unsigned int sfmt[N];
 static unsigned int idx;
+static uint32_t *sfmt32 = (uint32_t *)sfmt;
 
 #define POS1 4
 #define SL1 20
 #define SL2 1
 #define SR1 1
 #define SR2 1
-#define MSK1 0xfffef7f9UL
-#define MSK2 0xffdff7fbUL
-#define MSK3 0xcbfff7feUL
-#define MSK4 0xedfefffdUL
+#define MSK1 0xfffef7f9U
+#define MSK2 0xffdff7fbU
+#define MSK3 0xcbfff7feU
+#define MSK4 0xedfefffdU
 
 #define MAX_BLOCKS (DST_MAX_BLOCK + 2)
 
@@ -62,16 +61,16 @@ void print_param(FILE *fp) {
     fprintf(fp, "SL2 = %u\n", SL2);
     fprintf(fp, "SR1 = %u\n", SR1);
     fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "MSK1 = %lu\n", MSK1);
-    fprintf(fp, "MSK2 = %lu\n", MSK2);
-    fprintf(fp, "MSK3 = %lu\n", MSK3);
-    fprintf(fp, "MSK4 = %lu\n", MSK4);
+    fprintf(fp, "MSK1 = %u\n", MSK1);
+    fprintf(fp, "MSK2 = %u\n", MSK2);
+    fprintf(fp, "MSK3 = %u\n", MSK3);
+    fprintf(fp, "MSK4 = %u\n", MSK4);
     fflush(fp);
 }
 
 void print_param2(FILE *fp) {
     fprintf(fp, "[POS1, SL1, SL2, SR1, SR2, MSK1, MSK2, MSK3, MSK4] = "
-	    "[%u,%u,%u,%u,%u,%lu,%lu,%lu,%lu]\n", 
+	    "[%u,%u,%u,%u,%u,%u,%u,%u,%u]\n", 
 	    POS1, SL1, SL2, SR1, SR2, MSK1, MSK2, MSK3, MSK4);
     fflush(fp);
 }
@@ -107,7 +106,7 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
     y = vec_and(y, mask);
     v = vec_xor(v, x);
     z = vec_xor(z, y);
-    z = vec_xor(z, y);
+    z = vec_xor(z, v);
     return z;
 }
 

@@ -39,7 +39,8 @@
 \vspace*{2cm}
 \begin{center}
 {\bf Simple and Fast MT:\\
-  A Two times faster new variant of Mersenne Twister}
+  A Two times faster new variant of \\
+  Mersenne Twister}
 \vspace{1cm}
 
 Mutsuo Saito (Hiroshima Univ.) \\
@@ -210,24 +211,39 @@ Period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
 \noindent
 {\bf 6 Speed Up PRNG}
 
-{\bf 6-1 Speed Up transition function}
+{\bf 6-1} Speed Up transition function
 
 The speed of PRNG mainly depends on
 the speed of transition function.\\
 ~~~~Recent CPU archetecture has SIMD (Single Instruction Multiple
 Data) instruction set with 128-bit SIMD registers.
 
+The recursion formula is
+\[x_{n+i} = Ax_{n-1+i} + Bx_{n-2+i}+ Cx_{m+i} + Dx_{i},\]
+where each of $x_i$ is a 128-dimensional vector over the two 
+element field ${\mathbb F}_2$ and
+$A$, $B$ and $C$ are $128 \times 128$ matrices over
+${\mathbb F}_2$.
+
 \begin{center}
 \includegraphics[width=0.7\linewidth]{simd-shift.eps}
 \\
 Figure 5: Sample of SIMD instructon.
 \end{center}
-Some people implement MT19937ar using SIMD instruction set.
-It fast. But we think it's much faster when the recursion formula is
-designed to fit for SIMD instruction set.
-
+%Some people implement MT19937ar using SIMD instruction set.
+%It fast. But we think it's much faster when the recursion formula is
+%designed to fit for SIMD instruction set.
 \newpage
-{\bf 6-2 Speed Up of output function}
+Endian\\
+When use 32-bit and 128-bit integers together,
+
+\begin{center}
+\includegraphics[width=0.7\linewidth]{little-endian.eps}
+\\
+Figure 5: Little Endian
+\end{center}
+\newpage
+{\bf 6-2} Speed Up of output function
 
 MT19937ar calculates next 624 states at once,
 and output pseudo-random numbers sequencially.
@@ -322,6 +338,8 @@ we set the special 32-bit value (initila value) in
 initial internal state.
 
 The initial value for SFMT19937 of Figure 8 is 0x4d734d6d.
+This value is set to the heighest 32-bit of the first 128-bit
+word.
 
 \newpage
 {\bf 7-2} The period of 32-bit output.\\
@@ -370,6 +388,21 @@ $$
 \newpage
 {\bf 7-3} Calculate 32-bit $k(v)$ of 128-bit recursion formula PRMG
 
+\begin{center}
+\includegraphics[width=\linewidth,height=0.6\textheight,
+keepaspectratio]{view.eps}
+\\
+Figure 9: get minimum $k$-distributio of four views
+\end{center}
+\newpage
+
+\begin{center}
+\includegraphics[width=\linewidth,height=0.6\textheight,
+keepaspectratio]{weight.eps}
+\\
+Figure 9: weighted norm
+\end{center}
+
 \newpage
 {\bf 8 Comparison of Randomness}
 \begin{center}
@@ -394,8 +427,9 @@ Figure 9: gaps form upperbound
   \item Generators
     \begin{itemize}
     \item MT19937: Mersenne Twister with period $2^{19937}-1$ ('98).
-    \item MT19937(SIMD): MT19937 using SIMD instruction set.
+    \item MT(SIMD): MT19937 using SIMD instruction set.
     \item SFMT19937: Simple and Fast MT with period $2^{19937}-1$.
+    \item SFMT(SIMD): SFMT19937 using SIMD instruction set.
     \end{itemize}
   \item CPUs
     \begin{itemize}
@@ -409,45 +443,26 @@ Figure 9: gaps form upperbound
     \item sequencial output (old normal style)
     \end{itemize}
   \end{description}
-\newpage
-We used RDTSC (Read Time Stamp Counter) instruction for Intel and AMD CPU,
-and MFTB () and MFTBU () instruction for Power PC.
-These instructions return CPU clock cycles.
-In the following section, we call this clock cycles as {\bf tick}.
 
-create 9984 of 32-bit integers to 
 \newpage
 \begin{center}
-%\label{table:dist}
-\begin{tabular}{|c||c|c|c|c|c|}
+\begin{tabular}{|c|c||c|c|c|c|}
 \hline
-{\Huge Generator}& {\Huge $\Delta_1$} 
-  & {\Huge Linux} & {\Huge MacOSX} & {\Huge FreeBSD} & {\Huge Windows} \\ \hline \hline
-{\Huge MT19937} & {\Huge 6750}
-  & {\Huge 0.92} & {\Huge 1.63} & {\Huge 1.41} & {\Huge 1.42} \\ \hline
-{\Huge TT800}  & {\Huge 261} 
-  & {\Huge 0.82} & {\Huge 1.51} & {\Huge 1.28} & {\Huge 1.14} \\ \hline
-{\Huge XS800} & {\Huge 186}
-  & {\Huge 0.79} & {\Huge 1.44} & {\Huge 0.96} & {\Huge 0.89} \\ \hline
-{\Huge WELL1024} & {\Huge 0}
-  & {\Huge 1.48} & {\Huge 2.23} & {\Huge 1.34} & {\Huge 1.44} \\ \hline
-{\Huge WELL44497b} & {\Huge 0}
-  & {\Huge 2.13} & {\Huge 3.48} & {\Huge 2.38} & {\Huge 2.52} \\ \hline
-{\Huge HT800} & {\Huge 72} 
-  & {\Huge 0.95} & {\Huge 1.51} & {\Huge 1.10} & {\Huge 1.02} \\\hline
-{\Huge HT1279} & {\Huge 113}
-  & {\Huge 0.80} & {\Huge 1.36} & {\Huge 1.06} & {\Huge 0.92} \\ \hline
+CPU & output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} \\
+\hline \hline
+Pentium M  & block & & 0.621 & 0.732 & 0.321\\ \cline{2-6}
+1.4GHz & seq & & 1.263 & 1.333 & 0.963\\ \hline
+Pentium IV & block & & & & \\ \cline{2-6}
+& seq & & & &\\ \hline
+Athlon & block &0.771 & 0.431 & & 0.160 \\ \cline{2-6}
+& seq & 0.631 & 0.310 & & 0.391 \\ \hline
+Power PC  & block & 2.013 & 0.591 & & 0.280\\ \cline{2-6}
+1.33GHz & seq & 1.102 & 0.741 & & 0.541 \\ \hline
 \end{tabular}
 \\
 \vskip 5mm
-Table 1. Comparison of the dimension defects $\Delta_1$ 
-\\
-and the time (sec.) to generate $10^8$ prns (gcc -O2). 
+Table 1. Comparison of the time (sec.) to generate $10^8$ prns.
 \end{center}
-%\end{table}
-
-WELL has the optimal equidistribution property, 
-but slower than the other generators. 
 
 \newpage
 \noindent
