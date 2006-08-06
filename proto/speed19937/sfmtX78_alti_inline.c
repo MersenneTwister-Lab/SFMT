@@ -119,8 +119,8 @@ INLINE void gen_rand_all(void) {
     (MSK1, MSK2, MSK3, MSK4);
     const vector unsigned char perm_sl = (vector unsigned char)
     (1, 2, 3, 23, 5, 6, 7, 0, 9, 10, 11, 4, 13, 14, 15, 8);
-    const vector unsigned char perm_sr = (vector unsigned char)
-    (7, 0, 1, 2, 11, 4, 5, 6, 3, 8, 9, 10, 17, 12, 13, 14);
+        const vector unsigned char perm_sr = (vector unsigned char)
+    (7, 0, 1, 2, 11, 4, 5, 6, 15, 8, 9, 10, 17, 12, 13, 14);
 
     //vec_dst(sfmt, DST_TOUCH_BLOCK(1), 3);
     r1 = sfmt[N - 2];
@@ -154,7 +154,7 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
     const vector unsigned char perm_sl = (vector unsigned char)
     (1, 2, 3, 23, 5, 6, 7, 0, 9, 10, 11, 4, 13, 14, 15, 8);
     const vector unsigned char perm_sr = (vector unsigned char)
-    (7, 0, 1, 2, 11, 4, 5, 6, 3, 8, 9, 10, 17, 12, 13, 14);
+    (7, 0, 1, 2, 11, 4, 5, 6, 15, 8, 9, 10, 17, 12, 13, 14);
 
     /* read from sfmt */
     //vec_dstst(&array[0], DST_TOUCH_BLOCK(1), 0);
@@ -208,27 +208,17 @@ INLINE uint32_t gen_rand(void)
 
 INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 {
-#if 0
-    while (block_num > MAX_BLOCKS) {
-	//memcpy(array, sfmt, sizeof(sfmt));
-	gen_rand_array((vector unsigned int *)array, MAX_BLOCKS);
-	//memcpy(sfmt, &array[N * (MAX_BLOCKS - 1)], sizeof(sfmt));
-	array += N * MAX_BLOCKS;
-	block_num -= MAX_BLOCKS;
-    }
-#endif
     if (block_num == 0) {
 	return;
     } else if (block_num == 1) {
 	gen_rand_all();
 	memcpy(array, sfmt, sizeof(sfmt));
     } else {
-	//memcpy(array, sfmt, sizeof(sfmt));
 	gen_rand_array((vector unsigned int *)array, block_num);
-	//memcpy(sfmt, &array[N * (block_num-1)], sizeof(sfmt));
     }
 }
 
+#if 0
 INLINE void fill_array(uint32_t array[], uint32_t size) 
 {
     if (size < N * 4 - idx) {
@@ -255,6 +245,7 @@ INLINE void fill_array(uint32_t array[], uint32_t size)
 	idx = N * 4;
     }
 }
+#endif
 
 INLINE void init_gen_rand(uint32_t seed)
 {

@@ -4,6 +4,13 @@ X78 のエンディアンは合っていた。
 mt altivec はテンパリングが別ループではない。
 従って、sse 用だけテンパリング同一ループのを新しく作ればよい。
 mt19937ar_sse2_inline.c にバグあり i=620
+上とは別に a0 と a1 が逆になっていた。がーん。
+
+mt altivec も mismatch になっている。
+sfmtX78_alti_inline 3番目が違う問題未解決。
+perm_sr の 3 を 15 にした。
+なぜテストプログラムがOKなのか不明
+でも altivec 解決
 
 2006.08.04
 sfmtX78_alti_inlineはaltivec コードの単純なコーディング

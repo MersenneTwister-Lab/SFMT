@@ -49,7 +49,7 @@ int main(void) {
     vector unsigned char perm = (vector unsigned char)
 	(1, 2, 3, 23, 5, 6, 7, 0, 9, 10, 11, 4, 13, 14, 15, 8);
     vector unsigned char rperm = (vector unsigned char)
-	(7, 0, 1, 2, 11, 4, 5, 6, 3, 8, 9, 10, 17, 12, 13, 14);
+	(7, 0, 1, 2, 11, 4, 5, 6, 15, 8, 9, 10, 17, 12, 13, 14);
 
     int i;
 
