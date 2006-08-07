@@ -67,6 +67,23 @@ INLINE void init_gen_rand(uint32_t s)
     }
 }
 
+INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+						vector unsigned int b,
+						vector unsigned int one,
+						vector unsigned int zero,
+						vector unsigned int mat_a) {
+    vector unsigned int r, m;
+    
+    m = vec_and(a, one);
+    r = vec_sr(a, one);
+    m = vec_cmpeq(m, zero);
+    r = vec_xor(b, r);
+    m = vec_sel(mat_a, zero, m);
+    r = vec_xor(r, m);
+		
+    return r;
+}
+
 INLINE static void gen_rand_all(void)
 {
     //uint32_t y;
@@ -77,59 +94,42 @@ INLINE static void gen_rand_all(void)
     vector unsigned int zero = (vector unsigned int)(0);
     vector unsigned char perm1 = (vector unsigned char)
 	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
-    vector unsigned char perm;
     vector unsigned int mat_a = (vector unsigned int)(MATRIX_A);
     //static uint32_t mag01[2] = { 0x0UL, MATRIX_A };
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
     int i;
 
-    //__dcbt(&mt[0], 32);
-    //__dcbt(&mt[M], 32);
     a0 = vec_ld(0, &mt[0]);
     b0 = vec_ld(0, &mt[M]);
     for (i = 0; i < N - M - 4; i += 4) {
-	//__dcbt(&mt[i + 4], 32);
-	//__dcbt(&mt[i + M + 4], 32);
-	//__dcbtst(&mt[i], 32);
 	a1 = vec_ld(0, &mt[i + 4]);
 	a = vec_perm(a0, a1, perm1);
 	b1 = vec_ld(0, &mt[i + M + 4]);
 	b = vec_perm(b0, b1, perm1);
 	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	r = vec_recursion(r, b, one, zero, mat_a);
 	vec_st(r, 0, &mt[i]);
 	a0 = a1;
 	b0 = b1;
     }
-    //__dcbt(&mt[i + 4], 32);
-    //__dcbtst(&mt[i], 32);
-    perm = (vector unsigned char)
-	(4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23);
     a1 = vec_ld(0, &mt[i + 4]);
     a = vec_perm(a0, a1, perm1);
     b1 = vec_ld(0, &mt[0]);
-    b = vec_perm(b0, b1, perm);
+    b = vec_perm(b0, b1, perm1);
     r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+    r = vec_recursion(r, b, one, zero, mat_a);
     vec_st(r, 0, &mt[i]);
-    perm = (vector unsigned char)
-	(8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
     a0 = a1;
     b0 = b1;
     i += 4;
     for (; i < N - 4; i += 4) {
-	//__dcbt(&mt[i + 4], 32);
-	//__dcbtst(&mt[i], 32);
 	a1 = vec_ld(0, &mt[i + 4]);
 	a = vec_perm(a0, a1, perm1);
 	b1 = vec_ld(0, &mt[i + M - N + 4]);
-	b = vec_perm(b0, b1, perm);
+	b = vec_perm(b0, b1, perm1);
 	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	r = vec_recursion(r, b, one, zero, mat_a);
 	vec_st(r, 0, &mt[i]);
 	a0 = a1;
 	b0 = b1;
@@ -137,14 +137,28 @@ INLINE static void gen_rand_all(void)
     a1 = vec_ld(0, &mt[0]);
     a = vec_perm(a0, a1, perm1);
     b1 = vec_ld(0, &mt[i + M - N + 4]);
-    b = vec_perm(b0, b1, perm);
+    b = vec_perm(b0, b1, perm1);
     r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+    r = vec_recursion(r, b, one, zero, mat_a);
     vec_st(r, 0, &mt[i]);
 
     mti = 0;
+}
 
+INLINE static vector unsigned int temper(vector unsigned int *a,
+					 vector unsigned int s11,
+					 vector unsigned int s7,
+					 vector unsigned int s15,
+					 vector unsigned int s18,
+					 vector unsigned int and1,
+					 vector unsigned int and2) {
+    vector unsigned r;
+    r = vec_ld(0, a);
+    r = vec_xor(r, vec_sr(r, s11));
+    r = vec_xor(r, vec_and(vec_sl(r, s7), and1));
+    r = vec_xor(r, vec_and(vec_sl(r, s15), and2));
+    r = vec_xor(r, vec_sr(r, s18));
+    return r;
 }
 
 INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
@@ -157,7 +171,6 @@ INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
     vector unsigned int zero = (vector unsigned int)(0);
     vector unsigned char perm1 = (vector unsigned char)
 	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
-    vector unsigned char perm;
     vector unsigned int mat_a = (vector unsigned int)(MATRIX_A);
     //static unsigned long mag01[2] = { 0x0UL, MATRIX_A };
     vector unsigned int s11 = (vector unsigned int)(11);
@@ -167,106 +180,76 @@ INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
     vector unsigned int and1 = (vector unsigned int)(0x9d2c5680U);
     vector unsigned int and2 = (vector unsigned int)(0xefc60000U);
 
-    /* mag01[x] = x * MATRIX_A  for x=0,1 */
-
-    int i, j;
+    int i;
 
     //vec_dst(mt, DST_TOUCH_BLOCK(1), 0);
     memcpy(array, mt, sizeof(mt));
-    //__dcbt(&array[0], 32);
-    //__dcbt(&array[M], 32);
     a0 = vec_ld(0, &array[0]);
     b0 = vec_ld(0, &array[M]);
     for (i = 0; i < N - M - 4; i += 4) {
-	//__dcbt(&array[i + 4], 32);
-	//__dcbt(&array[i + M + 4], 32);
 	a1 = vec_ld(0, &array[i + 4]);
-	//__dcbtst(&array[i], 32);
 	a = vec_perm(a0, a1, perm1);
 	b1 = vec_ld(0, &array[i + M + 4]);
 	b = vec_perm(b0, b1, perm1);
 	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	r = vec_recursion(r, b, one, zero, mat_a);
 	vec_st(r, 0, &array[i]);
 	a0 = a1;
 	b0 = b1;
     }
-    //__dcbt(&array[i + 4], 32);
-    perm = (vector unsigned char)
-	(4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23);
     a1 = vec_ld(0, &array[i + 4]);
-    //__dcbtst(&array[i], 32);
     a = vec_perm(a0, a1, perm1);
     b1 = vec_ld(0, &array[0]);
-    b = vec_perm(b0, b1, perm);
+    b = vec_perm(b0, b1, perm1);
     r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+    r = vec_recursion(r, b, one, zero, mat_a);
     vec_st(r, 0, &array[i]);
-    perm = (vector unsigned char)
-	(8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
     a0 = a1;
     b0 = b1;
     i += 4;
     for (; i < N - 4; i += 4) {
-	//__dcbt(&array[i + 4], 32);
 	a1 = vec_ld(0, &array[i + 4]);
-	//__dcbtst(&array[i], 32);
 	a = vec_perm(a0, a1, perm1);
 	b1 = vec_ld(0, &array[i + M - N + 4]);
-	b = vec_perm(b0, b1, perm);
+	b = vec_perm(b0, b1, perm1);
 	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	r = vec_recursion(r, b, one, zero, mat_a);
 	vec_st(r, 0, &array[i]);
 	a0 = a1;
 	b0 = b1;
     }
-    //__dcbtst(&array[i], 32);
     a1 = vec_ld(0, &array[0]);
     a = vec_perm(a0, a1, perm1);
     b1 = vec_ld(0, &array[i + M - N + 4]);
-    b = vec_perm(b0, b1, perm);
+    b = vec_perm(b0, b1, perm1);
     r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-    r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+    r = vec_recursion(r, b, one, zero, mat_a);
     vec_st(r, 0, &array[i]);
     a0 = a1;
     b0 = b1;
     i += 4;
     for (; i < N * blocks; i += 4) {
-	__dcbtst(&array[i], 64);
-	//__dcbtst(&array[i - N], 32);
+	// tempering
+	r = temper((vector unsigned int *)&array[i - N],
+		   s11, s7, s15, s18, and1, and2);
+	vec_st(r, 0, &array[i - N]);
+	// end of tempering
+	//__dcbtst(&array[i], 64);
 	a1 = vec_ld(0, &array[i - N + 4]);
 	a = vec_perm(a0, a1, perm1);
-	// tempering
-	a0 = a;
-	a0 = vec_xor(a0, vec_sr(a0, s11));
-	a0 = vec_xor(a0, vec_and(vec_sl(a0, s7), and1));
-	a0 = vec_xor(a0, vec_and(vec_sl(a0, s15), and2));
-	a0 = vec_xor(a0, vec_sr(a0, s18));
-	vec_st(a0, 0, &array[i - N]);
-	//__dcbf(&array[i - N], 0);
-	// end of tempering
 	b1 = vec_ld(0, &array[i + M - N + 4]);
-	b = vec_perm(b0, b1, perm);
+	b = vec_perm(b0, b1, perm1);
 	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
-	r = vec_xor(vec_xor(b, vec_sl(r, one)),
-		    vec_sel(mat_a, zero, vec_cmpeq(vec_and(r, one), zero)));
+	r = vec_recursion(r, b, one, zero, mat_a);
 	vec_st(r, 0, &array[i]);
 	a0 = a1;
 	b0 = b1;
     }
     memcpy(mt, &array[N * (blocks - 1)], sizeof(mt));
-    for (j = (N - 1) * blocks; j < N * blocks; j += 4) {
-	// tempering
-	r = vec_ld(0, &array[j]);
-	r = vec_xor(r, vec_sr(r, s11));
-	r = vec_xor(r, vec_and(vec_sl(r, s7), and1));
-	r = vec_xor(r, vec_and(vec_sl(r, s15), and2));
-	r = vec_xor(r, vec_sr(r, s18));
-	vec_st(r, 0, &array[j]);
+    for (; i < N * (blocks + 1); i += 4) {
+	r = temper((vector unsigned int *)&array[i - N],
+		   s11, s7, s15, s18, and1, and2);
+	vec_st(r, 0, &array[i - N]);
     }
 }
 
@@ -320,6 +303,7 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
     }
 }
 
+#if 0
 INLINE void fill_array(uint32_t array[], uint32_t size) 
 {
     if (size < N - mti) {
@@ -346,6 +330,7 @@ INLINE void fill_array(uint32_t array[], uint32_t size)
 	mti = N;
     }
 }
+#endif
 
 #ifdef TICK
 #include "test_time_inline.c"

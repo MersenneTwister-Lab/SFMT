@@ -2,6 +2,7 @@
 
 #INC = /lib/gcc/i686-pc-cygwin/3.4.4/include
 #CC = gcc -Wall -O9 -mtune=pentium3 -Wmissing-prototypes -I$(INC)
+//CC = gcc -Wall -O0 -g -Wmissing-prototypes -finline-functions -march=prescott -fomit-frame-pointer
 CC = gcc -Wall -O9 -Wmissing-prototypes -finline-functions -march=prescott -fomit-frame-pointer
 CPP = g++ -Wall -fast $(DDEBUG) $(DMEXP) $(DPG)
 
@@ -21,11 +22,23 @@ sfmtX7_sse2_inline: sfmtX7_sse2_inline.c
 sfmtX7_sse2_inline2: sfmtX7_sse2_inline.c 
 	${CC} -o $@ sfmtX7_sse2_inline.c
 
-mt19937ar_sse2_inline: mt19937ar_sse2_inline.c 
+sfmtX74_sse2_inline: sfmtX74_sse2_inline.c 
+	${CC} -DTICK=1 -o $@ sfmtX74_sse2_inline.c
+
+sfmtX74_sse2_inline2: sfmtX74_sse2_inline.c 
+	${CC} -o $@ sfmtX74_sse2_inline.c
+
+mt19937ar_sse2_inline: mt19937ar_sse2_inline.c test_time_inline.c
 	${CC} -DTICK=1 -o $@ mt19937ar_sse2_inline.c
 
-mt19937ar_sse2_inline2: mt19937ar_sse2_inline.c 
+mt19937ar_sse2_inline2: mt19937ar_sse2_inline.c test_time2_inline.c
 	${CC} -o $@ mt19937ar_sse2_inline.c
+
+mt19937ar_sse2_tp_inline: mt19937ar_sse2_tp_inline.c test_time_inline.c
+	${CC} -DTICK=1 -o $@ mt19937ar_sse2_tp_inline.c
+
+mt19937ar_sse2_tp_inline2: mt19937ar_sse2_tp_inline.c test_time2_inline.c
+	${CC} -o $@ mt19937ar_sse2_tp_inline.c
 
 
 #### NORMAL C ####
@@ -65,11 +78,11 @@ pmt_fastc_inline2: test_time2_inline.c pmt_fastc_inline.h
 mt_fastc: mt19937ar.o test_time.o
 	${CC} -o $@ mt19937ar.o test_time.o
 
-mt_fastc_inline: mt19937ar_inline.h test_time_inline.c
-	${CC} -DRANDOM=mt19937ar_inline.h -o $@ test_time_inline.c
+mt_fastc_inline: mt19937ar_inline.c test_time_inline.c
+	${CC} -DTICK=1 -o $@ mt19937ar_inline.c
 
-mt_fastc_inline2: mt19937ar_inline.h test_time2_inline.c
-	${CC} -DRANDOM=mt19937ar_inline.h -o $@ test_time2_inline.c
+mt_fastc_inline2: mt19937ar_inline.c test_time2_inline.c
+	${CC} -o $@ mt19937ar_inline.c
 
 .c.o:
 	${CC} -c $<
