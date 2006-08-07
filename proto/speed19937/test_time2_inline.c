@@ -8,9 +8,11 @@
 #define QUOTE_HELPER(str) # str
 //#include QUOTE(RANDOM)
 
-#define KAISU 100000
+//#define KAISU 100000
+#define KAISU (624 * 128)
 #define TIC_MAG 1
-#define TIC_COUNT 1000
+//#define TIC_COUNT 1000
+#define TIC_COUNT (313 * 4)
 
 #ifdef __ppc__
 vector unsigned int dummy[KAISU/4+1];

@@ -446,24 +446,29 @@ Figure 9: gaps form upperbound
 
 \newpage
 \begin{center}
-\begin{tabular}{|c|c||c|c|c|c|}
+\begin{tabular}{|c|c||c|c|c|c|c|}
 \hline
-CPU & output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} \\
+CPU & output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & {\Large compiler} \\
 \hline \hline
-Pentium M  & block & & 0.621 & 0.732 & 0.321\\ \cline{2-6}
-1.4GHz & seq & & 1.263 & 1.333 & 0.963\\ \hline
-Pentium IV & block & & & & \\ \cline{2-6}
-& seq & & & &\\ \hline
-Athlon & block &0.771 & 0.431 & & 0.160 \\ \cline{2-6}
-& seq & 0.631 & 0.310 & & 0.391 \\ \hline
-Power PC  & block & 2.013 & 0.591 & & 0.280\\ \cline{2-6}
-1.33GHz & seq & 1.102 & 0.741 & & 0.541 \\ \hline
+{\Large Pentium M}  & block & 0.903 & 0.479 & 0.584 & 0.256 & gcc\\ \cline{2-6}
+{\Large 1.4GHz} & seq & 1.112 & 1.016 & 1.007 & 0.776 & \\ \hline
+{\Large Pentium IV} & block & 0.498 & 0.300 & 0.387 & 0.175 & intel\\ \cline{2-6}
+{\Large 3GHz} & seq & 0.847 & 0.724 & 0.648 & 0.449 & \\ \hline
+{\Large Athlon} & block & 0.543 & 0.264 & 0.272 & 0.112 & intel \\ \cline{2-6}
+{\Large 3800+} & seq & 0.487 & 0.319 & 0.407 & 0.312 & \\ \hline
+{\Large Power PC G4}  & block & 1.406 & 0.479 & 0.919 & 0.176 & gcc\\ \cline{2-6}
+{\Large 1.33GHz} & seq & 0.942 & 0.543 & 0.974 & 0.495 &\\ \hline
+\end{tabular}
+\\
+\vskip 5mm
+\begin{tabular}{|c|c|} \hline
+  block & 616 calls of 128 blocks fill\_array\_block \\ \hline
+  seq & 624 $\times$ 128 $\times$ 616 = 99999744 calls\\ \hline
 \end{tabular}
 \\
 \vskip 5mm
 Table 1. Comparison of the time (sec.) to generate $10^8$ prns.
 \end{center}
-
 \newpage
 \noindent
 {\bf 9 Concluding Remarks}
