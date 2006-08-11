@@ -1,7 +1,7 @@
 %!PS-Adobe-3.0 EPSF-3.0
 %%BoundingBox: 33 434 613 784
 %%Title: sfmt-b2
-%%CreationDate: Tue Aug  1 21:16:22 2006
+%%CreationDate: Thu Aug 10 10:34:34 2006
 %%Creator: Tgif-4.1.43-QPL written by William Chia-Wei Cheng (bill.cheng@acm.org)
 %%ProducedBy: (unknown)
 %%Pages: 1
@@ -9,8 +9,25 @@
 %%EndComments
 %%BeginProlog
 
-/tgifdict 56 dict def
+/tgifdict 58 dict def
 tgifdict begin
+
+/tgifellipsedict 6 dict def
+tgifellipsedict /mtrx matrix put
+
+/TGEL % tgifellipse
+ { tgifellipsedict begin
+      /yrad exch def
+      /xrad exch def
+      /y exch def
+      /x exch def
+      /savematrix mtrx currentmatrix def
+      x y translate
+      xrad yrad scale
+      0 0 1 0 360 arc
+      savematrix setmatrix
+   end
+ } def
 
 /tgifarrowtipdict 8 dict def
 tgifarrowtipdict /mtrx matrix put
@@ -664,11 +681,11 @@ NP
 0 SG
    GS
       1 W
-      557 184 M
+      546 183 M
       GS
             0 SG
             /Helvetica-Bold FF [34 0 0 -34 0 0] MS
-            (8) SH
+            (24) SH
       GR
    GR
 
@@ -854,7 +871,7 @@ NP
       GS
             0 SG
             /Helvetica-Bold FF [34 0 0 -34 0 0] MS
-            (20) SH
+            (11) SH
       GR
    GR
 
@@ -932,26 +949,6 @@ GR
 % TEXT
 NP
 0 SG
-GS
-   930 258 TR
-   [1.537 0.000 0.000 1.289 0 0] CO
-   930 NE 258 NE TR
-GR
-   GS
-      1 W
-      930 258 TR
-      [1.537 0.000 0.000 1.289 0 0] CO
-      0 67 M
-      GS
-            0 SG
-            /Helvetica-Bold FF [72 0 0 -72 0 0] MS
-            (+) SH
-      GR
-   GR
-
-% TEXT
-NP
-0 SG
    GS
       1 W
       627 236 M
@@ -960,29 +957,52 @@ NP
             /Helvetica-Bold FF [34 0 0 -34 0 0] MS
             (AND) SH
       GR
-      0 32 RM
+      0 30 RM
       GS
             0 SG
-            /Helvetica-Bold FF [34 0 0 -34 0 0] MS
-            (0xfffef7f9) SH
+            /Helvetica-Bold FF [30 0 0 -30 0 0] MS
+            (0x7DBEBFFF) SH
       GR
-      0 32 RM
+      0 30 RM
       GS
             0 SG
-            /Helvetica-Bold FF [34 0 0 -34 0 0] MS
-            (0xffdff7fb) SH
+            /Helvetica-Bold FF [30 0 0 -30 0 0] MS
+            (0x7FFFFFFE) SH
       GR
-      0 32 RM
+      0 30 RM
       GS
             0 SG
-            /Helvetica-Bold FF [34 0 0 -34 0 0] MS
-            (0xcbfff7fe) SH
+            /Helvetica-Bold FF [30 0 0 -30 0 0] MS
+            (0xDED6FFEF) SH
       GR
-      0 32 RM
+      0 30 RM
       GS
             0 SG
-            /Helvetica-Bold FF [34 0 0 -34 0 0] MS
-            (0xedfefffd) SH
+            /Helvetica-Bold FF [30 0 0 -30 0 0] MS
+            (0xFEFEFF6E) SH
+      GR
+   GR
+
+% OVAL
+0 SG
+GS
+   GS
+      NP 962 320 27 28 TGEL
+      3 W
+      S
+   GR
+GR
+
+% TEXT
+NP
+0 SG
+   GS
+      1 W
+      943 337 M
+      GS
+            0 SG
+            /Times-Bold FF [72 0 0 -72 0 0] MS
+            (+) SH
       GR
    GR
 
@@ -992,6 +1012,7 @@ end
 showpage
 
 %%Trailer
-%MatchingCreationDate: Tue Aug  1 21:16:22 2006
-%%DocumentFonts: Helvetica-Bold
+%MatchingCreationDate: Thu Aug 10 10:34:34 2006
+%%DocumentFonts: Times-Bold
+%%+ Helvetica-Bold
 %%EOF
