@@ -40,7 +40,7 @@
 %\vspace*{2cm}
 \begin{center}
 {\bf Simple and Fast MT:\\
-  A Two times faster new variant of \\
+  A two times faster new variant of \\
   Mersenne Twister}
 \vspace{1cm}
 
@@ -238,34 +238,51 @@ SFMT is \textcolor{blue}{4 times faster} than the original Mersenne Twister.
 % Figure 3: Twisted GFSR
 % \end{center}
 \newpage
-{\bf 1. Mersenne Twister} (MT, '98 Matsumoto-Nishimura)
+{\bf 1. Linear Feedbacked Shift Register}.
 
-Let $\F2$ be the two element field.
+Throughout this talk,
+\begin{itemize}
+\item
+A bit $\{0,1\}$ is identified with 
+$\F2$, the two element field.
 
-Identify $32$-bit integers with 
-horisontal vectors in $\F2^{32}$.
+\item
+$w$-bit integers are identified with 
+horisontal vectors in $\F2^{w}$.
 
-Consider a recursion of order $N$ over $\F2^{32}$:
+$w$ is 32 or 128.
+
+\item
+We consider pseudorandom number generators
+based on 
+
+a recursion of order $N$ over $\F2^{w}$:
 $$
-\bx_{i+N}:=g(\bx_i, \bx_{i+1}, \ldots, \bx_{i+N-1}).
+\bx_{i+N}:=g(\bx_i, \bx_{i+1}, \ldots, \bx_{i+N-1}),
 $$
+where $\bx_i \in \F2^{w}$ and 
+$g:(\F2^{w})^N \to \F2^{w}$ is an $\F2$-linear function.
+\end{itemize}
+This type of generator is called a Linear Feedbacked 
+Shiftregister (LFSR).
 
+\newpage
+{\bf Mersenne Twister} (MT, '98 Matsumoto-Nishimura)
 
-MT uses an $\F2$-linear recursion
+is an example with
 $$
 g(\bw_0,\ldots,\bw_{N-1}) = g(\bw_0, \bw_1, \bw_M) = (\bw_0|\bw_1)A + \bw_M,
 $$
 where $(\bw_0|\bw_1)$ denotes
-the concatenation 
-
-of $32-r$ MSBs of $\bw_0$ and $r$ LSBs of $\bw_1$,
-
+the concatenation of 
+\begin{center}
+$32-r$ MSBs of $\bw_0$ and $r$ LSBs of $\bw_1$,
+\end{center}
 and $A$ is a $(32\times 32)$-matrix 
 for which $\bw A$ is computable 
 
 by a few bit-operations.
 
-\newpage
 Its period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
 
 \vskip 5mm
@@ -323,10 +340,13 @@ recursion that fits to SIMD,
 ~~~then it will speed up.
 
 \item[More Parallelism.]
+$ $
 
-Recursion which allows parallel
+Because of the pipeline 
+and an increased number of registers, 
 
- computations is faster.
+recursion which allows 
+parallel computations is faster.
 \end{description}
 
 \newpage
@@ -368,18 +388,20 @@ $\bw_{N-2}$ and $\bw_{N-1}$ can be read from the registers.
 \newpage
 Reading $\bw_0$ and $\bw_M$ from the array takes some time, and 
 
-the CPU can compute $\bw_{n-2}C$ and $\bw_{n-1}D$ in the meanwhile.
+the CPU can compute $\bw_{n-2}C$ and $\bw_{n-1}D$ in the meanwhile, 
+
+since $\bw_{n-2}$ and $\bw_{n-1}$ are kept in the regesters.
 
 The linear transformations $A,B,C,D$ are as follows.
 \begin{itemize}
 \item 
 %$x D := (x \stackrel{128}{>>} 8) \oplus x.$
-$\bw A := (\bw \stackrel{128}{>>} 24) \oplus \bw.$
-%??? different from the figure below???
+$\bw A := (\bw \stackrel{128}{<<} 24) \oplus \bw.$
+%??? different from the figure below, so changed.???
 
 This notation means that $\bw A$ is regarded
 as a single 128-bit integer, and 
-is shifted to the right by 24 bits.
+is shifted to the left by 24 bits.
 
 (There is such a SIMD operation).
 
@@ -391,7 +413,7 @@ $\bw B := (\bw \stackrel{32}{>>} 1) \& \mbox{\tt (a constant 128-bit mask)}.$
 This notation means that $\bw$ is considered to be 
 a quadruple of $32$-bit integers, and
 %each $32$-bit integer is shifted to the left by 20 bits.
-each $32$-bit integer is shifted to the left by 1 bit,
+each $32$-bit integer is shifted to the right by 1 bit,
 and $\&$ means the bitwise AND. 
 
 \newpage
@@ -442,10 +464,16 @@ Write:
 (which will be explained in Matsumoto's talk.)
 \item  a code computing the dimension of equidistribution (DE).
 
-(Here is a difficulty to treat 128-bit integer generator 
+Here is a difficulty in treating 128-bit integer generator 
 
-as a 32-bit integer generator,
-which we omit here because of the lack of time.)
+as a 32-bit integer generator.
+
+This is solved by a use of weighted norm in 
+
+Couture-L'Ecuyer-Tezuka's lattice method.
+ 
+We here omit it 
+because of the lack of time.
 %%% 20060809
 %
 %later in this talk.)
@@ -493,9 +521,11 @@ Select the best parameters with respect to DE.
     \item Output
       \begin{description}
       \item[block]: Generate $(634 \times 128)$ of 32-bit integers 
-        in an array,
-        
-        616 times iterated ($\to 99999744\sim 10^8$ generations).
+%%% Is it 634, or 623???%%%
+        in an array, at one time. 
+
+        This is iterated for 616 times 
+        ($99999744\sim 10^8$ generations).
       \item[seq]: Generate $10^8$ of 32-bit integers sequentially,
         one by one.
       \end{description}
@@ -645,7 +675,7 @@ We have an upperbound
 $$
 k(v) \leq \lfloor \log_2 (P+1) / v \rfloor, 
 $$
-and define the \textcolor{blue}{dimension defect} $d(v)$ at $v$
+and define the \textcolor{blue}{dimension defect} $d(v)$ \textcolor{blue}{at $v$}
 as the gap between the bound and the realized DE:
 $$
 d(v):= \lfloor \log_2 (P+1) / v \rfloor - k(v) \geq 0, 
@@ -683,16 +713,17 @@ $d(8)$& 0 & \textcolor{red}{1} &$d(16)$& 0 & \textcolor{red}{2}
   $\Delta$ & 6750 & 4203 \\\hline
 \end{tabular}
 \end{center}
-At most $v$ SFMT has better DE than MT, but at some $v$ SFMT
- has worse DE than MT
-(which is colored \textcolor{red}{red}).
+SFMT has better DE than MT at 24 values of $v$, 
+
+but the converse holds at 8 values of $v$
+(they are colored \textcolor{red}{red}).
 \newpage
 \begin{center}
 %\parbox{17cm}{
 \includegraphics[width=0.8\linewidth,height=0.7\textheight,
 keepaspectratio]{delta.eps}
 \\
-Figure 5: $d(v)$ gaps from the upperbounds.
+Figure 5: Graph of the dimension defects $d(v)$.
 
 The $x$-axis: $v=1,2,\ldots, 32$.
 
