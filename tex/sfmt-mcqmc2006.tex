@@ -61,14 +61,26 @@ and JSPS Core-to-Core Program No.18005.
 
 \newpage
 We propose \textcolor{blue}{SFMT} pseudorandom numbergenerator.
+
+\begin{itemize}
+\item 
 SFMT is an $\F2$-linear generator,
-whose recursion fits to Single Instruction Multiple Data (SIMD)
-instructions ($\approx$ 128-bit operations).
+whose recursion fits to 
 
-\vskip 5mm
+Single Instruction Multiple Data (SIMD)
+instructions 
+
+($\approx$ 128-bit operations).
+
+\item
 SFMT is \textcolor{blue}{twice faster} than the Mersenne Twister
- coded in SIMD and is \textcolor{blue}{4 times faster} than original Mersenne Twister.
 
+coded in SIMD.
+
+\item
+SFMT is \textcolor{blue}{4 times faster} than the original Mersenne Twister.
+
+\end{itemize}
 % \vskip 5mm
 % An algorithm to compute the dimension 
 % of equidistribution 
@@ -227,21 +239,41 @@ SFMT is \textcolor{blue}{twice faster} than the Mersenne Twister
 % \end{center}
 \newpage
 {\bf 1. Mersenne Twister} (MT, '98 Matsumoto-Nishimura)
+
+Let $\F2$ be the two element field.
+
+Identify $32$-bit integers with 
+horisontal vectors in $\F2^{32}$.
+
+Consider a recursion of order $N$ over $\F2^{32}$:
+$$
+\bx_{i+N}:=g(\bx_i, \bx_{i+1}, \ldots, \bx_{i+N-1}).
+$$
+
+
+MT uses an $\F2$-linear recursion
 $$
 g(\bw_0,\ldots,\bw_{N-1}) = g(\bw_0, \bw_1, \bw_M) = (\bw_0|\bw_1)A + \bw_M,
 $$
 where $(\bw_0|\bw_1)$ denotes
-the concatenation of $32-r$ MSBs of $\bw_0$ and $r$ LSBs of $\bw_1$,
-and $A$ is the same as above.
+the concatenation 
 
-Period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
+of $32-r$ MSBs of $\bw_0$ and $r$ LSBs of $\bw_1$,
+
+and $A$ is a $(32\times 32)$-matrix 
+for which $\bw A$ is computable 
+
+by a few bit-operations.
+
+\newpage
+Its period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
 
 \vskip 5mm
 
 Choose a constant $32\times 32$ matrix $T$, 
 and output
 $$
-T \bw_0, T \bw_1, T \bw_2, \ldots
+\bw_0T , \bw_1T, \bw_2T, \ldots
 $$
 to improve the distribution of higher bits (called tempering).
 \newpage
@@ -252,22 +284,25 @@ Figure 1: Mersenne Twister
 \end{center}
 \newpage
 \noindent
-{\bf 2. Functions of modern CPUs for Personal \\Computer.}
+{\bf 2. New features of modern CPUs for PCs.}
 
-Modern CPUs for Personal Computer have new features, 
+Modern CPUs for Personal Computers have new features, 
 which was not available for standard CPUs 
 when MT was designed.
 \begin{description}
 \item[Multiplication.]
 Integer Multiplication is now quite fast.
+
 This makes linear congruential generators 
+
 and multiple recursive generators faster.
 
 $\Rightarrow$ 
 Bad news for $\F2$-linear generators.
 
-The speed merit of $\F2$-linear generators,
-which can avoid the multiplications,
+~~~The speed merit of $\F2$-linear generators,
+
+~~~which can avoid the multiplications,
 becomes small.
 
 \newpage
@@ -282,10 +317,10 @@ instruction set
 $\Rightarrow$ 
 Good news for $\F2$-linear generators.
 
-If we select an $\F2$-linear
+~~~If we select an $\F2$-linear
 recursion that fits to SIMD, 
 
-then it will speed up.
+~~~then it will speed up.
 
 \item[More Parallelism.]
 
@@ -312,7 +347,9 @@ $\bw_0, \bw_M, \ldots$ are \textcolor{blue}{128}-bit integers
 
 \item
 $A, B, C, D$ are sparse $128 \times 128$ matrices
-for which $\bw A, \bw B, \bw C, \bw D$ can be computed by
+for which 
+
+$\bw A, \bw B, \bw C, \bw D$ can be computed by
 SIMD bit-operations.
 \end{itemize}
 
@@ -338,6 +375,7 @@ The linear transformations $A,B,C,D$ are as follows.
 \item 
 %$x D := (x \stackrel{128}{>>} 8) \oplus x.$
 $\bw A := (\bw \stackrel{128}{>>} 24) \oplus \bw.$
+%??? different from the figure below???
 
 This notation means that $\bw A$ is regarded
 as a single 128-bit integer, and 
@@ -351,7 +389,7 @@ $\oplus$ means the exclusive-or.
 $\bw B := (\bw \stackrel{32}{>>} 1) \& \mbox{\tt (a constant 128-bit mask)}.$
 
 This notation means that $\bw$ is considered to be 
-a quadraple of $32$-bit integers, and
+a quadruple of $32$-bit integers, and
 %each $32$-bit integer is shifted to the left by 20 bits.
 each $32$-bit integer is shifted to the left by 1 bit,
 and $\&$ means the bitwise AND. 
@@ -359,7 +397,7 @@ and $\&$ means the bitwise AND.
 \newpage
 
 \item 
-$\bw C := (x \stackrel{128}{>>} 8).$
+$\bw C := (\bw \stackrel{128}{>>} 8).$
 
 $(\bw \stackrel{128}{>>} 8)$ is 128-bitwise right shift as above.
 
@@ -455,7 +493,7 @@ Select the best parameters with respect to DE.
     \item Output
       \begin{description}
       \item[block]: Generate $(634 \times 128)$ of 32-bit integers 
-        in an array, 
+        in an array,
         
         616 times iterated ($\to 99999744\sim 10^8$ generations).
       \item[seq]: Generate $10^8$ of 32-bit integers sequentially,
@@ -487,7 +525,7 @@ output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
 
 \textcolor{red}{red} the fastest in SFMT
 \begin{itemize}
-  \item SFMT coded in SIMD is near 2 (1.87) times faster than MT
+  \item SFMT coded in SIMD is nearly 2 (1.87) times faster than MT
  coded in SIMD.
   \item the fastest SFMT is about 3.5 times faster than original MT.
 \end{itemize}
@@ -516,7 +554,7 @@ output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
 
 \textcolor{red}{red} the fastest in SFMT
 \begin{itemize}
-  \item SFMT coded in SIMD is near 2 (1.71) times faster than MT
+  \item SFMT coded in SIMD is nearly 2 (1.71) times faster than MT
  coded in SIMD.
   \item the fastest SFMT is about 3 (2.85) times faster than original MT.
 \end{itemize}
@@ -573,7 +611,7 @@ block &1.406(sec.) & \textcolor{blue}{0.479}
 
 \textcolor{red}{red} the fastest in SFMT
 \begin{itemize}
-  \item SFMT coded in SIMD is near 3 (2.72) times faster than MT
+  \item SFMT coded in SIMD is nearly 3 (2.72) times faster than MT
  coded in SIMD.
   \item the fastest SFMT is over 5 (5.35) times faster than original MT (seq).
 \end{itemize}
@@ -608,7 +646,7 @@ $$
 k(v) \leq \lfloor \log_2 (P+1) / v \rfloor, 
 $$
 and define the \textcolor{blue}{dimension defect} $d(v)$ at $v$
-as the gap between the bound and the realized
+as the gap between the bound and the realized DE:
 $$
 d(v):= \lfloor \log_2 (P+1) / v \rfloor - k(v) \geq 0, 
 $$
@@ -645,7 +683,7 @@ $d(8)$& 0 & \textcolor{red}{1} &$d(16)$& 0 & \textcolor{red}{2}
   $\Delta$ & 6750 & 4203 \\\hline
 \end{tabular}
 \end{center}
-At most $v$ SFMT has beter DE than MT, but at some $v$ SFMT
+At most $v$ SFMT has better DE than MT, but at some $v$ SFMT
  has worse DE than MT
 (which is colored \textcolor{red}{red}).
 \newpage
@@ -785,7 +823,7 @@ Note: $\Rightarrow$ holds under a mild assumption.
 
 \newpage
 {\bf Definition.}
-Concatenate every quadraples of outputs
+Concatenate every quadruples of outputs
 of SFMT[$m$]$^v$, and denote it by cSFMT[$m$]$^v$.
 
 E.g. cSFMT[1]$^v$ is a 128-bit integer sequence
