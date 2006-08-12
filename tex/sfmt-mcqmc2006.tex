@@ -432,7 +432,7 @@ $(\bw \stackrel{32}{<<} 11)$ is 32-bitwise right shift as above.
 \end{itemize}
 All these instructions are available in 
 both Intel's SSE2 \\
-and PowerPC's altivec SIMD instruction set.
+and PowerPC's altivec SIMD instruction sets.
 
 \newpage
 {\bf SIMD instructions:} 
@@ -520,11 +520,11 @@ Select the best parameters with respect to DE.
     \newpage
     \item Output
       \begin{description}
-      \item[block]: Generate $(634 \times 128)$ of 32-bit integers 
+      \item[block]: Generate $(624 \times 128)$ of 32-bit integers 
 %%% Is it 634, or 623???%%%
         in an array, at one time. 
 
-        This is iterated for 616 times 
+        This is iterated for 1252 times 
         ($99999744\sim 10^8$ generations).
       \item[seq]: Generate $10^8$ of 32-bit integers sequentially,
         one by one.
