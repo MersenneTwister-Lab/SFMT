@@ -47,7 +47,7 @@
 Mutsuo Saito (Hiroshima Univ.) \\
 and \\
 Makoto Matsumoto (Hiroshima Univ.).\\
-August 12-18 MCQMC 2006
+August 14-18 MCQMC 2006
 \end{center}
 \vspace{\fill}
 \parbox{19cm}{\Large
@@ -60,7 +60,7 @@ and JSPS Core-to-Core Program No.18005.
 %\includegraphics*{logo.jpg}
 
 \newpage
-We propose \textcolor{blue}{SFMT} pseudorandom numbergenerator.
+We propose \textcolor{blue}{SFMT} pseudorandom number generator.
 
 \begin{itemize}
 \item 
@@ -78,7 +78,7 @@ SFMT is \textcolor{blue}{twice faster} than the Mersenne Twister
 coded in SIMD.
 
 \item
-SFMT is \textcolor{blue}{4 times faster} than the original Mersenne Twister.
+SFMT is \textcolor{blue}{3 to 5 times faster} than the original Mersenne Twister.
 
 \end{itemize}
 % \vskip 5mm
@@ -264,7 +264,7 @@ where $\bx_i \in \F2^{w}$ and
 $g:(\F2^{w})^N \to \F2^{w}$ is an $\F2$-linear function.
 \end{itemize}
 This type of generator is called a Linear Feedbacked 
-Shiftregister (LFSR).
+Shift Register (LFSR).
 
 \newpage
 {\bf Mersenne Twister} (MT, '98 Matsumoto-Nishimura)
@@ -373,6 +373,7 @@ $\bw A, \bw B, \bw C, \bw D$ can be computed by
 SIMD bit-operations.
 \end{itemize}
 
+(We have changed the recursion formula from the abstract.)
 \newpage
 \begin{center}
 %\includegraphics[width=0.7\linewidth]{sfmt-a.eps}
@@ -427,7 +428,7 @@ $(\bw \stackrel{128}{>>} 8)$ is 128-bitwise right shift as above.
 %$x A := (x \stackrel{32}{<<} 20).$
 $\bw D := (\bw \stackrel{32}{<<} 11).$
 
-$(\bw \stackrel{32}{<<} 11)$ is 32-bitwise right shift as above.
+$(\bw \stackrel{32}{<<} 11)$ is 32-bitwise left shift as above.
 
 \end{itemize}
 All these instructions are available in 
@@ -482,6 +483,7 @@ because of the lack of time.
 \end{itemize}
 
 \newpage
+We proceeded as follows:
 \begin{enumerate}
 \item 
 Decide a type of recursion by try-and-error,
@@ -526,7 +528,7 @@ Select the best parameters with respect to DE.
 
         This is iterated for 1252 times 
         ($99999744\sim 10^8$ generations).
-      \item[seq]: Generate $10^8$ of 32-bit integers sequentially,
+      \item[seq]: Generate $99999744\sim 10^8$ of 32-bit integers sequentially,
         one by one.
       \end{description}
     \end{description}
@@ -539,6 +541,16 @@ of 32-bit integer generations:
 Pentium M 1.4GHz. 
 
 \vskip 2mm
+% \begin{tabular}{|c||c|c|c|c|c|}
+% \hline
+% output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
+%  \\ \hline \hline
+%  block   & 0.903(sec.) & \textcolor{blue}{0.479}
+%  & 0.584 & \textcolor{red}{0.256} &    \\ \cline{2-5}
+%  (ratio) & 3.53\phantom{0}  & 1.87\phantom{0}  & 2.28\phantom{0}  & 1.00\phantom{0}  & intel C/C++ \\ \cline{1-5}
+%  seq     & 1.112(sec.) & 1.016 & 1.007 & 0.776 & ver. 9.0\\ \cline{2-5}
+%  (ratio) & 1.43\phantom{0} & 1.31\phantom{0}  & 1.30\phantom{0}  & 1.00\phantom{0}  &  \\ \hline
+% \end{tabular}
 \begin{tabular}{|c||c|c|c|c|c|}
 \hline
 output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
@@ -547,17 +559,19 @@ output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
  & 0.584 & \textcolor{red}{0.256} &    \\ \cline{2-5}
  (ratio) & 3.53\phantom{0}  & 1.87\phantom{0}  & 2.28\phantom{0}  & 1.00\phantom{0}  & intel C/C++ \\ \cline{1-5}
  seq     & 1.112(sec.) & 1.016 & 1.007 & 0.776 & ver. 9.0\\ \cline{2-5}
- (ratio) & 1.43\phantom{0} & 1.31\phantom{0}  & 1.30\phantom{0}  & 1.00\phantom{0}  &  \\ \hline
+ (ratio) & 4.34\phantom{0} & 3.97\phantom{0}  & 3.93\phantom{0}  & 3.03\phantom{0}  &  \\ \hline
 \end{tabular}
 \end{center}
 
-\textcolor{blue}{blue} the fastest in MT
+\textcolor{blue}{blue}: the fastest in MT
 
-\textcolor{red}{red} the fastest in SFMT
+\textcolor{red}{red}: the fastest in SFMT
+
+The ratio is compared with SFMT(SIMD) block.
 \begin{itemize}
   \item SFMT coded in SIMD is nearly 2 (1.87) times faster than MT
  coded in SIMD.
-  \item the fastest SFMT is about 3.5 times faster than original MT.
+  \item The fastest SFMT is about 3.5 times faster than original MT.
 \end{itemize}
 \newpage
 \begin{center}
@@ -567,6 +581,18 @@ of 32-bit integer generations:
 Pentium IV 3GHz. 
 
 \vskip 2mm
+% \begin{tabular}{|c||c|c|c|c|c|}
+% \hline
+% output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
+% \\ \hline \hline
+%  block & 0.498(sec.) & \textcolor{blue}{0.300}
+%  & 0.387 & \textcolor{red}{0.175} & \\ \cline{2-5}
+% (ratio)& 2.85\phantom{0} & 1.71\phantom{0}  & 2.21\phantom{0}
+%   & 1.00\phantom{0}  & intel C/C++\\ \cline{1-5}
+%  seq   & 0.847(sec.) & 0.724 & 0.648 & 0.449 & ver. 9.0 \\\cline{2-5}
+% (ratio)& 1.89\phantom{0} & 1.61\phantom{0}  & 1.44\phantom{0}
+%   & 1.00\phantom{0}  &  \\ \hline
+% \end{tabular}
 \begin{tabular}{|c||c|c|c|c|c|}
 \hline
 output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
@@ -576,17 +602,19 @@ output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
 (ratio)& 2.85\phantom{0} & 1.71\phantom{0}  & 2.21\phantom{0}
   & 1.00\phantom{0}  & intel C/C++\\ \cline{1-5}
  seq   & 0.847(sec.) & 0.724 & 0.648 & 0.449 & ver. 9.0 \\\cline{2-5}
-(ratio)& 1.89\phantom{0} & 1.61\phantom{0}  & 1.44\phantom{0}
-  & 1.00\phantom{0}  &  \\ \hline
+(ratio)& 4.84\phantom{0} & 4.14\phantom{0}  & 3.70\phantom{0}
+  & 2.57\phantom{0}  &  \\ \hline
 \end{tabular}
 \end{center}
-\textcolor{blue}{blue} the fastest in MT
+\textcolor{blue}{blue}: the fastest in MT
 
-\textcolor{red}{red} the fastest in SFMT
+\textcolor{red}{red}: the fastest in SFMT
+
+The ratio is compared with SFMT(SIMD) block.
 \begin{itemize}
   \item SFMT coded in SIMD is nearly 2 (1.71) times faster than MT
  coded in SIMD.
-  \item the fastest SFMT is about 3 (2.85) times faster than original MT.
+  \item The fastest SFMT is about 3 (2.85) times faster than original MT.
 \end{itemize}
 
 \newpage
@@ -597,6 +625,17 @@ of 32-bit integer generations:
 Athlon 64 3800+ (2.4GHz)
 
 \vskip 2mm
+% \begin{tabular}{|c||c|c|c|c|c|}
+% \hline
+% output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
+% \\ \hline \hline
+% block & 0.543(sec.) & \textcolor{blue}{0.264}
+%  & 0.272 & \textcolor{red}{0.112} & \phantom{intel C/C++}\\
+%  \cline{2-5}
+% (ratio)& 4.85\phantom{0} & 2.36\phantom{0}  & 2.43\phantom{0} & 1.00\phantom{0} & gcc \\ \cline{1-5}
+% seq & 0.487(sec.) & 0.319 & 0.407 & 0.312 & ver. 4.0.2\\ \cline{2-5}
+% (ratio)& 1.56\phantom{0} & 1.02\phantom{0}  & 1.30\phantom{0} & 1.00\phantom{0} & \\ \hline
+% \end{tabular}
 \begin{tabular}{|c||c|c|c|c|c|}
 \hline
 output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
@@ -606,16 +645,18 @@ block & 0.543(sec.) & \textcolor{blue}{0.264}
  \cline{2-5}
 (ratio)& 4.85\phantom{0} & 2.36\phantom{0}  & 2.43\phantom{0} & 1.00\phantom{0} & gcc \\ \cline{1-5}
 seq & 0.487(sec.) & 0.319 & 0.407 & 0.312 & ver. 4.0.2\\ \cline{2-5}
-(ratio)& 1.56\phantom{0} & 1.02\phantom{0}  & 1.30\phantom{0} & 1.00\phantom{0} & \\ \hline
+(ratio)& 4.35\phantom{0} & 2.85\phantom{0}  & 3.63\phantom{0} & 2.79\phantom{0} & \\ \hline
 \end{tabular}
 \end{center}
-\textcolor{blue}{blue} the fastest in MT
+\textcolor{blue}{blue}: the fastest in MT
 
-\textcolor{red}{red} the fastest in SFMT
+\textcolor{red}{red}: the fastest in SFMT
+
+The ratio is compared with SFMT(SIMD) block.
 \begin{itemize}
   \item SFMT coded in SIMD is over 2 (2.36) times faster than MT
  coded in SIMD.
-  \item the fastest SFMT is over 4 (4.35) times faster than original MT (seq).
+  \item The fastest SFMT is over 4 (4.35) times faster than original MT (seq).
 \end{itemize}
 
 \newpage
@@ -626,6 +667,16 @@ of 32-bit integer generations:
 Power PC G4 1.33GHz
 
 \vskip 2mm
+% \begin{tabular}{|c||c|c|c|c|c|}
+% \hline
+% output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
+% \\ \hline \hline
+% block &1.406(sec.) & \textcolor{blue}{0.479}
+%  & 0.919 & \textcolor{red}{0.176} & \phantom{intel C/C++}\\ \cline{2-5}
+% (ratio)& 7.99\phantom{0} & 2.72\phantom{0}  & 5.22\phantom{0} & 1.00\phantom{0} & gcc \\ \cline{1-5}
+%  seq & 0.942(sec.) & 0.543 & 0.974 & 0.495 & ver.4.0.0 \\ \cline{2-5}
+% (ratio)& 1.90\phantom{0} & 1.10\phantom{0} & 1.97\phantom{0} & 1.00\phantom{0} & \\ \hline
+% \end{tabular}
 \begin{tabular}{|c||c|c|c|c|c|}
 \hline
 output & MT & MT{\Large(SIMD)} & SFMT & SFMT{\Large (SIMD)} & compiler
@@ -634,16 +685,18 @@ block &1.406(sec.) & \textcolor{blue}{0.479}
  & 0.919 & \textcolor{red}{0.176} & \phantom{intel C/C++}\\ \cline{2-5}
 (ratio)& 7.99\phantom{0} & 2.72\phantom{0}  & 5.22\phantom{0} & 1.00\phantom{0} & gcc \\ \cline{1-5}
  seq & 0.942(sec.) & 0.543 & 0.974 & 0.495 & ver.4.0.0 \\ \cline{2-5}
-(ratio)& 1.90\phantom{0} & 1.10\phantom{0} & 1.97\phantom{0} & 1.00\phantom{0} & \\ \hline
+(ratio)& 5.35\phantom{0} & 3.09\phantom{0} & 5.53\phantom{0} & 2.81\phantom{0} & \\ \hline
 \end{tabular}
 \end{center}
-\textcolor{blue}{blue} the fastest in MT
+\textcolor{blue}{blue}: the fastest in MT
 
-\textcolor{red}{red} the fastest in SFMT
+\textcolor{red}{red}: the fastest in SFMT
+
+The ratio is compared with SFMT(SIMD) block.
 \begin{itemize}
   \item SFMT coded in SIMD is nearly 3 (2.72) times faster than MT
  coded in SIMD.
-  \item the fastest SFMT is over 5 (5.35) times faster than original MT (seq).
+  \item The fastest SFMT is over 5 (5.35) times faster than original MT (seq).
 \end{itemize}
 
 \newpage
