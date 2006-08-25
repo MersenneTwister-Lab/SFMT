@@ -118,19 +118,19 @@ int main(int argc, char* argv[]){
 
     setup_param(1, 0, 21, 4, 3, 29, 2, 2, 2, 0, 0, 0, 0);
 
-    if (argc != 3) {
-	limit = 32;
+    if (argc != 2) {
+	//limit = 32;
 	n = 1;
     } else {
-	limit = atoi(argv[1]);
-	n = atoi(argv[2]);
+	//limit = atoi(argv[1]);
+	n = atoi(argv[1]);
     }
 
     printf("MEXP = %d\n", get_rnd_mexp());
     seed = (long)time(NULL);
     printf("seed = %lu\n", seed);
     init_genrand(seed);
-    printf("search limit degree = %d\n", limit);
+    //printf("search limit degree = %d\n", limit);
     printf("now search %d times\n", n);
     fflush(stdout);
     search(n);
