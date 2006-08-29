@@ -241,6 +241,12 @@ param-searchP30-1279: search.o sfmtP30.o mt19937ar.o util.o debug.o
 param-searchP31-607: search.o sfmtP31.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP31.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-searchP32-607: search.o sfmtP32.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP32.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP32-1279: search.o sfmtP32.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP32.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}
