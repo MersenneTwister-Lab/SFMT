@@ -66,8 +66,8 @@ void print_param(FILE *fp) {
     fprintf(fp, "POS1 = %u\n", POS1);
     fprintf(fp, "SL1 = %u\n", SL1);
     fprintf(fp, "SL2 = %u\n", SL2);
-    fprintf(fp, "SL3 = %u\n", SL3);
     fprintf(fp, "SR1 = %u\n", SR1);
+    fprintf(fp, "SR2 = %u\n", SR2);
     fprintf(fp, "MSK1 = %08x\n", MSK1);
     fprintf(fp, "MSK2 = %08x\n", MSK2);
     fprintf(fp, "MSK3 = %08x\n", MSK3);
@@ -363,31 +363,22 @@ static void get_vector32(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
 static void get_vector64(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
 			 int bit_len) {
     uint32_t array[4];
-    uint32_t mask;
+    uint64_t array64[2];
+    uint64_t mask;
     int i, j, k;
 
     assert(state_mode == 0 || state_mode == 2);
 
     vec.SetLength(0);
     vec.SetLength(bit_len);
-    gen_rand128sp(sfmt, array, 0);
+    gen_rand128sp(sfmt, array, state_mode);
+    array64[0] = (uint64_t)array[0] | ((uint64_t)array[1] << 32);
+    array64[1] = (uint64_t)array[2] | ((uint64_t)array[3] << 32);
     k = 0;
-    for (i = 0; (i < 2) && (k < bit_len / 2); i++) {
-	mask = (uint32_t)0x80000000UL;
-	for (j = 0; (j < 32) && (k < bit_len / 2); j++) {
-	    if (array[i] & mask) {
-		vec.put(k, 1);
-	    } else {
-		vec.put(k, 0);
-	    }
-	    mask = mask >> 1;
-	    k++;
-	}
-    }
-    for (i = 2; (i < 4) && (k < bit_len); i++) {
-	mask = (uint32_t)0x80000000UL;
-	for (j = 0; (j < 32) && (k < bit_len); j++) {
-	    if (array[i] & mask) {
+    for (i = 0; i < 2; i++) {
+	mask = (uint64_t)1 << 63;
+	for (j = 0; j < bit_len / 2; j++) {
+	    if (array64[i] & mask) {
 		vec.put(k, 1);
 	    } else {
 		vec.put(k, 0);
@@ -413,7 +404,7 @@ static void get_vector128(vec_GF2& vec, sfmt_t *sfmt, int state_mode,
     vec.SetLength(bit_len);
     gen_rand128sp(sfmt, array, 0);
     k = 0;
-    for (i = 0; (i < 4) && (k < bit_len); i++) {
+    for (i = 3; (i >= 0) && (k < bit_len); i--) {
 	mask = (uint32_t)0x80000000UL;
 	for (j = 0; (j < 32) && (k < bit_len); j++) {
 	    if (array[i] & mask) {

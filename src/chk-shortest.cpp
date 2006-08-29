@@ -193,6 +193,7 @@ void test_shortest(sfmt_t *sfmt, GF2X& poly) {
     }
     printf("64bit D.D:%7d, DUP:%5d\n", dist_sum, count);
 #endif
+#if 1
     dist_sum = 0;
     count = 0;
     old = 0;
@@ -214,6 +215,7 @@ void test_shortest(sfmt_t *sfmt, GF2X& poly) {
 	fflush(stdout);
     }
     printf("32bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+#endif
 }
 
 int main(int argc, char *argv[]) {

@@ -62,6 +62,11 @@ shortestX7-base607: chk-shortest.o shortbase128.o sfmtX7-st.o util.o sfmt-util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX7-st.o util.o \
 	sfmt-util.o ${LINKOPT}
 
+shortestX78-base607: chk-shortest.o shortbase128.o sfmtX78-st.o util.o \
+		sfmt-util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX78-st.o util.o \
+		sfmt-util.o ${LINKOPT}
+
 ht-shortest128-base521: ht-chk-shortest.o ht-shortbase128.o ht-rnd-st.o util.o
 	${CPP} -o $@ ht-chk-shortest.o ht-shortbase128.o ht-rnd-st.o \
 		util.o ${LINKOPT}

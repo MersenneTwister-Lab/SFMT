@@ -148,6 +148,12 @@ int get_shortest_base(sfmt_t *sfmt) {
 #endif
 	while ((!dependent_found) && (weight_mode > 1)) {
 	    weight_mode--;
+#if 0
+	    for (i = 0; i <= bit_len; i++) {
+		cout << next[i] << " " << count[i] << " "
+		     << last_mode[i]<< endl;
+	    }
+#endif
 	    for (i = 0; i <= bit_len; i++) {
 		count[i] = get_vector(next[i], &bases[i], status_mode,
 				      weight_mode, bit_len, max_weight_mode);
