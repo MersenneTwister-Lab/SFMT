@@ -100,7 +100,7 @@ and a version MT19937 has the period of $2^{19937}-1$ and can generate
 roughly $10^8$ 32-bit pseudorandom integers per a second.
 
 On the other hand, modern CPUs for Personal Computers,
-such as Pentium and Power GC, have 
+such as Pentium and Power PC, have 
 Single Instruction Multiple Data (SIMD) operations,
 which can be considered as operations 
 on 128-bit registers. In addition, they have more registers
@@ -245,12 +245,12 @@ The degree of recursion $N$ is $\lfloor 19937/128 \rfloor=156$,
 and the linear transformations $A,B,C,D$ are as follows.
 \begin{itemize}
 \item 
-$\bw A := (\bw \stackrel{128}{<<} 24) + \bw.$
+$\bw A := (\bw \stackrel{128}{<<} 8) + \bw.$
 
 This notation means that $\bw$ is regarded
 as a single 128-bit integer, and 
 $\bw A$ is the result of the left-shift
-of $\bw$ by 24 bits. There is such a SIMD operation
+of $\bw$ by 8 bits. There is such a SIMD operation
 in both Pentium SSE2 and PowerPC altivec SIMD instruction 
 sets (SSE2 permits only a multiple of 8
 as the amount of shifting). 
@@ -258,11 +258,11 @@ Note that the notation $+$ means the exclusive-or
 in this article.
 
 \item
-$\bw B := (\bw \stackrel{32}{>>} 1) \& \mbox{\tt 7DBEBFFF 7FFFFFFE DED6FFEF FEFEFF6E}.$
+$\bw B := (\bw \stackrel{32}{>>} 11) \& \mbox{\tt BFFFFFF6 BFFAFFFF DDFECB7F DFFFFFEF}.$
 
 This notation means that $\bw$ is considered to be 
 a quadruple of $32$-bit integers, and
-each $32$-bit integer is shifted to the right by 1 bit,
+each $32$-bit integer is shifted to the right by 11 bit,
 (thus the most significant bit is filled with a 0, 
 for each 32-bit ingegers).
 The C-like notation $\&$ means the bitwise AND
@@ -285,11 +285,11 @@ $(\bw \stackrel{128}{>>} 8)$ is the 128-bitwise right shift
 by 8 bits, as above.
 
 \item
-$\bw D := (\bw \stackrel{32}{<<} 11).$
+$\bw D := (\bw \stackrel{32}{<<} 18).$
 
 Similarly to the above,
 $\bw$ is cut into four pieces of 32-bit integers,
-and each of them is shifted by 11 bits to the left.
+and each of them is shifted by 18 bits to the left.
 \end{itemize}
 All these instructions are available in 
 both Intel's SSE2 and PowerPC's altivec SIMD instruction sets.
@@ -538,33 +538,59 @@ for four different CPUs and two different return-value systems.
 The ratio to the SFMT coded in SIMD is listed, too.}\label{tab:speed}
 \end{table}
 
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c||c|c|c|c|c|c|}
+\hline
+CPU & return & mrg & rand48 & rand & random256g2 & well & xor3  \\ \hline \hline
+Pentium M & block & 3.414  & 1.412  & 0.440  & 0.310  & 2.273  & 0.300 \\
+\cline{2-8}
+ & seq & 3.425  & 1.252  & 0.691  & 1.002  & 2.834  & 1.221 \\ \hline
+Pentium IV & block & 2.546  & 1.249  & 0.406  & 0.109  & 1.218  & 0.313 \\
+\cline{2-8}
+ & seq & 2.515  & 1.171  & 0.594  & 0.562  & 1.531  & 0.844 \\ \hline
+Athlon & block & 2.160  & 1.660  & 0.210  & 0.250  & 0.940  & 0.370 \\
+\cline{2-8}
+ & seq & 2.090  & 1.490  & 0.200  & 0.210  & 1.100  & 0.500 \\ \hline
+PowerPC & block & 2.340  & 1.210  & 0.410  & 0.680  & 1.890  & 0.710 \\
+\cline{2-8}
+ & seq & 2.250  & 0.820  & 0.370  & 0.990  & 1.910  & 1.010 \\ \hline
+\end{tabular}
+\end{center}
+\caption{The CPU time (sec.) for $10^8$ generations of 32-bit integers,
+for four different CPUs and two different return-value systems. 
+The ratio to the SFMT coded in SIMD is listed, too.}\label{tab:speed-other}
+\end{table}
+
 \section{Dimension of equidistribution}
 The total dimension defect $\Delta$ of SFMT19937
-is $????$, which is smaller than $6750$ of MT19937.
+is $4188$, which is smaller than $6750$ of MT19937.
 
 Table~\ref{tab:dd} lists the dimension defects $d(v)$
 of SFMT19937 (as a 32-bit integer generator) 
 and MT19937 for $v=1,2,\ldots, 32$.
 SFMT has smaller values of the defect $d(v)$
-at 24??? values of $v$. The converse holds for 8??? values of
+at 26 values of $v$. The converse holds for 6 values of
 $v$, but the difference is small.
 \begin{table}
 \begin{tabular}{|c|rr||c|rr||c|rr||c|rr|} \hline
 $v$ & MT & SFMT & $v$ & MT & SFMT & $v$ & MT & SFMT & $v$ & MT & SFMT\\ \hline
-$d(1)$& 0 & *3
- &$d(9)$& 346 & 1 & $d(17)$ & 549 & 543 & $d(25)$ & 174 & 173\\
-$d(2)$& 0 & *1 
-&$d(10)$& 124 & 120 & $d(18)$ & 484 & 478 & $d(26)$ & 143 & 142\\
-$d(3)$& 405 & 0 &$d(11)$& 564 & 0 & $d(19)$ & 426 & 420 & $d(27)$ & 115 & 114\\
-$d(4)$& 0 & *1
- &$d(12)$& 415 & 29 & $d(201)$ & 373 & 372 & $d(28)$ & 89 & 88\\
-$d(5)$& 249 & 1 &$d(13)$& 287 & 270 & $d(21)$ & 326 & 325 & $d(29)$ & 64 & 63\\
-$d(6)$& 207 & 1 &$d(14)$& 178 & *180
- & $d(22)$ & 283 & 282 & $d(30)$ & 41 & 40\\
-$d(7)$& 355 & 0 &$d(15)$& 83 & *85
- & $d(23)$ & 243 & 242 & $d(31)$ & 20 & 19\\
-$d(8)$& 0 & *1 &$d(16)$& 0 & *2
- & $d(24)$ & 207 & 206 & $d(32)$ & 0 & *1 \\ \hline
+$d(1)$ & 0 & 0 & $d(9)$ & 346 & 1 & $d(17)$ & 549 & 543 & $d(25)$ & 174 & 173 \\
+$d(2)$ & 0 & *2 & $d(10)$ & 124 & 0 & $d(18)$ & 484 & 478 & $d(26)$ & 143 & 142
+\\
+$d(3)$ & 405 & 1 & $d(11)$ & 564 & 0 & $d(19)$ & 426 & 425 & $d(27)$ & 115 & 114
+\\
+$d(4)$ & 0 & *2 & $d(12)$ & 415 & 117 & $d(20)$ & 373 & 372 & $d(28)$ & 89 & 88
+\\
+$d(5)$ & 249 & 2 & $d(13)$ & 287 & 285 & $d(21)$ & 326 & 325 & $d(29)$ & 64 & 63
+\\
+$d(6)$ & 207 & 0 & $d(14)$ & 178 & 176 & $d(22)$ & 283 & 282 & $d(30)$ & 41 & 40
+\\
+$d(7)$ & 355 & 1 & $d(15)$ & 83 & *85 & $d(23)$ & 243 & 242 & $d(31)$ & 20 & 19 
+\\
+$d(8)$ & 0 & *1 & $d(16)$ & 0 & *2 & $d(24)$ & 207 & 206 & $d(32)$ & 0 & *1 \\
+\hline
+
 \end{tabular}
 \caption{Dimension defects 
 $d(v)$ of MT19937 and SFMT19937
@@ -630,12 +656,12 @@ Thus, SFMT focuses more on the speed.
 There is a trade-off between the speed and the portablity.
 We prepare (1) a standard C code of SFMT, which uses 
 functions specified in ISO-C only, (2) an optimized C++ code for
-Intel Pentium SSE2, and (3) an optimized C++ code for PowerGC. 
+Intel Pentium SSE2, and (3) an optimized C++ code for PowerPC. 
 The fastest implementation depends on the compiler, its versions and
 options. We will put the codes in the homepage {\tt http://www.???}.
 
 \appendix
-\section{Computation of the Period}\label{sec:period}
+\section{Computation of  the Period}\label{sec:period}
 %\subsection{Reducible transition function}
 LFSR may be considered as an automaton, 
 with the state space $S=(\F2^{w})^{N}$ 
