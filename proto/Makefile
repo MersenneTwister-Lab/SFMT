@@ -6,6 +6,7 @@
 %521:MEXP=521
 %607:MEXP=607
 %1279:MEXP=1279
+%2281:MEXP=2281
 %19937:MEXP=19937
 #%44497:MEXP=44497
 #%86243:MEXP=86243
@@ -246,6 +247,15 @@ param-searchP32-607: search.o sfmtP32.o mt19937ar.o util.o debug.o
 
 param-searchP32-1279: search.o sfmtP32.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP32.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP33-607: search.o sfmtP33.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP33.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP33-1279: search.o sfmtP33.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP33.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP33-2281: search.o sfmtP33.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP33.o mt19937ar.o util.o debug.o ${LINKOPT}
 
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \

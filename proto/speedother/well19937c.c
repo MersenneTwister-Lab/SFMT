@@ -269,8 +269,10 @@ INLINE uint32_t gen_rand(void)
     y = STATE[mti++];
 
     /* Tempering */
+#if 0
     y = y ^ ((y << 7) & TEMPERB);
     y = y ^ ((y << 15) & TEMPERC);
+#endif
     return y;
 }
 
@@ -281,17 +283,19 @@ INLINE unsigned int get_onetime_rnds(void) {
 
 INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 {
-    int i, j;
-    uint32_t y;
+    int i;
+
     for (i = 0; i < block_num; i++) {
 	gen_rand_all();
 	memcpy(array, STATE, sizeof(STATE));
+#if 0	
 	for (j = 0; j < R; j++) {
 	    y = array[j];
 	    y = y ^ ((y << 7) & TEMPERB);
 	    y = y ^ ((y << 15) & TEMPERC);
 	    array[j] = y;
 	}
+#endif
 	array += R;
     }
 }

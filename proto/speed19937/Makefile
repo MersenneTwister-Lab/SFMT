@@ -202,6 +202,9 @@ mt_fastc_inline2: mt19937ar_inline.c test_time2_inline.c
 mt_fastc_funcall2: mt19937ar_funcall.o test_time2_funcall.o
 	${CC} -o $@ mt19937ar_funcall.o test_time2_funcall.o
 
+well_fastc_inline2: well19937c.c test_time2_inline.c
+	${CC} -o $@ well19937c.c
+
 .c.o:
 	${CC} -c $<
 
