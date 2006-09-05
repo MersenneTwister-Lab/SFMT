@@ -1,51 +1,66 @@
-/*
- * SIMD based Fast Mersenne Twister (SFMT)
- * written by M.Saito 2006.08.29
- * Copyright 2006
+/** 
+ * @file  sfmt.c
+ * @brief SIMD oriented Fast Mersenne Twister
+ *
+ * @author Mutsuo Saito (Hiroshima-univ)
+ * @date 2006-08-29
+ *
+ * Copyright (C) 2006 Mutsuo Saito. All rights reserved.
+ * @see LICENSE
  */
 
 #include <stdio.h>
 #include <limits.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 #include "sfmt.h"
 
-#define KAISU (624 * 128)
-#define TIC_MAG 1
-#define TIC_COUNT (313 * 4)
-
-uint32_t dummy[KAISU/4+1][4];
+#define BLOCK_SIZE 100000
+#define COUNT 1000
 
 int main(int argc, char *argv[]) {
-    uint32_t i, j;
+    int i, j;
     uint64_t clo;
-    unsigned long long min = LONG_MAX;
-    uint32_t randoms;
-    uint32_t block;
-    uint32_t *array;
-    bool verbose = false;
+    uint64_t min = LONG_MAX;
+    uint32_t array[BLOCK_SIZE];
+    uint32_t array2[700];
+    int verbose = 0;
+    uint32_t r;
 
     if ((argc >= 2) && (strncmp(argv[1],"-v",2) == 0)) {
-	verbose = true;
+	verbose = 1;
     }
-    array = (uint32_t *)dummy;
-    block = get_onetime_rnds();
-    randoms = (KAISU / block) * block;
-    init_gen_rand(1234);
     if (verbose) {
 	printf("generated randoms\n");
-	fill_array_block(array, 1000 / block + 1);
+	init_gen_rand(1234);
+	fill_array(array, 1000);
+	fill_array(array2, 700);
+	init_gen_rand(1234);
 	for (i = 0; i < 1000; i++) {
 	    printf("%10u ", array[i]);
 	    if (i % 5 == 4) {
 		printf("\n");
 	    }
+	    r = gen_rand();
+	    if (r != array[i]) {
+		printf("mismatch at %d array:%u gen:%u", i, array[i], r);
+		exit(1);
+	    }
+	}
+	for (i = 0; i < 700; i++) {
+	    r = gen_rand();
+	    if (r != array2[i]) {
+		printf("mismatch at %d array2:%u gen:%u", i, array2[i], r);
+		exit(1);
+	    }
 	}
     }
+    init_gen_rand(1234);
     for (i = 0; i < 1; i++) {
 	clo = clock();
-	for (i = 0; i < TIC_COUNT; i++) {
-	    fill_array_block(array, randoms / block);
+	for (i = 0; i < COUNT; i++) {
+	    fill_array(array, BLOCK_SIZE);
 	}
 	clo = clock() - clo;
 	if (clo < min) {
@@ -53,14 +68,13 @@ int main(int argc, char *argv[]) {
 	}
     }
     printf("BLOCK:%.0f", (double)min * 1000/ CLOCKS_PER_SEC);
-    printf("ms and %u randoms = %.3fs per %drandoms\n",
-	   randoms * TIC_COUNT, 
-	   (double)min * 1000 * KAISU / CLOCKS_PER_SEC / randoms / TIC_COUNT,
-	   KAISU * TIC_COUNT);
+    printf("ms for %u randoms generation\n",
+	   BLOCK_SIZE * COUNT);
     min = LONG_MAX;
+    init_gen_rand(1234);
     for (i = 0; i < 1; i++) {
 	clo = clock();
-	for (j = 0; j < randoms * TIC_COUNT; j++) {
+	for (j = 0; j < BLOCK_SIZE * COUNT; j++) {
 	    gen_rand();
 	}
 	clo = clock() - clo;
@@ -69,9 +83,7 @@ int main(int argc, char *argv[]) {
 	}
     }
     printf("SEQUE:%.0f", (double)min * 1000 / CLOCKS_PER_SEC);
-    printf("ms and %u randoms = %.3fs per %drandoms\n",
-	   randoms * TIC_COUNT,
-	   (double)min * 1000 * KAISU / CLOCKS_PER_SEC / randoms / TIC_COUNT,
-	   KAISU * TIC_COUNT);
+    printf("ms for %u randoms generation\n",
+	   BLOCK_SIZE * COUNT);
     return 0;
 }
