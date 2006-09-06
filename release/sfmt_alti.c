@@ -1,36 +1,95 @@
-/* Hearty Twister Search Code, Makoto Matsumoto 2005/5/6 */
-
+/** 
+ * @file  sfmt_alti.c
+ * @brief SIMD oriented Fast Mersenne Twister(SFMT) for PowerPC G4, G5
+ *
+ * @author Mutsuo Saito (Hiroshima University)
+ * @author Makoto Matsumoto (Hiroshima University)
+ *
+ * @date 2006-09-06
+ *
+ * @note We assume BIG ENDIAN in this file.
+ *
+ * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University. All rights reserved.
+ */
 #include <string.h>
-#include <stdio.h>
-#include <ppc_intrinsics.h>
-#include "random-inline.h"
+#include <assert.h>
+#include "sfmt.h"
 
+/*-----------------
+  BASIC DEFINITIONS
+  -----------------*/
+/** Mersenne Exponent. The period of the sequence 
+ *  is a multiple of 2^MEXP-1. */
 #define MEXP 19937
-
+/** the word size of the recursion of SFMT is 128-bit. */
 #define WORDSIZE 128
+/** SFMT generator has an internal state array of 128-bit integers,
+ * and N is its size. */
 #define N (MEXP / WORDSIZE + 1)
-#define MAXDEGREE (WORDSIZE * N)
-#define DST_TOUCH_BLOCK(blk) (32 | (((blk) * 20) << 16) | (2 << 24))
-#define DST_MAX_BLOCK 12
+/** N32 is the size of internal state array when regarded as an array
+ * of 32-bit integers.*/
+#define N32 (N * 4)
+/** N64 is the size of internal state array when regarded as an array
+ * of 64-bit integers.*/
+#define N64 (N * 2)
 
+/*----------------------
+  the parameters of SFMT
+  ----------------------*/
+/** the pick up position of the array. */
+const int POS1 = 122;
+/** the parameter of shift left as four 32-bit registers. */
+const int SL1 = 18;
+/** the parameter of shift left as one 128-bit register. 
+ * The 128-bit integer is shifted by (SL2 * 8) bits. 
+ */
+const int SL2 = 1;
+/** the parameter of shift right as four 32-bit registers. */
+const int SR1 = 11;
+/** the parameter of shift right as one 128-bit register. 
+ * The 128-bit integer is shifted by (SL2 * 8) bits. 
+ */
+const int SR2 = 1;
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
+const uint32_t MSK1 = 0xdfffffefU;
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
+const uint32_t MSK2 = 0xddfecb7fU;
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
+const uint32_t MSK3 = 0xbffaffffU;
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
+const uint32_t MSK4 = 0xbffffff6U;
+/** The 32 MSBs of the internal state array is seto to this
+ * value. This peculiar value assures that the period length of the
+ * output sequence is a multiple of 2^19937-1.
+ */
+const uint32_t INIT_LUNG = 0x6d736d6dU;
+
+/*--------------------------------------
+  FILE GLOBAL VARIABLES
+  internal state, index counter and flag 
+  --------------------------------------*/
+/** the 128-bit internal state array */
 static vector unsigned int sfmt[N];
-static unsigned int idx;
-static uint32_t *sfmt32 = (uint32_t *)sfmt;
+/** the 32bit interger pointer to the 128-bit internal state array */
+static uint32_t *psfmt32 = (uint32_t *)&sfmt[0];
+/** index counter to the 32-bit internal state array */
+static int idx;
+/** a flag: it is 0 if and only if the internal state is not yet
+ * initialized. */
+static int initialized = 0;
 
-#define POS1 4
-#define SL1 20
-#define SL2 1
-#define SR1 1
-#define SR2 1
-#define MSK1 0xfffef7f9U
-#define MSK2 0xffdff7fbU
-#define MSK3 0xcbfff7feU
-#define MSK4 0xedfefffdU
-
-#define MAX_BLOCKS (DST_MAX_BLOCK + 2)
-
-INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks);
-INLINE static void gen_rand_all(void);
+/*----------------
+  STATIC FUNCTIONS
+  ----------------*/
+static void gen_rand_all(void);
+static void gen_rand_array(vector unsigned int array[], int size);
+static uint32_t func1(uint32_t x);
+static uint32_t func2(uint32_t x);
 INLINE static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
 						vector unsigned int c,
@@ -41,51 +100,16 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned char perm_sl,
 						vector unsigned char perm_sr);
 
-INLINE unsigned int get_rnd_maxdegree(void)
-{
-    return MAXDEGREE;
-}
-
-INLINE unsigned int get_rnd_mexp(void)
-{
-    return MEXP;
-}
-
-INLINE unsigned int get_onetime_rnds(void) {
-    return N * 4;
-}
-
-void print_param(FILE *fp) {
-    fprintf(fp, "POS1 = %u\n", POS1);
-    fprintf(fp, "SL1 = %u\n", SL1);
-    fprintf(fp, "SL2 = %u\n", SL2);
-    fprintf(fp, "SR1 = %u\n", SR1);
-    fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "MSK1 = %u\n", MSK1);
-    fprintf(fp, "MSK2 = %u\n", MSK2);
-    fprintf(fp, "MSK3 = %u\n", MSK3);
-    fprintf(fp, "MSK4 = %u\n", MSK4);
-    fflush(fp);
-}
-
-void print_param2(FILE *fp) {
-    fprintf(fp, "[POS1, SL1, SL2, SR1, SR2, MSK1, MSK2, MSK3, MSK4] = "
-	    "[%u,%u,%u,%u,%u,%u,%u,%u,%u]\n", 
-	    POS1, SL1, SL2, SR1, SR2, MSK1, MSK2, MSK3, MSK4);
-    fflush(fp);
-}
-
-INLINE void print_state(FILE *fp) {
-    int i;
-    for (i = 0; i < N; i++) {
-	fprintf(fp, "%08vlx ", sfmt[i]);
-	if (i % 2 == 1) {
-	    fprintf(fp, "\n");
-	}
-    }
-}
-
-INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+/**
+ * This function represents the recursion formula.
+ * @param a a 128-bit part of the interal state array
+ * @param b a 128-bit part of the interal state array
+ * @param c a 128-bit part of the interal state array
+ * @param d a 128-bit part of the interal state array
+ * @return output
+ */
+INLINE static __attribute__((always_inline)) 
+    vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
 						vector unsigned int c,
 						vector unsigned int d,
@@ -93,8 +117,7 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int sr1,
 						vector unsigned int mask,
 						vector unsigned char perm_sl,
-						vector unsigned char perm_sr
-) {
+						vector unsigned char perm_sr) {
 
     vector unsigned int v, w, x, y, z;
     x = vec_perm(a, perm_sl, perm_sl);
@@ -110,7 +133,11 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
     return z;
 }
 
-INLINE void gen_rand_all(void) {
+/**
+ * This function fills the internal state array with psedorandom
+ * integers.
+ */
+void gen_rand_all(void) {
     int i;
     vector unsigned int r, r1, r2;
     const vector unsigned int sl1 = (vector unsigned int)(SL1, SL1, SL1, SL1);
@@ -122,7 +149,6 @@ INLINE void gen_rand_all(void) {
         const vector unsigned char perm_sr = (vector unsigned char)
     (7, 0, 1, 2, 11, 4, 5, 6, 15, 8, 9, 10, 17, 12, 13, 14);
 
-    //vec_dst(sfmt, DST_TOUCH_BLOCK(1), 3);
     r1 = sfmt[N - 2];
     r2 = sfmt[N - 1];
     for (i = 0; i < N - POS1; i++) {
@@ -139,10 +165,16 @@ INLINE void gen_rand_all(void) {
 	r1 = r2;
 	r2 = r;
     }
-    //vec_dss(3);
 }
 
-INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
+/**
+ * This function fills the user-specified array with psedorandom
+ * integers.
+ *
+ * @param array an 128-bit array to be filled by pseudorandom numbers.  
+ * @param size number of 128-bit pesudorandom numbers to be generated.
+ */
+static void gen_rand_array(vector unsigned int array[], int size)
 {
     int i, j;
     vector unsigned int r, r1, r2;
@@ -156,9 +188,6 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
     const vector unsigned char perm_sr = (vector unsigned char)
     (7, 0, 1, 2, 11, 4, 5, 6, 15, 8, 9, 10, 17, 12, 13, 14);
 
-    /* read from sfmt */
-    //vec_dstst(&array[0], DST_TOUCH_BLOCK(1), 0);
-    //vec_dst(&sfmt[0], DST_TOUCH_BLOCK(1), 0);
     r1 = sfmt[N - 2];
     r2 = sfmt[N - 1];
     for (i = 0; i < N - POS1; i++) {
@@ -176,14 +205,18 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
 	r2 = r;
     }
     /* main loop */
-    for (; i < N * (blocks - 1); i++) {
+    for (; i < size - N; i++) {
 	r = vec_recursion(array[i - N], array[i + POS1 - N], r1, r2, sl1,
 			  sr1, mask, perm_sl, perm_sr);
 	array[i] = r;
 	r1 = r2;
 	r2 = r;
     }
-    for (j = 0; i < N * blocks; i++) {
+#if 1
+    for (j = 0; j < 2 * N - size; j++) {
+	sfmt[j] = array[j + size - N];
+    }
+    for (; i < size; i++) {
 	r = vec_recursion(array[i - N], array[i + POS1 - N], r1, r2, sl1,
 			  sr1, mask, perm_sl, perm_sr);
 	array[i] = r;
@@ -191,77 +224,236 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
 	r1 = r2;
 	r2 = r;
     }
+#endif
 }
 
-INLINE uint32_t gen_rand(void)
+/**
+ * This function swaps high and low 32-bit of 64-bit integers in user
+ * specified array.
+ *
+ * @param array an 128-bit array to be swaped.
+ * @param size size of 128-bit array.
+ */
+INLINE static void vec_swap(vector unsigned int array[], uint32_t size)
+{
+    int i;
+    const vector unsigned char perm = (vector unsigned char)
+	(4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11);
+
+    for (i = 0; i < size; i++) {
+	array[i] = vec_perm(array[i], perm, perm);
+    }
+}
+
+/**
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
+ */
+static uint32_t func1(uint32_t x) {
+    return (x ^ (x >> 27)) * (uint32_t)1664525UL;
+}
+
+/**
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
+ */
+static uint32_t func2(uint32_t x) {
+    return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
+}
+
+/*----------------
+  PUBLIC FUNCTIONS
+  ----------------*/
+/**
+ * This function generates and returns 32-bit pseudorandom number.
+ * init_gen_rand or init_by_array must be called before this function.
+ * @return 32-bit pseudorandom number
+ */
+INLINE uint32_t gen_rand32(void)
 {
     uint32_t r;
-    //uint32_t *sfmtp = (uint32_t *)sfmt;
 
     if (idx >= N * 4) {
 	gen_rand_all();
 	idx = 0;
     }
-    r = sfmt32[idx++];
+    r = psfmt32[idx++];
     return r;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+/**
+ * This function generates and returns 64-bit pseudorandom number.
+ * init_gen_rand or init_by_array must be called before this function.
+ * The function gen_rand64 should not be called after gen_rand32,
+ * unless an initialization is again executed. 
+ * @return 64-bit pseudorandom number
+ */
+INLINE uint64_t gen_rand64(void)
 {
-    if (block_num == 0) {
-	return;
-    } else if (block_num == 1) {
+    uint32_t r1, r2;
+
+    assert(initialized);
+    assert(idx % 2 == 0);
+
+    if (idx >= N32) {
 	gen_rand_all();
-	memcpy(array, sfmt, sizeof(sfmt));
-    } else {
-	gen_rand_array((vector unsigned int *)array, block_num);
+	idx = 0;
     }
+    r1 = psfmt32[idx];
+    r2 = psfmt32[idx + 1];
+    idx += 2;
+    return ((uint64_t)r2 << 32) | r1;
 }
 
-#if 0
-INLINE void fill_array(uint32_t array[], uint32_t size) 
+/**
+ * This function generates pseudorandom 32-bit integers in the
+ * specified array[] by one call. The number of pseudorandom integers
+ * is specified by the argument size, which must be at least 624 and a
+ * multiple of four.  The generation by this function is much faster
+ * than the following gen_rand function.
+ *
+ * For initialization, init_gen_rand or init_by_array must be called
+ * before the first call of this function. This function can not be
+ * used after calling gen_rand function, without initialization.
+ *
+ * @param array an array where pseudorandom 32-bit integers are filled
+ * by this function.  The pointer to the array must be "aligned"
+ * (namely, must be a multiple of 16) in the SIMD version, since it
+ * refers to the address of a 128-bit integer.  In the standard C
+ * version, the pointer is arbitrary.
+ *
+ * @param size the number of 32-bit pseudorandom integers to be
+ * generated.  size must be a multiple of 4, and greater than or equal
+ * to 624.
+ */
+void fill_array32(uint32_t array[], int size)
 {
-    if (size < N * 4 - idx) {
-	memcpy(array, sfmt, size * sizeof(uint32_t));
-	idx += size;
-	return;
-    }
-    if (idx < N * 4) {
-	memcpy(array, sfmt, ((N * 4) - idx) * sizeof(uint32_t));
-	array += N * 4 - idx;
-	size -= N * 4 - idx;
-    }
-    while (size >= N * 4) {
-	gen_rand_all();
-	memcpy(array, sfmt, sizeof(sfmt));
-	array += N * 4;
-	size -= N * 4;
-    }
-    if (size > 0) {
-	gen_rand_all();
-	memcpy(array, sfmt, size * sizeof(uint32_t));
-	idx = size;
-    } else {
-	idx = N * 4;
-    }
-}
-#endif
+    assert(initialized);
+    assert((uint32_t)array % 16 == 0);
+    assert(idx == N32);
+    assert(size % 4 == 0);
+    assert(size >= N32);
 
-INLINE void init_gen_rand(uint32_t seed)
+    gen_rand_array((vector unsigned int *)array, size / 4);
+    //memcpy(psfmt32, array + size - N32, sizeof(uint32_t) *  N32);
+    //vec_memcpy(sfmt, (vector unsigned int *)array + size / 4 - N, N);
+    idx = N32;
+}
+
+/**
+ * This function generates pseudorandom 64-bit integers in the
+ * specified array[] by one call. The number of pseudorandom integers
+ * is specified by the argument size, which must be at least 312 and a
+ * multiple of two.  The generation by this function is much faster
+ * than the following gen_rand function.
+ *
+ * For initialization, init_gen_rand or init_by_array must be called
+ * before the first call of this function. This function can not be
+ * used after calling gen_rand function, without initialization.
+ *
+ * @param array an array where pseudorandom 64-bit integers are filled
+ * by this function.  The pointer to the array must be "aligned"
+ * (namely, must be a multiple of 16) in the SIMD version, since it
+ * refers to the address of a 128-bit integer.  In the standard C
+ * version, the pointer is arbitrary.
+ *
+ * @param size the number of 64-bit pseudorandom integers to be
+ * generated.  size must be a multiple of 2, and greater than or equal
+ * to 312.
+ */
+void fill_array64(uint64_t array[], int size)
+{
+    assert(initialized);
+    assert((uint32_t)array % 16 == 0);
+    assert(idx == N32);
+    assert(size % 2 == 0);
+    assert(size >= N64);
+
+    gen_rand_array((vector unsigned int *)array, size / 2);
+    //memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
+    idx = N32;
+    vec_swap((vector unsigned int *)array, size / 2);
+}
+
+/**
+ * This function initializes the internal state array with a 32-bit
+ * integer seed.
+ *
+ * @param seed a 32-bit integer used as the seed.
+ */
+void init_gen_rand(uint32_t seed)
 {
     int i;
-    uint32_t *sfmtp = (uint32_t *)sfmt;
 
-    sfmtp[0] = seed;
-    for (i = 1; i < N * 4; i++) {
-	sfmtp[i] = 1812433253UL 
-	    * (sfmtp[i - 1] ^ (sfmtp[i - 1] >> 30)) + i;
+    psfmt32[0] = seed;
+    for (i = 1; i < N32; i++) {
+	psfmt32[i] = 1812433253UL * (psfmt32[i - 1] ^ (psfmt32[i - 1] >> 30))
+	    + i;
     }
-    idx = N * 4;
+    psfmt32[3] = INIT_LUNG;
+    idx = N32;
+    initialized = 1;
 }
 
-#ifdef TICK
-#include "test_time_inline.c"
-#else
-#include "test_time2_inline.c"
-#endif
+/**
+ * This function initializes the internal state array,
+ * with an array of 32-bit integers used as the seeds
+ * @param init_key the array of 32-bit integers, used as a seed.
+ * @param key_length the length of init_key.
+ */
+void init_by_array(uint32_t init_key[], int key_length) {
+    int i, j, count;
+    uint32_t r;
+    const int MID = 306;
+    const int LAG = 11;
+
+    memset(sfmt, 0x8b, sizeof(sfmt));
+    if (key_length + 1 > N32) {
+	count = key_length + 1;
+    } else {
+	count = N32;
+    }
+    r = func1(psfmt32[0] ^ psfmt32[MID] ^ psfmt32[N32 - 1]);
+    psfmt32[MID] += r;
+    r += key_length;
+    psfmt32[MID + LAG] = r;
+    psfmt32[0] = r;
+    i = 1;
+    count--;
+    for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
+	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
+		  ^ psfmt32[(i + N32 - 1) % N32]);
+	psfmt32[(i + MID) % N32] += r;
+	r += init_key[j] + i;
+	psfmt32[(i + MID + LAG) % N32] += r;
+	psfmt32[i] = r;
+	i = (i + 1) % N32;
+    }
+    for (; j < count; j++) {
+	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
+		  ^ psfmt32[(i + N32 - 1) % N32]);
+	psfmt32[(i + MID) % N32] += r;
+	r += i;
+	psfmt32[(i + MID + LAG) % N32] = r;
+	psfmt32[i] = r;
+	i = (i + 1) % N32;
+    }
+    for (j = 0; j < N32; j++) {
+	r = func2(psfmt32[i] + psfmt32[(i + MID) % N32] 
+		  + psfmt32[(i + N32 - 1) % N32]);
+	psfmt32[(i + MID) % N32] ^= r;
+	r -= i;
+	psfmt32[(i + MID + LAG) % N32] ^= r;
+	psfmt32[i] = r;
+	i = (i + 1) % N32;
+    }
+
+    psfmt32[3] = INIT_LUNG;
+    idx = N32;
+    initialized = 1;
+}
+

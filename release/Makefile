@@ -1,22 +1,23 @@
 #for GNU make
 
-OPT = -O9 -finline-functions -fomit-frame-pointer
-STD = -Wall -std=c89 -pedantic -Wmissing-prototypes
+WARN = -Wmissing-prototypes -Wall -Winline
+OPT = -O1 -finline-functions -fomit-frame-pointer -DNDEBUG 
+STD = -std=c89 -pedantic 
 # for standard unix
-CC = gcc $(OPT) $(STD) $(DDEBUG) 
+#CC = gcc $(OPT) $(STD)
 # for power PC
-#CC = gcc $(OPT) $(STD) -arch ppc  $(DDEBUG) 
+CC = gcc $(WARN) $(OPT) -faltivec -maltivec -arch ppc
 # for Pentium M
-#CC = gcc $(OPT) $(STD) -march=prescott $(DDEBUG)
+#CC = gcc $(OPT) $(STD) -march=prescott
 #CC = icl /Wcheck /O3 /QxB /Qc99 /Qprefetch /Fa
 # for Athlon
-#CC = gcc $(OPT) $(STD) -march=nocona $(DDEBUG) 
+#CC = gcc $(OPT) $(STD) -march=nocona
 
 sfmt-std: test.o sfmt.o
-	${CC} -o $@ test.o sfmt.o
+	${CC} ${STD} -o $@ test.o sfmt.o
 
-sfmt-alti: test.o sfmt-alti.o
-	${CC} -o $@ test.o sfmt-alti.o
+sfmt-alti32: test_alti32.c sfmt_alti.c Makefile
+	${CC} -o $@ test_alti32.c
 
 sfmt-sse2: test.o sfmt-sse2.o
 	${CC} -o $@ test.o sfmt-sse2.o

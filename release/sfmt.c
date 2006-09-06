@@ -289,6 +289,9 @@ INLINE static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
 }
 
+/**
+ * This function checks ENDIAN of CPU and set big_endian flag.
+ */
 INLINE static void endian_check(void) {
     uint32_t a[2] = {0, 1};
     uint64_t *pa;
@@ -324,7 +327,8 @@ INLINE uint32_t gen_rand32(void)
 /**
  * This function generates and returns 64-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
- * mixed usage of gen_rand32 and gen_rand64 is not allowed.
+ * The function gen_rand64 should not be called after gen_rand32,
+ * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
 INLINE uint64_t gen_rand64(void)
@@ -403,7 +407,7 @@ INLINE void fill_array32(uint32_t array[], int size)
  * version, the pointer is arbitrary.
  *
  * @param size the number of 64-bit pseudorandom integers to be
- * generated.  size must be a multiple of 4, and greater than or equal
+ * generated.  size must be a multiple of 2, and greater than or equal
  * to 312.
  */
 INLINE void fill_array64(uint64_t array[], int size)
@@ -412,7 +416,7 @@ INLINE void fill_array64(uint64_t array[], int size)
     /* assert(array % 16 == 0); */
     assert(idx == N32);
     assert(size % 2 == 0);
-    assert(size >= N32 / 2);
+    assert(size >= N64);
 
     gen_rand_array((w128_t *)array, size / 2);
     memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);

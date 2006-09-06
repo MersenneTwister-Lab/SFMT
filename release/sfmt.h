@@ -43,9 +43,9 @@
 
 INLINE uint32_t gen_rand32(void);
 INLINE uint64_t gen_rand64(void);
-INLINE void fill_array32(uint32_t array[], int size);
-INLINE void fill_array64(uint64_t array[], int size);
-INLINE void init_gen_rand(uint32_t seed);
-INLINE void init_by_array(uint32_t init_key[], int key_length);
+void fill_array32(uint32_t array[], int size);
+void fill_array64(uint64_t array[], int size);
+void init_gen_rand(uint32_t seed);
+void init_by_array(uint32_t init_key[], int key_length);
 
 #endif
