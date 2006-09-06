@@ -16,12 +16,14 @@
  *
  * @note We assume that your system has inttypes.h.
  * If your system doesn't have inttypes.h, you have to typedef
- * uint32_t and uint64_t like this:
+ * uint32_t and uint64_t as follows:
  * @verbatim
  typedef unsigned int uint32_t
- typedef unsigned long long uint64_t  @endverbatim
- * uint32_t must be just 32 bit unsigned integer type and
- * uint64_t must be just 64 bit unsigned integer type.
+ typedef unsigned long long uint64_t  
+@endverbatim
+ *
+ * uint32_t must be exactly 32-bit unsigned integer type (no more, no
+ * less), and uint64_t must be exactly 64-bit unsigned integer type.
  */
 
 #ifndef __SFMT_H__
@@ -39,9 +41,11 @@
   #endif
 #endif
 
+INLINE uint32_t gen_rand32(void);
+INLINE uint64_t gen_rand64(void);
+INLINE void fill_array32(uint32_t array[], int size);
+INLINE void fill_array64(uint64_t array[], int size);
 INLINE void init_gen_rand(uint32_t seed);
-INLINE uint32_t gen_rand(void);
-INLINE void fill_array(uint32_t array[], int size);
 INLINE void init_by_array(uint32_t init_key[], int key_length);
 
 #endif

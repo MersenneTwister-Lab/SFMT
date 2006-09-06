@@ -2,10 +2,8 @@
  * @file  sfmt.c
  * @brief SIMD oriented Fast Mersenne Twister(SFMT)
  *
- * @author Mutsuo Saito (saito@math.sci.hiroshima-u.ac.jp) Hiroshima
- * University 
- * @author Makoto Matsumoto
- * (m-mat@math.sci.hiroshima-u.ac.jp) Hiroshima University
+ * @author Mutsuo Saito (Hiroshima University)
+ * @author Makoto Matsumoto (Hiroshima University)
  *
  * @date 2006-08-29
  *
@@ -21,15 +19,23 @@
  *
  * This file provides:
  *
- * - INLINE void init_gen_rand() initialize pseudorandom number sequence.
- * - INLINE void init_by_array() initialize by array of seeds.
- * - INLINE uint32_t gen_rand() generates and returns pseudorandom number.
- * - INLINE void fill_array() fill given array with pseudorandom numbers. 
+ * - INLINE void init_gen_rand() initializes the generator with a 
+ *   32-bit integer seed.
+ * - INLINE void init_by_array() initializes the generator with an
+ *   array of 32-bit integers as the seeds.
+ * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
+ *   32-bit unsigned integer.
+ * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
+ *   64-bit unsigned integer.
+ * - INLINE void fill_array32() fills the user-specified array with 
+ *   32-bit psedorandom integers.
+ * - INLINE void fill_array64() fills the user-specified array with 
+ *   64-bit psedorandom integers.
  *
- * @author Mutsuo Saito (saito@math.sci.hiroshima-u.ac.jp) Hiroshima
- * University 
- * @author Makoto Matsumoto
- * (m-mat@math.sci.hiroshima-u.ac.jp) Hiroshima University
+ * @author Mutsuo Saito (saito@our-domain) Hiroshima University 
+ * @author Makoto Matsumoto (m-mat@our-domain) Hiroshima University
+ *
+ * our-domin is math.sci.hiroshima-u.ac.jp
  *
  * @date 2006-08-29
  *
@@ -47,70 +53,82 @@
 /*-----------------
   BASIC DEFINITIONS
   -----------------*/
-/** Expornent part of Mersenne Prime. 2^MEXP -1 is the least period of
- * this PRNG */
+/** Mersenne Exponent. The period of the sequence 
+ *  is a multiple of 2^MEXP-1. */
 #define MEXP 19937
-/** word size of SFMT is 128 bit */
+/** the word size of the recursion of SFMT is 128-bit. */
 #define WORDSIZE 128
-/** N is the size of 128 bit internal state array */
+/** SFMT generator has an internal state array of 128-bit integers,
+ * and N is its size. */
 #define N (MEXP / WORDSIZE + 1)
-/** N32 is the size of internal state array regard it as if 32 bit array */
+/** N32 is the size of internal state array when regarded as an array
+ * of 32-bit integers.*/
 #define N32 (N * 4)
+/** N64 is the size of internal state array when regarded as an array
+ * of 64-bit integers.*/
+#define N64 (N * 2)
 
 /*----------------------
   the parameters of SFMT
   ----------------------*/
 /** the pick up position of the array. */
 const int POS1 = 122;
-/** the parameter of shift left as four 32 bit registers. */
+/** the parameter of shift left as four 32-bit registers. */
 const int SL1 = 18;
-/** the parameter of shift left as one 128 bit register. 
- * SL2 * 8 bits are shifted.
+/** the parameter of shift left as one 128-bit register. 
+ * The 128-bit integer is shifted by (SL2 * 8) bits. 
  */
 const int SL2 = 1;
-/** the parameter of shift right as four 32 bit registers. */
+/** the parameter of shift right as four 32-bit registers. */
 const int SR1 = 11;
-/** the parameter of shift right as one 128 bit register. 
- * SR2 * 8 bits are shifted.
+/** the parameter of shift right as one 128-bit register. 
+ * The 128-bit integer is shifted by (SL2 * 8) bits. 
  */
 const int SR2 = 1;
-/** the parameter 1 of mask. These parameters are introduced to break
- * symmetry of SIMD.*/
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
 const uint32_t MSK1 = 0xdfffffefU;
-/** the parameter 2 of mask. These parameters are introduced to break
- * symmetry of SIMD.*/
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
 const uint32_t MSK2 = 0xddfecb7fU;
-/** the parameter 3 of mask. These parameters are introduced to break
- * symmetry of SIMD.*/
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
 const uint32_t MSK3 = 0xbffaffffU;
-/** the parameter 4 of mask. These parameters are introduced to break
- * symmetry of SIMD.*/
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.*/
 const uint32_t MSK4 = 0xbffffff6U;
-/** the initial parameter. This parameter is needed for the assurance
- * of the period. */
+/** The 32 MSBs of the internal state array is seto to this
+ * value. This peculiar value assures that the period length of the
+ * output sequence is a multiple of 2^19937-1.
+ */
 const uint32_t INIT_LUNG = 0x6d736d6dU;
 
 /*--------------------------------------
   FILE GLOBAL VARIABLES
   internal state, index counter and flag 
   --------------------------------------*/
-/** the 128 bit internal state array */
+/** the 128-bit internal state array */
 static uint32_t sfmt[N][4];
-/** the 32bit interger pointer to the 128 bit internal state array */
-static uint32_t *psfmt = &sfmt[0][0];
-/** index counter to the 32 bit internal state array */
+/** the 32bit interger pointer to the 128-bit internal state array */
+static uint32_t *psfmt32 = &sfmt[0][0];
+/** the 64bit interger pointer to the 128-bit internal state array */
+static uint64_t *psfmt64 = (uint64_t *)&sfmt[0][0];
+/** index counter to the 32-bit internal state array */
 static int idx;
-/** the flag to show that the interal state is initialized or not */
+/** a flag: it is 0 if and only if the internal state is not yet
+ * initialized. */
 static int initialized = 0;
+/** a flag: it is 1 if CPU is BIG ENDIAN. */
+static int big_endian;
 
 /*------------------------------------------
-  128 bit SIMD like data type for standard C
+  128-bit SIMD like data type for standard C
   ------------------------------------------*/
-/** 128 bit data structure */
+/** 128-bit data structure */
 struct W128_T {
     uint32_t a[4];
 };
-/** 128 bit data type */
+/** 128-bit data type */
 typedef struct W128_T w128_t;
 
 /*----------------
@@ -127,13 +145,14 @@ INLINE static void gen_rand_all(void);
 INLINE static void gen_rand_array(w128_t array[], uint32_t size);
 INLINE static uint32_t func1(uint32_t x);
 INLINE static uint32_t func2(uint32_t x);
+INLINE static void endian_check(void);
 
 /**
- * This function simulates SIMD 128 bit right shift in standard C.
- * shift * 8 bits are shifted.
+ * This function simulates SIMD 128-bit right shift by the standard C.
+ * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
  * This function simulates the LITTLE ENDIAN SIMD.
- * @param out the out put of this function
- * @param in the 128 bit data to be shifted
+ * @param out the output of this function
+ * @param in the 128-bit data to be shifted
  * @param shift the shift value
  */
 INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
@@ -153,11 +172,11 @@ INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
 }
 
 /**
- * This function simulates SIMD 128 bit left shift in standard C.
- * shift * 8 bits are shifted.
+ * This function simulates SIMD 128-bit left shift by the standard C.
+ * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
  * This function simulates the LITTLE ENDIAN SIMD.
- * @param out the out put of this function
- * @param in the 128 bit data to be shifted
+ * @param out the output of this function
+ * @param in the 128-bit data to be shifted
  * @param shift the shift value
  */
 INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
@@ -178,11 +197,11 @@ INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
 
 /**
  * This function represents the recursion formula.
- * @param r the out put of this function
- * @param a a 128 bit data of interal state
- * @param b a 128 bit data of interal state
- * @param c a 128 bit data of interal state
- * @param d a 128 bit data of interal state
+ * @param r output
+ * @param a a 128-bit part of the interal state array
+ * @param b a 128-bit part of the interal state array
+ * @param c a 128-bit part of the interal state array
+ * @param d a 128-bit part of the interal state array
  */
 INLINE static void do_recursion(uint32_t r[4], const uint32_t a[4], 
 				const uint32_t b[4], const uint32_t c[4],
@@ -199,8 +218,8 @@ INLINE static void do_recursion(uint32_t r[4], const uint32_t a[4],
 }
 
 /**
- * This function makes N32 pseudorandom numbers in internal state
- * array at once.
+ * This function fills the internal state array with psedorandom
+ * integers.
  */
 INLINE static void gen_rand_all(void) {
     int i;
@@ -221,12 +240,11 @@ INLINE static void gen_rand_all(void) {
 }
 
 /**
- * This function makes size * 4 of 32 bit pseudorandom numbers in
- * given array at once.  
- * @param array an 128 bit array to be filled by
- * pseudorandom numbers.  
- * @param size number of 128 bit pesudorandom
- * numbers to be generated.
+ * This function fills the user-specified array with psedorandom
+ * integers.
+ *
+ * @param array an 128-bit array to be filled by pseudorandom numbers.  
+ * @param size number of 128-bit pesudorandom numbers to be generated.
  */
 INLINE static void gen_rand_array(w128_t array[], uint32_t size) {
     int i;
@@ -252,33 +270,45 @@ INLINE static void gen_rand_array(w128_t array[], uint32_t size) {
 }
 
 /**
- * This function represents recursion formula I used in init_by_array.
- * @param x 32 bit integer
- * @return 32 bit integer
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
  */
 INLINE static uint32_t func1(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1664525UL;
 }
 
 /**
- * This function represents recursion formula II used in init_by_array.
- * @param x 32 bit integer
- * @return 32 bit integer
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
  */
 INLINE static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
 }
 
+INLINE static void endian_check(void) {
+    uint32_t a[2] = {0, 1};
+    uint64_t *pa;
 
+    pa = (uint64_t *)a;
+    if (*pa == 1) {
+	big_endian = 1;
+    } else {
+	big_endian = 0;
+    }
+}
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/
 /**
- * This function generates and returns 32 bit pseudorandom number.
+ * This function generates and returns 32-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
- * @return 32 bit pseudorandom number
+ * @return 32-bit pseudorandom number
  */
-INLINE uint32_t gen_rand(void)
+INLINE uint32_t gen_rand32(void)
 {
     uint32_t r;
 
@@ -287,25 +317,62 @@ INLINE uint32_t gen_rand(void)
 	gen_rand_all();
 	idx = 0;
     }
-    r = psfmt[idx++];
+    r = psfmt32[idx++];
     return r;
 }
 
 /**
- * This function makes size of pseudorandom numbers in given array at
- * once.
+ * This function generates and returns 64-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
- * gen_rand should not be called after initialization and before this function.
- * In other words, this function can only follows to init_gen_rand,
- * init_by_array or this function.
- * @param array an 32 bit array to be filled by pseudorandom numbers.
- * The pointer to the array must be aligned in SIMD version.
- * The pointer to the array don't have to be aligned in standard C version.
- * @param size number of 32 bit pesudorandom numbers to be generated.
- * size must be multiple of 4.
- * size must be greater than or equal to 624.
+ * mixed usage of gen_rand32 and gen_rand64 is not allowed.
+ * @return 64-bit pseudorandom number
  */
-INLINE void fill_array(uint32_t array[], int size)
+INLINE uint64_t gen_rand64(void)
+{
+    uint32_t r1, r2;
+    uint32_t r;
+
+    assert(initialized);
+    assert(idx % 2 == 0);
+
+    if (idx >= N32) {
+	gen_rand_all();
+	idx = 0;
+    }
+    if (big_endian) {
+	r1 = psfmt32[idx];
+	r2 = psfmt32[idx + 1];
+	idx += 2;
+	return ((uint64_t)r2 << 32) | r1;
+    } else {
+	r = psfmt64[idx / 2];
+	idx += 2;
+	return r;
+    }
+}
+
+/**
+ * This function generates pseudorandom 32-bit integers in the
+ * specified array[] by one call. The number of pseudorandom integers
+ * is specified by the argument size, which must be at least 624 and a
+ * multiple of four.  The generation by this function is much faster
+ * than the following gen_rand function.
+ *
+ * For initialization, init_gen_rand or init_by_array must be called
+ * before the first call of this function. This function can not be
+ * used after calling gen_rand function, without initialization.
+ *
+ * @param array an array where pseudorandom 32-bit integers are filled
+ * by this function.  The pointer to the array must be "aligned"
+ * (namely, must be a multiple of 16) in the SIMD version, since it
+ * refers to the address of a 128-bit integer.  In the standard C
+ * version, the pointer is arbitrary.
+ *
+ * @param size the number of 32-bit pseudorandom integers to be
+ * generated.  size must be a multiple of 4, and greater than or equal
+ * to 624.
+ */
+INLINE void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
     /* assert(array % 16 == 0); */
@@ -314,30 +381,80 @@ INLINE void fill_array(uint32_t array[], int size)
     assert(size >= N32);
 
     gen_rand_array((w128_t *)array, size / 4);
-    memcpy(psfmt, array + size - N32, sizeof(uint32_t) * N32);
+    memcpy(psfmt32, array + size - N32, sizeof(uint32_t) * N32);
     idx = N32;
 }
 
 /**
- * This function initialize the internal state array. 
- * @param seed the seed of pseudorandom numbers.
+ * This function generates pseudorandom 64-bit integers in the
+ * specified array[] by one call. The number of pseudorandom integers
+ * is specified by the argument size, which must be at least 312 and a
+ * multiple of two.  The generation by this function is much faster
+ * than the following gen_rand function.
+ *
+ * For initialization, init_gen_rand or init_by_array must be called
+ * before the first call of this function. This function can not be
+ * used after calling gen_rand function, without initialization.
+ *
+ * @param array an array where pseudorandom 64-bit integers are filled
+ * by this function.  The pointer to the array must be "aligned"
+ * (namely, must be a multiple of 16) in the SIMD version, since it
+ * refers to the address of a 128-bit integer.  In the standard C
+ * version, the pointer is arbitrary.
+ *
+ * @param size the number of 64-bit pseudorandom integers to be
+ * generated.  size must be a multiple of 4, and greater than or equal
+ * to 312.
+ */
+INLINE void fill_array64(uint64_t array[], int size)
+{
+    assert(initialized);
+    /* assert(array % 16 == 0); */
+    assert(idx == N32);
+    assert(size % 2 == 0);
+    assert(size >= N32 / 2);
+
+    gen_rand_array((w128_t *)array, size / 2);
+    memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
+    idx = N32;
+    if (big_endian) {
+	int i;
+	uint32_t x;
+	uint32_t *pa;
+	pa = (uint32_t *)array;
+	for (i = 0; i < size * 2; i += 2) {
+	    x = pa[i];
+	    pa[i] = pa[i + 1];
+	    pa[i + 1] = x;
+	}
+    }
+}
+
+/**
+ * This function initializes the internal state array with a 32-bit
+ * integer seed.
+ *
+ * @param seed a 32-bit integer used as the seed.
  */
 INLINE void init_gen_rand(uint32_t seed)
 {
     int i;
 
-    psfmt[0] = seed;
+    psfmt32[0] = seed;
     for (i = 1; i < N32; i++) {
-	psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 30)) + i;
+	psfmt32[i] = 1812433253UL * (psfmt32[i - 1] ^ (psfmt32[i - 1] >> 30))
+	    + i;
     }
-    psfmt[3] = INIT_LUNG;
+    psfmt32[3] = INIT_LUNG;
     idx = N32;
+    endian_check();
     initialized = 1;
 }
 
 /**
- * This function initialize the internal state array. 
- * @param init_key the seed array of pseudorandom numbers.
+ * This function initializes the internal state array,
+ * with an array of 32-bit integers used as the seeds
+ * @param init_key the array of 32-bit integers, used as a seed.
  * @param key_length the length of init_key.
  */
 INLINE void init_by_array(uint32_t init_key[], int key_length) {
@@ -352,42 +469,43 @@ INLINE void init_by_array(uint32_t init_key[], int key_length) {
     } else {
 	count = N32;
     }
-    r = func1(psfmt[0] ^ psfmt[MID] ^ psfmt[N32 - 1]);
-    psfmt[MID] += r;
+    r = func1(psfmt32[0] ^ psfmt32[MID] ^ psfmt32[N32 - 1]);
+    psfmt32[MID] += r;
     r += key_length;
-    psfmt[MID + LAG] = r;
-    psfmt[0] = r;
+    psfmt32[MID + LAG] = r;
+    psfmt32[0] = r;
     i = 1;
     count--;
     for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
-	r = func1(psfmt[i] ^ psfmt[(i + MID) % N32] 
-		  ^ psfmt[(i + N32 - 1) % N32]);
-	psfmt[(i + MID) % N32] += r;
+	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
+		  ^ psfmt32[(i + N32 - 1) % N32]);
+	psfmt32[(i + MID) % N32] += r;
 	r += init_key[j] + i;
-	psfmt[(i + MID + LAG) % N32] += r;
-	psfmt[i] = r;
+	psfmt32[(i + MID + LAG) % N32] += r;
+	psfmt32[i] = r;
 	i = (i + 1) % N32;
     }
     for (; j < count; j++) {
-	r = func1(psfmt[i] ^ psfmt[(i + MID) % N32] 
-		  ^ psfmt[(i + N32 - 1) % N32]);
-	psfmt[(i + MID) % N32] += r;
+	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
+		  ^ psfmt32[(i + N32 - 1) % N32]);
+	psfmt32[(i + MID) % N32] += r;
 	r += i;
-	psfmt[(i + MID + LAG) % N32] = r;
-	psfmt[i] = r;
+	psfmt32[(i + MID + LAG) % N32] = r;
+	psfmt32[i] = r;
 	i = (i + 1) % N32;
     }
     for (j = 0; j < N32; j++) {
-	r = func2(psfmt[i] + psfmt[(i + MID) % N32] 
-		  + psfmt[(i + N32 - 1) % N32]);
-	psfmt[(i + MID) % N32] ^= r;
+	r = func2(psfmt32[i] + psfmt32[(i + MID) % N32] 
+		  + psfmt32[(i + N32 - 1) % N32]);
+	psfmt32[(i + MID) % N32] ^= r;
 	r -= i;
-	psfmt[(i + MID + LAG) % N32] ^= r;
-	psfmt[i] = r;
+	psfmt32[(i + MID + LAG) % N32] ^= r;
+	psfmt32[i] = r;
 	i = (i + 1) % N32;
     }
 
-    psfmt[3] = INIT_LUNG;
+    psfmt32[3] = INIT_LUNG;
     idx = N32;
+    endian_check();
     initialized = 1;
 }
