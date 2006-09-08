@@ -17,10 +17,6 @@ static const uint16_t c0 = 0x000B ;
 
 static uint16_t x0, x1, x2;
 
-INLINE unsigned int get_onetime_rnds(void) {
-    return 624;
-}
-
 static INLINE void
 rand48_advance ()
 {
@@ -74,46 +70,13 @@ init_gen_rand (uint32_t s)
   return;
 }
 
-#if 1
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
     int i;
-    for (i = 0; i < 624 * block_num; i++) {
+    for (i = 0; i < size; i++) {
 	array[i] = gen_rand();
     }
 }
-#else
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
-{
-    int i;
-    uint32_t a, y0, y1, y2;
-
-    y0 = x0;
-    y1 = x1;
-    y2 = x2;
-    for (i = 0; i < 624 * block_num; i++) {
-  
-	a = a0 * y0 + c0 ;
-	y0 = (a & 0xFFFF) ;
-	
-	a >>= 16 ;
-
-	/* although the next line may overflow we only need the top 16 bits
-	   in the following stage, so it does not matter */
-	
-	a += a0 * y1 + a1 * y0 ; 
-	y1 = (a & 0xFFFF) ;
-	
-	a >>= 16 ;
-	a += a0 * y2 + a1 * y1 + a2 * y0 ;
-	y2 = (a & 0xFFFF) ;
-	array[i] = (y2 << 16) + y1;
-    }
-    x0 = y0;
-    x1 = y1;
-    x2 = y2;
-}
-#endif
 
 #ifdef TICK
 #include "test_time_inline.c"

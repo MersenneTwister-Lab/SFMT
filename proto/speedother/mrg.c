@@ -73,14 +73,10 @@ init_gen_rand (uint32_t s)
   return;
 }
 
-INLINE unsigned int get_onetime_rnds(void) {
-    return 624;
-}
-
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
     int i;
-    for (i = 0; i < 624 * block_num; i++) {
+    for (i = 0; i < size; i++) {
 	array[i] = gen_rand();
     }
 }

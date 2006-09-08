@@ -3,6 +3,7 @@
   #include <stdint.h>
 #endif
 #include <stdio.h>
+#include <assert.h>
 #include "random-inline.h"
 
 #define N 25
@@ -11,10 +12,6 @@
 #define MultA(x) (x ^ (x >> 11))
 #define MultB(x) (x ^ (x << 21))
 #define MultC(x) (x ^ (x << 7))
-
-INLINE unsigned int get_onetime_rnds(void) {
-    return 624;
-}
 
 static int num_used = 0;
 static uint32_t x[N];
@@ -54,10 +51,11 @@ INLINE void init_gen_rand(uint32_t seed)
     num_used = N;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
     int i, j;
 
+    assert(size >= N);
     for (i = 0; i < N - M2; i++) {
 	array[i] = MultA(x[i + M1]) ^ MultB(x[i + M2]) ^ MultC(x[i]);
     }
@@ -68,11 +66,14 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 	array[i] = MultA(array[i + M1 - N]) ^ MultB(array[i + M2 - N]) 
 	    ^ MultC(x[i]);
     }
-    for (; i < 624 * block_num - N; i++) {
+    for (; i < size - N; i++) {
 	array[i] = MultA(array[i + M1 - N]) ^ MultB(array[i + M2 - N]) 
 	    ^ MultC(array[i - N]);
     }
-    for (j = 0; i < 624 * block_num; i++, j++) {
+    for (j = 0; j < 2 * N - size; j++) {
+	x[j] = array[j + size - N];
+    }
+    for (; i < size; i++, j++) {
 	array[i] = MultA(array[i + M1 - N]) ^ MultB(array[i + M2 - N]) 
 	    ^ MultC(array[i - N]);
 	x[j] = array[i];

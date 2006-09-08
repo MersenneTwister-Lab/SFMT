@@ -8,10 +8,6 @@
 static int si, sj;
 static int32_t sx[63];
 
-INLINE unsigned int get_onetime_rnds(void) {
-    return 624;
-}
-
 static INLINE uint32_t
 random_get (int * i, int * j, int n, int32_t * x)
 {
@@ -79,7 +75,7 @@ init_gen_rand (uint32_t s)
     gen_rand () ; 
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
     int i, j;
     int32_t *sa;
@@ -90,16 +86,16 @@ INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
 	sa[i] = sx[i] + sx[i + 1];
     }
     sa[62] = sx[62] + sa[0];
-    for (i = 63; i < 624 * block_num - 63; i++) {
+    for (i = 63; i < size - 63; i++) {
 	sa[i] = sa[i - 63] + sa[i - 62];
 	sa[i - 63] = (sa[i - 63] >> 1) & 0x7FFFFFFF ;
     }
-    for (j = 0; i < 624 * block_num; i++, j++) {
+    for (j = 0; i < size; i++, j++) {
 	sa[i] = sa[i - 63] + sa[i - 62];
 	sa[i - 63] = (sa[i - 63] >> 1) & 0x7FFFFFFF ;
 	sx[j] = sa[i];
     }
-    for (; i < 624 * block_num + 63; i++) {
+    for (; i < size + 63; i++) {
 	sa[i - 63] = (sa[i - 63] >> 1) & 0x7FFFFFFF ;
     }
 }

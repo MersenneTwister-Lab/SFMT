@@ -1,11 +1,11 @@
 #for GNU make
 
-OPT = -O9 -finline-functions -fomit-frame-pointer
+OPT = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG
 # for power PC
-#CC = gcc -Wall $(OPT) -Wmissing-prototypes -arch ppc  $(DDEBUG) 
+CC = gcc -Wall $(OPT) -Wmissing-prototypes -arch ppc  $(DDEBUG) 
 # for Pentium M
 #CC = gcc -Wall $(OPT) -Wmissing-prototypes -march=prescott $(DDEBUG)
-CC = icl /Wcheck /O3 /QxB /Qc99 /Qprefetch /Fa
+#CC = icl /Wcheck /O3 /QxB /Qc99 /Qprefetch /Fa
 # for Athlon
 #CC = gcc -Wall $(OPT) -Wmissing-prototypes -march=nocona $(DDEBUG) 
 

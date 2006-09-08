@@ -14,10 +14,6 @@ INLINE void init_gen_rand(uint32_t seed)
     rand_x = seed;
 }
 
-INLINE unsigned int get_onetime_rnds(void) {
-    return 624;
-}
-
 INLINE uint32_t gen_rand(void)
 {
   rand_x = (1103515245 * rand_x + 12345) & 0x7fffffffUL;
@@ -25,11 +21,11 @@ INLINE uint32_t gen_rand(void)
   return rand_x;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
     int i;
     uint32_t r = rand_x;
-    for (i = 0; i < 624 * block_num; i++) {
+    for (i = 0; i < size; i++) {
 	r = (1103515245 * r + 12345) & 0x7fffffffUL;
 	array[i] = r;
     }
