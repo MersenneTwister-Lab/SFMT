@@ -1,0 +1,3 @@
+generated randoms
+
+mismatch i = 0: r = 1395609768, array = 2371825894
