@@ -5,6 +5,7 @@
   #include <stdint.h>
 #endif
 #include <stdio.h>
+#include <assert.h>
 #include "random-inline.h"
 
 #ifndef MEXP
@@ -146,7 +147,7 @@ INLINE static void gen_rand_all(void) {
     }
 }
 
-INLINE static void gen_rand_array(w128_t array[], uint32_t blocks) {
+INLINE static void gen_rand_array(w128_t array[], int size) {
     int i, j;
     uint32_t *r1, *r2;
 
@@ -162,12 +163,18 @@ INLINE static void gen_rand_array(w128_t array[], uint32_t blocks) {
 	r1 = r2;
 	r2 = array[i].a;
     }
-    for (; i < N * (blocks - 1); i++) {
+    for (; i < size - N; i++) {
 	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a, r1, r2);
 	r1 = r2;
 	r2 = array[i].a;
     }
-    for (j = 0; i < N * blocks; i++, j++) {
+    for (j = 0; j < 2 * N - size; j++) {
+	sfmt[j][0] = array[j + size - N].a[0];
+	sfmt[j][1] = array[j + size - N].a[1];
+	sfmt[j][2] = array[j + size - N].a[2];
+	sfmt[j][3] = array[j + size - N].a[3];
+    }
+    for (; i < size; i++, j++) {
 	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a, r1, r2);
 	r1 = r2;
 	r2 = array[i].a;
@@ -190,16 +197,11 @@ INLINE uint32_t gen_rand(void)
     return r;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
-    if (block_num == 0) {
-	return;
-    } else if (block_num == 1) {
-	gen_rand_all();
-	memcpy(array, sfmt, sizeof(sfmt));
-    } else {
-	gen_rand_array((w128_t *)array, block_num);
-    }
+    assert(size % 4 == 0);
+    assert(size >= 2 * N * 4);
+    gen_rand_array((w128_t *)array, size / 4);
 }
 
 INLINE void init_gen_rand(uint32_t seed)

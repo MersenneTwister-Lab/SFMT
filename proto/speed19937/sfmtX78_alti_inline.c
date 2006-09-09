@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ppc_intrinsics.h>
+#include <assert.h>
 #include "random-inline.h"
 
 #define MEXP 19937
@@ -29,7 +30,7 @@ static uint32_t *sfmt32 = (uint32_t *)sfmt;
 
 #define MAX_BLOCKS (DST_MAX_BLOCK + 2)
 
-INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks);
+INLINE static void gen_rand_array(vector unsigned int array[], int size);
 INLINE static void gen_rand_all(void);
 INLINE static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
@@ -85,15 +86,16 @@ INLINE void print_state(FILE *fp) {
     }
 }
 
-INLINE static vector unsigned int vec_recursion(vector unsigned int a,
-						vector unsigned int b,
-						vector unsigned int c,
-						vector unsigned int d,
-						vector unsigned int sl1,
-						vector unsigned int sr1,
-						vector unsigned int mask,
-						vector unsigned char perm_sl,
-						vector unsigned char perm_sr
+INLINE static __attribute__((always_inline))
+    vector unsigned int vec_recursion(vector unsigned int a,
+				      vector unsigned int b,
+				      vector unsigned int c,
+				      vector unsigned int d,
+				      vector unsigned int sl1,
+				      vector unsigned int sr1,
+				      vector unsigned int mask,
+				      vector unsigned char perm_sl,
+				      vector unsigned char perm_sr
 ) {
 
     vector unsigned int v, w, x, y, z;
@@ -142,7 +144,7 @@ INLINE void gen_rand_all(void) {
     //vec_dss(3);
 }
 
-INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
+INLINE static void gen_rand_array(vector unsigned int array[], int size)
 {
     int i, j;
     vector unsigned int r, r1, r2;
@@ -176,14 +178,17 @@ INLINE static void gen_rand_array(vector unsigned int array[], uint32_t blocks)
 	r2 = r;
     }
     /* main loop */
-    for (; i < N * (blocks - 1); i++) {
+    for (; i < size - N; i++) {
 	r = vec_recursion(array[i - N], array[i + POS1 - N], r1, r2, sl1,
 			  sr1, mask, perm_sl, perm_sr);
 	array[i] = r;
 	r1 = r2;
 	r2 = r;
     }
-    for (j = 0; i < N * blocks; i++) {
+    for (j = 0; j < 2 * N - size; j++) {
+	sfmt[j] = array[j + size - N];
+    }
+     for (; i < size; i++) {
 	r = vec_recursion(array[i - N], array[i + POS1 - N], r1, r2, sl1,
 			  sr1, mask, perm_sl, perm_sr);
 	array[i] = r;
@@ -206,46 +211,14 @@ INLINE uint32_t gen_rand(void)
     return r;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
-    if (block_num == 0) {
-	return;
-    } else if (block_num == 1) {
-	gen_rand_all();
-	memcpy(array, sfmt, sizeof(sfmt));
-    } else {
-	gen_rand_array((vector unsigned int *)array, block_num);
-    }
-}
+    assert(size >= 2 * N * 4);
+    assert(size % 4 == 0);
 
-#if 0
-INLINE void fill_array(uint32_t array[], uint32_t size) 
-{
-    if (size < N * 4 - idx) {
-	memcpy(array, sfmt, size * sizeof(uint32_t));
-	idx += size;
-	return;
-    }
-    if (idx < N * 4) {
-	memcpy(array, sfmt, ((N * 4) - idx) * sizeof(uint32_t));
-	array += N * 4 - idx;
-	size -= N * 4 - idx;
-    }
-    while (size >= N * 4) {
-	gen_rand_all();
-	memcpy(array, sfmt, sizeof(sfmt));
-	array += N * 4;
-	size -= N * 4;
-    }
-    if (size > 0) {
-	gen_rand_all();
-	memcpy(array, sfmt, size * sizeof(uint32_t));
-	idx = size;
-    } else {
-	idx = N * 4;
-    }
+    gen_rand_array((vector unsigned int *)array, size / 4);
+
 }
-#endif
 
 INLINE void init_gen_rand(uint32_t seed)
 {

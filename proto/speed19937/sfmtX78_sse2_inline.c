@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 #if defined(__GNUC__)
   #include <inttypes.h>
 #endif
@@ -16,7 +17,7 @@
 
 //#define MAX_BLOCKS 10
 
-INLINE static void gen_rand_array(__m128i array[], uint32_t blocks);
+INLINE static void gen_rand_array(__m128i array[], int size);
 INLINE static void gen_rand_all(void);
 
 static __m128i sfmt[N];
@@ -119,7 +120,7 @@ INLINE void gen_rand_all(void) {
     }
 }
 
-INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
+INLINE static void gen_rand_array(__m128i array[], int size) {
     int i, j;
     __m128i r, r1, r2, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);
@@ -139,13 +140,17 @@ INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
 	r2 = r;
     }
     /* main loop */
-    for (; i < N * (blocks - 1); i++) {
+    for (; i < size - N; i++) {
 	r = mm_recursion(&array[i - N], &array[i + POS1 - N], r1, r2, mask);
 	_mm_store_si128(&array[i], r);
 	r1 = r2;
 	r2 = r;
     }
-    for (j = 0; i < N * blocks; i++, j++) {
+    for (j = 0; j < 2 * N - size; j++) {
+	r = _mm_load_si128(&array[j + size - N]);
+	_mm_store_si128(&sfmt[j], r);
+    }    
+    for (j = 0; i < size; i++, j++) {
 	r = mm_recursion(&array[i - N], &array[i + POS1 - N], r1, r2, mask);
 	_mm_store_si128(&array[i], r);
 	_mm_store_si128(&sfmt[j], r);
@@ -166,18 +171,13 @@ INLINE uint32_t gen_rand(void)
     return r;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
-    if (block_num == 0) {
-	return;
-    } else if (block_num == 1) {
-	gen_rand_all();
-	memcpy(array, sfmt, sizeof(sfmt));
-    } else {
-	//memcpy(array, sfmt, sizeof(sfmt));
-	gen_rand_array((__m128i *)array, block_num);
-	//memcpy(sfmt, &array[N * (block_num-1)], sizeof(sfmt));
-    }
+    assert(size >= N * 4);
+    assert(size % 4 == 0);
+    assert((int)array % 16 == 0);
+
+    gen_rand_array((__m128i *)array, size / 4);
 }
 
 INLINE void init_gen_rand(uint32_t seed)

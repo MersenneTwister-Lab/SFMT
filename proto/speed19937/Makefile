@@ -1,6 +1,6 @@
 #for GNU make
 
-CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  $(DDEBUG) $(DMEXP) $(DPG)
+CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -Winline -maltivec -arch ppc  -DNDEBUG $(DDEBUG) $(DMEXP) $(DPG)
 #CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  -fprefetch-loop-arrays $(DDEBUG) $(DMEXP) $(DPG)
 CPP = g++ -Wall -fast $(DDEBUG) $(DMEXP) $(DPG)
 

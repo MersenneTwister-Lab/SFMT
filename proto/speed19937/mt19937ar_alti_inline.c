@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ppc_intrinsics.h>
+#include <assert.h>
 //#include "mt19937ar.h"
 #include "random-inline.h"
 /* Period parameters */
@@ -18,7 +19,7 @@ static int mti = N + 1;		/* mti==N+1 means mt[N] is not initialized */
 
 #define MAX_BLOCKS (DST_MAX_BLOCK + 2)
 
-INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks);
+INLINE static void gen_rand_array(uint32_t array[], int size);
 INLINE static void gen_rand_all(void);
 
 INLINE unsigned int get_rnd_maxdegree(void)
@@ -161,7 +162,7 @@ INLINE static vector unsigned int temper(vector unsigned int *a,
     return r;
 }
 
-INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
+INLINE static void gen_rand_array(uint32_t array[], int size)
 {
     //unsigned long y;
     vector unsigned int a0, a1, a, b0, b1, b, r;
@@ -228,7 +229,7 @@ INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
     a0 = a1;
     b0 = b1;
     i += 4;
-    for (; i < N * blocks; i += 4) {
+    for (; i < size; i += 4) {
 	// tempering
 	r = temper((vector unsigned int *)&array[i - N],
 		   s11, s7, s15, s18, and1, and2);
@@ -245,8 +246,8 @@ INLINE static void gen_rand_array(uint32_t array[], uint32_t blocks)
 	a0 = a1;
 	b0 = b1;
     }
-    memcpy(mt, &array[N * (blocks - 1)], sizeof(mt));
-    for (; i < N * (blocks + 1); i += 4) {
+    memcpy(mt, &array[size - N], sizeof(mt));
+    for (; i < size + N; i += 4) {
 	r = temper((vector unsigned int *)&array[i - N],
 		   s11, s7, s15, s18, and1, and2);
 	vec_st(r, 0, &array[i - N]);
@@ -273,64 +274,13 @@ INLINE uint32_t gen_rand(void)
     return y;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
-    int i;
-    uint32_t y;
+    assert(size >= 2 * N);
+    assert((int)array % 16 == 0);
 
-#if 1
-    while (block_num > MAX_BLOCKS) {
-	gen_rand_array(array, MAX_BLOCKS);
-	array += N * MAX_BLOCKS;
-	block_num -= MAX_BLOCKS;
-    }
-#endif
-    if (block_num == 0) {
-	return;
-    } else if (block_num == 1) {
-	gen_rand_all();
-	memcpy(array, mt, sizeof(mt));
-	for (i = 0; i < N * block_num; i++) {
-	    y = array[i];
-	    y ^= (y >> 11);
-	    y ^= (y << 7) & 0x9d2c5680UL;
-	    y ^= (y << 15) & 0xefc60000UL;
-	    y ^= (y >> 18);
-	    array[i] = y;
-	}
-    } else {
-	gen_rand_array(array, block_num);
-    }
+    gen_rand_array(array, size);
 }
-
-#if 0
-INLINE void fill_array(uint32_t array[], uint32_t size) 
-{
-    if (size < N - mti) {
-	memcpy(array, mt, size * sizeof(uint32_t));
-	mti += size;
-	return;
-    }
-    if (mti < N) {
-	memcpy(array, mt, (N - mti) * sizeof(uint32_t));
-	array += N - mti;
-	size -= N - mti;
-    }
-    while (size >= N) {
-	gen_rand_all();
-	memcpy(array, mt, sizeof(mt));
-	array += N;
-	size -= N;
-    }
-    if (size > 0) {
-	gen_rand_all();
-	memcpy(array, mt, size * sizeof(uint32_t));
-	mti = size;
-    } else {
-	mti = N;
-    }
-}
-#endif
 
 #ifdef TICK
 #include "test_time_inline.c"
