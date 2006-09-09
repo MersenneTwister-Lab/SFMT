@@ -1,0 +1,2 @@
+BURST:2594ms for 100000000 randoms.
+SEQUE:2563ms for 100000000 randoms.
