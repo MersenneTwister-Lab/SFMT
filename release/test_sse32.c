@@ -1,12 +1,14 @@
-/** 
+/**
  * @file  test_sse32.c
- * @brief SIMD oriented Fast Mersenne Twister
+ * @brief test program for 32-bit output of SFMT19937.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
  * @date 2006-08-29
  *
- * Copyright (C) 2006 Mutsuo Saito. All rights reserved.
- * @see LICENSE
+ * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University. All rights reserved.
+ *
+ * The new BSD License is applied to this software, see LICENSE.txt
  */
 
 #include <stdio.h>
@@ -16,7 +18,7 @@
 #include <stdlib.h>
 #include <emmintrin.h>
 
-#include "sfmt-sse2.c"
+#include "sfmt19937-sse2.c"
 
 #define BLOCK_SIZE 100000
 #define COUNT 1000

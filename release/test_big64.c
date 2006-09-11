@@ -1,5 +1,5 @@
 /**
- * @file  test_sse64.c
+ * @file  test_big64.c
  * @brief test program for 64-bit output of SFMT19937.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
@@ -16,9 +16,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include <emmintrin.h>
-
-#include "sfmt19937-sse2.c"
+#include "sfmt19937-big64.c"
 
 #define BLOCK_SIZE 50000
 #define COUNT 2000
@@ -26,8 +24,8 @@
 void check64(void);
 void speed64(void);
 
-static __m128i array1[BLOCK_SIZE / 2];
-static __m128i array2[700 / 2];
+static uint32_t array1[BLOCK_SIZE / 2][4];
+static uint32_t array2[700 / 2][4];
 
 void check64(void) {
     int i;
@@ -45,14 +43,13 @@ void check64(void) {
     fill_array64(array64_2, 700);
     init_by_array(ini, 5);
     for (i = 0; i < 1000; i++) {
-	printf("%20" PRIu64 " ", array64[i]);
+	printf("%20"PRIu64" ", array64[i]);
 	if (i % 3 == 2) {
 	    printf("\n");
 	}
 	r = gen_rand64();
 	if (r != array64[i]) {
-	    printf("\nsize of uint64 = %d", sizeof(uint64_t));
-	    printf("\nmismatch at %d array64:%" PRIx64 " gen:%I64x\n", 
+	    printf("\nmismatch at %d array64:%"PRIx64" gen:%"PRIx64"\n", 
 		   i, array64[i], r);
 	    exit(1);
 	}
@@ -61,7 +58,7 @@ void check64(void) {
     for (i = 0; i < 700; i++) {
 	r = gen_rand64();
 	if (r != array64_2[i]) {
-	    printf("\nmismatch at %d array64_2:%" PRIx64 " gen:%llx\n", 
+	    printf("\nmismatch at %d array64_2:%"PRIx64" gen:%"PRIx64"\n", 
 		   i, array64_2[i], r);
 	    exit(1);
 	}

@@ -14,36 +14,44 @@
 
 WARN = -Wmissing-prototypes -Wall -Winline
 OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG 
-STD = 
+STD = -std=c89 -pedantic
+GCC = gcc $(OPTI) $(WARN) $(STD)
+STD_TARGET = test-std32 test-std64
+BIG_TARGET = $(STD_TARGET) test-big64
+ALTI_TARGET = $(BIG_TARGET) test-alti32 test-alti64
+SSE_TARGET = $(STD_TARGET) test-sse32 test-sse64
+# --------------------
+# for UNIX like system
+# --------------------
+#CC = $(GCC)
+#TARGET = $(STD_TARGET)
 # -----------------
-# for standard unix
+# for PowerPC
 # -----------------
-#CC = gcc $(OPTI) $(STD)
-
-# -----------------
-# for power PC
-# -----------------
-CC = gcc $(WARN) $(OPTI) $(STD) -faltivec -maltivec -arch ppc
-
+CC = $(GCC) -faltivec -maltivec -arch ppc
+TARGET = $(ALTI_TARGET)
 # -----------------
 # for Pentium M
 # -----------------
-#CC = gcc $(OPTI) $(STD) -march=prescott
+#CC = $(GCC) -march=prescott -msse2
 #CC = icl /Wcheck /O3 /QxB /Qprefetch
-
+#TARGET = $(SSE_TARGET)
 # -----------------
 # for Athlon
 # -----------------
-#CC = gcc $(OPTI) $(STD) -march=nocona
+#CC = $(GCC) -march=nocona -msse2
+#TARGET = $(SSE_TARGET)
 
-sse2: test-std32 test-std64 test-sse32 test-sse64
-altivec: test-std32 test-std64 test-alti32 test-alti64
+all:$(TARGET)
 
 test-std32: test32.c sfmt19937.c sfmt19937.h Makefile
 	${CC} -o $@ test32.c
 
 test-std64: test64.c sfmt19937.c sfmt19937.h Makefile
 	${CC} -o $@ test64.c
+
+test-big64: test_big64.c sfmt19937-big64.c sfmt19937.h Makefile
+	${CC} -o $@ test_big64.c
 
 test-alti32: test_alti32.c sfmt19937-alti32.c sfmt19937.h Makefile
 	${CC} -o $@ test_alti32.c

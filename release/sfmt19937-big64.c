@@ -1,6 +1,7 @@
 /** 
- * @file  sfmt19937.c
- * @brief SIMD oriented Fast Mersenne Twister(SFMT)
+ * @file  sfmt19937-big64.c
+ * @brief SIMD oriented Fast Mersenne Twister(SFMT) for 64-bit output
+ * for BIG ENDIAN machine.
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
@@ -11,42 +12,12 @@
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
+ *
+ * @note We assume BIG ENDIAN in this file.  \b init_gen_rand, \b
+ * init_by_array functions are optimized for 64-bit output for BIG
+ * ENDIAN machine.
  */
 
-/**
- * \mainpage 
- *
- * This is SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
- * number generator.
- *
- * This file provides:
- *
- * - void init_gen_rand() initializes the generator with a 32-bit
- *   integer seed.
- * - void init_by_array() initializes the generator with an array of
- *   32-bit integers as the seeds.
- * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
- *   32-bit unsigned integer.
- * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
- *   64-bit unsigned integer.
- * - void fill_array32() fills the user-specified array with 32-bit
- *   psedorandom integers.
- * - void fill_array64() fills the user-specified array with 64-bit
- *   psedorandom integers.
- *
- * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
- * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
- *
- * ??? Please change our-domin to math.sci.hiroshima-u.ac.jp
- *
- * @date 2006-08-29
- *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
- * University. All rights reserved.
- *
- * The new BSD License is applied to this software.
- * \verbinclude LICENSE.txt
- */
 #include <string.h>
 #include <assert.h>
 #include "sfmt19937.h"
@@ -119,8 +90,6 @@ static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int initialized = 0;
-/** a flag: it is 1 if CPU is BIG ENDIAN. */
-static int big_endian;
 
 /*------------------------------------------
   128-bit SIMD like data type for standard C
@@ -143,7 +112,7 @@ INLINE static void gen_rand_all(void);
 INLINE static void gen_rand_array(w128_t array[], int size);
 INLINE static uint32_t func1(uint32_t x);
 INLINE static uint32_t func2(uint32_t x);
-static void endian_check(void);
+INLINE static int idxof(int i);
 
 /**
  * This function simulates SIMD 128-bit right shift by the standard C.
@@ -152,21 +121,25 @@ static void endian_check(void);
  * @param out the output of this function
  * @param in the 128-bit data to be shifted
  * @param shift the shift value
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * initialization must be done by \b init_gen_rand or \b init_by_array
+ * in this file.
  */
 INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
     uint64_t th, tl, oh, ol;
 
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
+    th = ((uint64_t)in[2] << 32) | ((uint64_t)in[3]);
+    tl = ((uint64_t)in[0] << 32) | ((uint64_t)in[1]);
 
     oh = th >> (shift * 8);
     ol = tl >> (shift * 8);
     ol |= th << (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
+    out[0] = (uint32_t)(ol >> 32);
+    out[1] = (uint32_t)ol;
+    out[2] = (uint32_t)(oh >> 32);
+    out[3] = (uint32_t)oh;
 }
 
 /**
@@ -176,30 +149,40 @@ INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
  * @param out the output of this function
  * @param in the 128-bit data to be shifted
  * @param shift the shift value
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * initialization must be done by \b init_gen_rand or \b init_by_array
+ * in this file.
  */
 INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
     uint64_t th, tl, oh, ol;
 
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
+    th = ((uint64_t)in[2] << 32) | ((uint64_t)in[3]);
+    tl = ((uint64_t)in[0] << 32) | ((uint64_t)in[1]);
 
     oh = th << (shift * 8);
     ol = tl << (shift * 8);
     oh |= tl >> (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
+    out[0] = (uint32_t)(ol >> 32);
+    out[1] = (uint32_t)ol;
+    out[2] = (uint32_t)(oh >> 32);
+    out[3] = (uint32_t)oh;
 }
 
 /**
- * This function represents the recursion formula.
+ * This macro represents the recursion formula.
+ * The recursion formula is optimized for 64-bit output for BIG ENDIAN
+ * machine.
  * @param r output
  * @param a a 128-bit part of the interal state array
  * @param b a 128-bit part of the interal state array
  * @param c a 128-bit part of the interal state array
  * @param d a 128-bit part of the interal state array
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * initialization must be done by \b init_gen_rand or \b init_by_array
+ * in this file.
  */
 #define do_recursion(r, a, b, c, d) \
     do { \
@@ -208,15 +191,19 @@ INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
 \
     lshift128(x, a, SL2);\
     rshift128(y, c, SR2);\
-    r[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ y[0] ^ (d[0] << SL1);\
-    r[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ y[1] ^ (d[1] << SL1);\
-    r[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ y[2] ^ (d[2] << SL1);\
-    r[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ y[3] ^ (d[3] << SL1);\
+    r[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK2) ^ y[0] ^ (d[0] << SL1);\
+    r[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK1) ^ y[1] ^ (d[1] << SL1);\
+    r[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK4) ^ y[2] ^ (d[2] << SL1);\
+    r[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK3) ^ y[3] ^ (d[3] << SL1);\
     } while(0)
 
 /**
  * This function fills the internal state array with psedorandom
  * integers.
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * initialization must be done by \b init_gen_rand or \b init_by_array
+ * in this file.
  */
 INLINE static void gen_rand_all(void) {
     int i;
@@ -242,6 +229,10 @@ INLINE static void gen_rand_all(void) {
  *
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * initialization must be done by \b init_gen_rand or \b init_by_array
+ * in this file.
  */
 INLINE static void gen_rand_array(w128_t array[], int size) {
     int i;
@@ -287,51 +278,29 @@ static uint32_t func2(uint32_t x) {
 }
 
 /**
- * This function checks ENDIAN of CPU and set big_endian flag.
+ * ??? This function simulate a 64-bit index of LITTLE ENDIAN 
+ * in BIG ENDIAN machine.
  */
-static void endian_check(void) {
-    uint32_t a[2] = {0, 1};
-    uint64_t *pa;
-
-    pa = (uint64_t *)a;
-    if (*pa == 1) {
-	big_endian = 1;
-    } else {
-	big_endian = 0;
-    }
+INLINE static int idxof(int i) {
+    return i ^ 1;
 }
 
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/
 /**
- * This function generates and returns 32-bit pseudorandom number.
- * init_gen_rand or init_by_array must be called before this function.
- * @return 32-bit pseudorandom number
- */
-INLINE uint32_t gen_rand32(void)
-{
-    uint32_t r;
-
-    assert(initialized);
-    if (idx >= N32) {
-	gen_rand_all();
-	idx = 0;
-    }
-    r = psfmt32[idx++];
-    return r;
-}
-
-/**
  * This function generates and returns 64-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
  * The function gen_rand64 should not be called after gen_rand32,
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * initialization must be done by \b init_gen_rand or \b init_by_array
+ * in this file.
  */
 INLINE uint64_t gen_rand64(void)
 {
-    uint32_t r1, r2;
     uint64_t r;
 
     assert(initialized);
@@ -341,54 +310,9 @@ INLINE uint64_t gen_rand64(void)
 	gen_rand_all();
 	idx = 0;
     }
-    if (big_endian) {
-	r1 = psfmt32[idx];
-	r2 = psfmt32[idx + 1];
-	idx += 2;
-	return ((uint64_t)r2 << 32) | r1;
-    } else {
-	r = psfmt64[idx / 2];
-	idx += 2;
-	return r;
-    }
-}
-
-/**
- * This function generates pseudorandom 32-bit integers in the
- * specified array[] by one call. The number of pseudorandom integers
- * is specified by the argument size, which must be at least 624 and a
- * multiple of four.  The generation by this function is much faster
- * than the following gen_rand function.
- *
- * For initialization, init_gen_rand or init_by_array must be called
- * before the first call of this function. This function can not be
- * used after calling gen_rand function, without initialization.
- *
- * @param array an array where pseudorandom 32-bit integers are filled
- * by this function.  The pointer to the array must be \b "aligned"
- * (namely, must be a multiple of 16) in the SIMD version, since it
- * refers to the address of a 128-bit integer.  In the standard C
- * version, the pointer is arbitrary.
- *
- * @param size the number of 32-bit pseudorandom integers to be
- * generated.  size must be a multiple of 4, and greater than or equal
- * to 624.
- *
- * @note ??? \b memalign or \b posix_memalign is available to get aligned
- * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
- * returns the pointer to the aligned memory block.
- */
-INLINE void fill_array32(uint32_t array[], int size)
-{
-    assert(initialized);
-    /* assert(array % 16 == 0); */
-    assert(idx == N32);
-    assert(size % 4 == 0);
-    assert(size >= N32);
-
-    gen_rand_array((w128_t *)array, size / 4);
-    memcpy(psfmt32, array + size - N32, sizeof(uint32_t) * N32);
-    idx = N32;
+    r = psfmt64[idx / 2];
+    idx += 2;
+    return r;
 }
 
 /**
@@ -412,14 +336,14 @@ INLINE void fill_array32(uint32_t array[], int size)
  * generated.  size must be a multiple of 2, and greater than or equal
  * to 312.
  *
- * @note ??? \b memalign or \b posix_memalign is available to get aligned
- * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
- * returns the pointer to the aligned memory block.
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * initialization must be done by \b init_gen_rand or \b init_by_array
+ * in this file.
  */
 INLINE void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
-    /* assert(array % 16 == 0); */
+    /* assert((uint32_t)array % 16 == 0); */
     assert(idx == N32);
     assert(size % 2 == 0);
     assert(size >= N64);
@@ -427,17 +351,6 @@ INLINE void fill_array64(uint64_t array[], int size)
     gen_rand_array((w128_t *)array, size / 2);
     memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
     idx = N32;
-    if (big_endian) {
-	int i;
-	uint32_t x;
-	uint32_t *pa;
-	pa = (uint32_t *)array;
-	for (i = 0; i < size * 2; i += 2) {
-	    x = pa[i];
-	    pa[i] = pa[i + 1];
-	    pa[i + 1] = x;
-	}
-    }
 }
 
 /**
@@ -445,27 +358,36 @@ INLINE void fill_array64(uint64_t array[], int size)
  * integer seed.
  *
  * @param seed a 32-bit integer used as the seed.
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * pseudorandom number generation must be done by \b gen_rand64 or \b
+ * fill_array64 in this file.
  */
 void init_gen_rand(uint32_t seed)
 {
     int i;
 
-    psfmt32[0] = seed;
+    psfmt32[idxof(0)] = seed;
     for (i = 1; i < N32; i++) {
-	psfmt32[i] = 1812433253UL * (psfmt32[i - 1] ^ (psfmt32[i - 1] >> 30))
+	psfmt32[idxof(i)] = 1812433253UL * (psfmt32[idxof(i - 1)] 
+					    ^ (psfmt32[idxof(i - 1)] >> 30))
 	    + i;
     }
-    psfmt32[3] = INIT_LUNG;
+    psfmt32[idxof(3)] = INIT_LUNG;
     idx = N32;
-    endian_check();
     initialized = 1;
 }
 
 /**
  * This function initializes the internal state array,
  * with an array of 32-bit integers used as the seeds
+ * ??? This function is optimized for 64-bit output in BIG ENDIAN machine.
  * @param init_key the array of 32-bit integers, used as a seed.
- * @param key_length the length of init_key.
+ * @param key_length the length of \b init_key.
+ *
+ * @note This function is optimized for BIG ENDIAN machine. The
+ * pseudorandom number generation must be done by \b gen_rand64 or \b
+ * fill_array64 in this file.
  */
 void init_by_array(uint32_t init_key[], int key_length) {
     int i, j, count;
@@ -479,43 +401,43 @@ void init_by_array(uint32_t init_key[], int key_length) {
     } else {
 	count = N32;
     }
-    r = func1(psfmt32[0] ^ psfmt32[MID] ^ psfmt32[N32 - 1]);
-    psfmt32[MID] += r;
+    r = func1(psfmt32[idxof(0)] ^ psfmt32[idxof(MID)] 
+	      ^ psfmt32[idxof(N32 - 1)]);
+    psfmt32[idxof(MID)] += r;
     r += key_length;
-    psfmt32[MID + LAG] = r;
-    psfmt32[0] = r;
+    psfmt32[idxof(MID + LAG)] = r;
+    psfmt32[idxof(0)] = r;
     i = 1;
     count--;
     for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
-	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
-		  ^ psfmt32[(i + N32 - 1) % N32]);
-	psfmt32[(i + MID) % N32] += r;
+	r = func1(psfmt32[idxof(i)] ^ psfmt32[idxof((i + MID) % N32)] 
+		  ^ psfmt32[idxof((i + N32 - 1) % N32)]);
+	psfmt32[idxof((i + MID) % N32)] += r;
 	r += init_key[j] + i;
-	psfmt32[(i + MID + LAG) % N32] += r;
-	psfmt32[i] = r;
+	psfmt32[idxof((i + MID + LAG) % N32)] += r;
+	psfmt32[idxof(i)] = r;
 	i = (i + 1) % N32;
     }
     for (; j < count; j++) {
-	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
-		  ^ psfmt32[(i + N32 - 1) % N32]);
-	psfmt32[(i + MID) % N32] += r;
+	r = func1(psfmt32[idxof(i)] ^ psfmt32[idxof((i + MID) % N32)] 
+		  ^ psfmt32[idxof((i + N32 - 1) % N32)]);
+	psfmt32[idxof((i + MID) % N32)] += r;
 	r += i;
-	psfmt32[(i + MID + LAG) % N32] = r;
-	psfmt32[i] = r;
+	psfmt32[idxof((i + MID + LAG) % N32)] = r;
+	psfmt32[idxof(i)] = r;
 	i = (i + 1) % N32;
     }
     for (j = 0; j < N32; j++) {
-	r = func2(psfmt32[i] + psfmt32[(i + MID) % N32] 
-		  + psfmt32[(i + N32 - 1) % N32]);
-	psfmt32[(i + MID) % N32] ^= r;
+	r = func2(psfmt32[idxof(i)] + psfmt32[idxof((i + MID) % N32)] 
+		  + psfmt32[idxof((i + N32 - 1) % N32)]);
+	psfmt32[idxof((i + MID) % N32)] ^= r;
 	r -= i;
-	psfmt32[(i + MID + LAG) % N32] ^= r;
-	psfmt32[i] = r;
+	psfmt32[idxof((i + MID + LAG) % N32)] ^= r;
+	psfmt32[idxof(i)] = r;
 	i = (i + 1) % N32;
     }
 
-    psfmt32[3] = INIT_LUNG;
+    psfmt32[idxof(3)] = INIT_LUNG;
     idx = N32;
-    endian_check();
     initialized = 1;
 }

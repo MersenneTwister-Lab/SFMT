@@ -1,12 +1,14 @@
-/** 
- * @file  sfmt.c
- * @brief SIMD oriented Fast Mersenne Twister
+/**
+ * @file  test_alti32.c
+ * @brief test program for 32-bit output of SFMT19937.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
  * @date 2006-08-29
  *
- * Copyright (C) 2006 Mutsuo Saito. All rights reserved.
- * @see LICENSE
+ * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University. All rights reserved.
+ *
+ * The new BSD License is applied to this software, see LICENSE.txt
  */
 
 #include <stdio.h>

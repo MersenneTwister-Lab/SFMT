@@ -1,5 +1,5 @@
 /** 
- * @file  sfmt-sse2.c
+ * @file  sfmt19937-sse2.c
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) for intel SSE2
  *
  * @author Mutsuo Saito (Hiroshima University)
@@ -11,6 +11,8 @@
  *
  * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
+ *
+ * The new BSD License is applied to this software, see LICENSE.txt
  */
 
 #include <string.h>
@@ -86,8 +88,6 @@ static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int initialized = 0;
-/** a flag: it is 1 if CPU is BIG ENDIAN. */
-static int big_endian;
 
 /*----------------
   STATIC FUNCTIONS
@@ -98,7 +98,6 @@ INLINE static void gen_rand_all(void);
 INLINE static void gen_rand_array(__m128i array[], int size);
 INLINE static uint32_t func1(uint32_t x);
 INLINE static uint32_t func2(uint32_t x);
-INLINE static void endian_check(void);
 
 /**
  * This function represents the recursion formula.
@@ -109,8 +108,12 @@ INLINE static void endian_check(void);
  * @param mask 128-bit mask
  * @return output
  */
-INLINE static __m128i mm_recursion(__m128i *a, __m128i *b, 
-				   __m128i c, __m128i d, __m128i mask) {
+INLINE static 
+#if defined(__GNUC__)
+__attribute__((always_inline)) 
+#endif
+    __m128i mm_recursion(__m128i *a, __m128i *b, 
+			 __m128i c, __m128i d, __m128i mask) {
     __m128i v, x, y, z;
     
     x = _mm_load_si128(a);
@@ -200,7 +203,7 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
 
 /**
  * This function represents a function used in the initialization
- * by init_by_array
+ * by \b init_by_array
  * @param x 32-bit integer
  * @return 32-bit integer
  */
@@ -210,7 +213,7 @@ INLINE static uint32_t func1(uint32_t x) {
 
 /**
  * This function represents a function used in the initialization
- * by init_by_array
+ * by \b init_by_array
  * @param x 32-bit integer
  * @return 32-bit integer
  */
@@ -222,8 +225,10 @@ INLINE static uint32_t func2(uint32_t x) {
   PUBLIC FUNCTIONS
   ----------------*/
 /**
- * This function generates and returns 32-bit pseudorandom number.
- * init_gen_rand or init_by_array must be called before this function.
+ * This function generates and returns 32-bit pseudorandom number.  \b
+ * init_gen_rand or \b init_by_array must be called before this
+ * function.
+ *
  * @return 32-bit pseudorandom number
  */
 INLINE uint32_t gen_rand32(void)
@@ -239,10 +244,11 @@ INLINE uint32_t gen_rand32(void)
 }
 
 /**
- * This function generates and returns 64-bit pseudorandom number.
- * init_gen_rand or init_by_array must be called before this function.
- * The function gen_rand64 should not be called after gen_rand32,
- * unless an initialization is again executed. 
+ * This function generates and returns 64-bit pseudorandom number.  \b
+ * init_gen_rand or \b init_by_array must be called before this
+ * function.  The function gen_rand64 should not be called after
+ * gen_rand32, unless an initialization is again executed.
+ *
  * @return 64-bit pseudorandom number
  */
 INLINE uint64_t gen_rand64(void)
@@ -268,9 +274,10 @@ INLINE uint64_t gen_rand64(void)
  * multiple of four.  The generation by this function is much faster
  * than the following gen_rand function.
  *
- * For initialization, init_gen_rand or init_by_array must be called
- * before the first call of this function. This function can not be
- * used after calling gen_rand function, without initialization.
+ * For initialization, \b init_gen_rand or \b init_by_array must be
+ * called before the first call of this function. This function can
+ * not be used after calling gen_rand function, without
+ * initialization.
  *
  * @param array an array where pseudorandom 32-bit integers are filled
  * by this function.  The pointer to the array must be "aligned"
@@ -301,9 +308,10 @@ INLINE void fill_array32(uint32_t array[], int size)
  * multiple of two.  The generation by this function is much faster
  * than the following gen_rand function.
  *
- * For initialization, init_gen_rand or init_by_array must be called
- * before the first call of this function. This function can not be
- * used after calling gen_rand function, without initialization.
+ * For initialization, \b init_gen_rand or \b init_by_array must be
+ * called before the first call of this function. This function can
+ * not be used after calling gen_rand function, without
+ * initialization.
  *
  * @param array an array where pseudorandom 64-bit integers are filled
  * by this function.  The pointer to the array must be "aligned"
@@ -334,7 +342,7 @@ INLINE void fill_array64(uint64_t array[], int size)
  *
  * @param seed a 32-bit integer used as the seed.
  */
-INLINE void init_gen_rand(uint32_t seed)
+void init_gen_rand(uint32_t seed)
 {
     int i;
 
@@ -354,7 +362,7 @@ INLINE void init_gen_rand(uint32_t seed)
  * @param init_key the array of 32-bit integers, used as a seed.
  * @param key_length the length of init_key.
  */
-INLINE void init_by_array(uint32_t init_key[], int key_length) {
+void init_by_array(uint32_t init_key[], int key_length) {
     int i, j, count;
     uint32_t r;
     const int MID = 306;

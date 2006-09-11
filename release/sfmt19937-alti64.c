@@ -1,6 +1,8 @@
 /** 
- * @file  sfmt19937-alti64.c
- * @brief SIMD oriented Fast Mersenne Twister(SFMT) for PowerPC G4, G5
+ * @file sfmt19937-alti64.c 
+ *
+ * @brief SIMD oriented Fast Mersenne Twister(SFMT) for 64-bit output
+ * for PowerPC G4, G5
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
@@ -10,8 +12,7 @@
  * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
- * The new BSD License is applied to this software.
- * see LICENSE.txt
+ * The new BSD License is applied to this software, see LICENSE.txt
  *
  * @note We assume BIG ENDIAN in this file.  \b init_gen_rand, \b
  * init_by_array and \b vec_recursion functions are optimized for 64-bit
@@ -295,7 +296,6 @@ INLINE void fill_array64(uint64_t array[], int size)
     assert(size >= N64);
 
     gen_rand_array((vector unsigned int *)array, size / 2);
-    //memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
     idx = N32;
 }
 
@@ -351,7 +351,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
 	r = func1(psfmt32[idxof(i)] ^ psfmt32[idxof((i + MID) % N32)] 
 		  ^ psfmt32[idxof((i + N32 - 1) % N32)]);
 	psfmt32[idxof((i + MID) % N32)] += r;
-	r += init_key[idxof(j)] + i;
+	r += init_key[j] + i;
 	psfmt32[idxof((i + MID + LAG) % N32)] += r;
 	psfmt32[idxof(i)] = r;
 	i = (i + 1) % N32;

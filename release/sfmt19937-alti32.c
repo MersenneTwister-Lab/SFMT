@@ -10,8 +10,7 @@
  * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
- * The new BSD License is applied to this software.
- * see LICENSE.txt
+ * The new BSD License is applied to this software, see LICENSE.txt
  *
  * @note We assume BIG ENDIAN in this file.
  */
@@ -316,7 +315,6 @@ INLINE void fill_array32(uint32_t array[], int size)
     assert(size >= N32);
 
     gen_rand_array((vector unsigned int *)array, size / 4);
-    //memcpy(psfmt32, array + size - N32, sizeof(uint32_t) *  N32);
     idx = N32;
 }
 
@@ -350,7 +348,6 @@ INLINE void fill_array64(uint64_t array[], int size)
     assert(size >= N64);
 
     gen_rand_array((vector unsigned int *)array, size / 2);
-    //memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
     idx = N32;
     vec_swap((vector unsigned int *)array, size / 2);
 }

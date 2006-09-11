@@ -1,12 +1,14 @@
-/** 
+/**
  * @file  test64.c
- * @brief test driver for sfmt19937.c
+ * @brief test program for 64-bit output of SFMT19937.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
  * @date 2006-08-29
  *
- * Copyright (C) 2006 Mutsuo Saito. All rights reserved.
- * @see LICENSE
+ * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University. All rights reserved.
+ *
+ * The new BSD License is applied to this software, see LICENSE.txt
  */
 
 #include <stdio.h>
@@ -22,8 +24,8 @@
 void check64(void);
 void speed64(void);
 
-static uint32_t array1[BLOCK_SIZE / 2][4];
-static uint32_t array2[700 / 2][4];
+static uint64_t array1[BLOCK_SIZE];
+static uint64_t array2[700];
 
 void check64(void) {
     int i;
