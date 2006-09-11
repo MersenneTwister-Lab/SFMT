@@ -1,54 +1,23 @@
 /** 
- * @file  sfmt.c
- * @brief SIMD oriented Fast Mersenne Twister(SFMT)
+ * @file  sfmt19937-alti32.c
+ * @brief SIMD oriented Fast Mersenne Twister(SFMT) for PowerPC G4, G5
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2006-08-29
- *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
- * University. All rights reserved.
- */
-
-/**
- * \mainpage 
- *
- * This is SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
- * number generator.
- *
- * This file provides:
- *
- * - INLINE void init_gen_rand() initializes the generator with a 
- *   32-bit integer seed.
- * - INLINE void init_by_array() initializes the generator with an
- *   array of 32-bit integers as the seeds.
- * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
- *   32-bit unsigned integer.
- * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
- *   64-bit unsigned integer.
- * - INLINE void fill_array32() fills the user-specified array with 
- *   32-bit psedorandom integers.
- * - INLINE void fill_array64() fills the user-specified array with 
- *   64-bit psedorandom integers.
- *
- * @author Mutsuo Saito (saito@our-domain) Hiroshima University 
- * @author Makoto Matsumoto (m-mat@our-domain) Hiroshima University
- *
- * our-domin is math.sci.hiroshima-u.ac.jp
- *
- * @date 2006-08-29
+ * @date 2006-09-06
  *
  * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software.
- * \verbinclude LICENSE.txt
+ * see LICENSE.txt
+ *
+ * @note We assume BIG ENDIAN in this file.
  */
 #include <string.h>
 #include <assert.h>
-#include "sfmt.h"
-
+#include "sfmt19937.h"
 
 /*-----------------
   BASIC DEFINITIONS
@@ -72,149 +41,98 @@
   the parameters of SFMT
   ----------------------*/
 /** the pick up position of the array. */
-const int POS1 = 122;
+#define POS1 122
 /** the parameter of shift left as four 32-bit registers. */
-const int SL1 = 18;
+#define SL1 18
 /** the parameter of shift left as one 128-bit register. 
  * The 128-bit integer is shifted by (SL2 * 8) bits. 
  */
-const int SL2 = 1;
+#define SL2 1
 /** the parameter of shift right as four 32-bit registers. */
-const int SR1 = 11;
+#define SR1 11
 /** the parameter of shift right as one 128-bit register. 
  * The 128-bit integer is shifted by (SL2 * 8) bits. 
  */
-const int SR2 = 1;
+#define SR2 1
 /** A bitmask, used in the recursion.  These parameters are introduced
  * to break symmetry of SIMD.*/
-const uint32_t MSK1 = 0xdfffffefU;
+#define MSK1 0xdfffffefU
 /** A bitmask, used in the recursion.  These parameters are introduced
  * to break symmetry of SIMD.*/
-const uint32_t MSK2 = 0xddfecb7fU;
+#define MSK2 0xddfecb7fU
 /** A bitmask, used in the recursion.  These parameters are introduced
  * to break symmetry of SIMD.*/
-const uint32_t MSK3 = 0xbffaffffU;
+#define MSK3 0xbffaffffU
 /** A bitmask, used in the recursion.  These parameters are introduced
  * to break symmetry of SIMD.*/
-const uint32_t MSK4 = 0xbffffff6U;
+#define MSK4 0xbffffff6U
 /** The 32 MSBs of the internal state array is seto to this
  * value. This peculiar value assures that the period length of the
  * output sequence is a multiple of 2^19937-1.
  */
-const uint32_t INIT_LUNG = 0x6d736d6dU;
+#define INIT_LUNG 0x6d736d6dU
 
 /*--------------------------------------
   FILE GLOBAL VARIABLES
   internal state, index counter and flag 
   --------------------------------------*/
 /** the 128-bit internal state array */
-static uint32_t sfmt[N][4];
+static vector unsigned int sfmt[N];
 /** the 32bit interger pointer to the 128-bit internal state array */
-static uint32_t *psfmt32 = &sfmt[0][0];
-/** the 64bit interger pointer to the 128-bit internal state array */
-static uint64_t *psfmt64 = (uint64_t *)&sfmt[0][0];
+static uint32_t *psfmt32 = (uint32_t *)&sfmt[0];
 /** index counter to the 32-bit internal state array */
 static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int initialized = 0;
-/** a flag: it is 1 if CPU is BIG ENDIAN. */
-static int big_endian;
-
-/*------------------------------------------
-  128-bit SIMD like data type for standard C
-  ------------------------------------------*/
-/** 128-bit data structure */
-struct W128_T {
-    uint32_t a[4];
-};
-/** 128-bit data type */
-typedef struct W128_T w128_t;
 
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift);
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift);
-INLINE static void do_recursion(uint32_t r[4], const uint32_t a[4], 
-				const uint32_t b[4], const uint32_t c[4],
-				const uint32_t d[4]);
 INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(w128_t array[], uint32_t size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
-INLINE static void endian_check(void);
+INLINE static void gen_rand_array(vector unsigned int array[], int size);
+static uint32_t func1(uint32_t x);
+static uint32_t func2(uint32_t x);
+INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+						vector unsigned int b,
+						vector unsigned int c,
+						vector unsigned int d);
 
 /**
- * This function simulates SIMD 128-bit right shift by the standard C.
- * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
- * This function simulates the LITTLE ENDIAN SIMD.
- * @param out the output of this function
- * @param in the 128-bit data to be shifted
- * @param shift the shift value
- */
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
-    uint64_t th, tl, oh, ol;
-
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
-
-    oh = th >> (shift * 8);
-    ol = tl >> (shift * 8);
-    ol |= th << (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
-}
-
-/**
- * This function simulates SIMD 128-bit left shift by the standard C.
- * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
- * This function simulates the LITTLE ENDIAN SIMD.
- * @param out the output of this function
- * @param in the 128-bit data to be shifted
- * @param shift the shift value
- */
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
-    uint64_t th, tl, oh, ol;
-
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
-
-    oh = th << (shift * 8);
-    ol = tl << (shift * 8);
-    oh |= tl >> (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
-}
-
-/**
- * This function represents the recursion formula.
- * @param r output
+ * This function represents the recursion formula in AltiVec and BIG ENDIAN.
  * @param a a 128-bit part of the interal state array
  * @param b a 128-bit part of the interal state array
  * @param c a 128-bit part of the interal state array
  * @param d a 128-bit part of the interal state array
+ * @return output
  */
-INLINE static void do_recursion(uint32_t r[4], const uint32_t a[4], 
-				const uint32_t b[4], const uint32_t c[4],
-				const uint32_t d[4]) {
-    uint32_t x[4];
-    uint32_t y[4];
+INLINE static __attribute__((always_inline)) 
+    vector unsigned int vec_recursion(vector unsigned int a,
+				      vector unsigned int b,
+				      vector unsigned int c,
+				      vector unsigned int d) {
 
-    lshift128(x, a, SL2);
-    rshift128(y, c, SR2);
-    r[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ y[0] ^ (d[0] << SL1);
-    r[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ y[1] ^ (d[1] << SL1);
-    r[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ y[2] ^ (d[2] << SL1);
-    r[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ y[3] ^ (d[3] << SL1);
+    const vector unsigned int sl1 = (vector unsigned int)(SL1, SL1, SL1, SL1);
+    const vector unsigned int sr1 = (vector unsigned int)(SR1, SR1, SR1, SR1);
+    const vector unsigned int mask = (vector unsigned int)
+    (MSK1, MSK2, MSK3, MSK4);
+    const vector unsigned char perm_sl = (vector unsigned char)
+    (1, 2, 3, 23, 5, 6, 7, 0, 9, 10, 11, 4, 13, 14, 15, 8);
+    const vector unsigned char perm_sr = (vector unsigned char)
+    (7, 0, 1, 2, 11, 4, 5, 6, 15, 8, 9, 10, 17, 12, 13, 14);
+
+    vector unsigned int v, w, x, y, z;
+    x = vec_perm(a, perm_sl, perm_sl);
+    v = a;
+    y = vec_sr(b, sr1);
+    z = vec_perm(c, perm_sr, perm_sr);
+    w = vec_sl(d, sl1);
+    z = vec_xor(z, w);
+    y = vec_and(y, mask);
+    v = vec_xor(v, x);
+    z = vec_xor(z, y);
+    z = vec_xor(z, v);
+    return z;
 }
 
 /**
@@ -223,19 +141,21 @@ INLINE static void do_recursion(uint32_t r[4], const uint32_t a[4],
  */
 INLINE static void gen_rand_all(void) {
     int i;
-    uint32_t *r1, *r2;
+    vector unsigned int r, r1, r2;
 
     r1 = sfmt[N - 2];
     r2 = sfmt[N - 1];
     for (i = 0; i < N - POS1; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1], r1, r2);
+	r = vec_recursion(sfmt[i], sfmt[i + POS1], r1, r2);
+	sfmt[i] = r;
 	r1 = r2;
-	r2 = sfmt[i];
+	r2 = r;
     }
     for (; i < N; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1 - N], r1, r2);
+	r = vec_recursion(sfmt[i], sfmt[i + POS1 - N], r1, r2);
+	sfmt[i] = r;
 	r1 = r2;
-	r2 = sfmt[i];
+	r2 = r;
     }
 }
 
@@ -246,26 +166,59 @@ INLINE static void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-INLINE static void gen_rand_array(w128_t array[], uint32_t size) {
-    int i;
-    uint32_t *r1, *r2;
+INLINE static void gen_rand_array(vector unsigned int array[], int size)
+{
+    int i, j;
+    vector unsigned int r, r1, r2;
 
     r1 = sfmt[N - 2];
     r2 = sfmt[N - 1];
     for (i = 0; i < N - POS1; i++) {
-	do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], r1, r2);
+	r = vec_recursion(sfmt[i], sfmt[i + POS1], r1, r2);
+	array[i] = r;
 	r1 = r2;
-	r2 = array[i].a;
+	r2 = r;
     }
     for (; i < N; i++) {
-	do_recursion(array[i].a, sfmt[i], array[i + POS1 - N].a, r1, r2);
+	r = vec_recursion(sfmt[i], array[i + POS1 - N], r1, r2);
+	array[i] = r;
 	r1 = r2;
-	r2 = array[i].a;
+	r2 = r;
+    }
+    /* main loop */
+    for (; i < size - N; i++) {
+	r = vec_recursion(array[i - N], array[i + POS1 - N], r1, r2);
+	array[i] = r;
+	r1 = r2;
+	r2 = r;
+    }
+    for (j = 0; j < 2 * N - size; j++) {
+	sfmt[j] = array[j + size - N];
     }
     for (; i < size; i++) {
-	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a, r1, r2);
+	r = vec_recursion(array[i - N], array[i + POS1 - N], r1, r2);
+	array[i] = r;
+	sfmt[j++] = r;
 	r1 = r2;
-	r2 = array[i].a;
+	r2 = r;
+    }
+}
+
+/**
+ * This function swaps high and low 32-bit of 64-bit integers in user
+ * specified array.
+ *
+ * @param array an 128-bit array to be swaped.
+ * @param size size of 128-bit array.
+ */
+INLINE static void vec_swap(vector unsigned int array[], uint32_t size)
+{
+    int i;
+    const vector unsigned char perm = (vector unsigned char)
+	(4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11);
+
+    for (i = 0; i < size; i++) {
+	array[i] = vec_perm(array[i], perm, perm);
     }
 }
 
@@ -275,7 +228,7 @@ INLINE static void gen_rand_array(w128_t array[], uint32_t size) {
  * @param x 32-bit integer
  * @return 32-bit integer
  */
-INLINE static uint32_t func1(uint32_t x) {
+static uint32_t func1(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1664525UL;
 }
 
@@ -285,24 +238,10 @@ INLINE static uint32_t func1(uint32_t x) {
  * @param x 32-bit integer
  * @return 32-bit integer
  */
-INLINE static uint32_t func2(uint32_t x) {
+static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
 }
 
-/**
- * This function checks ENDIAN of CPU and set big_endian flag.
- */
-INLINE static void endian_check(void) {
-    uint32_t a[2] = {0, 1};
-    uint64_t *pa;
-
-    pa = (uint64_t *)a;
-    if (*pa == 1) {
-	big_endian = 1;
-    } else {
-	big_endian = 0;
-    }
-}
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/
@@ -315,8 +254,7 @@ INLINE uint32_t gen_rand32(void)
 {
     uint32_t r;
 
-    assert(initialized);
-    if (idx >= N32) {
+    if (idx >= N * 4) {
 	gen_rand_all();
 	idx = 0;
     }
@@ -334,7 +272,6 @@ INLINE uint32_t gen_rand32(void)
 INLINE uint64_t gen_rand64(void)
 {
     uint32_t r1, r2;
-    uint32_t r;
 
     assert(initialized);
     assert(idx % 2 == 0);
@@ -343,16 +280,10 @@ INLINE uint64_t gen_rand64(void)
 	gen_rand_all();
 	idx = 0;
     }
-    if (big_endian) {
-	r1 = psfmt32[idx];
-	r2 = psfmt32[idx + 1];
-	idx += 2;
-	return ((uint64_t)r2 << 32) | r1;
-    } else {
-	r = psfmt64[idx / 2];
-	idx += 2;
-	return r;
-    }
+    r1 = psfmt32[idx];
+    r2 = psfmt32[idx + 1];
+    idx += 2;
+    return ((uint64_t)r2 << 32) | r1;
 }
 
 /**
@@ -379,13 +310,13 @@ INLINE uint64_t gen_rand64(void)
 INLINE void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
-    /* assert(array % 16 == 0); */
+    assert((uint32_t)array % 16 == 0);
     assert(idx == N32);
     assert(size % 4 == 0);
     assert(size >= N32);
 
-    gen_rand_array((w128_t *)array, size / 4);
-    memcpy(psfmt32, array + size - N32, sizeof(uint32_t) * N32);
+    gen_rand_array((vector unsigned int *)array, size / 4);
+    //memcpy(psfmt32, array + size - N32, sizeof(uint32_t) *  N32);
     idx = N32;
 }
 
@@ -413,25 +344,15 @@ INLINE void fill_array32(uint32_t array[], int size)
 INLINE void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
-    /* assert(array % 16 == 0); */
+    assert((uint32_t)array % 16 == 0);
     assert(idx == N32);
     assert(size % 2 == 0);
     assert(size >= N64);
 
-    gen_rand_array((w128_t *)array, size / 2);
-    memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
+    gen_rand_array((vector unsigned int *)array, size / 2);
+    //memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
     idx = N32;
-    if (big_endian) {
-	int i;
-	uint32_t x;
-	uint32_t *pa;
-	pa = (uint32_t *)array;
-	for (i = 0; i < size * 2; i += 2) {
-	    x = pa[i];
-	    pa[i] = pa[i + 1];
-	    pa[i + 1] = x;
-	}
-    }
+    vec_swap((vector unsigned int *)array, size / 2);
 }
 
 /**
@@ -440,7 +361,7 @@ INLINE void fill_array64(uint64_t array[], int size)
  *
  * @param seed a 32-bit integer used as the seed.
  */
-INLINE void init_gen_rand(uint32_t seed)
+void init_gen_rand(uint32_t seed)
 {
     int i;
 
@@ -451,7 +372,6 @@ INLINE void init_gen_rand(uint32_t seed)
     }
     psfmt32[3] = INIT_LUNG;
     idx = N32;
-    endian_check();
     initialized = 1;
 }
 
@@ -461,7 +381,7 @@ INLINE void init_gen_rand(uint32_t seed)
  * @param init_key the array of 32-bit integers, used as a seed.
  * @param key_length the length of init_key.
  */
-INLINE void init_by_array(uint32_t init_key[], int key_length) {
+void init_by_array(uint32_t init_key[], int key_length) {
     int i, j, count;
     uint32_t r;
     const int MID = 306;
@@ -510,6 +430,6 @@ INLINE void init_by_array(uint32_t init_key[], int key_length) {
 
     psfmt32[3] = INIT_LUNG;
     idx = N32;
-    endian_check();
     initialized = 1;
 }
+
