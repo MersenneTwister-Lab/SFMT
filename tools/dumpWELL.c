@@ -3,17 +3,17 @@
 #include <errno.h>
 #include <string.h>
 #include <inttypes.h>
-#include "pmt32-st.h"
+#include "well19937a.h"
 
 int main(int argc, char *argv[]) {
     int cnt;
     int i, j;
     uint32_t ran;
-    pmt32_t pmt32;
+    uint32_t well[624];
     FILE *fp;
 
     if (argc < 3) {
-	printf("dumpPMT count filename\n");
+	printf("dumpX78 count filename\n");
 	return -1;
     }
     cnt = (int)strtol(argv[1], NULL, 10);
@@ -22,11 +22,12 @@ int main(int argc, char *argv[]) {
 	printf("can't open %s for write\n", argv[2]);
 	return -1;
     }
-    memset(&pmt32, 0, sizeof(pmt32));
-    pmt32.gx[N - 1] = 1;
-    pmt32.idx = 1000;
+    memset(well, 0, sizeof(well));
+    well[180] = 1;
+    //well[0] = 1;
+    InitWELLRNG19937a(well);
     for (i = 0; i < cnt; i++) {
-	ran = gen_rand_int32(&pmt32);
+	ran = (*WELLRNG19937a)();
 	for (j = 0; j < 4; j++) {
 	    putc(ran & 0xff, fp);
 	    ran = ran >> 8;

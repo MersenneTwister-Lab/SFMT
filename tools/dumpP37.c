@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
 	return -1;
     }
     memset(&sfmt, 0, sizeof(sfmt));
-    sfmt.sfmt[0][0] = 1;
-    sfmt.idx = N * 4;
+    sfmt.sfmt[N - 2][0] = 1;
+    sfmt.idx = N * 4 + 1;
     for (i = 0; i < cnt; i++) {
 	ran = gen_rand32(&sfmt);
 	for (j = 0; j < 4; j++) {
