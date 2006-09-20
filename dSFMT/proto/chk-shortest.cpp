@@ -6,12 +6,12 @@
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
 
-#include "shortbase128p1.h"
+#include "shortbase128.h"
 #include "util.h"
 #include <unistd.h>
 
 extern "C" {
-#include "sfmt_p1_st.h"
+#include "sfmt-st.h"
 }
 
 NTL_CLIENT;
@@ -87,84 +87,26 @@ void option(int argc, char * argv[]) {
 }
 
 void fill_state_random(sfmt_t *sfmt, FILE *frandom) {
-    uint32_t w, p, l;
-    bool error = false;
+    int i, j;
+    int w;
 
-    w = (uint32_t)getw(frandom);
-    if (feof(frandom) || ferror(frandom)) {
-	error = true;
-    }
-    if (!error) {
-	p = (uint32_t)getw(frandom);
-	if (feof(frandom) || ferror(frandom)) {
-	    error = true;
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 4; j++) {
+	    w = getw(frandom);
+	    if (feof(frandom) || ferror(frandom)) {
+		if (errno != 0) {
+		    printf("test_shortest:%s\n", strerror(errno));
+		} else {
+		    printf("test_shortest:/dev/urandom reached to EOF!\n");
+		}
+		fclose(frandom);
+		exit(1);
+	    }
+	    sfmt->sfmt[i][j] = w;
 	}
     }
-    if (!error) {
-	l = (uint32_t)getw(frandom);
-	if (feof(frandom) || ferror(frandom)) {
-	    error = true;
-	}
-    }
-    if (error) {
-	if (errno != 0) {
-	    printf("test_shortest:%s\n", strerror(errno));
-	} else {
-	    printf("test_shortest:/dev/urandom reached to EOF!\n");
-	}
-	fclose(frandom);
-	exit(1);
-    }
-    sfmt->sfmt[(p / 4) % N][p % 4] = w;
-    sfmt->sfmt[NN - 1][p % 4] = l;
 }
 
-void generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
-				 unsigned int bitpos, 
-				 unsigned int maxdegree)
-{
-    unsigned int i;
-    uint64_t hi, low;
-    uint64_t mask;
-    uint64_t bit;
-
-    //DPRINTHT("in gene:", rand);
-    mask = (uint64_t)1UL << (63 - bitpos);
-    for (i=0; i<= 2 * maxdegree-1; i++) {
-	gen_rand128(sfmt, &hi, &low);
-	bit = (hi & mask);
-	vec[i] = (bit != 0);
-    }
-    //DPRINTHT("end gene:", rand);
-}
-
-void generating_polynomial128_low(sfmt_t *sfmt, vec_GF2& vec,
-				 unsigned int bitpos, 
-				 unsigned int maxdegree)
-{
-    unsigned int i;
-    uint64_t hi, low;
-    uint64_t mask;
-    uint64_t bit;
-
-    //DPRINTHT("in gene:", rand);
-    mask = (uint64_t)1UL << (63 - bitpos);
-    for (i=0; i<= 2 * maxdegree-1; i++) {
-	gen_rand128(sfmt, &hi, &low);
-	bit = (low & mask);
-	vec[i] = (bit != 0);
-    }
-    //DPRINTHT("end gene:", rand);
-}
-
-void generating_polynomial128(sfmt_t *sfmt, vec_GF2& vec, unsigned int bitpos, 
-			   unsigned int maxdegree) {
-    if (bitpos < 64) {
-	generating_polynomial128_hi(sfmt, vec, bitpos, maxdegree);
-    } else {
-	generating_polynomial128_low(sfmt, vec, bitpos - 64, maxdegree);
-    }
-}
 
 
 bool check_minpoly128_hi(sfmt_t *sfmt, const GF2X& minpoly,
@@ -352,8 +294,10 @@ void test_shortest(char *filename) {
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
 	if (lcmcount > 5000) {
-	    break;
+	    printf("failure\n");
+	    return;
 	}
+	errno = 0;
 	fill_state_random(&sfmt, frandom);
 	for (int j = 0; j < 128; j++) {
 	    generating_polynomial128(&sfmt, vec, j, maxdegree);
@@ -372,7 +316,7 @@ void test_shortest(char *filename) {
 	    }
 	}
     }
-    if (deg(lcmpoly) > maxdegree) {
+    if (deg(lcmpoly) != maxdegree) {
 	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
 	exit(1);
     }
@@ -402,6 +346,7 @@ void test_shortest(char *filename) {
 	printf("deg zero state = %ld\n", deg(minpoly));
 	return;
     }
+
     if (bit_128) {
 	dist_sum = 0;
 	count = 0;

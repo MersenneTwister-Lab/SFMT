@@ -29,9 +29,9 @@
  *   32-bit unsigned integer.
  * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
  *   64-bit unsigned integer.
- * - void fill_array32() fills the user-specified array with 32-bit
+ * - INLINE void fill_array32() fills the user-specified array with 32-bit
  *   psedorandom integers.
- * - void fill_array64() fills the user-specified array with 64-bit
+ * - INLINE void fill_array64() fills the user-specified array with 64-bit
  *   psedorandom integers.
  *
  * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 

@@ -610,10 +610,10 @@ and an optimized XORSHIFT generator {\tt xor3}
 \cite{XORSHIFT} \cite{XORSHIFT-MAR}.
 The table shows that SFMT(SIMD) is faster than
 these PRNGs, except for the lagged-fibonacci
-generator {\tt random256g2} with Pentium IV,
-but this method is known to
-have poor randomness (cf. \cite{SUM}).
-
+generator {\tt random256g2} with Pentium IV
+(but this method is known to
+ have poor randomness, cf. \cite{SUM})
+and {\tt xor3} with Pentium-M.
 
 \section{Dimension of equidistribution}
 The total dimension defect $\Delta$ of SFMT19937
@@ -701,7 +701,7 @@ all such initial states.
 \end{enumerate}
 We draw graphs of these ratio $\gamma_k$ $(1 \leq k \leq 20000)$
 in Figure~\ref{fig:zero-recovery}
-for the following generators: (1) WELL19937a, 
+for the following generators: (1) WELL19937c, 
 (2) PMT19937 \cite{PMT}, (3) SFMT19937, and (4) MT19937. 
 %For (1), (2), (3) and (3), the chosen 
 %initial states are those with only one bit being 1
@@ -719,11 +719,11 @@ Starting from extreme 0-excess states,
 discard the first $k$ outputs and then measure
 the ratio $\gamma_k$ of 1's in the next 1000 outputs. 
 In the order of the recovery speed: 
-(1) WELL19937a, 
+(1) WELL19937c, 
 (2) PMT19937, (3) SFMT19937, and (3) MT19937.
 }\label{fig:zero-recovery}
 \end{figure}
-Because of its dense feedback, WELL19937a shows
+Because of its dense feedback, WELL19937c shows
 the fastest recovery among the compared. 
 SFMT is better than MT, since its recursion refers to 
 the previously-computed words (i.e., {\tt W[N-1]} and {\tt W[N-2]}) 
@@ -930,7 +930,7 @@ The number of non-zero terms in $\chi_f(t)$ is
 an index measuring the amount of the bit-mixing. 
 In the case of SFMT19937, the number of nonzero 
 terms is 6711, which is much larger than 135 of MT, 
-but smaller than 8585 of WELL19937a. 
+but smaller than 8585 of WELL19937c. 
 \end{remark}
 
 \section{Block-generation}\label{sec:block}

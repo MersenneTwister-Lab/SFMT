@@ -7,7 +7,7 @@
 #include <NTL/mat_GF2.h>
 
 extern "C" {
-#include "sfmt_p1_st.h"
+#include "sfmt-st.h"
 }
 
 NTL_CLIENT;

@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "shortbase128p1.h"
+#include "shortbase128.h"
 #include "util.h"
 
 extern "C" {
-#include "sfmt_p1_st.h"
+#include "sfmt-st.h"
 }
 
 NTL_CLIENT;

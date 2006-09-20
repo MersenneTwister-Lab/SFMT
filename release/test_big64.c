@@ -24,8 +24,8 @@
 void check64(void);
 void speed64(void);
 
-static uint32_t array1[BLOCK_SIZE / 2][4];
-static uint32_t array2[700 / 2][4];
+static uint64_t array1[BLOCK_SIZE];
+static uint64_t array2[700];
 
 void check64(void) {
     int i;

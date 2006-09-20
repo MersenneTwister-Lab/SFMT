@@ -257,6 +257,36 @@ param-searchP33-1279: search.o sfmtP33.o mt19937ar.o util.o debug.o
 param-searchP33-2281: search.o sfmtP33.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP33.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-searchP34-607: search.o sfmtP34.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP34.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP34-2281: search.o sfmtP34.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP34.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP35-607: search.o sfmtP35.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP35.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP35-2281: search.o sfmtP35.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP35.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP36-607: search.o sfmtP36.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP36.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP36-2281: search.o sfmtP36.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP36.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP37-607: search.o sfmtP37.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP37.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP37-2281: search.o sfmtP37.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP37.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP38-607: search.o sfmtP38.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP38.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP38-2281: search.o sfmtP38.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP38.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}
@@ -347,6 +377,26 @@ shortest-baseP30-607: chk-p1-shortest.o shortbase128p1.o sfmtP30-st.o util.o
 
 shortest-baseP31-607: chk-p1-shortest.o shortbase128p1.o sfmtP31-st.o util.o
 	${CPP} -o $@ chk-p1-shortest.o shortbase128p1.o sfmtP31-st.o util.o \
+		${LINKOPT}
+
+shortest-baseP33-607: chk-p1-shortest.o shortbase128p1.o sfmtP33-st.o util.o
+	${CPP} -o $@ chk-p1-shortest.o shortbase128p1.o sfmtP33-st.o util.o \
+		${LINKOPT}
+
+shortest-baseP34-607: sfmtP34-st.o chk-p1-shortest.o shortbase128p1.o util.o
+	${CPP} -o $@ sfmtP34-st.o chk-p1-shortest.o shortbase128p1.o util.o \
+		${LINKOPT}
+
+shortest-baseP35-607: sfmtP35-st.o chk-p1-shortest.o shortbase128p1.o util.o
+	${CPP} -o $@ sfmtP35-st.o chk-p1-shortest.o shortbase128p1.o util.o \
+		${LINKOPT}
+
+shortest-baseP37-607: sfmtP37-st.o chk-p1-shortest.o shortbase128p1.o util.o
+	${CPP} -o $@ sfmtP37-st.o chk-p1-shortest.o shortbase128p1.o util.o \
+		${LINKOPT}
+
+shortest-baseP38-607: sfmtP38-st.o chk-p1-shortest.o shortbase128p1.o util.o
+	${CPP} -o $@ sfmtP38-st.o chk-p1-shortest.o shortbase128p1.o util.o \
 		${LINKOPT}
 
 shortest32-base5-521: chk-shortest32.o shortbase.o sfmt5-cls.o util.o

@@ -17,7 +17,5 @@ void print_param2(FILE *fp);
 
 void init_gen_rand(uint32_t seed);
 uint32_t gen_rand(void);
-uint32_t gen_rand32(void);
-uint64_t gen_rand128(uint64_t *hi, uint64_t *low);
 
 #endif

@@ -90,4 +90,4 @@ searchX78-lung19937: search-lung.o sfmtX78-st.o mt19937ar.o util.o
 	${CC} -c $<
 
 clean:
-	rm -f *.o
+	rm -f *.o *~

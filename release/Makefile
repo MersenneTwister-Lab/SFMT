@@ -11,10 +11,21 @@
 #
 # The new BSD License is applied to this software.
 # see LICENSE.txt
+#
+# @note ???
+# We could comple sfmt19937-sse2.c using gcc 3.4.4 of cygwin.
+# We could comple sfmt19937-sse2.c using gcc 4.0.1 of Linux.
+# We coundn't comple sfmt19937-sse2.c using gcc 3.3.2 of Linux.
+# We could comple sfmt19937-alti32.c and sfmt19937-alti64.c 
+# using gcc 3.3 of osx.
+# We could comple sfmt19937-alti32.c and sfmt19937-alti64.c 
+# using gcc 4.0 of osx.
 
 WARN = -Wmissing-prototypes -Wall -Winline
 OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG 
-STD = -std=c89 -pedantic
+#STD =
+#STD = -std=c89 -pedantic
+STD = -std=c99 -pedantic
 GCC = gcc $(OPTI) $(WARN) $(STD)
 STD_TARGET = test-std32 test-std64
 BIG_TARGET = $(STD_TARGET) test-big64
@@ -40,6 +51,11 @@ TARGET = $(ALTI_TARGET)
 # for Athlon
 # -----------------
 #CC = $(GCC) -march=nocona -msse2
+#TARGET = $(SSE_TARGET)
+# -----------------
+# for other sse2 CPU
+# -----------------
+#CC = $(GCC) -msse2
 #TARGET = $(SSE_TARGET)
 
 all:$(TARGET)
