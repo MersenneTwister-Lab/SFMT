@@ -393,7 +393,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
     r = func1(psfmt32[0] ^ psfmt32[MID] ^ psfmt32[N32 - 1]);
     psfmt32[MID] += r;
     r += key_length;
-    psfmt32[MID + LAG] = r;
+    psfmt32[MID + LAG] += r;
     psfmt32[0] = r;
     i = 1;
     count--;
@@ -411,7 +411,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
 		  ^ psfmt32[(i + N32 - 1) % N32]);
 	psfmt32[(i + MID) % N32] += r;
 	r += i;
-	psfmt32[(i + MID + LAG) % N32] = r;
+	psfmt32[(i + MID + LAG) % N32] += r;
 	psfmt32[i] = r;
 	i = (i + 1) % N32;
     }
