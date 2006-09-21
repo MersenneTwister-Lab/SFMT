@@ -42,14 +42,14 @@ is a widely-used fast pseudorandom number generator (PRNG)
 with a long period of $2^{19937}-1$,
 designed 10 years ago based on 32-bit operations.
 In this decade, CPUs for personal computers
-acquired new features, such as 
+have acquired new features, such as 
 Single Instruction Multiple Data (SIMD) operations
 (i.e., 128-bit operations) and multi-stage pipelines.
 Here we propose a 128-bit based 
 PRNG, named SIMD-oriented Fast Mersenne Twister
 (SFMT), which is analogous to MT but making full use
-of these features. Its recursion fits to the pipeline processing
-better than MT, and it is roughly twice faster than 
+of these features. Its recursion fits pipeline processing
+better than MT, and it is roughly twice as faster as 
 optimized MT using SIMD operations.
 Moreover, the dimension of equidistibution of SFMT, 
 as a 32-bit integer generator,
@@ -96,17 +96,17 @@ and faster pseudorandom number generators (PRNGs)
 are required. The power of CPUs for
 usual personal computers are now sufficiently strong
 for such purposes, and the necessity of efficient PRNGs 
-for CPUs on PC is increasing.
-One of such generators is Mersenne Twister (MT) \cite{MT},
+for CPUs on PCs is increasing.
+One such generator is Mersenne Twister (MT) \cite{MT},
 which is based on a linear recursion modulo 2 over 32-bit
 integers. An implementation MT19937 has 
 the period of $2^{19937}-1$ and 
 can generate
-roughly $10^8$ 32-bit pseudorandom integers per a second.
+roughly $10^8$ 32-bit pseudorandom integers per second.
 
 MT was designed 10 years ago,
 and the architectures of CPUs for Personal Computers,
-such as Pentium and PowerPC, has been changed.
+such as Pentium and PowerPC, have changed.
 They have
 Single Instruction Multiple Data (SIMD) operations,
 which may be regarded as operations 
@@ -114,17 +114,17 @@ on 128-bit registers. Also, they have more registers
 and automatic parallelisms by multi-stage pipelining. 
 These are not reflected in the design of MT. 
 
-In this article, we propose a MT-like 
+In this article, we propose an MT-like 
 pseudorandom number generator
 that makes full use of these new features: SFMT, 
 SIMD-oriented Mersenne Twister. 
-We implemented an SFMT with period a multiple of $2^{19937}-1$, named
+We implemented an SFMT with the period a multiple of $2^{19937}-1$, named
 SFMT19937,
 which has a better equidistribution property than MT. 
 SFMT is much faster than MT, even without using SIMD instructions. 
 
 There is an argument that the CPU time consumed for 
-function call to PRNG routine occupies large part of
+function calls to PRNG routines occupies a large part of
 the random number generation, and consequently 
 it is not so important to improve the speed of PRNG 
 (cf. \cite{XORSHIFT}).
@@ -132,15 +132,15 @@ This is not always the case:
 one can avoid the function calls by (1) inline-expansion
 and/or (2) generation of pseudorandom numbers in an array
 at one call. Actually some demanding users re-coded MT to avoid the 
-function call, see the homepage of \cite{MT}. 
-In this article, we introduce a block-generation scheme, which 
+function call; see the homepage of \cite{MT}. 
+In this article, we introduce a block-generation scheme which 
 is much faster than using function calls.
 
 \section{SIMD-oriented Fast Mersenne Twister}\label{sec:jump}
 
 We propose SIMD-oriented Fast Mersenne Twister (SFMT) 
 pseudorandom number generator. It is a
-linear feedbacked shift register generator based
+linear-feedback shift register generator based
 on a recursion over $\F2^{128}$.
 We identify
 the set of bit $\{0,1\}$
@@ -197,14 +197,14 @@ and $A$ is a $(32\times 32)$-matrix
 for which the multiplication $\bw A$ is computable 
 by a few bit-operations.
 Its period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
-To obtain better equidistribution property, 
+To obtain better an equidistribution property, 
 MT transforms the sequence by
 a suitably chosen $(32\times 32)$ matrix $T$,
 by outputting
 $\bx_0T , \bx_1T, \bx_2T, \ldots$
 (called tempering).
 
-\subsection{New features of modern CPUs for personal computers.}
+\subsection{New features of modern CPUs for personal computers}
 Modern CPUs for personal computers (e.g.\ Pentium and
 PowerPC) have new features such as 
 (1) fast integer multiplication instructions
@@ -212,7 +212,7 @@ PowerPC) have new features such as
 (3) SIMD operations 
 (4) multi-stage pipelining.
 These were not available 
-for standard CPUs for PC, when MT was designed.
+for standard PC CPUs, when MT was designed.
 
 An advantage of $\F2$-linear generators 
 over integer multiplication generators 
@@ -250,21 +250,21 @@ a few SIMD bit-operations.
 %\end{center}
 %\caption{The transition function of SIMD-oriented Fast MT.}
 %\end{figure}
-The choice of the suffixes $N-1$, $N-2$ is for the 
+The choice of the suffixes $N-1$, $N-2$ is for  
 speed. In the implementation of $g$, 
 {\tt W[0]} and {\tt W[M]} are read from the array
 {\tt W}, while the copies of 
 {\tt W[N-2]} and {\tt W[N-1]}
 are kept in 
 two 128-bit registers in the CPU, 
-say {\tt r1} and {\tt r2}. Concretely saying, we assign 
+say {\tt r1} and {\tt r2}. Concretely speaking, we assign 
 ${\tt r2} \leftarrow {\tt r1}$ and
 ${\tt r1} \leftarrow \mbox{``the result of (\ref{eq:rec-SFMT})''}$
 at every generation, then {\tt r2} ({\tt r1}) keeps
 a copy of {\tt W[N-2]} ({\tt W[N-1]}, respectively). 
-The merit of doing this is to use pipeline effectively. To fetch 
-{\tt W[0]} and {\tt W[M]} from the memory takes some
-time. In the meanwhile, 
+The merit of doing this is to use the pipeline effectively. To fetch 
+{\tt W[0]} and {\tt W[M]} from memory takes some
+time. In the meantime, the
 CPU can compute $\bw_{N-2}C$ and $\bw_{N-1}D$,
 because copies of $\bw_{N-2}$ and $\bw_{N-1}$ are kept 
 in the registers. This selection was made through experiments
@@ -272,8 +272,8 @@ on the speed of generation.
 
 By trial and error, 
 we searched for a set of parameters of SFMT,
-with period being a multiple of $2^{19937}-1$
-and good equidistribution property.
+with the period being a multiple of $2^{19937}-1$
+and having good equidistribution properties.
 The degree of recursion $N$ is $\lceil 19937/128 \rceil=156$, 
 and the linear transformations $A,B,C,D$ are as follows.
 \begin{itemize}
@@ -295,9 +295,9 @@ $\bw B := (\bw \stackrel{32}{>>} 11) \& (\mbox{\tt BFFFFFF6 BFFAFFFF DDFECB7F DF
 
 This notation means that $\bw$ is considered to be 
 a quadruple of $32$-bit integers, and
-each $32$-bit integer is shifted to the right by 11 bit,
+each $32$-bit integer is shifted to the right by 11 bits,
 (thus the most significant bit is filled with 0s, 
-for each 32-bit integers).
+for each 32-bit integer).
 The C-like notation $\&$ means the bitwise AND
 with a constant 128-bit integer,
 denoted in the hexadecimal form
@@ -320,9 +320,9 @@ by 8 bits, as above.
 \item
 $\bw D := (\bw \stackrel{32}{<<} 18).$
 
-Similarly to the above,
+Similar to the above,
 $\bw$ is cut into four pieces of 32-bit integers,
-and each of them is shifted by 18 bits to the left.
+and each of these is shifted by 18 bits to the left.
 \end{itemize}
 All these instructions are available in 
 both Intel Pentium's SSE2 and PowerPC's AltiVec SIMD instruction sets.
@@ -363,7 +363,7 @@ i.e., by the so-called little-endian system
 (see \S\ref{sec:portability} for a compatible implementation
  with big-endian systems).
 
-We write codes to compute (the lower bounds of) the period
+We write codes to compute the lower bounds of the period
 (see \S\ref{sec:period}),
 the dimension of equidistribution (DE, see below),
 and to measure the generation speed for Pentium SSE2
@@ -377,8 +377,8 @@ attains the desired period, good DE, and fast generations,
 by trial and error on the type of recursion, 
 and reached (\ref{eq:rec-SFMT}).
 Then, we searched for the parameters 
-with period being a nonzero multiple of $2^{19937}-1$. 
-Roughly 10 sets of parameters are found per a day,
+with the period being a nonzero multiple of $2^{19937}-1$. 
+Roughly 10 sets of parameters were found per day,
 by using four AMD Athlon 64 machines. 
 We selected the best parameter with respect to DE.
 
@@ -437,11 +437,11 @@ we say that $\chi$ is $k$-dimensionally equidistributed
 with defect ratio $\#(D)/\#(m \cdot O^k)$, 
 where the cardinality is counted with multiplicity. 
 \end{definition}
-Thus, in Definition~\ref{def:DE}, the defect ratio upto $1/(P+1)$
+Thus, in Definition~\ref{def:DE}, the defect ratio up to $1/(P+1)$
 is allowed to claim the dimension of equidistribution.
 If $P=2^{19937}-1$, then $1/(P+1)=2^{-19937}$. 
 In the following, the dimension of equidistribution 
-allows the defect ratio upto $2^{-19937}$. 
+allows the defect ratio up to $2^{-19937}$. 
 
 For a $w$-bit integer sequence, its {\em dimension of 
 equidistribution at $v$-bit accuracy} $k(v)$
@@ -452,7 +452,7 @@ then there is an upper bound
 $$
 k(v) \leq \lfloor \log_2 (P+1) / v \rfloor.
 $$
-The gap between the realized $k(v)$ and the upperbound is
+The gap between the realized $k(v)$ and the upper bound is
 called the dimension defect at $v$ of the sequence,
 and denoted by
 $$
@@ -465,7 +465,7 @@ denoted by $\Delta$.
 There is a difficulty in computing $k(v)$ when 
 a 128-bit integer generator is used as a 32-bit 
 (or 64-bit) integer generator.
-We solved this by using weighted lattice method,
+We solved this by using a weighted lattice method,
 generalising \cite{CLT}. Since the algorithm involves
 rather complicated mathematics, we omit it here
 (we plan another article for this). 
@@ -482,29 +482,29 @@ $$
 The meaning of $k'(v)$ and a justification for this 
 definition will be explained in the planned article.
 
-\section{Comparison of the speed}\label{sec:comp-speed}
+\section{Comparison of  speed}\label{sec:comp-speed}
 We compared two algorithms: MT19937 and SFMT19937,
 with implementations with and without SIMD instructions.
 
 We measured the speeds for four different CPUs:
 Pentium M 1.4GHz, Pentium IV 3GHz, 
 AMD Athlon 64 3800+, and PowerPC G4 1.33GHz.  
-In returning the random values, we use two different ways.
-One is the sequential generation, where one 32-bit random 
+In returning the random values, we use two different methods.
+One is sequential generation, where one 32-bit random 
 integer is returned for one call. 
-The other is the block generation, where an array
+The other is block generation, where an array
 of random integers is generated for one call (for 
 detail, see \S\ref{sec:block} below). 
 
 We measured the consumed CPU time in second, 
 for $10^8$ generations of 32-bit integers. More precisely,
-in the block generation case, we generate $10^5$
+in case of the block generation, we generate $10^5$
 of 32-bit random integers by one call, and it is iterated
 for $10^3$ times. 
-In the sequential generation case, the same $10^8$
-of 32-bit integers are generated, one per a call.
+For sequential generation, the same $10^8$
+ 32-bit integers are generated, one per a call.
 To avoid the function call, the code uses 
-inline declaration. 
+an inline declaration. 
 More precisely: we used the inline declaration
 {\tt inline}
 and unsigned 32-bit, 64-bit integer types 
@@ -517,27 +517,27 @@ whereas those with SIMD use
 some standard SIMD extension of C99 supported by 
 the compilers icl (Intel C compiler) and gcc.
 
-Table~\ref{tab:speed} summarises the comparison of 
-the speed. The first four lines list the CPU-time
-(in second) needed to generate $10^8$ of
-32-bit integers, for Pentium-M CPU with Intel C/C++
-compiler. The first line lists the seconds for
+Table~\ref{tab:speed} summarises the speed comparisons.
+ The first four lines list the CPU time
+(in second) needed to generate $10^8$ 
+32-bit integers, for a Pentium-M CPU with the Intel C/C++
+compiler. The first line lists the seconds for the
 block-generation scheme. The second line shows the 
-ratio of the CPU-time to that of 
+ratio of CPU time to that of 
 SFMT(SIMD). Thus, SFMT coded in SIMD is 1.94 times
 faster than MT coded in SIMD, and 3.53 times faster
 than MT without SIMD. The third line lists the seconds
-for sequential generation scheme. The fourth line
-lists the ratio of them, with the basis taken
+for the sequential generation scheme. The fourth line
+lists the ratio, with the basis taken
 at SFMT(SIMD) block-generation (not sequential). 
 Thus, the block-generation of SFMT(SIMD) is 2.78 times
 faster than the sequential-generation of SFMT(SIMD).
 
-Roughly saying, in the block generation, 
-SFMT(SIMD) is twice faster than MT(SIMD),
+Roughly speaking, in the block generation, 
+SFMT(SIMD) is twice as fast as MT(SIMD),
 and four times faster than MT without using SIMD.
 Even in the sequential generation case,
-still SFMT(SIMD) is considerably faster than MT(SIMD).
+SFMT(SIMD) is still considerably faster than MT(SIMD).
 
 \begin{table}
 \begin{center}
@@ -597,11 +597,11 @@ PowerPC & block & 2.620  & 1.200  & 0.480  & 0.730  & 1.820  & 0.720 \\
 \caption{The CPU time (sec.) for $10^8$ generations of 32-bit integers,
 by six other PRNGs.}\label{tab:speed-other}
 \end{table}
-Table~\ref{tab:speed-other} lists the CPU-time for generating
-$10^8$ 32-bit integers, for four PRNGs from GNU Scientific Library
+Table~\ref{tab:speed-other} lists the CPU time for generating
+$10^8$ 32-bit integers, for four PRNGs from the GNU Scientific Library
 and two recent generators. 
-They are re-coded with inline specification. Examined
-generators are:
+They are re-coded with inline specification. 
+Generators examined were:
 a multiple recursive generator {\tt mrg} \cite{MRG}, 
 linear congruential generators {\tt rand48} and {\tt rand}, 
 a lagged fibonacci generator {\tt random256g2},
@@ -610,14 +610,14 @@ and an optimized XORSHIFT generator {\tt xor3}
 \cite{XORSHIFT} \cite{XORSHIFT-MAR}.
 The table shows that SFMT(SIMD) is faster than
 these PRNGs, except for the lagged-fibonacci
-generator {\tt random256g2} with Pentium IV
+generator {\tt random256g2} with a Pentium IV
 (but this method is known to
- have poor randomness, cf. \cite{SUM})
-and {\tt xor3} with Pentium-M.
+ have poor randomness, cf. \cite{SUM}),
+and {\tt xor3} with a Pentium-M.
 
 \section{Dimension of equidistribution}
 The total dimension defect $\Delta$ of SFMT19937
-as 32-bit integer generator is $4188$, 
+as a 32-bit integer generator is $4188$, 
 which is smaller than $6750$ of MT19937.
 Table~\ref{tab:dd} lists the dimension defects $d(v)$
 of SFMT19937 (as a 32-bit integer generator) 
@@ -665,7 +665,7 @@ for $v=1,2,\ldots, 32$.}
 We also computed the dimension defects of SFMT19937 as a 64-bit
 (128-bit) integer generator, and the total dimension 
 defect $\Delta$ is 14089 (28676, respectively). In some applications, 
-the distribution of LSBs are important. 
+the distribution of LSBs is important. 
 To check them, we inverted the order of the bits (i.e. the $i$-th
 bit is exchanged with the $(w-i)$-th bit) in each integer, 
 and computed the total dimension defect. It is
@@ -678,13 +678,13 @@ for which no statistical problem
 related to the dimension defect has been reported, 
 as far as we know.
 
-\section{Recovery from the 0-excess states}
+\section{Recovery from 0-excess states}
 LFSR with a sparse feedback function $g$ has
 the following phenomenon: 
 if the bits in the state space 
 contain too many 0's and few 1's (called a 0-excess state), then
-this tendency continues after considerable generations,
-since only small part is changed in the state array
+this tendency continues for considerable generations,
+since only a small part is changed in the state array
 at one generation, and the change is not well-reflected to 
 the next generation because of the sparseness.
 
@@ -713,7 +713,7 @@ for the following generators: (1) WELL19937c,
 %has the period being a nonzero multiple of $2^{19937}-1$,
 %see \S\ref{sec:period}.
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sfmt.eps}
+\includegraphics[width=0.7\linewidth]{sfmt-zero.eps}
 \caption{$\gamma_k \ (k=0,\ldots,20000)$:
 Starting from extreme 0-excess states,
 discard the first $k$ outputs and then measure
@@ -738,43 +738,43 @@ is a trade-off
 with the speed of generation. 
 Such 0-excess states will not happen practically, 
 since the probability 
-that 19937 random bits has less than $19937\times 0.4$ of 1's 
+that 19937 random bits have less than $19937\times 0.4$ of 1's 
 is about $5.7\times 10^{-177}$.
-The only the plausible case is that
+The only plausible case is that
 a poor initialization scheme gives a 0-excess initial state. 
 In a typical simulation, the number of 
 initializations is far smaller than the number of generations,
-therefore we may spend more CPU-time in the initialization
+therefore we may spend more CPU time in the initialization
 than the generation. Once we avoid the 0-excess initial state
-by well-designed initialization, then the recovery 
+by a well-designed initialization, then the recovery 
 speed does not matter, in a practical sense. 
-Consequently, the slower recovery of SFMT than WELL 
+Consequently, the slower recovery of SFMT compared to WELL 
 is not an issue, under the assumption that
 a good initialization scheme is provided. 
 
 \section{Concluding remarks}
-We proposed SFMT pseudorandom number generators, 
+We proposed SFMT pseudorandom number generator, 
 which is a very fast generator with satisfactorily
 high dimensional equidistribution property. 
 
-\subsection{Trade-off between the speed and the quality}
+\subsection{Trade-off between speed and quality}
 It is difficult to measure the generation speed of a PRNG in a fair way,
-since it heavily depends on the circumstance. 
+since it depends heavily on the circumstance. 
 The 
 WELL \cite{WELL} generators have the best possible dimensions of 
 equidistribution (i.e. $\Delta=0$)
 for various periods ($2^{1024}-1$ to $2^{19937}-1$).
 If we use the function call to PRNG
-for each generation, then a large part of CPU time
+for each generation, then a large part of the CPU time
 is consumed for handling the function call, and in the 
 experiments in \cite{WELL} or \cite{XORSHIFT}, WELL 
-is not so slower than MT. On the other hand, if we avoid
+is not much slower than MT. On the other hand, if we avoid
 the function call, WELL is much slower than MT as seen
 in Table~\ref{tab:speed}. 
 
 Since $\Delta=0$, WELL has a better quality than MT or SFMT
 in a theoretical sense. 
-However, one may argue on whether this difference is 
+However, one may argue whether this difference is 
 observable or not. In the case of an $\F2$-linear generator,
 the dimension of equidistribution $k(v)$ of $v$-bit accuracy
 means that
@@ -790,7 +790,7 @@ mean the existence of some observable bias.
 According to \cite{TESTWEIGHT}, it requires $10^{28}$
 samples to detect an $\F2$-linear relation with 
 15 (or more) terms among 521 bits, by a standard
-statistical test. If the number of the 
+statistical test. If the number of 
 total bits is increased, 
 the necessary sample size is increased. Thus, it seems
 that $k(v)$ of SFMT19937 is sufficiently large, far beyond
@@ -800,15 +800,15 @@ observable.
 Thus, SFMT focuses more on the speed, for applications
 that require fast generations. 
 
-\subsection{Trade-off between the speed and the portability}\label{sec:portability}
-There is a trade-off between the speed and the portability.
+\subsection{Trade-off between speed and portability}\label{sec:portability}
+There is a trade-off between the speed and portability.
 We prepare (1) a standard C code of SFMT, which uses 
 functions specified in C99 only, (2) an optimized C code for
 Intel Pentium SSE2, and 
 (3) an optimized C code for PowerPC AltiVec. The optimized codes require
 icl (Intel C Compiler) or gcc compiler with suitable options.
 We will put the newest version of the codes 
-in a link from the homepage of \cite{MT}, toghether with some notes 
+in a link from the homepage of \cite{MT}, together with some notes 
 on compiling with SIMD.
 
 There is a problem of the endian when 128-bit integers 
@@ -818,7 +818,7 @@ endian system such as Pentium, the 32 MSBs come first.
 On the other hand, in a big endian system such as PowerPC,
 the 32 LSBs come first. 
 The explanation above is based on the former.
-To assure the exactly same outputs for both endian systems
+To assure the exact same outputs for both endian systems
 as 32-bit integer generators, in the SIMD implementation 
 for PowerPC, 
 the recursion (\ref{eq:rec-SFMT}) is considered as 
@@ -855,7 +855,7 @@ the integer factorization of this number, which is usually
 impossible for $\dim(S)=nw>10000$. 
 On the other hand, the primarity test is much easier than 
 the factorization, so many huge primes of the form 
-$2^p-1$ are found. 
+$2^p-1$ have been found. 
 Such a prime is called a Mersenne prime, and $p$ is
 called the Mersenne exponent, which itself is a prime.
 
@@ -871,7 +871,7 @@ the reducible transition method (RTM),
 which uses a reducible characteristic polynomial.
 This idea appeared in \cite{FUSHIMI90}
 \cite{BRENT}\cite{BRENT-PRIM}, and 
-applications in the present context is 
+applications in the present context are 
 discussed in detail in another article \cite{PMT}, 
 therefore we only briefly recall it. 
 
@@ -916,18 +916,18 @@ decomposition.
 The period length of the state transition is the least common multiple
 of that started from $s_p$ and that started from $s_r$. Hence, 
 if $s_p \neq 0$, then the period is a nonzero multiple of $2^p-1$. 
-By these computation, we checked the following. 
+By these computations, we checked the following. 
 \begin{proposition}
 The period of SFMT19937 as 128-bit integer generator is 
 a nonzero multiple of $2^{19937}-1$, if the 32 MSBs of 
 $\bw_0$ is set to 
-the value {\tt 6d736d6d} in the hexadecimal form.
+the value {\tt 6d736d6d} in hexadecimal form.
 \end{proposition}
 The choice of the value for $\bw_0$ is to assure that $s_p\neq 0$.
 
 \begin{remark}
 The number of non-zero terms in $\chi_f(t)$ is 
-an index measuring the amount of the bit-mixing. 
+an index measuring the amount of bit-mixing. 
 In the case of SFMT19937, the number of nonzero 
 terms is 6711, which is much larger than 135 of MT, 
 but smaller than 8585 of WELL19937c. 
@@ -937,7 +937,7 @@ but smaller than 8585 of WELL19937c.
 In the block-generation scheme, 
 the user of the PRNG specifies an array
 of $w$-bit integers of the length $L$, 
-where $w=32$, 64 or 128 and $L$ are specified
+where $w=32$, 64 or 128 and $L$ is specified
 by the user.
 In the case of SFMT19937,
 $L$ should be a multiple of $128/w$
@@ -949,15 +949,15 @@ with the pointer to this array, $w$, and $L$,
 the routine fills up the array with
 pseudorandom integers, as follows. SFMT19937 keeps the state
 space $S$ in an internal array of 128-bit integers of length 156.
-We concatenate this state array with the user specified array, 
+We concatenate this state array with the user-specified array, 
 using the indexing technique.
 Then, the routine generates 128-bit integers in the user-specified 
-array by the recursion (\ref{eq:rec-SFMT}), as described
+array by recursion (\ref{eq:rec-SFMT}), as described
 in Figure~\ref{fig:B1}, until it fills up the array.
 The last 156 128-bit integers
 are copied back to the internal array
 of SFMT19937. 
-This makes the generation much faster than the sequential generation
+This makes the generation much faster than sequential generation
 (i.e., one generation per one call) as shown in Table~\ref{tab:speed}.
 \begin{figure}
 \begin{center}
