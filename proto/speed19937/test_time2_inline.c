@@ -24,7 +24,8 @@ int main(int argc, char *argv[]) {
     uint64_t clo;
     unsigned long long min = LONG_MAX;
     //unsigned long long max = 0;
-    uint32_t *array;
+    uint32_t *array = (uint32_t *)dummy;
+    uint32_t r;
     bool verbose = false;
 
     if ((argc >= 2) && (strncmp(argv[1],"-v",2) == 0)) {
@@ -34,14 +35,25 @@ int main(int argc, char *argv[]) {
     init_gen_rand(1234);
     if (verbose) {
 	printf("generated randoms\n");
-	fill_array(array, 2000);
-	for (i = 0; i < 1000; i++) {
-	    printf("%10u ", array[i]);
-	    if (i % 5 == 4) {
-		printf("\n");
+	init_gen_rand(1234);
+	fill_array(array, 5000);
+	init_gen_rand(1234);
+	for (i = 0; i < 5000; i++) {
+	    r = gen_rand();
+	    if (r != array[i]) {
+		printf("\nmismatch i = %d: r = %x, array = %x\n",
+		       i, r, array[i]);
+		return -1;
+	    }
+	    if (i < 1000) {
+		printf("%10u ", array[i]);
+		if (i % 5 == 4) {
+		    printf("\n");
+		}
 	    }
 	}
     }
+    init_gen_rand(1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (i = 0; i < TIC_COUNT; i++) {

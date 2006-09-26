@@ -14,12 +14,7 @@
 
 #define WORDSIZE 128
 #define N (MEXP / WORDSIZE)
-#define NN (N + 1)
-#define MAXDEGREE (WORDSIZE * NN)
-
-static uint32_t sfmt[NN][4];
-static uint32_t *psfmt = &sfmt[0][0];
-static unsigned int idx;
+#define MAXDEGREE (WORDSIZE * (N + 1))
 
 #define POS1 89
 #define SL1 18
@@ -36,6 +31,11 @@ struct W128_T {
 };
 
 typedef struct W128_T w128_t;
+
+static w128_t sfmt[N + 1];
+static uint32_t *psfmt = (uint32_t *)sfmt;
+static int idx;
+static const uint32_t mask[4] = {MSK1, MSK2, MSK3, MSK4};
 
 INLINE unsigned int get_rnd_maxdegree(void)
 {
@@ -77,7 +77,7 @@ INLINE void print_state(FILE *fp) {
     int i, j;
     for (i = 0; i < N; i++) {
 	for (j = 0; j < 4; j++) {
-	    fprintf(fp, "%08x ", sfmt[i][j]);
+	    fprintf(fp, "%08x ", sfmt[i].a[j]);
 	}
 	if (i % 2 == 1) {
 	    fprintf(fp, "\n");
@@ -85,124 +85,101 @@ INLINE void print_state(FILE *fp) {
     }
 }
 
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
-    uint64_t th, tl, oh, ol;
-
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
-
-    oh = th >> (shift * 8);
-    ol = tl >> (shift * 8);
-    ol |= th << (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
-}
-
 INLINE static
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
-void lshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
+void lshift128(w128_t *out, const w128_t *in, int shift) {
     uint64_t th, tl, oh, ol;
 
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
+    th = ((uint64_t)in->a[3] << 32) | ((uint64_t)in->a[2]);
+    tl = ((uint64_t)in->a[1] << 32) | ((uint64_t)in->a[0]);
 
     oh = th << (shift * 8);
     ol = tl << (shift * 8);
     oh |= tl >> (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
+    out->a[0] = (uint32_t)ol;
+    out->a[1] = (uint32_t)(ol >> 32);
+    out->a[2] = (uint32_t)oh;
+    out->a[3] = (uint32_t)(oh >> 32);
 }
 
 INLINE static
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
- void do_recursion(uint32_t r[4], uint32_t a[4], uint32_t b[4],
-				uint32_t c[4], uint32_t d[4]) {
-    uint32_t x[4];
+    void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c, w128_t *d) {
+    w128_t x;
 
-    lshift128(x, a, SL2);
-    r[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ (c[0] >> SR2) ^ (c[0] << SL1)
-	^ d[3];
-    r[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] >> SR2) ^ (c[1] << SL1)
-	^ d[2];
-    r[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ (c[2] >> SR2) ^ (c[2] << SL1)
-	^ d[0];
-    r[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ (c[3] >> SR2) ^ (c[3] << SL1)
-	^ d[1];
+    lshift128(&x, a, SL2);
+    r->a[0] = a->a[0] ^ x.a[0] ^ ((b->a[0] >> SR1) & mask[0]) ^ (c->a[0] >> SR2)
+	^ (c->a[0] << SL1) ^ d->a[3];
+    r->a[1] = a->a[1] ^ x.a[1] ^ ((b->a[1] >> SR1) & mask[1]) ^ (c->a[1] >> SR2)
+	^ (c->a[1] << SL1) ^ d->a[2];
+    r->a[2] = a->a[2] ^ x.a[2] ^ ((b->a[2] >> SR1) & mask[2]) ^ (c->a[2] >> SR2)
+	^ (c->a[2] << SL1) ^ d->a[0];
+    r->a[3] = a->a[3] ^ x.a[3] ^ ((b->a[3] >> SR1) & mask[3]) ^ (c->a[3] >> SR2)
+	^ (c->a[3] << SL1) ^ d->a[1];
 }
 
-INLINE static void assign128(uint32_t to[4], uint32_t from[4]) {
-    to[0] = from[0];
-    to[1] = from[1];
-    to[2] = from[2];
-    to[3] = from[3];
-}
-
-INLINE static void xor128(uint32_t to[4], uint32_t from[4]) {
-    to[0] ^= from[0];
-    to[1] ^= from[1];
-    to[2] ^= from[2];
-    to[3] ^= from[3];
+INLINE static void xor128(w128_t *to, w128_t *from) {
+	to->a[0] ^= from->a[0];
+	to->a[1] ^= from->a[1];
+	to->a[2] ^= from->a[2];
+	to->a[3] ^= from->a[3];
 }
 
 INLINE static void gen_rand_all(void) {
     int i;
-    uint32_t lung[4];
+    w128_t lung;
 
-    assign128(lung, sfmt[N]);
-    do_recursion(sfmt[0], sfmt[0], sfmt[POS1], sfmt[N -1], lung);
-    xor128(lung, sfmt[0]);
+    lung = sfmt[N];
+    do_recursion(&sfmt[0], &sfmt[0], &sfmt[POS1], &sfmt[N -1], &lung);
+    xor128(&lung, &sfmt[0]);
     for (i = 1; i < N - POS1; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1], sfmt[i - 1], lung);
-	xor128(lung, sfmt[i]);
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1], &sfmt[i - 1], &lung);
+	xor128(&lung, &sfmt[i]);
     }
     for (; i < N; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1 - N], sfmt[i - 1], lung);
-	xor128(lung, sfmt[i]);
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1 - N], &sfmt[i - 1],
+		     &lung);
+	xor128(&lung, &sfmt[i]);
     }
-    assign128(sfmt[N], lung);
+    sfmt[N] = lung;
 }
 
 INLINE static void gen_rand_array(w128_t array[], int size) {
     int i, j;
-    uint32_t lung[4];
+    w128_t lung;
 
-    assign128(lung, sfmt[N]);
-    do_recursion(array[0].a, sfmt[0], sfmt[POS1], sfmt[N - 1], lung);
-    xor128(lung, array[0].a);
+    lung = sfmt[N];
+    do_recursion(&array[0], &sfmt[0], &sfmt[POS1], &sfmt[N - 1], &lung);
+    xor128(&lung, &array[0]);
     for (i = 1; i < N - POS1; i++) {
-	do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], array[i - 1].a, lung);
-	xor128(lung, array[i].a);
+	do_recursion(&array[i], &sfmt[i], &sfmt[i + POS1], &array[i - 1],
+		     &lung);
+	xor128(&lung, &array[i]);
     }
     for (; i < N; i++) {
-	do_recursion(array[i].a, sfmt[i], array[i + POS1 - N].a,
-		     array[i - 1].a, lung);
-	xor128(lung, array[i].a);
+	do_recursion(&array[i], &sfmt[i], &array[i + POS1 - N],
+		     &array[i - 1], &lung);
+	xor128(&lung, &array[i]);
     }
     for (; i < size - N; i++) {
-	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a,
-		     array[i - 1].a, lung);
-	xor128(lung, array[i].a);
+	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
+		     &array[i - 1], &lung);
+	xor128(&lung, &array[i]);
     }
     for (j = 0; j < 2 * N - size; j++) {
-	assign128(sfmt[j], array[j + size - N].a);
+	sfmt[j] = array[j + size - N];
     }
     for (; i < size; i++, j++) {
-	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a,
-		     array[i - 1].a, lung);
-	xor128(lung, array[i].a);
-	assign128(sfmt[j], array[i].a);
+	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
+		     &array[i - 1], &lung);
+	xor128(&lung, &array[i]);
+	sfmt[j] = array[i];
     }
-    assign128(sfmt[N], lung);
+    sfmt[N] = lung;
 }
 
 INLINE uint32_t gen_rand(void)
@@ -217,7 +194,7 @@ INLINE uint32_t gen_rand(void)
     return r;
 }
 
-INLINE void fill_array(uint32_t array[], int size)
+void fill_array(uint32_t array[], int size)
 {
     assert(size % 4 == 0);
     assert(size >= 2 * N * 4);
@@ -229,7 +206,7 @@ INLINE void init_gen_rand(uint32_t seed)
     int i;
 
     psfmt[0] = seed;
-    for (i = 1; i < N * 4; i++) {
+    for (i = 1; i < (N + 1) * 4; i++) {
 	psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 30)) + i;
     }
     idx = N * 4;
