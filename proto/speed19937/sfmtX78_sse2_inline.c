@@ -150,7 +150,7 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
 	r = _mm_load_si128(&array[j + size - N]);
 	_mm_store_si128(&sfmt[j], r);
     }    
-    for (j = 0; i < size; i++, j++) {
+    for (; i < size; i++, j++) {
 	r = mm_recursion(&array[i - N], &array[i + POS1 - N], r1, r2, mask);
 	_mm_store_si128(&array[i], r);
 	_mm_store_si128(&sfmt[j], r);

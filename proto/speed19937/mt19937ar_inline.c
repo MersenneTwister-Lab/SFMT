@@ -118,22 +118,6 @@ INLINE static void gen_rand_all(void)
 
     int kk;
 
-#if 0
-    int i;
-    printf("----\n");
-    for (i = 0; i < 4; i++) {
-	printf("%010" PRIu32 " ", mt[i]);
-    }
-    printf("\n");
-    kk = 0;
-    printf("%010" PRIu32 "\n", mt[kk + M]);
-    y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
-    mt[kk] = mt[kk + M] ^ (y >> 1) ^ mag01[y & 0x1UL];
-    printf("%010" PRIu32 "\n", y);
-    printf("%08" PRIx32 "\n", mag01[y & 0x1UL]);
-    printf("%010" PRIu32 "\n", mt[0]);
-    printf("----\n");
-#endif
     for (kk = 0; kk < N - M; kk++) {
 	y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
 	mt[kk] = mt[kk + M] ^ (y >> 1) ^ mag01[y & 0x1UL];
@@ -144,9 +128,6 @@ INLINE static void gen_rand_all(void)
     }
     y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
     mt[N - 1] = mt[M - 1] ^ (y >> 1) ^ mag01[y & 0x1UL];
-
-    mti = 0;
-
 }
 
 INLINE static uint32_t temper(uint32_t y) {
@@ -202,6 +183,7 @@ INLINE uint32_t gen_rand(void)
 
     if (mti >= N) {		/* generate N words at one time */
 	gen_rand_all();
+	mti = 0;
     }
 
     y = mt[mti++];

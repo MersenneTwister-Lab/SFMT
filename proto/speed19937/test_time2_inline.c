@@ -22,7 +22,8 @@ __m128i dummy[NUM_RANDS / 4 + 1];
 int main(int argc, char *argv[]) {
     uint32_t i, j;
     uint64_t clo;
-    unsigned long long min = LONG_MAX;
+    uint64_t sum;
+    uint64_t min;
     //unsigned long long max = 0;
     uint32_t *array = (uint32_t *)dummy;
     uint32_t r;
@@ -54,32 +55,41 @@ int main(int argc, char *argv[]) {
 	}
     }
     init_gen_rand(1234);
+    min = LONG_MAX;
+    sum = 0;
     for (i = 0; i < 10; i++) {
 	clo = clock();
-	for (i = 0; i < TIC_COUNT; i++) {
+	for (j = 0; j < TIC_COUNT; j++) {
 	    fill_array(array, NUM_RANDS);
 	}
 	clo = clock() - clo;
+	sum += clo;
 	if (clo < min) {
 	    min = clo;
 	}
     }
-    printf("BURST:%.0f", (double)min * 1000/ CLOCKS_PER_SEC);
-    printf("ms for %u randoms.\n",
-	   NUM_RANDS * TIC_COUNT);
+    printf("BLOCK MIN:%4lldms for %u randoms.\n",
+	   min * 1000 / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
+    printf("      AVE:%4lldms for %u randoms.\n", 
+	   sum * 100 / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
     min = LONG_MAX;
+    r = 0;
+    sum = 0;
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < NUM_RANDS * TIC_COUNT; j++) {
-	    gen_rand();
+	    r ^= gen_rand();
 	}
 	clo = clock() - clo;
+	sum += clo;
 	if (clo < min) {
 	    min = clo;
 	}
     }
-    printf("SEQUE:%.0f", (double)min * 1000 / CLOCKS_PER_SEC);
-    printf("ms for %u randoms.\n",
-	   NUM_RANDS * TIC_COUNT);
+    printf("SEQUE MIN:%4lldms for %u randoms.\n", 
+	   min * 1000 / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
+    printf("      AVE:%4lldms for %u randoms.\n", 
+	   sum * 100  / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
+    printf("r = %u\n", r);
     return 0;
 }

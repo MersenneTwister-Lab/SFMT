@@ -27,7 +27,7 @@
 #define MSK4 0xfefe7befU
 
 struct W128_T {
-    uint32_t a[4];
+    uint32_t a[4] __attribute__((aligned(16)));
 };
 
 typedef struct W128_T w128_t;
@@ -35,7 +35,6 @@ typedef struct W128_T w128_t;
 static w128_t sfmt[N + 1];
 static uint32_t *psfmt = (uint32_t *)sfmt;
 static int idx;
-static const uint32_t mask[4] = {MSK1, MSK2, MSK3, MSK4};
 
 INLINE unsigned int get_rnd_maxdegree(void)
 {
@@ -112,13 +111,13 @@ __attribute__((always_inline))
     w128_t x;
 
     lshift128(&x, a, SL2);
-    r->a[0] = a->a[0] ^ x.a[0] ^ ((b->a[0] >> SR1) & mask[0]) ^ (c->a[0] >> SR2)
+    r->a[0] = a->a[0] ^ x.a[0] ^ ((b->a[0] >> SR1) & MSK1) ^ (c->a[0] >> SR2)
 	^ (c->a[0] << SL1) ^ d->a[3];
-    r->a[1] = a->a[1] ^ x.a[1] ^ ((b->a[1] >> SR1) & mask[1]) ^ (c->a[1] >> SR2)
+    r->a[1] = a->a[1] ^ x.a[1] ^ ((b->a[1] >> SR1) & MSK2) ^ (c->a[1] >> SR2)
 	^ (c->a[1] << SL1) ^ d->a[2];
-    r->a[2] = a->a[2] ^ x.a[2] ^ ((b->a[2] >> SR1) & mask[2]) ^ (c->a[2] >> SR2)
+    r->a[2] = a->a[2] ^ x.a[2] ^ ((b->a[2] >> SR1) & MSK3) ^ (c->a[2] >> SR2)
 	^ (c->a[2] << SL1) ^ d->a[0];
-    r->a[3] = a->a[3] ^ x.a[3] ^ ((b->a[3] >> SR1) & mask[3]) ^ (c->a[3] >> SR2)
+    r->a[3] = a->a[3] ^ x.a[3] ^ ((b->a[3] >> SR1) & MSK4) ^ (c->a[3] >> SR2)
 	^ (c->a[3] << SL1) ^ d->a[1];
 }
 
@@ -182,7 +181,11 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
     sfmt[N] = lung;
 }
 
-INLINE uint32_t gen_rand(void)
+INLINE
+#if defined(__GNUC__)
+__attribute__((always_inline)) 
+#endif
+    uint32_t gen_rand(void)
 {
     uint32_t r;
 
@@ -194,7 +197,11 @@ INLINE uint32_t gen_rand(void)
     return r;
 }
 
-void fill_array(uint32_t array[], int size)
+INLINE
+#if defined(__GNUC__)
+__attribute__((always_inline)) 
+#endif
+    void fill_array(uint32_t array[], int size)
 {
     assert(size % 4 == 0);
     assert(size >= 2 * N * 4);

@@ -7,6 +7,7 @@
 #endif
 #include "random-inline.h"
 #include <emmintrin.h>
+#include <assert.h>
 
 #define MEXP 19937
 
@@ -16,7 +17,7 @@
 
 //#define MAX_BLOCKS 10
 
-INLINE static void gen_rand_array(__m128i array[], uint32_t blocks);
+INLINE static void gen_rand_array(__m128i array[], int size);
 INLINE static void gen_rand_all(void);
 
 static __m128i sfmt[N + 1];
@@ -46,38 +47,6 @@ INLINE unsigned int get_rnd_mexp(void)
 
 INLINE unsigned int get_onetime_rnds(void) {
     return N * 4;
-}
-
-
-void print_param(FILE *fp) {
-    fprintf(fp, "POS1 = %u\n", POS1);
-    fprintf(fp, "SL1 = %u\n", SL1);
-    fprintf(fp, "SL2 = %u\n", SL2);
-    fprintf(fp, "SR1 = %u\n", SR1);
-    fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "MSK1 = %u\n", MSK1);
-    fprintf(fp, "MSK2 = %u\n", MSK2);
-    fprintf(fp, "MSK3 = %u\n", MSK3);
-    fprintf(fp, "MSK4 = %u\n", MSK4);
-    fflush(fp);
-}
-
-void print_param2(FILE *fp) {
-    fprintf(fp, "[POS1, SL1, SL2, SL3, SR1, MSK1, MSK2, MSK3, MSK4] = "
-	    "[%u,%u,%u,%u,%u,%u,%u, %u, %u]\n", 
-	    POS1, SL1, SL2, SR1, SR2, MSK1, MSK2, MSK3, MSK4);
-    fflush(fp);
-}
-
-INLINE void print_state(FILE *fp) {
-    int i;
-
-    for (i = 0; i < N; i++) {
-	fprintf(fp, "%08" PRIx32 " ", sfmtp[i]);
-	if (i % 8 == 7) {
-	    fprintf(fp, "\n");
-	}
-    }
 }
 
 INLINE static __m128i mm_recursion(__m128i *a, __m128i *b, 
@@ -120,13 +89,13 @@ INLINE void gen_rand_all(void) {
     _mm_store_si128(&sfmt[N], u);
 }
 
-INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
+INLINE static void gen_rand_array(__m128i array[], int size) {
     int i, j;
     __m128i r, u, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);
 
-    r = _mm_load_si128(&sfmt[N - 1]);
     u = _mm_load_si128(&sfmt[N]);
+    r = _mm_load_si128(&sfmt[N - 1]);
     for (i = 0; i < N - POS1; i++) {
 	r = mm_recursion(&sfmt[i], &sfmt[i + POS1], r, u, mask);
 	_mm_store_si128(&array[i], r);
@@ -138,12 +107,16 @@ INLINE static void gen_rand_array(__m128i array[], uint32_t blocks) {
 	_mm_xor_si128(u, r);
     }
     /* main loop */
-    for (; i < N * (blocks - 1); i++) {
+    for (; i < size - N; i++) {
 	r = mm_recursion(&array[i - N], &array[i + POS1 - N], r, u, mask);
 	_mm_store_si128(&array[i], r);
 	_mm_xor_si128(u, r);
     }
-    for (j = 0; i < N * blocks; i++, j++) {
+    for (j = 0; j < 2 * N - size; j++) {
+	r = _mm_load_si128(&array[j + size - N]);
+	_mm_store_si128(&sfmt[j], r);
+    }
+    for (; i < size; i++, j++) {
 	r = mm_recursion(&array[i - N], &array[i + POS1 - N], r, u, mask);
 	_mm_store_si128(&array[i], r);
 	_mm_store_si128(&sfmt[j], r);
@@ -164,18 +137,13 @@ INLINE uint32_t gen_rand(void)
     return r;
 }
 
-INLINE void fill_array_block(uint32_t array[], uint32_t block_num)
+INLINE void fill_array(uint32_t array[], int size)
 {
-    if (block_num == 0) {
-	return;
-    } else if (block_num == 1) {
-	gen_rand_all();
-	memcpy(array, sfmt, sizeof(sfmt));
-    } else {
-	//memcpy(array, sfmt, sizeof(sfmt));
-	gen_rand_array((__m128i *)array, block_num);
-	//memcpy(sfmt, &array[N * (block_num-1)], sizeof(sfmt));
-    }
+    //assert(size >= N * 4);
+    //assert(size % 4 == 0);
+    //assert((int)array % 16 == 0);
+
+    gen_rand_array((__m128i *)array, size / 4);
 }
 
 INLINE void init_gen_rand(uint32_t seed)

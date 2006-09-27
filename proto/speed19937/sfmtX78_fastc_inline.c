@@ -145,12 +145,9 @@ __attribute__((always_inline))
 INLINE static void gen_rand_all(void) {
     int i;
 
-    i = 0;
-    do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1], sfmt[N - 2], sfmt[N - 1]);
-    i++;
-    do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1], sfmt[N - 1], sfmt[0]);
-    i++;
-    for (; i < N - POS1; i++) {
+    do_recursion(sfmt[0], sfmt[0], sfmt[POS1], sfmt[N - 2], sfmt[N - 1]);
+    do_recursion(sfmt[1], sfmt[1], sfmt[1 + POS1], sfmt[N - 1], sfmt[0]);
+    for (i = 2; i < N - POS1; i++) {
 	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1], sfmt[i - 2],
 		     sfmt[i - 1]);
     }
@@ -162,16 +159,10 @@ INLINE static void gen_rand_all(void) {
 
 INLINE static void gen_rand_array(w128_t array[], int size) {
     int i, j;
-    uint32_t *r1, *r2;
 
-    r1 = sfmt[N - 2];
-    r2 = sfmt[N - 1];
-    i = 0;
-    do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], sfmt[N - 2], sfmt[N - 1]);
-    i++;
-    do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], sfmt[N - 1], array[0].a);
-    i++;
-    for (; i < N - POS1; i++) {
+    do_recursion(array[0].a, sfmt[0], sfmt[POS1], sfmt[N - 2], sfmt[N - 1]);
+    do_recursion(array[1].a, sfmt[1], sfmt[1 + POS1], sfmt[N - 1], array[0].a);
+    for (i = 2; i < N - POS1; i++) {
 	do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], array[i - 2].a,
 		     array[i -1].a);
     }
@@ -192,8 +183,6 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
     for (; i < size; i++, j++) {
 	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a,
 		     array[i - 2].a, array[i - 1].a);
-	r1 = r2;
-	r2 = array[i].a;
 	sfmt[j][0] = array[i].a[0];
 	sfmt[j][1] = array[i].a[1];
 	sfmt[j][2] = array[i].a[2];
@@ -201,7 +190,7 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
     }
 }
 
-INLINE static
+INLINE
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -217,7 +206,7 @@ __attribute__((always_inline))
     return r;
 }
 
-INLINE static
+INLINE
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
