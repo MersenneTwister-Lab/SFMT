@@ -26,16 +26,14 @@
 #define MSK3 0xcbfff7feU
 #define MSK4 0xedfefffdU
 
-static uint32_t sfmt[N][4];
-static uint32_t *psfmt = &sfmt[0][0];
-static unsigned int idx;
-static const uint32_t mask[4] = {MSK1, MSK2, MSK3, MSK4};
-
 struct W128_T {
     uint32_t a[4];
 };
-
 typedef struct W128_T w128_t;
+
+static w128_t sfmt[N];
+static uint32_t *psfmt = (uint32_t *)&sfmt[0];
+static unsigned int idx;
 
 INLINE unsigned int get_rnd_maxdegree(void)
 {
@@ -47,146 +45,133 @@ INLINE unsigned int get_rnd_mexp(void)
     return MEXP;
 }
 
-INLINE unsigned int get_onetime_rnds(void) {
-    return N * 4;
-}
-
-INLINE void print_param(FILE *fp) {
-    fprintf(fp, "POS1 = %u\n", POS1);
-    fprintf(fp, "SL1 = %u\n", SL1);
-    fprintf(fp, "SL2 = %u\n", SL2);
-    fprintf(fp, "SR1 = %u\n", SR1);
-    fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "MSK1 = %08x\n", MSK1);
-    fprintf(fp, "MSK2 = %08x\n", MSK2);
-    fprintf(fp, "MSK3 = %08x\n", MSK3);
-    fprintf(fp, "MSK4 = %08x\n", MSK4);
-    fflush(fp);
-}
-
-INLINE void print_param2(FILE *fp) {
-    fprintf(fp, "[POS1, SL1, SL2, SL3, SL4, SL5, SL6, SL7, SL8,"
-	    " SR1, SR2, SR3, SR4] = "
-	    "[%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u]\n", 
-	    POS1, SL1, SR1, MSK1, MSK2, MSK3, MSK4, 0, 0, 
-	    0, 0, 0, 0);
-    fflush(fp);
-}
-
-INLINE void print_state(FILE *fp) {
-    int i, j;
-    for (i = 0; i < N; i++) {
-	for (j = 0; j < 4; j++) {
-	    fprintf(fp, "%08x ", sfmt[i][j]);
-	}
-	if (i % 2 == 1) {
-	    fprintf(fp, "\n");
-	}
-    }
-}
-
 INLINE static
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
- void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
+#if defined(LITTLE_ENDIAN)
+void rshift128(w128_t *out, const w128_t *in, int shift) {
+    uint64_t *op;
+    uint64_t *ip;
+
+    op = (uint64_t *)out;
+    ip = (uint64_t *)in;
+    op[0] = ip[0];
+    op[1] = ip[1];
+    op[0] = op[0] >> (shift * 8);
+    op[1] = op[1] >> (shift * 8);
+    op[0] |= ip[1] << (64 - shift * 8);
+}
+#else
+ void rshift128(w128_t *out, const w128_t *in, int shift) {
     uint64_t th, tl, oh, ol;
 
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
+    th = ((uint64_t)in->a[3] << 32) | ((uint64_t)in->a[2]);
+    tl = ((uint64_t)in->a[1] << 32) | ((uint64_t)in->a[0]);
 
     oh = th >> (shift * 8);
     ol = tl >> (shift * 8);
     ol |= th << (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
+    out->a[1] = (uint32_t)(ol >> 32);
+    out->a[0] = (uint32_t)ol;
+    out->a[3] = (uint32_t)(oh >> 32);
+    out->a[2] = (uint32_t)oh;
 }
+#endif
 
 INLINE static
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
- void lshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
+#if defined(LITTLE_ENDIAN)
+void lshift128(w128_t *out, const w128_t *in, int shift) {
+    uint64_t *op;
+    uint64_t *ip;
+
+    op = (uint64_t *)out->a;
+    ip = (uint64_t *)in->a;
+    op[0] = ip[0];
+    op[1] = ip[1];
+    op[0] = op[0] << (shift * 8);
+    op[1] = op[1] << (shift * 8);
+    op[1] |= ip[0] >> (64 - shift * 8);
+}
+#else
+ void lshift128(w128_t *out, const w128_t *in, int shift) {
     uint64_t th, tl, oh, ol;
 
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
+    th = ((uint64_t)in->a[3] << 32) | ((uint64_t)in->a[2]);
+    tl = ((uint64_t)in->a[1] << 32) | ((uint64_t)in->a[0]);
 
     oh = th << (shift * 8);
     ol = tl << (shift * 8);
     oh |= tl >> (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
+    out->a[1] = (uint32_t)(ol >> 32);
+    out->a[0] = (uint32_t)ol;
+    out->a[3] = (uint32_t)(oh >> 32);
+    out->a[2] = (uint32_t)oh;
 }
+#endif
 
 INLINE static
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
-    void do_recursion(uint32_t r[4], uint32_t a[4], uint32_t b[4],
-		      uint32_t c[4], uint32_t d[4]) {
-    uint32_t x[4];
-    uint32_t y[4];
+    void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c, w128_t *d) {
+    w128_t x;
+    w128_t y;
 
-    lshift128(x, a, SL2);
-    rshift128(y, c, SR2);
-    r[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & mask[0]) ^ y[0] ^ (d[0] << SL1);
-    r[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & mask[1]) ^ y[1] ^ (d[1] << SL1);
-    r[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & mask[2]) ^ y[2] ^ (d[2] << SL1);
-    r[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & mask[3]) ^ y[3] ^ (d[3] << SL1);
+    lshift128(&x, a, SL2);
+    rshift128(&y, c, SR2);
+    r->a[0] = a->a[0] ^ x.a[0] ^ ((b->a[0] >> SR1) & MSK1) ^ y.a[0] 
+	^ (d->a[0] << SL1);
+    r->a[1] = a->a[1] ^ x.a[1] ^ ((b->a[1] >> SR1) & MSK2) ^ y.a[1]
+	^ (d->a[1] << SL1);
+    r->a[2] = a->a[2] ^ x.a[2] ^ ((b->a[2] >> SR1) & MSK3) ^ y.a[2]
+	^ (d->a[2] << SL1);
+    r->a[3] = a->a[3] ^ x.a[3] ^ ((b->a[3] >> SR1) & MSK4) ^ y.a[3]
+	^ (d->a[3] << SL1);
 }
 
 INLINE static void gen_rand_all(void) {
     int i;
 
-    do_recursion(sfmt[0], sfmt[0], sfmt[POS1], sfmt[N - 2], sfmt[N - 1]);
-    do_recursion(sfmt[1], sfmt[1], sfmt[1 + POS1], sfmt[N - 1], sfmt[0]);
+    do_recursion(&sfmt[0], &sfmt[0], &sfmt[POS1], &sfmt[N - 2], &sfmt[N - 1]);
+    do_recursion(&sfmt[1], &sfmt[1], &sfmt[1 + POS1], &sfmt[N - 1], &sfmt[0]);
     for (i = 2; i < N - POS1; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1], sfmt[i - 2],
-		     sfmt[i - 1]);
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1], &sfmt[i - 2],
+		     &sfmt[i - 1]);
     }
     for (; i < N; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1 - N], sfmt[i - 2],
-		     sfmt[i - 1]);
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1 - N], &sfmt[i - 2],
+		     &sfmt[i - 1]);
     }
 }
 
 INLINE static void gen_rand_array(w128_t array[], int size) {
     int i, j;
 
-    do_recursion(array[0].a, sfmt[0], sfmt[POS1], sfmt[N - 2], sfmt[N - 1]);
-    do_recursion(array[1].a, sfmt[1], sfmt[1 + POS1], sfmt[N - 1], array[0].a);
+    do_recursion(&array[0], &sfmt[0], &sfmt[POS1], &sfmt[N - 2], &sfmt[N - 1]);
+    do_recursion(&array[1], &sfmt[1], &sfmt[1 + POS1], &sfmt[N - 1], &array[0]);
     for (i = 2; i < N - POS1; i++) {
-	do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], array[i - 2].a,
-		     array[i -1].a);
+	do_recursion(&array[i], &sfmt[i], &sfmt[i + POS1], &array[i - 2],
+		     &array[i -1]);
     }
     for (; i < N; i++) {
-	do_recursion(array[i].a, sfmt[i], array[i + POS1 - N].a, array[i - 2].a,
-		     array[i - 1].a);
+	do_recursion(&array[i], &sfmt[i], &array[i + POS1 - N], &array[i - 2],
+		     &array[i - 1]);
     }
     for (; i < size - N; i++) {
-	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a, 
-		     array[i - 2].a, array[i - 1].a);
+	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N], 
+		     &array[i - 2], &array[i - 1]);
     }
     for (j = 0; j < 2 * N - size; j++) {
-	sfmt[j][0] = array[j + size - N].a[0];
-	sfmt[j][1] = array[j + size - N].a[1];
-	sfmt[j][2] = array[j + size - N].a[2];
-	sfmt[j][3] = array[j + size - N].a[3];
+	sfmt[j] = array[j + size - N];
     }
     for (; i < size; i++, j++) {
-	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a,
-		     array[i - 2].a, array[i - 1].a);
-	sfmt[j][0] = array[i].a[0];
-	sfmt[j][1] = array[i].a[1];
-	sfmt[j][2] = array[i].a[2];
-	sfmt[j][3] = array[i].a[3];
+	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
+		     &array[i - 2], &array[i - 1]);
+	sfmt[j] = array[i];
     }
 }
 

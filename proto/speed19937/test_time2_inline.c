@@ -4,15 +4,9 @@
 #include <time.h>
 #include <string.h>
 
-#define QUOTE(str) QUOTE_HELPER(str)
-#define QUOTE_HELPER(str) # str
-//#include QUOTE(RANDOM)
-
 #define NUM_RANDS 100000
-//#define KAISU (624 * 128)
 #define TIC_MAG 1
 #define TIC_COUNT 1000
-//#define TIC_COUNT (313 * 4)
 
 #ifdef __ppc__
 vector unsigned int dummy[NUM_RANDS / 4 + 1];
@@ -24,7 +18,6 @@ int main(int argc, char *argv[]) {
     uint64_t clo;
     uint64_t sum;
     uint64_t min;
-    //unsigned long long max = 0;
     uint32_t *array = (uint32_t *)dummy;
     uint32_t r;
     bool verbose = false;
@@ -68,10 +61,9 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("BLOCK MIN:%4lldms for %u randoms.\n",
-	   min * 1000 / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
-    printf("      AVE:%4lldms for %u randoms.\n", 
-	   sum * 100 / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
+    printf("consumed time for generating %u randoms.\n", NUM_RANDS * TIC_COUNT);
+    printf("BLOCK MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("      AVE:%4lldms.\n",  (sum * 100) / CLOCKS_PER_SEC);
     min = LONG_MAX;
     r = 0;
     sum = 0;
@@ -86,10 +78,8 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("SEQUE MIN:%4lldms for %u randoms.\n", 
-	   min * 1000 / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
-    printf("      AVE:%4lldms for %u randoms.\n", 
-	   sum * 100  / CLOCKS_PER_SEC, NUM_RANDS * TIC_COUNT);
+    printf("SEQUE MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("      AVE:%4lldms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("r = %u\n", r);
     return 0;
 }

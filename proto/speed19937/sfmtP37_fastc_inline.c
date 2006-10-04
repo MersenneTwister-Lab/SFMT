@@ -26,68 +26,36 @@
 #define MSK3 0xeffffbffU
 #define MSK4 0xfefe7befU
 
-struct W128_T {
-    uint32_t a[4] __attribute__((aligned(16)));
+#if defined(LITTLE_ENDIAN)
+union W128_T {
+    uint64_t b[2];
+    uint32_t a[4];
 };
-
+typedef union W128_T w128_t;
+#else
+struct W128_T {
+    uint32_t a[4];
+};
 typedef struct W128_T w128_t;
+#endif
 
 static w128_t sfmt[N + 1];
 static uint32_t *psfmt = (uint32_t *)sfmt;
 static int idx;
 
-INLINE unsigned int get_rnd_maxdegree(void)
-{
-    return MAXDEGREE;
-}
-
-INLINE unsigned int get_rnd_mexp(void)
-{
-    return MEXP;
-}
-
-INLINE unsigned int get_onetime_rnds(void) {
-    return N * 4;
-}
-
-INLINE void print_param(FILE *fp) {
-    fprintf(fp, "POS1 = %u\n", POS1);
-    fprintf(fp, "SL1 = %u\n", SL1);
-    fprintf(fp, "SL2 = %u\n", SL2);
-    fprintf(fp, "SR1 = %u\n", SR1);
-    fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "MSK1 = %08x\n", MSK1);
-    fprintf(fp, "MSK2 = %08x\n", MSK2);
-    fprintf(fp, "MSK3 = %08x\n", MSK3);
-    fprintf(fp, "MSK4 = %08x\n", MSK4);
-    fflush(fp);
-}
-
-INLINE void print_param2(FILE *fp) {
-    fprintf(fp, "[POS1, SL1, SL2, SL3, SL4, SL5, SL6, SL7, SL8,"
-	    " SR1, SR2, SR3, SR4] = "
-	    "[%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u]\n", 
-	    POS1, SL1, SR1, MSK1, MSK2, MSK3, MSK4, 0, 0, 
-	    0, 0, 0, 0);
-    fflush(fp);
-}
-
-INLINE void print_state(FILE *fp) {
-    int i, j;
-    for (i = 0; i < N; i++) {
-	for (j = 0; j < 4; j++) {
-	    fprintf(fp, "%08x ", sfmt[i].a[j]);
-	}
-	if (i % 2 == 1) {
-	    fprintf(fp, "\n");
-	}
-    }
-}
-
 INLINE static
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
+#if defined(LITTLE_ENDIAN)
+void lshift128(w128_t *out, const w128_t *in, int shift) {
+    out->b[0] = in->b[0];
+    out->b[1] = in->b[1];
+    out->b[0] = out->b[0] << (shift * 8);
+    out->b[1] = out->b[1] << (shift * 8);
+    out->b[1] |= in->b[0] >> (64 - shift * 8);
+}
+#else
 void lshift128(w128_t *out, const w128_t *in, int shift) {
     uint64_t th, tl, oh, ol;
 
@@ -102,6 +70,7 @@ void lshift128(w128_t *out, const w128_t *in, int shift) {
     out->a[2] = (uint32_t)oh;
     out->a[3] = (uint32_t)(oh >> 32);
 }
+#endif
 
 INLINE static
 #if defined(__GNUC__)

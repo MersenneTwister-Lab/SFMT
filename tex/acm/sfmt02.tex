@@ -49,7 +49,7 @@ Here we propose a 128-bit based
 PRNG, named SIMD-oriented Fast Mersenne Twister
 (SFMT), which is analogous to MT but making full use
 of these features. Its recursion fits pipeline processing
-better than MT, and it is roughly twice as faster as 
+better than MT, and it is roughly twice as fast as 
 optimized MT using SIMD operations.
 Moreover, the dimension of equidistibution of SFMT, 
 as a 32-bit integer generator,
@@ -140,7 +140,7 @@ is much faster than using function calls.
 
 We propose SIMD-oriented Fast Mersenne Twister (SFMT) 
 pseudorandom number generator. It is a
-linear-feedback shift register generator based
+Linear Feedbacked Shift Register (LFSR) generator based
 on a recursion over $\F2^{128}$.
 We identify
 the set of bit $\{0,1\}$
@@ -153,8 +153,7 @@ bit-wise exor), not as integers.
 We consider three cases: $w$ is 32, 64 or 128.
 
 \subsection{LFSR generators}
-A Linear Feedbacked 
-Shift Register (LFSR) method is to generate
+A LFSR method is to generate
 a sequence $\bx_0, \bx_1, \bx_2, \ldots$
 of elements $\F2^{w}$ by a recursion
 \begin{equation}\label{eq:recursion}
@@ -713,7 +712,7 @@ for the following generators: (1) WELL19937c,
 %has the period being a nonzero multiple of $2^{19937}-1$,
 %see \S\ref{sec:period}.
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sfmt-zero.eps}
+\includegraphics[width=0.7\linewidth]{sfmt.eps}
 \caption{$\gamma_k \ (k=0,\ldots,20000)$:
 Starting from extreme 0-excess states,
 discard the first $k$ outputs and then measure
