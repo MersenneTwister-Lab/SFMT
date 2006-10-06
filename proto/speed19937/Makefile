@@ -111,6 +111,9 @@ sfmtX78_alti_inline2: test_time2_inline.c sfmtX78_alti_inline.c
 sfmtX78_alti_funcall2: test_time2_funcall.o sfmtX78_alti_funcall.o
 	${CC} -o $@ sfmtX78_alti_funcall.o test_time2_funcall.o
 
+sfmtP37_alti_inline2: test_time2_inline.c sfmtP37_alti_inline.c
+	${CC} -o $@ sfmtP37_alti_inline.c
+
 sfmt4a_alti44497_inline: test_time_inline.c sfmt4a_alti44497_inline.h
 	${CC} -DRANDOM=sfmt4a_alti44497_inline.h -o $@ test_time_inline.c
 

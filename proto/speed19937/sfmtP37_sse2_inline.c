@@ -25,15 +25,15 @@ static unsigned int idx;
 static uint32_t *sfmtp = (uint32_t *)sfmt;
 #define SHUFF 0x39
 
-#define POS1 3
-#define SL1 25
+#define POS1 89
+#define SL1 18
 #define SL2 1
-#define SR1 9
-#define SR2 11
-#define MSK1 0xfffef7f9U
-#define MSK2 0xffdff7fbU
-#define MSK3 0xcbfff7feU
-#define MSK4 0xedfefffdU
+#define SR1 3
+#define SR2 2
+#define MSK1 0x7f7fffffU
+#define MSK2 0xfffbffffU
+#define MSK3 0xeffffbffU
+#define MSK4 0xfefe7befU
 
 INLINE unsigned int get_rnd_maxdegree(void)
 {
