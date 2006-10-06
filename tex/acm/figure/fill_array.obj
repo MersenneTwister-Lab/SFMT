@@ -1,7 +1,7 @@
 %TGIF 4.1.43-QPL
 state(0,37,100.000,12,384,0,16,0,9,1,1,2,0,2,0,1,0,'Times-Bold',1,195840,0,0,0,10,-6,0,1,1,0,16,0,0,1,1,1,1,1088,1408,1,0,2880,0).
 %
-% @(#)$Header$
+% @(#)$Header: /Users/saito/cvs/sfmt/tex/acm/figure/fill_array.obj,v 1.3 2006/09/21 03:46:23 saito Exp $
 % %W%
 %
 unit("1 pixel/pixel").

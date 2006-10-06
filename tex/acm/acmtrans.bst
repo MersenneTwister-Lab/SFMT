@@ -3,7 +3,7 @@
 %  Revised 28-MARCH-1996
 %  Revised 30-JUNE-1995
 %  Revised 15-JAN-1996 
-%  $Header$
+%  $Header: /Users/saito/cvs/sfmt/tex/acm/acmtrans.bst,v 1.1 2006/08/31 01:07:57 saito Exp $
 %
 % Hacked by John T. Boyland at University of California, Berkeley
 % (with assistance by John R. Hauser)

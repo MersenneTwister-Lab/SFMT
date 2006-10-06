@@ -1,7 +1,7 @@
 %TGIF 4.1.43-QPL
 state(0,37,100.000,0,0,0,16,1,9,1,1,1,0,0,0,1,0,'Courier-Bold',1,103680,0,0,0,10,0,0,1,1,0,16,0,0,1,1,1,1,1088,1408,1,0,2880,0).
 %
-% @(#)$Header$
+% @(#)$Header: /Users/saito/cvs/sfmt/tex/gimp/weight.obj,v 1.1 2006/08/05 05:00:17 saito Exp $
 % %W%
 %
 unit("1 pixel/pixel").
