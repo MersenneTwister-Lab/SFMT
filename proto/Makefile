@@ -406,6 +406,10 @@ shortest32-base5-521: chk-shortest32.o shortbase.o sfmt5-cls.o util.o
 searchX78-lung607: search-lung.o sfmtX78-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-lung.o sfmtX78-st.o mt19937ar.o util.o ${LINKOPT}
 
+searchP37-parity607: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
 test_bm521: sfmt.o test_bm.o util.o debug.o
 	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}
 

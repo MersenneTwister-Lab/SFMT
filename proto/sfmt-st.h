@@ -10,12 +10,11 @@
 #endif
 
 #define WORDSIZE 128
-#define NN (MEXP / WORDSIZE + 1)
-#define N (NN - 1)
-#define MAXDEGREE (WORDSIZE * NN)
+#define N (MEXP / WORDSIZE + 1)
+#define MAXDEGREE (WORDSIZE * N)
 
 struct SFMT_TAG {
-    uint32_t sfmt[NN][4];
+    uint32_t sfmt[N][4];
     uint32_t idx;
 };
 
@@ -36,7 +35,7 @@ uint32_t gen_rand32(sfmt_t *sfmt);
 uint64_t gen_rand64(sfmt_t *sfmt);
 uint64_t gen_rand128(sfmt_t *sfmt, uint64_t *hi, uint64_t *low);
 uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t arrary[4], uint32_t mode);
-void get_lung(sfmt_t *sfmt, uint32_t lung[4]);
+uint32_t get_lung(sfmt_t *sfmt);
 void add_rnd(sfmt_t *dist, sfmt_t *src);
 void read_random_param(FILE *fp);
 
