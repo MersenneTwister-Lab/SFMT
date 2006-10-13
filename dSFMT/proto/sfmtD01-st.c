@@ -19,6 +19,9 @@ static unsigned int SR2 = 7;
 static uint64_t MSK1 = 7;
 static uint64_t MSK2 = 7;
 
+static unsigned int get_uint(char *line, int radix);
+static uint64_t get_uint64(char *line, int radix);
+
 unsigned int get_rnd_maxdegree(void)
 {
     return MAXDEGREE;
@@ -54,30 +57,35 @@ void print_param(FILE *fp) {
     fflush(fp);
 }
 
-inline static void rshift128(uint64_t out[4], const uint64_t in[4],
+inline static void rshift128(uint64_t out[2], const uint64_t in[2],
 			     int shift) {
     out[1] = in[1] >> (shift * 8);
     out[0] = in[0] >> (shift * 8);
     out[0] |= in[1] << (64 - shift * 8);
 }
 
-inline static void lshift128(uint64_t out[4], const uint64_t in[4],
+inline static void lshift128(uint64_t out[2], const uint64_t in[2],
 			     int shift) {
     out[1] = in[1] << (shift * 8);
     out[0] = in[0] << (shift * 8);
     out[1] |= in[0] >> (64 - shift * 8);
 }
 
+inline static void xor128(uint64_t to[2], const uint64_t from[2]) {
+    to[0] ^= from[0];
+    to[1] ^= from[1];
+}
+
 static inline void do_recursion(uint64_t a[2], uint64_t b[2],
 				uint64_t c[2], uint64_t d[2]) {
     uint64_t x[2];
-    uint64_t y[2];
 
     lshift128(x, a, SL2);
-    rshift128(y, c, SR2);
-    a[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ y[0] ^ (d[0] << SL1);
+    a[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ (c[0] << SL1) ^ (c[0] >> SR2)
+	^ d[1];
     a[0] = (a[0] & LOW_MASK) | HIGH_CONST;
-    a[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ y[1] ^ (d[1] << SL1);
+    a[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] << SL1) ^ (c[0] >> SR2)
+	^ d[0];
     a[1] = (a[1] & LOW_MASK) | HIGH_CONST;
 }
 
@@ -92,8 +100,9 @@ static void next_state(dsfmt_t *dsfmt) {
     }
     i = dsfmt->idx / 2;
     do_recursion(dsfmt->status[i], dsfmt->status[(i + POS1) % N],
-		 dsfmt->status[(i + N - 2) % N],
-		 dsfmt->status[(i + N - 1) % N]);
+		 dsfmt->status[(i + N - 1) % N],
+		 dsfmt->status[N]);
+    xor128(dsfmt->status[N], dsfmt->status[i]);
 }
 
 /* これは初期状態を出力する */
@@ -133,7 +142,7 @@ void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed)
 
     psfmt = dsfmt->status[0];
     psfmt[0] = (seed & LOW_MASK) | HIGH_CONST;
-    for (i = 1; i < N * 2; i++) {
+    for (i = 1; i <= N * 2; i++) {
 	psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 30)) + i;
 	psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
     }
@@ -141,24 +150,25 @@ void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed)
 }
 
 void add_rnd(dsfmt_t *dist, dsfmt_t *src) {
-    int i, j, k;
+    int i, k;
 
     assert(dist->idx % 2 == 0);
     assert(src->idx % 2 == 0);
     
     k = (src->idx / 2 - dist->idx / 2 + N) % N;
     for (i = 0; i < N; i++) {
-	for (j = 0; j < 2; j++) {
-	    dist->status[i][j] ^= src->status[(k + i) % N][j];
-	}
+	dist->status[i][0] ^= src->status[(k + i) % N][0];
+	dist->status[i][1] ^= src->status[(k + i) % N][1];
     }
+    dist->status[N][0] ^= src->status[N][0];
+    dist->status[N][1] ^= src->status[N][1];
 }
 
-uint64_t get_lung(dsfmt_t *dsfmt) {
-    return dsfmt->status[0][1];
+void get_lung(dsfmt_t *dsfmt, uint64_t lung[2]) {
+    lung[0] = dsfmt->status[N][0];
+    lung[1] = dsfmt->status[N][1];
 }
 
-static unsigned int get_uint(char *line, int radix);
 static unsigned int get_uint(char *line, int radix) {
     unsigned int result;
 
@@ -173,6 +183,38 @@ static unsigned int get_uint(char *line, int radix) {
     if (errno) {
 	fprintf(stderr, "WARN:format error:%s", line);
 	perror("get_unit");
+    }
+    return result;
+}
+
+static uint64_t get_uint64(char *line, int radix) {
+    int i;
+    unsigned int x;
+    uint64_t result;
+
+    assert(radix == 16);
+
+    for (;(*line) && (*line != '=');line++);
+    if (!*line) {
+	fprintf(stderr, "WARN:can't get = in get_uint\n");
+	return 0;
+    }
+    line++;
+    for (;(*line) && (*line <= ' ');line++);
+    result = 0;
+    for (i = 0;(*line) && (i < 16);i++,line++) {
+	x = *line;
+	if (('0' <= x) && (x <= '9')) {
+	    x = x - '0';
+	} else if (('A' <= x) && (x <= 'F')) {
+	    x = x + 10 - 'A';
+	} else if (('a' <= x) && (x <= 'f')) {
+	    x = x + 10 - 'a';
+	} else {
+	    printf("format error %s\n", line);
+	    return 0;
+	}
+	result = result * 16 + x;
     }
     return result;
 }
@@ -193,8 +235,8 @@ void read_random_param(FILE *f) {
     fgets(line, 256, f);
     SR2 = get_uint(line, 10);
     fgets(line, 256, f);
-    MSK1 = get_uint(line, 16);
+    MSK1 = get_uint64(line, 16);
     fgets(line, 256, f);
-    MSK2 = get_uint(line, 16);
+    MSK2 = get_uint64(line, 16);
 }
 

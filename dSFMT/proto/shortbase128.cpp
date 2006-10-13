@@ -8,7 +8,7 @@
 #include "util.h"
 
 extern "C" {
-#include "sfmt-st.h"
+#include "dsfmt-st.h"
 }
 
 NTL_CLIENT;
@@ -20,9 +20,9 @@ struct IN_STATUS {
     vec_GF2 previous;
     vec_GF2 previous2;
     vec_GF2 next;
-    unsigned int count;
-    unsigned int last_weight_mode;
-    sfmt_t random;
+    int count;
+    int last_weight_mode;
+    dsfmt_t random;
 };
 typedef struct IN_STATUS in_status;
 
@@ -33,38 +33,30 @@ mat_GF2 debug_mat;
 //bool debug_dependent[128];
 //uint32_t debug_count;
 int debug_flag = 0;
-static unsigned int bit_len;
-static unsigned int status_mode;	// 0-3 状態空間のどこを見るか
-static unsigned int weight_mode;	// 0-3 ノルムにweighetをかける位置
-static unsigned int max_weight_mode;
+static int bit_len;
+static int status_mode;	// 0-1 状態空間のどこを見るか
+static int weight_mode;	// 0-1 ノルムにweighetをかける位置
+static int max_weight_mode;
 static void (*get_next_random)(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-			       sfmt_t *sfmt);
+			       dsfmt_t *sfmt);
 
-static void get_next_random128(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-			       sfmt_t *sfmt);
-static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-			      sfmt_t *sfmt);
-static void get_next_random32(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			      sfmt_t *sfmt);
-static void get_next_random128_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-				   sfmt_t *sfmt);
-static void get_next_random64_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
-				  sfmt_t *sfmt);
-static void get_next_random32_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-				  sfmt_t *sfmt);
-//static uint32_t get_shortest(in_status bases[]);
+static void get_next_random104(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
+			       dsfmt_t *sfmt);
+static void get_next_random52(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
+			      dsfmt_t *sfmt);
+static void get_next_random104_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
+				   dsfmt_t *sfmt);
+static void get_next_random52_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
+				  dsfmt_t *sfmt);
 static void set_special(in_status *st, unsigned int special_bit);
-static void set_normal(in_status *st, sfmt_t *sfmt);
+static void set_normal(in_status *st, dsfmt_t *sfmt);
 static void add_status(in_status *dist, in_status *src);
 static void get_next_state(in_status *st);
-void dprintnext(in_status *st);
-void dprintbase(char *file, int line, int num, in_status *st);
 static uint32_t get_shortest(bool dependents[], in_status bases[]);
 static bool get_dependent_trans(bool dependent[], vec_GF2 array[]);
 static bool dependent_rows(bool result[], mat_GF2& mat);
-static void convert(mat_GF2& mat, vec_GF2 array[], uint32_t bit_len);
+static void convert(mat_GF2& mat, vec_GF2 array[], int bit_len);
 static void change_weight_mode(in_status bases[], vec_GF2 next[]);
-//static uint32_t last_process(in_status bases[], vec_GF2 next[]);
 
 uint64_t vecto64(vec_GF2& vec) {
     uint64_t v = 0;
@@ -88,36 +80,25 @@ static void copy_status(in_status *dist, const in_status *src) {
 void set_up(uint32_t bit_mode, uint32_t len, uint32_t p_mode, bool msb) {
     if (bit_mode == 128) {
 	max_weight_mode = 1;
-	if ((len <= 0) || (len > 128)) {
+	if ((len <= 0) || (len > 104)) {
 	    printf("bitLength error mode 128\n");
 	    exit(1);
 	}
 	if (msb) {
-	    get_next_random = get_next_random128;
+	    get_next_random = get_next_random104;
 	} else {
-	    get_next_random = get_next_random128_lsb;
+	    get_next_random = get_next_random104_lsb;
 	}
-    } else if (bit_mode == 64) {
+    } else {
 	max_weight_mode = 2;
-	if ((len <= 0) || (len > 64)) {
+	if ((len <= 0) || (len > 52)) {
 	    printf("bitLength error mode 64\n");
 	    exit(1);
 	}
 	if (msb) {
-	    get_next_random = get_next_random64;
+	    get_next_random = get_next_random52;
 	} else {
-	    get_next_random = get_next_random64_lsb;
-	}
-    } else {
-	max_weight_mode = 4;
-	if ((len <= 0) || (len > 32)) {
-	    printf("bitLength error mode 32\n");
-	    exit(1);
-	}
-	if (msb) {
-	    get_next_random = get_next_random32;
-	} else {
-	    get_next_random = get_next_random32_lsb;
+	    get_next_random = get_next_random52_lsb;
 	}
     }
     bit_len = len * max_weight_mode;
@@ -142,19 +123,18 @@ void set_special(in_status *st, unsigned int special_bit) {
 /*
  * prevは使わないからこれでよい。
  */
-static void get_next_random128(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			       sfmt_t *sfmt) {
-    uint32_t array32[4];
+static void get_next_random104(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
+			       dsfmt_t *sfmt) {
+    uint64_t array64[2];
     uint64_t mask;
-    unsigned int i, j, k;
+    int i, j, k;
 
-    //clear(vec);
-    gen_rand128sp(sfmt, array32, status_mode);
+    gen_rand104sp(sfmt, array64, status_mode);
     k = 0;
-    for (i = 3; (i >= 0) && (k < bit_len); i--) {
-	mask = (uint32_t)0x80000000UL;
-	for (j = 0; (j < 32) && (k < bit_len); j++) {
-	    if (array32[i] & mask) {
+    for (i = 1; (i >= 0) && (k < bit_len); i--) {
+	mask = (uint64_t)1 << 51;
+	for (j = 0; (j < 52) && (k < bit_len); j++) {
+	    if (array64[i] & mask) {
 		vec.put(k, 1);
 	    } else {
 		vec.put(k, 0);
@@ -170,19 +150,18 @@ static void get_next_random128(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 #endif
 }
 
-static void get_next_random128_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-				   sfmt_t *sfmt) {
-    uint32_t array32[4];
-    uint32_t mask;
-    unsigned int i, j, k;
+static void get_next_random104_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
+				   dsfmt_t *sfmt) {
+    uint64_t array64[2];
+    uint64_t mask;
+    int i, j, k;
 
-    //clear(vec);
-    gen_rand128sp(sfmt, array32, status_mode);
+    gen_rand104sp(sfmt, array64, status_mode);
     k = 0;
-    for (i = 0; (i < 4) && (k < bit_len); i++) {
-	mask = (uint32_t)1;
-	for (j = 0; (j < 32) && (k < bit_len); j++) {
-	    if (array32[i] & mask) {
+    for (i = 0; (i < 2) && (k < bit_len); i++) {
+	mask = (uint64_t)1;
+	for (j = 0; (j < 52) && (k < bit_len); j++) {
+	    if (array64[i] & mask) {
 		vec.put(k, 1);
 	    } else {
 		vec.put(k, 0);
@@ -199,25 +178,21 @@ static void get_next_random128_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 }
 
 /*
- *まだ未対応 -> 対応済み
+ *
  */
-static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			      sfmt_t *sfmt) {
-    uint32_t array32[4];
+static void get_next_random52(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
+			      dsfmt_t *sfmt) {
     uint64_t array64[2];
     vec_GF2 tmp;
     uint64_t mask;
-    unsigned int i, j, k;
+    int i, j, k;
 
-    assert(status_mode % 2 == 0);
     tmp.SetLength(bit_len);
-    gen_rand128sp(sfmt, array32, status_mode);
-    array64[0] = (uint64_t)array32[0] | ((uint64_t)array32[1] << 32);
-    array64[1] = (uint64_t)array32[2] | ((uint64_t)array32[3] << 32);
+    gen_rand104sp(sfmt, array64, status_mode);
     k = 0;
-    for (i = 0; i < 2; i++) {
-	mask = 0x8000000000000000ULL;
-	for (j = 0; j < bit_len; j += 2) {
+    for (i = 1; i >= 0; i--) {
+	mask = (uint64_t)1 << 51;
+	for (j = 0; j <  bit_len; j += 2) {
 	    if (array64[i] & mask) {
 		tmp.put(k, 1);
 	    } else {
@@ -243,24 +218,21 @@ static void get_next_random64(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 #endif
 }
 
-static void get_next_random64_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-				  sfmt_t *sfmt) {
-    uint32_t array32[4];
+static void get_next_random52_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
+				  dsfmt_t *sfmt) {
     uint64_t array64[2];
     vec_GF2 tmp;
     uint64_t mask;
-    unsigned int i, j, k;
+    int i, j, k;
 
     assert(status_mode % 2 == 0);
     tmp.SetLength(bit_len);
-    gen_rand128sp(sfmt, array32, status_mode);
-    array64[0] = (uint64_t)array32[0] | ((uint64_t)array32[1] << 32);
-    array64[1] = (uint64_t)array32[2] | ((uint64_t)array32[3] << 32);
+    gen_rand104sp(sfmt, array64, status_mode);
     k = 0;
     for (i = 0; i < 2; i++) {
 	mask = 1;
 	for (j = 0; j < bit_len; j += 2) {
-	    if (array64[i] & mask) {
+	    if (array64[0] & mask) {
 		tmp.put(k, 1);
 	    } else {
 		tmp.put(k, 0);
@@ -285,74 +257,9 @@ static void get_next_random64_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 #endif
 }
 
-static void get_next_random32(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-			      sfmt_t *sfmt) {
-    uint32_t array[4];
-    uint32_t mask;
-    vec_GF2 tmp;
-    unsigned int i, j, k;
-
-    tmp.SetLength(bit_len);
-    gen_rand128sp(sfmt, array, status_mode);
-    k = 0;
-    for (i = 0; i < 4; i++) {
-	mask = 0x80000000UL;
-	for (j = 0; j < bit_len; j += 4) {
-	    if (array[i] & mask) {
-		tmp.put(k, 1);
-	    } else {
-		tmp.put(k, 0);
-	    }
-	    mask = mask >> 1;
-	    k++;
-	}
-    }
-    /* weight 付きノルムの計算 */
-    for (i = 0; i < bit_len * weight_mode / 4 ; i++) {
-	vec.put(i, tmp.get(i));
-    }
-    for (; i < bit_len; i++) {
-	vec.put(i, prev.get(i));
-    }
-    prev2 = prev;
-    prev = tmp;
-}
-
-static void get_next_random32_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
-				  sfmt_t *sfmt) {
-    uint32_t array[4];
-    uint32_t mask;
-    vec_GF2 tmp;
-    unsigned int i, j, k;
-
-    tmp.SetLength(bit_len);
-    gen_rand128sp(sfmt, array, status_mode);
-    k = 0;
-    for (i = 0; i < 4; i++) {
-	mask = 1;
-	for (j = 0; j < bit_len; j += 4) {
-	    if (array[i] & mask) {
-		tmp.put(k, 1);
-	    } else {
-		tmp.put(k, 0);
-	    }
-	    mask = mask << 1;
-	    k++;
-	}
-    }
-    /* weight 付きノルムの計算 */
-    for (i = 0; i < bit_len * weight_mode / 4 ; i++) {
-	vec.put(i, tmp.get(i));
-    }
-    for (; i < bit_len; i++) {
-	vec.put(i, prev.get(i));
-    }
-    prev2 = prev;
-    prev = tmp;
-}
-
-static void set_normal(in_status *st, sfmt_t *sfmt) {
+static void set_normal(in_status *st, dsfmt_t *sfmt) {
     int zero_count = 0;
+
     st->random = *sfmt;
     st->special = false;
     st->zero = false;
@@ -363,7 +270,6 @@ static void set_normal(in_status *st, sfmt_t *sfmt) {
     st->previous2.SetLength(bit_len);
     st->next.SetLength(0);
     st->next.SetLength(bit_len);
-    //st->random.gen_rand(st->next, bit_len);
     get_next_random(st->next, st->previous, st->previous2, &(st->random));
     st->count++;
     while (IsZero(st->next)) {
@@ -372,14 +278,13 @@ static void set_normal(in_status *st, sfmt_t *sfmt) {
 	    st->zero = true;
 	    break;
 	}
-	//st->random.gen_rand(st->next, bit_len);
 	get_next_random(st->next, st->previous, st->previous2, &(st->random));
 	st->count++;
     }
 }
 
 static void add_status(in_status *dist, in_status *src) {
-    unsigned int c;
+    int c;
     vec_GF2 next;
 
     c = dist->count;
@@ -414,7 +319,6 @@ static void add_status(in_status *dist, in_status *src) {
 static void get_next_state(in_status *st) {
     int zero_count = 0;
 
-    //DPRINTHT("before next", &(st->random));
     if (st->special) {
 	printf("Request next to special\n");
 	exit(1);
@@ -422,7 +326,6 @@ static void get_next_state(in_status *st) {
     if (st->zero) {
 	return;
     }
-    //st->random.gen_rand(st->next, bit_len);
     get_next_random(st->next, st->previous, st->previous2, &(st->random));
     st->count++;
     while (IsZero(st->next)) {
@@ -431,31 +334,25 @@ static void get_next_state(in_status *st) {
 	    st->zero = true;
 	    break;
 	}
-	//st->random.gen_rand(st->next, bit_len);
 	get_next_random(st->next, st->previous, st->previous2, &(st->random));
 	st->count++;
     }
     st->last_weight_mode = weight_mode;
-    //DPRINTHT("after next", &(st->random));
 }
   
-int get_shortest_base(sfmt_t *sfmt) {
+int get_shortest_base(dsfmt_t *sfmt) {
     static in_status bases[128 + 1];
     vec_GF2 next[bit_len + 1];
     bool dependents[bit_len + 1];
-    unsigned int shortest, min_mode;
-    unsigned int i;
+    int shortest, min_mode;
+    int i;
     bool dependent_found;
 
-    //DPRINT("in get_shortest_base bit_len:%u", bit_len);
-    //set_bit_len(bit_len);
-    //debug_count = 0;
     for (i = 0; i < bit_len; i++) {
 	set_special(&(bases[i]), i);
     }
     set_normal(&(bases[bit_len]), sfmt);
     for (;;) {
-	//debug_count++;
 	for (i = 0; i <= bit_len; i++) {
 	    next[i] = bases[i].next;
 	}
@@ -492,7 +389,6 @@ int get_shortest_base(sfmt_t *sfmt) {
 	fprintf(stderr, "\n");
 #endif
 	shortest = get_shortest(dependents, bases);
-	//memcpy(debug_dependent, dependents, sizeof(dependents));
 	for (i = 0; i <= bit_len; i++) {
 	    if (i == shortest) {
 		continue;
@@ -518,7 +414,6 @@ int get_shortest_base(sfmt_t *sfmt) {
 	    exit(1);
 	}
     }
-    //shortest = last_process(bases, next);
 #if 0
     for (i = 0; i <= bit_len; i++) {
 	if (bases[i].zero) {
@@ -529,7 +424,7 @@ int get_shortest_base(sfmt_t *sfmt) {
 	}
     }
 #endif
-    shortest = UINT_MAX;
+    shortest = INT_MAX;
     for (i = 0; i <= bit_len; i++) {
 	if (!bases[i].zero) {
 	    if (bases[i].count < shortest) {
@@ -559,9 +454,8 @@ int get_shortest_base(sfmt_t *sfmt) {
 }
 
 static void change_weight_mode(in_status bases[], vec_GF2 next[]) {
-    uint32_t i, j;
+    int i, j;
 
-    //printf("change_weight_mode called\n");
     for (i = 0; i <= bit_len; i++) {
 #if 0
 	cout << "p" << bases[i].previous2 << " " << bases[i].count << endl;
@@ -583,9 +477,9 @@ static void change_weight_mode(in_status bases[], vec_GF2 next[]) {
 }
 
 static uint32_t get_shortest(bool dependents[], in_status bases[]) {
-    uint32_t index = 0;
-    uint32_t min = UINT_MAX;
-    uint32_t i;
+    int index = 0;
+    int min = INT_MAX;
+    int i;
 
     for (i = 0; i <= bit_len; i++) {
 	if (dependents[i]) {
@@ -595,7 +489,7 @@ static uint32_t get_shortest(bool dependents[], in_status bases[]) {
 	    }
 	}
     }
-    if (min == UINT_MAX) {
+    if (min == INT_MAX) {
 	printf("can't find shortest\n");
 	exit(1);
     }
@@ -658,8 +552,8 @@ static bool dependent_rows(bool result[], mat_GF2& mat) {
     return found;
 }
 
-static void convert(mat_GF2& mat, vec_GF2 array[], uint32_t size) {
-    uint32_t i, j;
+static void convert(mat_GF2& mat, vec_GF2 array[], int size) {
+    int i, j;
 
     mat.SetDims(size + 1, size + 1);
     for (i = 0; i < size + 1; i++) {

@@ -9,13 +9,14 @@
 #define MEXP 19937
 #endif
 
+#define LUNG_WORD_SIZE 128
 #define WORDSIZE 104
-#define N (MEXP / WORDSIZE + 1)
-#define MAXDEGREE (WORDSIZE * N)
+#define N ((MEXP - LUNG_WORD_SIZE) / WORDSIZE + 1)
+#define MAXDEGREE (WORDSIZE * N + LUNG_WORD_SIZE)
 
 struct DSFMT_T {
-    uint64_t status[N][2];
-    unsigned int idx;
+    uint64_t status[N + 1][2];
+    int idx;
 };
 
 typedef struct DSFMT_T dsfmt_t;
@@ -28,11 +29,10 @@ void setup_param(unsigned int p1, unsigned int p2, unsigned int p3,
 unsigned int get_rnd_maxdegree(void);
 unsigned int get_rnd_mexp(void);
 void print_param(FILE *fp);
-void print_param2(FILE *fp);
 
 void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed);
 uint64_t gen_rand104sp(dsfmt_t *dsfmt, uint64_t arrary[2], int mode);
-uint64_t get_lung(dsfmt_t *dsfmt);
+void get_lung(dsfmt_t *dsfmt, uint64_t lung[2]);
 void add_rnd(dsfmt_t *dist, dsfmt_t *src);
 void read_random_param(FILE *fp);
 

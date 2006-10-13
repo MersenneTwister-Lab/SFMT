@@ -14,7 +14,7 @@
 #%132049:MEXP=132049
 #%216091:MEXP=216091
 
-#DDEBUG = -DDEBUG=1
+DDEBUG = -O0 -g
 
 DMEXP = -DMEXP=${MEXP}
 
@@ -27,9 +27,10 @@ param-searchD01-607: search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o
 	${CPP} -o $@ search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o \
 		${LINKOPT}
 
-shortest-baseX78-607: chk-shortest.o shortbase128.o sfmtX78-st.o util.o
-	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX78-st.o util.o \
-		${LINKOPT}
+shortest-baseD01-607: chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
+			dsfmt-util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
+			dsfmt-util.o ${LINKOPT}
 
 searchX78-lung607: search-lung.o sfmtX78-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-lung.o sfmtX78-st.o mt19937ar.o util.o ${LINKOPT}

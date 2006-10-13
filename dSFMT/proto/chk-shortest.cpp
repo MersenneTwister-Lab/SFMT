@@ -8,16 +8,17 @@
 
 #include "shortbase128.h"
 #include "util.h"
+#include "dsfmt-util.h"
 #include <unistd.h>
 
 extern "C" {
-#include "sfmt-st.h"
+#include "dsfmt-st.h"
 }
 
 NTL_CLIENT;
 
-int get_equiv_distrib(int bit, sfmt_t *sfmt);
-void make_zero_state(sfmt_t *sfmt, const GF2X& poly);
+int get_equiv_distrib(int bit, dsfmt_t *sfmt);
+void make_zero_state(dsfmt_t *sfmt, const GF2X& poly);
 void test_shortest(char *filename);
 
 static int mexp;
@@ -26,7 +27,6 @@ static FILE *frandom;
 
 static bool bit_128 = true;
 static bool bit_64 = true;
-static bool bit_32 = true;
 static bool msb = true;
 static char* filename = NULL;
 
@@ -50,7 +50,6 @@ void option(int argc, char * argv[]) {
 	case 'a':
 	    bit_128 = true;
 	    bit_64 = true;
-	    bit_32 = true;
 	    break;
 	case 'r':
 	    msb = false;
@@ -60,7 +59,6 @@ void option(int argc, char * argv[]) {
 		first = false;
 		bit_128 = false;
 		bit_64 = false;
-		bit_32 = false;
 	    }
 	    if (strcmp("128", optarg) == 0) {
 		bit_128 = true;
@@ -70,10 +68,6 @@ void option(int argc, char * argv[]) {
 		bit_64 = true;
 		break;
 	    }
-	    if (strcmp("32", optarg) == 0) {
-		bit_32 = true;
-		break;
-	    }
 	case 'h':
 	default:
 	    error = true;
@@ -81,18 +75,21 @@ void option(int argc, char * argv[]) {
 	}
     }
     if (error || filename == NULL) {
-	printf("%s [-a | -b128 -b64 -b32] [-r] filename\n", pgm);
+	printf("%s [-a | -b128 -b64] [-r] filename\n", pgm);
 	    exit(0);
     }
 }
 
-void fill_state_random(sfmt_t *sfmt, FILE *frandom) {
+#if 0
+void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
     int i, j;
-    int w;
+    int w, z;
+    uint64_t x;
 
-    for (i = 0; i < N; i++) {
-	for (j = 0; j < 4; j++) {
+    for (i = 0; i <= N; i++) {
+	for (j = 0; j < 2; j++) {
 	    w = getw(frandom);
+	    z = getw(frandom);
 	    if (feof(frandom) || ferror(frandom)) {
 		if (errno != 0) {
 		    printf("test_shortest:%s\n", strerror(errno));
@@ -102,17 +99,41 @@ void fill_state_random(sfmt_t *sfmt, FILE *frandom) {
 		fclose(frandom);
 		exit(1);
 	    }
-	    sfmt->sfmt[i][j] = w;
+	    x = ((uint64_t)w << 32) | z;
+	    sfmt->status[i][j] = x;
 	}
     }
 }
+#else
+void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
+    int i, j;
+    int w, z;
+    uint64_t x;
+
+    i = ((uint32_t)getw(frandom)) % (N + 1);
+    j = ((uint32_t)getw(frandom)) % 2;
+    w = getw(frandom);
+    z = getw(frandom);
+    if (feof(frandom) || ferror(frandom)) {
+	if (errno != 0) {
+	    printf("test_shortest:%s\n", strerror(errno));
+	} else {
+	    printf("test_shortest:/dev/urandom reached to EOF!\n");
+	}
+	fclose(frandom);
+	exit(1);
+    }
+    x = ((uint64_t)w << 32) | z;
+    sfmt->status[i][j] = x;
+}
+
+#endif
 
 
-
-bool check_minpoly128_hi(sfmt_t *sfmt, const GF2X& minpoly,
+bool check_minpoly128_hi(dsfmt_t *sfmt, const GF2X& minpoly,
 			 unsigned int bitpos) {
     uint32_t sum;
-    uint64_t hi, low;
+    uint64_t ar[2];
     uint64_t mask;
     int i;
 
@@ -120,8 +141,8 @@ bool check_minpoly128_hi(sfmt_t *sfmt, const GF2X& minpoly,
     mask = (uint64_t)1UL << (63 - bitpos);
     for (int j = 0; j < 500; j++) {
 	for (i = 0; i <= deg(minpoly); i++) {
-	    gen_rand128(sfmt, &hi, &low);
-	    if (mask & hi != 0) {
+	    gen_rand104sp(sfmt, ar, 0);
+	    if (mask & ar[0] != 0) {
 		sum ^= 1;
 	    }
 	}
@@ -132,10 +153,10 @@ bool check_minpoly128_hi(sfmt_t *sfmt, const GF2X& minpoly,
     return true;
 }
 
-bool check_minpoly128_low(sfmt_t *sfmt, const GF2X& minpoly,
+bool check_minpoly128_low(dsfmt_t *sfmt, const GF2X& minpoly,
 			  unsigned int bitpos) {
     uint32_t sum;
-    uint64_t hi, low;
+    uint64_t ar[2];
     uint64_t mask;
     int i;
 
@@ -143,8 +164,8 @@ bool check_minpoly128_low(sfmt_t *sfmt, const GF2X& minpoly,
     mask = (uint64_t)1UL << (63 - bitpos);
     for (int j = 0; j < 500; j++) {
 	for (i = 0; i <= deg(minpoly); i++) {
-	    gen_rand128(sfmt, &hi, &low);
-	    if (mask & low != 0) {
+	    gen_rand104sp(sfmt, ar, 0);
+	    if (mask & ar[1] != 0) {
 		sum ^= 1;
 	    }
 	}
@@ -155,7 +176,7 @@ bool check_minpoly128_low(sfmt_t *sfmt, const GF2X& minpoly,
     return true;
 }
 
-bool check_minpoly128(sfmt_t *sfmt, const GF2X& minpoly, unsigned int bitpos) {
+bool check_minpoly128(dsfmt_t *sfmt, const GF2X& minpoly, unsigned int bitpos) {
     if (bitpos < 64) {
 	return check_minpoly128_hi(sfmt, minpoly, bitpos);
     } else {
@@ -163,8 +184,8 @@ bool check_minpoly128(sfmt_t *sfmt, const GF2X& minpoly, unsigned int bitpos) {
     }
 }
 
-int get_equiv_distrib(int bit, sfmt_t *sfmt) {
-    static sfmt_t sfmtnew;
+int get_equiv_distrib(int bit, dsfmt_t *sfmt) {
+    static dsfmt_t sfmtnew;
     int shortest;
 
     //fprintf(stderr, "now start get_equiv %d\n", bit);
@@ -174,13 +195,13 @@ int get_equiv_distrib(int bit, sfmt_t *sfmt) {
     return shortest;
 }
 
-int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
-    static sfmt_t sfmtnew;
+int get_equiv_distrib64(int bit, dsfmt_t *sfmt) {
+    static dsfmt_t sfmtnew;
     int dist, min;
     uint32_t mode;
 
     min = INT_MAX;
-    for (mode = 0; mode < 4; mode += 2) {
+    for (mode = 0; mode < 2; mode++) {
 	sfmtnew = *sfmt;
 	set_up(64, bit, mode, msb);
 	dist = get_shortest_base(&sfmtnew);
@@ -192,30 +213,9 @@ int get_equiv_distrib64(int bit, sfmt_t *sfmt) {
     return min;
 }
 
-int get_equiv_distrib32(int bit, sfmt_t *sfmt) {
-    static sfmt_t sfmtnew;
-    int dist, min;
-    uint32_t mode;
-
-    min = INT_MAX;
-    //printf("dist = ");
-    for (mode = 0; mode < 4; mode++) {
-	sfmtnew = *sfmt;
-	set_up(32, bit, mode, msb);
-	dist = get_shortest_base(&sfmtnew);
-	//printf("%d ", dist);
-	//printf("dist = %d\n", dist);
-	if (dist < min) {
-	    min = dist;
-	}
-    }
-    //printf("\n");
-    return min;
-}
-
-void make_zero_state(sfmt_t *sfmt, const GF2X& poly) {
-    sfmt_t sfmtnew;
-    uint64_t hi, low;
+void make_zero_state(dsfmt_t *sfmt, const GF2X& poly) {
+    dsfmt_t sfmtnew;
+    uint64_t ar[2];
     int i;
 
     memset(&sfmtnew, 0, sizeof(sfmtnew));
@@ -223,7 +223,7 @@ void make_zero_state(sfmt_t *sfmt, const GF2X& poly) {
 	if (coeff(poly, i) != 0) {
 	    add_rnd(&sfmtnew, sfmt);
 	}
-	gen_rand128(sfmt, &hi, &low);
+	gen_rand104sp(sfmt, ar, 0);
     }
     *sfmt = sfmtnew;
 }
@@ -236,11 +236,11 @@ void test_shortest(char *filename) {
     GF2X minpoly;
     GF2X tmp;
     GF2X rempoly;
-    sfmt_t sfmt;
-    sfmt_t sfmt_save;
+    dsfmt_t sfmt;
+    dsfmt_t sfmt_save;
     vec_GF2 vec;
     int shortest;
-    uint32_t i;
+    int i;
     int dist_sum;
     int count;
     int old;
@@ -263,7 +263,7 @@ void test_shortest(char *filename) {
     fclose(fp);
     printBinary(stdout, poly);
     vec.SetLength(2 * maxdegree);
-    generating_polynomial128(&sfmt, vec, 0, maxdegree);
+    generating_polynomial104(&sfmt, vec, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
 #if 0
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
@@ -277,9 +277,8 @@ void test_shortest(char *filename) {
 	printf("check minpoly NG!\n");
     }
 #endif
-    for (i = 1; i < 128; i++) {
-	//sfmt = sfmt_save;
-	generating_polynomial128(&sfmt, vec, i, maxdegree);
+    for (i = 1; i < 104; i++) {
+	generating_polynomial104(&sfmt, vec, i, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
@@ -290,17 +289,15 @@ void test_shortest(char *filename) {
 	}
 #endif
     }
-#if 1 // 0状態を作るにはこれは不要？
     lcmcount = 0;
     while (deg(lcmpoly) < (long)maxdegree) {
 	if (lcmcount > 5000) {
-	    printf("failure\n");
-	    return;
+	    printf("failure to get max LCM\n");
+	    break;
 	}
-	errno = 0;
 	fill_state_random(&sfmt, frandom);
-	for (int j = 0; j < 128; j++) {
-	    generating_polynomial128(&sfmt, vec, j, maxdegree);
+	for (int j = 0; j < 104; j++) {
+	    generating_polynomial104(&sfmt, vec, j, maxdegree);
 	    if (IsZero(vec)) {
 		break;
 	    }
@@ -316,11 +313,10 @@ void test_shortest(char *filename) {
 	    }
 	}
     }
-    if (deg(lcmpoly) != maxdegree) {
+    if (deg(lcmpoly) > maxdegree) {
 	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
 	exit(1);
     }
-#endif
 #if 0
     sfmt = sfmt_save;
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
@@ -340,7 +336,7 @@ void test_shortest(char *filename) {
     }
     sfmt = sfmt_save;
     make_zero_state(&sfmt, tmp);
-    generating_polynomial128(&sfmt, vec, 0, maxdegree);
+    generating_polynomial104(&sfmt, vec, 0, maxdegree);
     berlekampMassey(minpoly, maxdegree, vec);
     if (deg(minpoly) != MEXP) {
 	printf("deg zero state = %ld\n", deg(minpoly));
@@ -351,8 +347,9 @@ void test_shortest(char *filename) {
 	dist_sum = 0;
 	count = 0;
 	old = 0;
-	printf("128 bit k-distribution\n");
-	for (bit = 1; bit <= 128; bit++) {
+	printf("104 bit k-distribution\n");
+	for (bit = 1; bit <= 104; bit++) {
+	//for (bit = 1; bit <= 1; bit++) {
 	    shortest = get_equiv_distrib(bit, &sfmt);
 	    dist_sum += mexp / bit - shortest;
 	    if (old == shortest) {
@@ -364,15 +361,15 @@ void test_shortest(char *filename) {
 	    printf("k(%d) = %d\n", bit, shortest);
 	    fflush(stdout);
 	}
-	printf("128bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+	printf("104bit D.D:%7d, DUP:%5d\n", dist_sum, count);
     }
 
     if (bit_64) {
     dist_sum = 0;
     count = 0;
     old = 0;
-    printf("64 bit k-distribution\n");
-    for (bit = 1; bit <= 64; bit++) {
+    printf("52 bit k-distribution\n");
+    for (bit = 1; bit <= 52; bit++) {
 	shortest = get_equiv_distrib64(bit, &sfmt);
 	dist_sum += mexp / bit - shortest;
 	if (old == shortest) {
@@ -384,27 +381,7 @@ void test_shortest(char *filename) {
 	printf("k(%d) = %d\n", bit, shortest);
 	fflush(stdout);
     }
-    printf("64bit D.D:%7d, DUP:%5d\n", dist_sum, count);
-    }
-
-    if (bit_32) {
-	dist_sum = 0;
-	count = 0;
-	old = 0;
-	printf("32 bit k-distribution\n");
-	for (bit = 1; bit <= 32; bit++) {
-	    shortest = get_equiv_distrib32(bit, &sfmt);
-	    dist_sum += mexp / bit - shortest;
-	    if (old == shortest) {
-		count++;
-	    } else {
-		old = shortest;
-	    }
-	    //printf("k(%d) = %d, %d, %d\n", bit, shortest, dist_sum, count);
-	    printf("k(%d) = %d\n", bit, shortest);
-	    fflush(stdout);
-	}
-	printf("32bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+    printf("52bit D.D:%7d, DUP:%5d\n", dist_sum, count);
     }
 }
 
@@ -412,7 +389,7 @@ int main(int argc, char *argv[]) {
     option(argc, argv);
     mexp = get_rnd_mexp();
     maxdegree = get_rnd_maxdegree();
-    printf("mexp = %d\n", mexp);
+    printf("mexp = %d, maxdegree = %d\n", mexp, maxdegree);
     frandom = fopen("/dev/urandom", "r");
     if (errno) {
 	perror("main");
