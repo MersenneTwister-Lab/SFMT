@@ -9,10 +9,9 @@
 #define MEXP 19937
 #endif
 
-#define LUNG_WORD_SIZE 128
 #define WORDSIZE 104
-#define N ((MEXP - LUNG_WORD_SIZE) / WORDSIZE + 1)
-#define MAXDEGREE ((WORDSIZE * N) + LUNG_WORD_SIZE)
+#define N (MEXP / WORDSIZE)
+#define MAXDEGREE (WORDSIZE * (N + 1))
 
 struct DSFMT_T {
     uint64_t status[N + 1][2];

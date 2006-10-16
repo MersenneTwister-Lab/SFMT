@@ -1,0 +1,5 @@
+2006.10.16
+resultD01.521.03.txt のdistributionを求めると、k(25) でエラーになる。
+shortbase128.cpp のchange_weight_modeでスペシャルのnextを求めようと
+しているから。スペシャルの場合、ゼロフラグを立てるようにしたが、
+これでよいかどうか、疑問あり。

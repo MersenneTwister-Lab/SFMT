@@ -28,8 +28,8 @@ typedef struct IN_STATUS in_status;
 
 #define MIN(a,b) ((a)>(b)?(b):(a))
 
-mat_GF2 debug_mat0;
-mat_GF2 debug_mat;
+//mat_GF2 debug_mat0;
+//mat_GF2 debug_mat;
 //bool debug_dependent[128];
 //uint32_t debug_count;
 int debug_flag = 0;
@@ -118,6 +118,9 @@ void set_special(in_status *st, unsigned int special_bit) {
     st->next.SetLength(bit_len);
     st->next.put(special_bit, 1);
     memset(&(st->random), 0, sizeof(st->random));
+    //if (special_bit == 49) {
+    //cout << "DEBUG:49:" << bit_len << ":" << st->next << endl;
+    //}
 }
 
 /*
@@ -274,7 +277,7 @@ static void set_normal(in_status *st, dsfmt_t *sfmt) {
     st->count++;
     while (IsZero(st->next)) {
 	zero_count++;
-	if (zero_count > MAXDEGREE) {
+	if (zero_count > 2 * MAXDEGREE) {
 	    st->zero = true;
 	    break;
 	}
@@ -330,7 +333,7 @@ static void get_next_state(in_status *st) {
     st->count++;
     while (IsZero(st->next)) {
 	zero_count++;
-	if (zero_count > MAXDEGREE) {
+	if (zero_count > 2 * MAXDEGREE) {
 	    st->zero = true;
 	    break;
 	}
@@ -401,9 +404,11 @@ int get_shortest_base(dsfmt_t *sfmt) {
 	    get_next_state(&(bases[shortest]));
 	} else {
 	    fprintf(stderr, "next is not zero\n");
+#if 0
 	    cout << "debug_mat0:" << debug_mat0 << endl;
 	    cout << "debug_mat:" << debug_mat << endl;
 	    cout << "dependent:";
+#endif
 	    for (i = 0; i <= bit_len; i++) {
 		cout << dependents[i] ;
 	    }
@@ -464,7 +469,10 @@ static void change_weight_mode(in_status bases[], vec_GF2 next[]) {
 	for (j = bit_len * weight_mode / max_weight_mode; j < bit_len; j++) {
 	    bases[i].next.put(j, bases[i].previous2.get(j));
 	}
-	if (IsZero(bases[i].next)) {
+	// これでよいかわからない。
+	if (bases[i].special && IsZero(bases[i].next)) {
+	    bases[i].zero = true;
+	} else if (IsZero(bases[i].next)) {
 	    get_next_state(&(bases[i]));
 	}
 	next[i] = bases[i].next;
@@ -501,7 +509,7 @@ static bool get_dependent_trans(bool dependent[], vec_GF2 array[]) {
     uint32_t rank;
 
     convert(mat, array, bit_len);
-    debug_mat0 = mat;
+    //debug_mat0 = mat;
     rank = (uint32_t) gauss_plus(mat);
     return dependent_rows(dependent, mat);
 }
@@ -548,7 +556,7 @@ static bool dependent_rows(bool result[], mat_GF2& mat) {
 	exit(1);
     }
 #endif
-    debug_mat = mat;
+    //debug_mat = mat;
     return found;
 }
 

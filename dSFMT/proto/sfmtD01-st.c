@@ -81,10 +81,12 @@ static inline void do_recursion(uint64_t a[2], uint64_t b[2],
 	^ lung[1];
     r1 = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] << SL1) ^ (c[0] >> SR2)
 	^ lung[0];
+    r0 = (r0 & LOW_MASK) | HIGH_CONST;
+    r1 = (r1 & LOW_MASK) | HIGH_CONST;
+    a[0] = r0;
+    a[1] = r1;
     lung[0] ^= r0;
     lung[1] ^= r1;
-    a[0] = (r0 & LOW_MASK) | HIGH_CONST;
-    a[1] = (r1 & LOW_MASK) | HIGH_CONST;
 }
 
 /*
@@ -139,12 +141,10 @@ void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed)
 
     psfmt = dsfmt->status[0];
     psfmt[0] = (seed & LOW_MASK) | HIGH_CONST;
-    for (i = 1; i < N * 2; i++) {
-	psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 60)) + i;
+    for (i = 1; i <= N * 2; i++) {
+	psfmt[i] = 6364136223846793005ULL 
+	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
 	psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
-    }
-    for (; i <= N * 2; i++) {
-	psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 60)) + i;
     }
     dsfmt->idx = 0;
 }

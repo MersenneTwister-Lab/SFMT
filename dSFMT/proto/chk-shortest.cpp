@@ -25,7 +25,7 @@ static int mexp;
 static int maxdegree;
 static FILE *frandom;
 
-static bool bit_128 = true;
+static bool bit_128 = false;
 static bool bit_64 = true;
 static bool msb = true;
 static char* filename = NULL;
