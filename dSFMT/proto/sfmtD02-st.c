@@ -14,6 +14,7 @@
 static unsigned int POS1 = 1;
 static unsigned int SL1 = 11;
 static unsigned int SL2 = 11;
+static unsigned int SL3 = 3;
 static unsigned int SR1 = 7;
 static unsigned int SR2 = 7;
 static uint64_t MSK1 = 7;
@@ -37,9 +38,10 @@ void setup_param(unsigned int p1, unsigned int p2, unsigned int p3,
 		 unsigned int p7, unsigned int p8, unsigned int p9,
 		 unsigned int p10, unsigned int p11, unsigned int p12,
 		 unsigned int p13) {
-    POS1 = p1 % (N-2) + 1;
+    POS1 = p1 % (N-1) + 1;
     SL1 = (p2 & 0xffff) % (64 - 1) + 1;
     SL2 = (p13 % 4) * 2 + 1; 
+    SL3 = (p13 >> 2) % (64 - 1) + 1; 
     SR1 = (p2 >> 16) % (64 - 1) + 1;
     SR2 = (p3 & 0xffff) % (64 - 1) + 1;
     MSK1= ((uint64_t)(p4 | p5 | p6) << 32) | (p8 | p9 | p10);
@@ -50,6 +52,7 @@ void print_param(FILE *fp) {
     fprintf(fp, "POS1 = %u\n", POS1);
     fprintf(fp, "SL1 = %u\n", SL1);
     fprintf(fp, "SL2 = %u\n", SL2);
+    fprintf(fp, "SL3 = %u\n", SL3);
     fprintf(fp, "SR1 = %u\n", SR1);
     fprintf(fp, "SR2 = %u\n", SR2);
     fprintf(fp, "MSK1 = %016llx\n", MSK1);
@@ -78,9 +81,9 @@ static inline void do_recursion(uint64_t a[2], uint64_t b[2],
 
     lshift128(x, a, SL2);
     r0 = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ (c[0] << SL1) ^ (c[0] >> SR2)
-	^ lung[1];
+	^ lung[1] ^ (lung[1] << SL3);
     r1 = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] << SL1) ^ (c[0] >> SR2)
-	^ lung[0];
+	^ lung[0] ^ (lung[0] << SL3);
     lung[0] ^= r0;
     lung[1] ^= r1;
     a[0] = (r0 & LOW_MASK) | HIGH_CONST;
@@ -230,6 +233,8 @@ void read_random_param(FILE *f) {
     SL1 = get_uint(line, 10);
     fgets(line, 256, f);
     SL2 = get_uint(line, 10);
+    fgets(line, 256, f);
+    SL3 = get_uint(line, 10);
     fgets(line, 256, f);
     SR1 = get_uint(line, 10);
     fgets(line, 256, f);

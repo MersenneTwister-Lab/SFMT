@@ -111,7 +111,8 @@ int main(int argc, char* argv[]){
 	n = atoi(argv[1]);
     }
 
-    printf("MEXP = %d\n", get_rnd_mexp());
+    printf("MEXP = %d, MAXDEGREE = %d, N = %d\n",
+	   get_rnd_mexp(), get_rnd_maxdegree(), N);
     seed = (long)time(NULL);
     printf("seed = %lu\n", seed);
     init_genrand(seed);

@@ -6,6 +6,7 @@
 %521:MEXP=521
 %607:MEXP=607
 %1279:MEXP=1279
+%2203:MEXP=2203
 %2281:MEXP=2281
 %19937:MEXP=19937
 #%44497:MEXP=44497
@@ -14,7 +15,7 @@
 #%132049:MEXP=132049
 #%216091:MEXP=216091
 
-DDEBUG = -O0 -g
+#DDEBUG = -O0 -g
 
 DMEXP = -DMEXP=${MEXP}
 
@@ -23,11 +24,44 @@ CPP = g++ -Wall -O9 $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -lntl -lgmp
 
+param-searchD01-521: search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
 param-searchD01-607: search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o 
 	${CPP} -o $@ search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o \
 		${LINKOPT}
 
+param-searchD01-1279: search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
+param-searchD01-2203: search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD01-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
+param-searchD02-521: search.o sfmtD02-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD02-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
+param-searchD02-607: search.o sfmtD02-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD02-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
+param-searchD02-1279: search.o sfmtD02-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD02-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
+param-searchD03-521: search.o sfmtD03-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD03-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
 shortest-baseD01-607: chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
+			dsfmt-util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
+			dsfmt-util.o ${LINKOPT}
+
+shortest-baseD01-521: chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
 			dsfmt-util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
 			dsfmt-util.o ${LINKOPT}
