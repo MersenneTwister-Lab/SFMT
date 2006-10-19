@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "random.h"
+#include "paramsD01.h"
 
 #ifndef MEXP
 #define MEXP 19937
@@ -15,18 +16,6 @@
 #define WORDSIZE 104
 #define N (MEXP / WORDSIZE)
 #define MAXDEGREE (WORDSIZE * (N + 1))
-
-#define LOW_MASK  ((uint64_t)0x000FFFFFFFFFFFFFULL)
-#define HIGH_CONST ((uint64_t)0xBFF0000000000000ULL)
-//#define HIGH_CONST ((uint64_t)0x0000000000000ULL)
-
-#define POS1 89
-#define SL1 18
-#define SL2 1
-#define SR1 3
-#define SR2 2
-#define MSK1 0x7f7fffffU
-#define MSK2 0xfffbffffU
 
 union W128_T {
     uint64_t a[2];
@@ -39,7 +28,7 @@ static double *psfmt = (double *)&(sfmt[0].d[0]);
 static int idx;
 
 INLINE static
-#if defined(__GNUC__)
+#if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
 #endif
 void lshift128(w128_t *out, const w128_t *in, int shift) {
@@ -49,7 +38,7 @@ void lshift128(w128_t *out, const w128_t *in, int shift) {
 }
 
 INLINE static
-#if defined(__GNUC__)
+#if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
 #endif
     void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c, w128_t *lung){
@@ -122,7 +111,7 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
 }
 
 INLINE
-#if defined(__GNUC__)
+#if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
 #endif
     double gen_rand(void)
@@ -139,7 +128,7 @@ __attribute__((always_inline))
 }
 
 INLINE
-#if defined(__GNUC__)
+#if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
 #endif
     void fill_array(double array[], int size)
