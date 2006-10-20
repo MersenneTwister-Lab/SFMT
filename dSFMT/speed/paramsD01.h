@@ -9,12 +9,19 @@
 #define SL2 5
 #define SR1 46
 #define SR2 31
-#define MSK1 ((uint64_t)0x7ffebfd7ff6affffULL)
-#define MSK2 ((uint64_t)0xfeffbff7fffffbbfULL)
+#define MSK1 0x7ffebfd7ff6affffULL
+#define MSK2 0xfeffbff7fffffbbfULL
+#define MSK32_1 0x7ffebfd7U
+#define MSK32_2 0xff6affffU
+#define MSK32_3 0xfeffbff7U
+#define MSK32_4 0xfffffbbfU
 
-#define LOW_MASK  ((uint64_t)0x000FFFFFFFFFFFFFULL)
-#define HIGH_CONST ((uint64_t)0xBFF0000000000000ULL)
-//#define HIGH_CONST ((uint64_t)0x0000000000000ULL)
+#define LOW_MASK  0x000FFFFFFFFFFFFFULL
+#define HIGH_CONST 0xBFF0000000000000ULL
+//#define HIGH_CONST 0x0000000000000ULL
+#define LOW_MASK32_1 0x000fffffU
+#define LOW_MASK32_2 0xffffffffU
+#define HIGH_CONST32 0xbff00000U
 
 /* for altivec */
 #define ALTI_SL1 6
@@ -39,3 +46,6 @@
 #define ALTI_LOW_MSK \
     (vector unsigned int)(0x000fffffU, 0xffffffffU, 0x000fffffU, 0xffffffffU)
 #define ALTI_HIGH_CONST (vector unsigned int)(0xbff00000U, 0, 0xbff00000U, 0)
+
+/* for sse2 */
+#define SSE2_SHUFF 0x4e
