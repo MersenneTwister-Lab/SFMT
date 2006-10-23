@@ -68,11 +68,12 @@ INLINE void init_gen_rand(uint32_t s)
     }
 }
 
-INLINE static vector unsigned int vec_recursion(vector unsigned int a,
-						vector unsigned int b,
-						vector unsigned int one,
-						vector unsigned int zero,
-						vector unsigned int mat_a) {
+INLINE static __attribute__((always_inline))
+    vector unsigned int vec_recursion(vector unsigned int a,
+				      vector unsigned int b,
+				      vector unsigned int one,
+				      vector unsigned int zero,
+				      vector unsigned int mat_a) {
     vector unsigned int r, m;
     
     m = vec_and(a, one);
@@ -85,7 +86,8 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
     return r;
 }
 
-INLINE static void gen_rand_all(void)
+INLINE static __attribute__((always_inline)) 
+    void gen_rand_all(void)
 {
     //uint32_t y;
     vector unsigned int a0, a1, a, b0, b1, b, r;
@@ -146,14 +148,16 @@ INLINE static void gen_rand_all(void)
     mti = 0;
 }
 
-INLINE static vector unsigned int temper(vector unsigned int *a,
-					 vector unsigned int s11,
-					 vector unsigned int s7,
-					 vector unsigned int s15,
-					 vector unsigned int s18,
-					 vector unsigned int and1,
-					 vector unsigned int and2) {
+INLINE static __attribute__((always_inline)) 
+    vector unsigned int temper(vector unsigned int *a,
+			       vector unsigned int s11,
+			       vector unsigned int s7,
+			       vector unsigned int s15,
+			       vector unsigned int s18,
+			       vector unsigned int and1,
+			       vector unsigned int and2) {
     vector unsigned r;
+
     r = vec_ld(0, a);
     r = vec_xor(r, vec_sr(r, s11));
     r = vec_xor(r, vec_and(vec_sl(r, s7), and1));
@@ -255,7 +259,8 @@ INLINE static void gen_rand_array(uint32_t array[], int size)
 }
 
 /* generates a random number on [0,0xffffffff]-interval */
-INLINE uint32_t gen_rand(void)
+INLINE __attribute__((always_inline)) 
+    uint32_t gen_rand(void)
 {
     unsigned long y;
 
@@ -274,7 +279,8 @@ INLINE uint32_t gen_rand(void)
     return y;
 }
 
-INLINE void fill_array(uint32_t array[], int size)
+INLINE __attribute__((always_inline)) 
+    void fill_array(uint32_t array[], int size)
 {
     assert(size >= 2 * N);
     assert((int)array % 16 == 0);

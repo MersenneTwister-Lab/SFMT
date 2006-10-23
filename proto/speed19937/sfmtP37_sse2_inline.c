@@ -23,7 +23,7 @@ INLINE static void gen_rand_all(void);
 static __m128i sfmt[N + 1];
 static unsigned int idx;
 static uint32_t *sfmtp = (uint32_t *)sfmt;
-#define SHUFF 0x39
+#define SHUFF 0x4B
 
 #define POS1 89
 #define SL1 18
@@ -79,12 +79,12 @@ INLINE void gen_rand_all(void) {
     for (i = 0; i < N - POS1; i++) {
 	r = mm_recursion(&sfmt[i], &sfmt[i + POS1], r, u, mask);
 	_mm_store_si128(&sfmt[i], r);
-	_mm_xor_si128(u, r);
+	u =_mm_xor_si128(u, r);
     }
     for (; i < N; i++) {
 	r = mm_recursion(&sfmt[i], &sfmt[i + POS1 - N], r, u, mask);
 	_mm_store_si128(&sfmt[i], r);
-	_mm_xor_si128(u, r);
+	u =_mm_xor_si128(u, r);
     }
     _mm_store_si128(&sfmt[N], u);
 }
@@ -99,18 +99,18 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
     for (i = 0; i < N - POS1; i++) {
 	r = mm_recursion(&sfmt[i], &sfmt[i + POS1], r, u, mask);
 	_mm_store_si128(&array[i], r);
-	_mm_xor_si128(u, r);
+	u =_mm_xor_si128(u, r);
     }
     for (; i < N; i++) {
 	r = mm_recursion(&sfmt[i], &array[i + POS1 - N], r, u, mask);
 	_mm_store_si128(&array[i], r);
-	_mm_xor_si128(u, r);
+	u = _mm_xor_si128(u, r);
     }
     /* main loop */
     for (; i < size - N; i++) {
 	r = mm_recursion(&array[i - N], &array[i + POS1 - N], r, u, mask);
 	_mm_store_si128(&array[i], r);
-	_mm_xor_si128(u, r);
+	u = _mm_xor_si128(u, r);
     }
     for (j = 0; j < 2 * N - size; j++) {
 	r = _mm_load_si128(&array[j + size - N]);
@@ -120,7 +120,7 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
 	r = mm_recursion(&array[i - N], &array[i + POS1 - N], r, u, mask);
 	_mm_store_si128(&array[i], r);
 	_mm_store_si128(&sfmt[j], r);
-	_mm_xor_si128(u, r);
+	u = _mm_xor_si128(u, r);
     }
     _mm_store_si128(&sfmt[N], u);
 }

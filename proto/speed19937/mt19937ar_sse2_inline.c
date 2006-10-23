@@ -77,8 +77,8 @@ INLINE void init_gen_rand(uint32_t s)
 }
 
 INLINE static __m128i mm_recursion(uint32_t *x, uint32_t *y, uint32_t *z,
-				   __m128i u_mask, __m128i l_mask, 
-				   __m128i mat_a, __m128i one) {
+			 __m128i u_mask, __m128i l_mask, 
+			 __m128i mat_a, __m128i one) {
     __m128i a0, a1, b, r;
     a0 = _mm_load_si128((__m128i *)x);
     a1 = _mm_loadu_si128((__m128i *)y);
