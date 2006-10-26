@@ -14,8 +14,8 @@ CC = gcc -Wall $(OPT) -Wmissing-prototypes -arch ppc  $(DDEBUG)
 all:well_fastc_inline2 rand_fastc_inline2 rand48_fastc_inline2 \
 	mrg_fastc_inline2 random256g2_fastc_inline2 xor3_fastc_inline2
 
-well_fastc_inline2: well19937c.c test_time2_inline.c
-	${CC} -o $@ well19937c.c
+well_fastc_inline2: well19937c_fast.c test_time2_inline.c
+	${CC} -o $@ well19937c_fast.c
 
 rand_fastc_inline2: rand.c test_time2_inline.c
 	${CC} -o $@ rand.c

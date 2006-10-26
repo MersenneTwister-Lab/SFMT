@@ -1,2 +1,6 @@
-BURST:200ms for 100000000 randoms.
-SEQUE:210ms for 100000000 randoms.
+consumed time for generating 100000000 randoms.
+BLOCK MIN: 160ms.
+      AVE: 166ms.
+SEQUE MIN: 240ms.
+      AVE: 248ms.
+r = 1568473218
