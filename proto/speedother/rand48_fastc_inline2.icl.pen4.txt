@@ -1,6 +1,6 @@
 consumed time for generating 100000000 randoms.
-BLOCK MIN:1248ms.
-      AVE:1260ms.
-SEQUE MIN:1264ms.
-      AVE:1275ms.
+BLOCK MIN:1277ms.
+      AVE:1285ms.
+SEQUE MIN:1293ms.
+      AVE:1304ms.
 r = 2549442811

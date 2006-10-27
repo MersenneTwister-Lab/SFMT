@@ -151,7 +151,7 @@ INLINE void fill_array(uint32_t array[], int size)
     y = y ^ ((y << 15) & TEMPERC);
     array[i] = y;
     i++;
-    for (;i + R < size; i++) {
+    for (;i + N < size; i++) {
 	r = do_recursion(&lun, array[i], array[i + 1], array[i + MM1],
 			 array[i + MM2], array[i + MM3]);
 	array[i + R] = r;
@@ -159,7 +159,7 @@ INLINE void fill_array(uint32_t array[], int size)
 	y = y ^ ((y << 15) & TEMPERC);
 	array[i] = y;
     }
-    memcpy(STATE, &array[i], sizeof(uint32_t) * R);
+    memcpy(STATE, &array[i], sizeof(STATE));
     lung = lun;
     for (; i < size; i++) {
 	array[i] = gen_rand();

@@ -9,6 +9,7 @@
 #define TIC_COUNT 1000
 
 uint32_t array[NUM_RANDS + 1];
+uint32_t array2[2048];
 
 int main(int argc, char *argv[]) {
     uint32_t i, j;
@@ -25,6 +26,7 @@ int main(int argc, char *argv[]) {
 	printf("generated randoms\n");
 	init_gen_rand(1234);
 	fill_array(array, 5000);
+	fill_array(array2, 2048);
 	init_gen_rand(1234);
 	for (i = 0; i < 5000; i++) {
 	    r = gen_rand();
@@ -38,6 +40,14 @@ int main(int argc, char *argv[]) {
 		if (i % 5 == 4) {
 		    printf("\n");
 		}
+	    }
+	}
+	for (i = 0; i < 2048; i++) {
+	    r = gen_rand();
+	    if (r != array2[i]) {
+		printf("\nmismatch array2 i = %d: r = %x, array = %x\n",
+		       i, r, array2[i]);
+		return -1;
 	    }
 	}
     }
