@@ -22,6 +22,9 @@ static unsigned int SL1 = 11;
 static unsigned int SL2 = 11;
 static unsigned int SR1 = 7;
 static unsigned int PM1 = 7;
+static unsigned int PM2 = 7;
+static unsigned int PM3 = 7;
+static unsigned int PM4 = 7;
 static unsigned int MSK1 = 7;
 static unsigned int MSK2 = 7;
 static unsigned int MSK3 = 7;
@@ -44,11 +47,25 @@ void setup_param(unsigned int p1, unsigned int p2, unsigned int p3,
 		 unsigned int p7, unsigned int p8, unsigned int p9,
 		 unsigned int p10, unsigned int p11, unsigned int p12,
 		 unsigned int p13) {
+    int perm;
+    const int perm_type[24][4] = {{0, 1, 2, 3}, {0, 1, 3, 2}, {0, 2, 1, 3},
+				  {0, 2, 3, 1}, {0, 3, 1, 2}, {0, 3, 2, 1},
+				  {1, 0, 2, 3}, {1, 0, 3, 2}, {1, 2, 0, 3},
+				  {1, 2, 3, 0}, {1, 3, 0, 2}, {1, 3, 2, 0},
+				  {2, 0, 1, 3}, {2, 0, 3, 1}, {2, 1, 0, 3},
+				  {2, 1, 3, 0}, {2, 3, 0, 1}, {2, 3, 1, 0},
+				  {3, 0, 1, 2}, {3, 0, 2, 1}, {3, 1, 0, 2},
+				  {3, 1, 2, 0}, {3, 2, 0, 1}, {3, 2, 1, 0}};
+
     POS1 = p1 % (N-1) + 1;
     SL1 = p2 % (32 - 1) + 1;
     SL2 = (p13 % 4) * 2 + 1;
     SR1 = (p2 >> 16) % (32 - 1) + 1;
-    PM1 = p3 % 24;
+    perm = p3 % 24;
+    PM1 = perm_type[perm][0];
+    PM2 = perm_type[perm][1];
+    PM3 = perm_type[perm][2];
+    PM4 = perm_type[perm][3];
     MSK1= p4 | p5 | p6;
     MSK2= p6 | p7 | p8;
     MSK3= p8 | p9 | p10;
@@ -62,6 +79,9 @@ void print_param(FILE *fp) {
     fprintf(fp, "SL2 = %u\n", SL2);
     fprintf(fp, "SR1 = %u\n", SR1);
     fprintf(fp, "PM1 = %u\n", PM1);
+    fprintf(fp, "PM2 = %u\n", PM2);
+    fprintf(fp, "PM3 = %u\n", PM3);
+    fprintf(fp, "PM4 = %u\n", PM4);
     fprintf(fp, "MSK1 = %08x\n", MSK1);
     fprintf(fp, "MSK2 = %08x\n", MSK2);
     fprintf(fp, "MSK3 = %08x\n", MSK3);
@@ -114,24 +134,12 @@ inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 static inline void do_recursion(uint32_t a[4], uint32_t b[4],
 				uint32_t c[4], uint32_t d[4]) {
     uint32_t x[4];
-    const int perm_type[24][4] = {{0, 1, 2, 3}, {0, 1, 3, 2}, {0, 2, 1, 3},
-				  {0, 2, 3, 1}, {0, 3, 1, 2}, {0, 3, 2, 1},
-				  {1, 0, 2, 3}, {1, 0, 3, 2}, {1, 2, 0, 3},
-				  {1, 2, 3, 0}, {1, 3, 0, 2}, {1, 3, 2, 0},
-				  {2, 0, 1, 3}, {2, 0, 3, 1}, {2, 1, 0, 3},
-				  {2, 1, 3, 0}, {2, 3, 0, 1}, {2, 3, 1, 0},
-				  {3, 0, 1, 2}, {3, 0, 2, 1}, {3, 1, 0, 2},
-				  {3, 1, 2, 0}, {3, 2, 0, 1}, {3, 2, 1, 0}};
 
     lshift128(x, a, SL2);
-    a[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ (c[0] << SL1) 
-	^ d[perm_type[PM1][0]];
-    a[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] << SL1) 
-	^ d[perm_type[PM1][1]];
-    a[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ (c[2] << SL1) 
-	^ d[perm_type[PM1][2]];
-    a[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ (c[3] << SL1) 
-	^ d[perm_type[PM1][3]];
+    a[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ (c[0] << SL1) ^ d[PM1];
+    a[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] << SL1) ^ d[PM2];
+    a[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ (c[2] << SL1) ^ d[PM3];
+    a[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ (c[3] << SL1) ^ d[PM4];
 }
 
 static inline void assign128(uint32_t to[4], uint32_t from[4]) {
