@@ -260,13 +260,13 @@ param-searchP33-2281: search.o sfmtP33.o mt19937ar.o util.o debug.o
 param-searchP34-607: search.o sfmtP34.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP34.o mt19937ar.o util.o debug.o ${LINKOPT}
 
-param-searchP34-2281: search.o sfmtP34.o mt19937ar.o util.o debug.o
+param-searchP34-1279: search.o sfmtP34.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP34.o mt19937ar.o util.o debug.o ${LINKOPT}
 
 param-searchP35-607: search.o sfmtP35.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP35.o mt19937ar.o util.o debug.o ${LINKOPT}
 
-param-searchP35-2281: search.o sfmtP35.o mt19937ar.o util.o debug.o
+param-searchP35-1279: search.o sfmtP35.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP35.o mt19937ar.o util.o debug.o ${LINKOPT}
 
 param-searchP36-607: search.o sfmtP36.o mt19937ar.o util.o debug.o
@@ -278,14 +278,44 @@ param-searchP36-2281: search.o sfmtP36.o mt19937ar.o util.o debug.o
 param-searchP37-607: search.o sfmtP37.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP37.o mt19937ar.o util.o debug.o ${LINKOPT}
 
-param-searchP37-2281: search.o sfmtP37.o mt19937ar.o util.o debug.o
+param-searchP37-1279: search.o sfmtP37.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP37.o mt19937ar.o util.o debug.o ${LINKOPT}
 
 param-searchP38-607: search.o sfmtP38.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP38.o mt19937ar.o util.o debug.o ${LINKOPT}
 
-param-searchP38-2281: search.o sfmtP38.o mt19937ar.o util.o debug.o
+param-searchP38-1279: search.o sfmtP38.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP38.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP39-607: search.o sfmtP39.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP39.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP39-1279: search.o sfmtP39.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP39.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3a-607: search.o sfmtP3a.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3a.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3a1-607: search.o sfmtP3a1.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3a1.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3a-1279: search.o sfmtP3a.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3a.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3b-1279: search.o sfmtP3b.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3b.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3c-1279: search.o sfmtP3c.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3c.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3d-1279: search.o sfmtP3d.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3d.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3e-607: search.o sfmtP3e.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3e.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchP3e-1279: search.o sfmtP3e.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtP3e.o mt19937ar.o util.o debug.o ${LINKOPT}
 
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
@@ -397,6 +427,14 @@ shortest-baseP37-607: sfmtP37-st.o chk-p1-shortest.o shortbase128p1.o util.o
 
 shortest-baseP38-607: sfmtP38-st.o chk-p1-shortest.o shortbase128p1.o util.o
 	${CPP} -o $@ sfmtP38-st.o chk-p1-shortest.o shortbase128p1.o util.o \
+		${LINKOPT}
+
+shortest-baseP3a-607: sfmtP3a-st.o chk-p1-shortest.o shortbase128p1.o util.o
+	${CPP} -o $@ sfmtP3a-st.o chk-p1-shortest.o shortbase128p1.o util.o \
+		${LINKOPT}
+
+shortest-baseP3e-607: sfmtP3e-st.o chk-p1-shortest.o shortbase128p1.o util.o
+	${CPP} -o $@ sfmtP3e-st.o chk-p1-shortest.o shortbase128p1.o util.o \
 		${LINKOPT}
 
 shortest32-base5-521: chk-shortest32.o shortbase.o sfmt5-cls.o util.o
