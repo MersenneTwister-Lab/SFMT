@@ -60,6 +60,10 @@ param-searchD04-521: search.o sfmtD04-st.o mt19937ar.o util.o dsfmt-util.o
 	${CPP} -o $@ search.o sfmtD04-st.o mt19937ar.o util.o dsfmt-util.o \
 		${LINKOPT}
 
+param-searchD05-607: search.o sfmtD05-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD05-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
 shortest-baseD01-607: chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
 			dsfmt-util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
