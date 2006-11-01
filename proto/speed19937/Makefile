@@ -6,7 +6,10 @@ CPP = g++ -Wall -fast $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -lntl -lgmp
 
-inline_all:sfmt4a_fastc_inline pmt_fastc_inline mt_fastc_inline
+all:sfmtP37_fastc_inline2 sfmtP37_alti_inline2 \
+    sfmtP35_fastc_inline2 sfmtP35_alti_inline2 \
+    sfmtP3e_fastc_inline2 sfmtP3e_alti_inline2 \
+    mt_fastc_inline2 mt19937ar_alti_inline2	
 
 ##### ALTIVEC ####
 sfmt4a_alti: sfmt4a_alti.o test_time.o
@@ -111,6 +114,9 @@ sfmtX78_alti_inline2: test_time2_inline.c sfmtX78_alti_inline.c
 sfmtX78_alti_funcall2: test_time2_funcall.o sfmtX78_alti_funcall.o
 	${CC} -o $@ sfmtX78_alti_funcall.o test_time2_funcall.o
 
+sfmtP35_alti_inline2: test_time2_inline.c sfmtP35_alti_inline.c
+	${CC} -o $@ sfmtP35_alti_inline.c
+
 sfmtP37_alti_inline2: test_time2_inline.c sfmtP37_alti_inline.c
 	${CC} -o $@ sfmtP37_alti_inline.c
 
@@ -180,6 +186,9 @@ sfmtP37_fastc_inline2: sfmtP37_fastc_inline.c test_time2_inline.c
 
 sfmtP372_fastc_inline2: sfmtP372_fastc_inline.c test_time2_inline.c
 	${CC} -o $@ sfmtP372_fastc_inline.c
+
+sfmtP35_fastc_inline2: sfmtP35_fastc_inline.c test_time2_inline.c
+	${CC} -o $@ sfmtP35_fastc_inline.c
 
 sfmtP3e_fastc_inline2: sfmtP3e_fastc_inline.c test_time2_inline.c
 	${CC} -o $@ sfmtP3e_fastc_inline.c

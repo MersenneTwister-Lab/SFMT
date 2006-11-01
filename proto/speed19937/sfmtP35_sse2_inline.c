@@ -23,17 +23,16 @@ INLINE static void gen_rand_all(void);
 static __m128i sfmt[N + 1];
 static unsigned int idx;
 static uint32_t *sfmtp = (uint32_t *)sfmt;
-#define SHUFF 0x4B
 
 #define POS1 89
 #define SL1 18
 #define SL2 1
 #define SR1 3
-#define SR2 2
 #define MSK1 0x7f7fffffU
 #define MSK2 0xfffbffffU
 #define MSK3 0xeffffbffU
 #define MSK4 0xfefe7befU
+#define SHUFF 0x4B
 
 INLINE unsigned int get_rnd_maxdegree(void)
 {
@@ -53,20 +52,20 @@ INLINE static __m128i mm_recursion(__m128i *a, __m128i *b,
 				   __m128i c, __m128i d, __m128i mask) {
     __m128i v, x, y, z;
     
-    y = _mm_srli_epi32(*b, SR1);
-    y = _mm_and_si128(y, mask);
-    z = _mm_srli_epi32(c, SR2);
+    x = _mm_load_si128(a);
+    y = _mm_load_si128(b);
     v = _mm_slli_epi32(c, SL1);
+    z = _mm_shuffle_epi32(d, SHUFF);
+    z = _mm_xor_si128(z, x);
+    v = _mm_xor_si128(v, c);
+    x = _mm_slli_si128(x, SL2);
+    y = _mm_srli_epi32(y, SR1);
+    y = _mm_and_si128(y, mask);
     z = _mm_xor_si128(z, v);
-    v = _mm_shuffle_epi32(d, SHUFF);
-    v = _mm_xor_si128(v, *a);
-    x = _mm_slli_si128(*a, SL2);
     x = _mm_xor_si128(x, y);
-    z = _mm_xor_si128(z, v);
     z = _mm_xor_si128(z, x);
     return z;
 }
-
 INLINE void gen_rand_all(void) {
     int i;
     __m128i r, u, mask;

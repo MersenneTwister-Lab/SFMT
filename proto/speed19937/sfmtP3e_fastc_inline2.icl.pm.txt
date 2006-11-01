@@ -201,7 +201,7 @@ generated randoms
 3166975279  507920610  803871553 4046743557 2252576660 
 consumed time for generating 100000000 randoms.
 BLOCK MIN: 620ms.
-      AVE: 622ms.
+      AVE: 620ms.
 SEQUE MIN:1011ms.
-      AVE:1013ms.
+      AVE:1017ms.
 r = 2624773438
