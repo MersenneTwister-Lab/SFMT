@@ -72,6 +72,14 @@ param-searchD07-607: search.o sfmtD07-st.o mt19937ar.o util.o dsfmt-util.o
 	${CPP} -o $@ search.o sfmtD07-st.o mt19937ar.o util.o dsfmt-util.o \
 		${LINKOPT}
 
+param-searchD08-607: search.o sfmtD08-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD08-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
+param-searchD09-607: search.o sfmtD09-st.o mt19937ar.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD09-st.o mt19937ar.o util.o dsfmt-util.o \
+		${LINKOPT}
+
 shortest-baseD01-607: chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
 			dsfmt-util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
@@ -100,6 +108,16 @@ shortest-baseD06-607: chk-shortest.o shortbase128.o sfmtD06-st.o util.o \
 shortest-baseD07-607: chk-shortest.o shortbase128.o sfmtD07-st.o util.o \
 			dsfmt-util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD07-st.o util.o \
+			dsfmt-util.o ${LINKOPT}
+
+shortest-baseD08-607: chk-shortest.o shortbase128.o sfmtD08-st.o util.o \
+			dsfmt-util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD08-st.o util.o \
+			dsfmt-util.o ${LINKOPT}
+
+shortest-baseD09-607: chk-shortest.o shortbase128.o sfmtD09-st.o util.o \
+			dsfmt-util.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD09-st.o util.o \
 			dsfmt-util.o ${LINKOPT}
 
 searchX78-lung607: search-lung.o sfmtX78-st.o mt19937ar.o util.o
