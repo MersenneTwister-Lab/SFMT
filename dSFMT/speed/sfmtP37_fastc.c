@@ -26,6 +26,8 @@
 #define MSK3 0xeffffbffU
 #define MSK4 0xfefe7befU
 
+#define M_RAN_INVM32 2.32830643653869628906e-010
+
 #if defined(LITTLE_ENDIAN)
 union W128_T {
     uint64_t b[2];
@@ -154,7 +156,7 @@ INLINE
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
-    uint32_t gen_rand(void)
+    uint32_t genrand_int32(void)
 {
     uint32_t r;
 
@@ -170,26 +172,45 @@ INLINE
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
-    void fill_array(uint32_t array[], int size)
+    void fill_array_int32(uint32_t array[], int size)
 {
     assert(size % 4 == 0);
     assert(size >= 2 * N * 4);
     gen_rand_array((w128_t *)array, size / 4);
 }
 
-INLINE void init_gen_rand(uint32_t seed)
+INLINE void init_gen_rand(uint64_t seed)
 {
     int i;
 
-    psfmt[0] = seed;
+    psfmt[0] = (uint32_t)seed;
     for (i = 1; i < (N + 1) * 4; i++) {
 	psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 30)) + i;
     }
     idx = N * 4;
 }
 
-#ifdef TICK
-#include "test_time_inline.c"
-#else
-#include "test_time2_inline.c"
-#endif
+INLINE void init_genrand(uint32_t seed) {
+    init_gen_rand(seed);
+}
+
+/* generates a random number on [0,1]-real-interval */
+INLINE double genrand_real1(void)
+{
+    return genrand_int32()*M_RAN_INVM32;
+    /* divided by 2^32-1 */ 
+}
+
+/* JURGEN A DOORNIK */
+INLINE double genrand_real2(void)
+{
+    return ((int)genrand_int32()) * M_RAN_INVM32 + 0.5;
+}
+
+/* generates a random number on [0,1) with 53-bit resolution*/
+double genrand_res53(void) 
+{ 
+    unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6; 
+    return(a*67108864.0+b)*(1.0/9007199254740992.0); 
+} 
+#include "test_time2.c"

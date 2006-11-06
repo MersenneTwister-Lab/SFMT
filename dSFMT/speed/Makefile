@@ -16,12 +16,18 @@ sfmtD01_alti: sfmtD01_alti.c test_time.c  paramsD01.h
 sfmtD11_alti: sfmtD11_alti.c test_time.c  paramsD11.h
 	${CC} -o $@ sfmtD11_alti.c
 
+sfmtP37_alti: sfmtP37_alti.c test_time.c
+	${CC} -o $@ sfmtP37_alti.c
+
 #### NORMAL C ####
 sfmtD01_fastc: sfmtD01_fastc.c test_time.c paramsD01.h
 	${CC} -o $@ sfmtD01_fastc.c
 
 sfmtD11_fastc: sfmtD11_fastc.c test_time.c paramsD11.h
 	${CC} -o $@ sfmtD11_fastc.c
+
+sfmtP37_fastc: sfmtP37_fastc.c test_time2.c
+	${CC} -o $@ sfmtP37_fastc.c
 
 mt19937ar_fastc: mt19937ar.c test_time2.c
 	${CC} -o $@ mt19937ar.c

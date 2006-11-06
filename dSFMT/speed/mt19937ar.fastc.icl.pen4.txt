@@ -1,0 +1,13 @@
+consumed time for generating 100000000 randoms.
+REAL1 MIN:1202ms.
+      AVE:1213ms.
+total = 500002118.242125
+REAL2 MIN:1171ms.
+      AVE:1176ms.
+total = 500019319.242125
+REAL53 MIN:2139ms.
+       AVE:2150ms.
+total = 500000757.697550
+ADD   MIN: 187ms.
+      AVE: 201ms.
+total = 1000000000.000000
