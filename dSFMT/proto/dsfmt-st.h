@@ -2,6 +2,7 @@
 #ifndef __DSFMT_H__
 #define __DSFMT_H__
 
+#define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
 #include <stdio.h>
 

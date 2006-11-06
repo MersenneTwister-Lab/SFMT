@@ -19,7 +19,7 @@
 
 DMEXP = -DMEXP=${MEXP}
 
-CC = gcc -Wall -O9 -Wmissing-prototypes  $(DDEBUG) $(DMEXP) $(DPG)
+CC = gcc -Wall -O9 -Wmissing-prototypes $(DDEBUG) $(DMEXP) $(DPG)
 CPP = g++ -Wall -O9 $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -lntl -lgmp
@@ -140,6 +140,10 @@ shortest-baseD11-607: chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
 
 searchX78-lung607: search-lung.o sfmtX78-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-lung.o sfmtX78-st.o mt19937ar.o util.o ${LINKOPT}
+
+searchD11-parity607: search-parity-vector.o sfmtD11-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector.o sfmtD11-st.o mt19937ar.o util.o \
+		${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<
