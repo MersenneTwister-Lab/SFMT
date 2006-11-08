@@ -19,7 +19,6 @@ extern "C" {
 #include "util.h"
 
 NTL_CLIENT;
-#define STDC_FORMAT_MACROS 1
 
 const int WORD_WIDTH = 104;
 
