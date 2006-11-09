@@ -1,5 +1,5 @@
 /** 
- * @file sfmt19937.h 
+ * @file sfmt.h 
  *
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
  * number generator
@@ -30,8 +30,8 @@
  * unsigned int and 64-bit unsigned int in hexadecimal format.
  */
 
-#ifndef __SFMT19937_H__
-#define __SFMT19937_H__
+#ifndef SFMT19937_H
+#define SFMT19937_H
 
 #include <stdio.h>
 
@@ -54,8 +54,8 @@
     #define PRIu64 "I64u"
     #define PRIx64 "I64x"
   #else
-    #define PRIu64 "llu"
-    #define PRIx64 "llx"
+    #define PRIu64 "qu"
+    #define PRIx64 "qx"
   #endif
 #endif
 

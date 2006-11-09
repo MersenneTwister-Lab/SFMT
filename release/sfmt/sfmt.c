@@ -12,104 +12,17 @@
  *
  * The new BSD License is applied to this software, see LICENSE.txt
  */
-
-/**
- * \mainpage 
- *
- * This is SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
- * number generator.
- *
- * This file provides:
- *
- * - void init_gen_rand() initializes the generator with a 32-bit
- *   integer seed.
- * - void init_by_array() initializes the generator with an array of
- *   32-bit integers as the seeds.
- * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
- *   32-bit unsigned integer.
- * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
- *   64-bit unsigned integer.
- * - INLINE void fill_array32() fills the user-specified array with 32-bit
- *   psedorandom integers.
- * - INLINE void fill_array64() fills the user-specified array with 64-bit
- *   psedorandom integers.
- *
- * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
- * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
- *
- * ??? Please change our-domin to math.sci.hiroshima-u.ac.jp
- *
- * @date 2006-08-29
- *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
- * University. All rights reserved.
- *
- * The new BSD License is applied to this software.
- * \verbinclude LICENSE.txt
- */
 #include <string.h>
 #include <assert.h>
-#include "sfmt19937.h"
-
-/*-----------------
-  BASIC DEFINITIONS
-  -----------------*/
-/** Mersenne Exponent. The period of the sequence 
- *  is a multiple of 2^MEXP-1. */
-#define MEXP 19937
-/** the word size of the recursion of SFMT is 128-bit. */
-#define WORDSIZE 128
-/** SFMT generator has an internal state array of 128-bit integers,
- * and N is its size. */
-#define N (MEXP / WORDSIZE + 1)
-/** N32 is the size of internal state array when regarded as an array
- * of 32-bit integers.*/
-#define N32 (N * 4)
-/** N64 is the size of internal state array when regarded as an array
- * of 64-bit integers.*/
-#define N64 (N * 2)
-
-/*----------------------
-  the parameters of SFMT
-  ----------------------*/
-/** the pick up position of the array. */
-#define POS1 122
-/** the parameter of shift left as four 32-bit registers. */
-#define SL1 18
-/** the parameter of shift left as one 128-bit register. 
- * The 128-bit integer is shifted by (SL2 * 8) bits. 
- */
-#define SL2 1
-/** the parameter of shift right as four 32-bit registers. */
-#define SR1 11
-/** the parameter of shift right as one 128-bit register. 
- * The 128-bit integer is shifted by (SL2 * 8) bits. 
- */
-#define SR2 1
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK1 0xdfffffefU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK2 0xddfecb7fU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK3 0xbffaffffU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK4 0xbffffff6U
-/** The 32 MSBs of the internal state array is seto to this
- * value. This peculiar value assures that the period length of the
- * output sequence is a multiple of 2^19937-1.
- */
-#define INIT_LUNG 0x6d736d6dU
+#include "sfmt.h"
+#include "params.h"
 
 /*--------------------------------------
   FILE GLOBAL VARIABLES
   internal state, index counter and flag 
   --------------------------------------*/
 /** the 128-bit internal state array */
-static uint32_t sfmt[N][4];
+static uint32_t sfmt[N + 1][4];
 /** the 32bit interger pointer to the 128-bit internal state array */
 static uint32_t *psfmt32 = &sfmt[0][0];
 /** the 64bit interger pointer to the 128-bit internal state array */

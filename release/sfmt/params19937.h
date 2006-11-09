@@ -1,0 +1,13 @@
+#define POS1 89
+#define SL1 18
+#define SL2 1
+#define SR1 3
+#define SR2 2
+#define MSK1 0x7f7fffffU
+#define MSK2 0xfffbffffU
+#define MSK3 0xeffffbffU
+#define MSK4 0xfefe7befU
+#define PARITY1 0x00000001U
+#define PARITY2 0x00000000U
+#define PARITY3 0x80000000U
+#define PARITY4 0xda784b58U

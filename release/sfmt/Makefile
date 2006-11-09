@@ -60,6 +60,9 @@ TARGET = $(ALTI_TARGET)
 
 all:$(TARGET)
 
+test-ref32: sfmt-ref.c sfmt.h
+	${CC} -DTEST -o $@ sfmt-ref.c
+
 test-std32: test32.c sfmt19937.c sfmt19937.h Makefile
 	${CC} -o $@ test32.c
 
