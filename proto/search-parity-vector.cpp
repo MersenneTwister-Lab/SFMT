@@ -32,7 +32,7 @@ typedef struct IN_STATUS in_status;
 
 #define NTH_BIT2(i) (1U << (31 - (i)))
 
-void search_lung (GF2X& f);
+void search_basis (GF2X& f);
 void set_status(in_status *st);
 void add_status(in_status *dist, in_status *src);
 void get_next_state(in_status *st);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     readFile(f, fp);
     printf("deg poly = %ld\n", deg(f));
     fclose(fp);
-    search_lung(f);
+    search_basis(f);
     return 0;
 }
 
@@ -111,7 +111,7 @@ void make_zero_state(sfmt_t *sfmt, GF2X& poly) {
   *sfmt = sfmtnew;
 }
 
-void search_lung (GF2X& f) {
+void search_basis (GF2X& f) {
     static in_status bases[WORD_WIDTH];
     int i, j;
     int count;
@@ -178,7 +178,7 @@ void search_parity_check_vector(in_status base[], int size) {
     }
     kernel(my, mx);
     if (my.NumRows() == 0) {
-	printf("initial lung can't find\n");
+	printf("parity vector can't be found\n");
 	return;
     }
     printf("dim kernel = %ld\n", my.NumRows());

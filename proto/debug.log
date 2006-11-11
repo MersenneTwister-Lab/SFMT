@@ -1,0 +1,3 @@
+2006.11.11
+static void initial_status_parity_check(sfmt_t *sfmt)
+にバグあり。内積のかけ算(&)が足し算(^)になっていた。

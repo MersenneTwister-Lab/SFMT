@@ -467,6 +467,9 @@ searchP37-parity607: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o \
 		${LINKOPT}
 
+testP37-parity607:test-parity.o sfmtP37-st.o util.o
+	${CPP} -o $@ test-parity.o sfmtP37-st.o util.o ${LINKOPT}
+
 test_bm521: sfmt.o test_bm.o util.o debug.o
 	${CPP} -o $@ test_bm.o sfmt.o util.o debug.o ${LINKOPT}
 
