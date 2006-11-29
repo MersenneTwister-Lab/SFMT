@@ -1,0 +1,4 @@
+filename:irr521.txt
+deg poly = 521
+kiyaku
+time: 0.020000s

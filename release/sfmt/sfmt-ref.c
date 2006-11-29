@@ -5,10 +5,10 @@
 #include "params.h"
 
 static uint32_t sfmt[N + 1][4];
-static unsigned int idx;
+static int idx;
 static uint32_t *sfmt32 = &sfmt[0][0];
 static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
-
+static int initialized = 0;
 static void gen_rand_all(void);
 
 static void lshift128(uint32_t out[4], const uint32_t in[4], int shift) {
@@ -41,13 +41,6 @@ static void do_recursion(uint32_t a[4], uint32_t b[4],
 	^ d[1];
 }
 
-static void assign128(uint32_t to[4], uint32_t from[4]) {
-    to[0] = from[0];
-    to[1] = from[1];
-    to[2] = from[2];
-    to[3] = from[3];
-}
-
 static void xor128(uint32_t to[4], uint32_t from[4]) {
     to[0] ^= from[0];
     to[1] ^= from[1];
@@ -57,14 +50,12 @@ static void xor128(uint32_t to[4], uint32_t from[4]) {
 
 static void gen_rand_all(void) {
     int i;
-    uint32_t lung[4];
 
-    assign128(lung, sfmt[N]);
     for (i = 0; i < N; i++) {
-	do_recursion(sfmt[i], sfmt[(i + POS1) % N], sfmt[(i + N -1) % N], lung);
-	xor128(lung, sfmt[i]);
+	do_recursion(sfmt[i], sfmt[(i + POS1) % N], sfmt[(i + N -1) % N],
+		     sfmt[N]);
+	xor128(sfmt[N], sfmt[i]);
     }
-    assign128(sfmt[N], lung);
 }
 
 uint32_t gen_rand32(void)
@@ -80,33 +71,28 @@ uint32_t gen_rand32(void)
     return r;
 }
 
-void static initial_status_parity_check(void) {
+static void initial_status_parity_check(void) {
     int inner = 0;
     int i, j;
     uint32_t work;
 
     for (i = 0; i < 4; i++) {
-	work = sfmt[N][i] ^ parity[i];
+	work = sfmt[N][i] & parity[i];
 	for (j = 0; j < 32; j++) {
 	    inner ^= work & 1;
 	    work = work >> 1;
 	}
     }
+    /* check OK */
     if (inner == 1) {
-	printf("DEBUG:success in parity check\n");
 	return;
     }
-    printf("DEBUG:failure in parity check\n");
+    /* check NG, and modification */
     for (i = 0; i < 4; i++) {
 	work = 1;
 	for (j = 0; j < 32; j++) {
 	    if ((work & parity[i]) != 0) {
-		printf("DEBUG: before = %x\n", sfmt[N][i]);
 		sfmt[N][i] ^= work;
-		printf("DEBUG: change %dth bit of index %d\n", j, i);
-		printf("DEBUG: work = %x, parity[%d] = %d\n", work, i,
-		       parity[i]);
-		printf("DEBUG: after = %x\n", sfmt[N][i]);
 		return;
 	    }
 	    work = work << 1;
@@ -124,6 +110,92 @@ void init_gen_rand(uint32_t seed)
     }
     idx = N32;
     initial_status_parity_check();
+    initialized = 1;
+}
+
+/**
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
+ */
+static uint32_t func1(uint32_t x) {
+    return (x ^ (x >> 27)) * (uint32_t)1664525UL;
+}
+
+/**
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
+ */
+static uint32_t func2(uint32_t x) {
+    return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
+}
+
+/**
+ * This function initializes the internal state array,
+ * with an array of 32-bit integers used as the seeds
+ * @param init_key the array of 32-bit integers, used as a seed.
+ * @param key_length the length of init_key.
+ */
+void init_by_array(uint32_t init_key[], int key_length) {
+    int i, j, count;
+    uint32_t r;
+    int LAG;
+    int MID;
+
+    if (N >= 623) {
+	LAG = 11;
+    } else if (N >= 68) {
+	LAG = 7;
+    } else if (N >= 39) {
+	LAG = 5;
+    } else {
+	LAG = 3;
+    }
+    MID = (N - LAG) / 2;
+
+    memset(sfmt, 0x8b, sizeof(sfmt));
+    if (key_length + 1 > N) {
+	count = key_length + 1;
+    } else {
+	count = N;
+    }
+    r = func1(sfmt32[0] ^ sfmt32[MID % N] ^ sfmt32[N - 1]);
+    sfmt32[MID % N] += r;
+    r += key_length;
+    sfmt32[(MID + LAG) % N] += r;
+    sfmt32[0] = r;
+    count--;
+    for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
+	r = func1(sfmt32[i] ^ sfmt32[(i + MID) % N] ^ sfmt32[(i + N - 1) % N]);
+	sfmt32[(i + MID) % N] += r;
+	r += init_key[j] + i;
+	sfmt32[(i + MID + LAG) % N] += r;
+	sfmt32[i] = r;
+	i = (i + 1) % N;
+    }
+    for (; j < count; j++) {
+	r = func1(sfmt32[i] ^ sfmt32[(i + MID) % N] ^ sfmt32[(i + N - 1) % N]);
+	sfmt32[(i + MID) % N] += r;
+	r += i;
+	sfmt32[(i + MID + LAG) % N] += r;
+	sfmt32[i] = r;
+	i = (i + 1) % N;
+    }
+    for (j = 0; j < N; j++) {
+	r = func2(sfmt32[i] + sfmt32[(i + MID) % N] + sfmt32[(i + N - 1) % N]);
+	sfmt32[(i + MID) % N] ^= r;
+	r -= i;
+	sfmt32[(i + MID + LAG) % N] ^= r;
+	sfmt32[i] = r;
+	i = (i + 1) % N;
+    }
+
+    idx = N32;
+    initial_status_parity_check();
+    initialized = 1;
 }
 
 #if defined(TEST)

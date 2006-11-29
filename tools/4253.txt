@@ -1,0 +1,4 @@
+filename:irr4253.txt
+deg poly = 4253
+kiyaku
+time: 2.300000s

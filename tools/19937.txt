@@ -1,0 +1,4 @@
+filename:irr19937.txt
+deg poly = 19937
+kiyaku
+time: 113.140000s

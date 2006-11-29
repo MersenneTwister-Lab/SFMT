@@ -1,0 +1,4 @@
+filename:irr1279.txt
+deg poly = 1279
+kiyaku
+time: 0.160000s
