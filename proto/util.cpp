@@ -9,6 +9,15 @@
 
 NTL_CLIENT;
 
+void lazy_square_free(GF2X& f) {
+    GF2X d;
+    GF2X g;
+    
+    diff(d, f);
+    GCD(g, f, d);
+    f /= g;
+}
+
 int non_reducible(GF2X& fpoly, int degree) {
     static const GF2X t2(2, 1);
     static const GF2X t1(1, 1);
@@ -16,33 +25,44 @@ int non_reducible(GF2X& fpoly, int degree) {
     GF2X t;
     GF2X alpha;
     int m;
+    long df;
 
-    t2m = t2;
-    if (deg(fpoly) < degree) {
+    df = deg(fpoly);
+    if (df < degree) {
 	return 0;
     }
+    lazy_square_free(fpoly);
+    df = deg(fpoly);
+    if (df < degree) {
+	return 0;
+    }
+    t2m = t2;
     t = t1;
     t += t2m;
   
-    for (m = 1; deg(fpoly) > degree; m++) {
+    for (m = 1; df > degree; m++) {
 	for(;;) {
 	    GCD(alpha, fpoly, t);
 	    if (IsOne(alpha)) {
 		break;
 	    }
-	    fpoly /= alpha;
-	    if (deg(fpoly) < degree) {
+	    if (df - deg(alpha) < degree) {
 		return 0;
 	    }
+	    fpoly /= alpha;
+	    df = deg(fpoly);
 	}
-//	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
-//	    return 0;
-//	}
+	if (df == degree) {
+	    break;
+	}
+	if (df <= degree + m) {
+	    return 0;
+	}
 	t2m *= t2m;
 	t2m %= fpoly;
 	add(t, t2m, t1);
     }
-    if (deg(fpoly) != degree) {
+    if (df != degree) {
 	return 0;
     }
     return IterIrredTest(fpoly);

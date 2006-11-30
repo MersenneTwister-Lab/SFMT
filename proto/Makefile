@@ -17,6 +17,8 @@
 #%216091:MEXP=216091
 
 #DDEBUG = -DDEBUG=1
+#DPG = -pg
+#DPG = -g
 
 DMEXP = -DMEXP=${MEXP}
 
