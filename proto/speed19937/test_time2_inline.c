@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
 	for (i = 0; i < 5000; i++) {
 	    r = gen_rand();
 	    if (r != array[i]) {
-		printf("\nmismatch i = %d: r = %x, array = %x\n",
-		       i, r, array[i]);
+		printf("\nmismatch i = %d: r = %u(%x), array = %u(%x)\n",
+		       i, r, r,  array[i], array[i]);
 		return -1;
 	    }
 	    if (i < 1000) {
@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
 	}
     }
     printf("consumed time for generating %u randoms.\n", NUM_RANDS * TIC_COUNT);
-    printf("BLOCK MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    printf("BLOCK MIN:%4"PRIu64"ms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("      AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
     min = LONG_MAX;
     r = 0;
     sum = 0;
@@ -78,8 +78,8 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("SEQUE MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQUE MIN:%4"PRIu64"ms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("      AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("r = %u\n", r);
     return 0;
 }

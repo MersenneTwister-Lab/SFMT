@@ -9,21 +9,9 @@
 
 NTL_CLIENT;
 
-void lazy_square_free(GF2X& f) {
-    GF2X d;
-    GF2X g;
-    
-    diff(d, f);
-    GCD(g, f, d);
-    f /= g;
-}
-
 int non_reducible(GF2X& fpoly, int degree) {
     static const GF2X t2(2, 1);
     static const GF2X t1(1, 1);
-    GF2X t2m;
-    GF2X t;
-    GF2X alpha;
     int m;
     long df;
 
@@ -31,15 +19,23 @@ int non_reducible(GF2X& fpoly, int degree) {
     if (df < degree) {
 	return 0;
     }
-    lazy_square_free(fpoly);
-    df = deg(fpoly);
-    if (df < degree) {
+    // lazy square free
+    GF2X d, g;
+    diff(d, fpoly);
+    GCD(g, fpoly, d);
+    if (df - deg(g) < degree) {
 	return 0;
     }
+    fpoly /= g;
+    df = deg(fpoly);
+    // end
+    GF2X t2m;
+    GF2X t;
+    GF2X alpha;
+    GF2XModulus modf;
+    build(modf, fpoly);
     t2m = t2;
-    t = t1;
-    t += t2m;
-  
+    add(t, t2m, t1);
     for (m = 1; df > degree; m++) {
 	for(;;) {
 	    GCD(alpha, fpoly, t);
@@ -58,8 +54,7 @@ int non_reducible(GF2X& fpoly, int degree) {
 	if (df <= degree + m) {
 	    return 0;
 	}
-	t2m *= t2m;
-	t2m %= fpoly;
+	SqrMod(t2m, t2m, modf);
 	add(t, t2m, t1);
     }
     if (df != degree) {

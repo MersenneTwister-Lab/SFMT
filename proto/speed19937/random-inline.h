@@ -13,7 +13,7 @@ INLINE void print_param(FILE *fp);
 INLINE void print_param2(FILE *fp);
 INLINE void print_state(FILE *fp);
 
-INLINE void init_gen_rand(uint32_t seed);
+void init_gen_rand(uint32_t seed);
 INLINE uint32_t gen_rand(void);
 //INLINE void gen_rand_all(void);
 //INLINE void fill_array_block(uint32_t array[], uint32_t block_num);

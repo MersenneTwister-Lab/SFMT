@@ -100,9 +100,9 @@ INLINE static __attribute__((always_inline))
 
     vector unsigned int v, w, x, y, z;
     x = vec_perm(a, perm_sl, perm_sl);
-    v = a;
-    y = vec_sr(b, sr1);
     z = vec_perm(c, perm_sr, perm_sr);
+    y = vec_sr(b, sr1);
+    v = a;
     w = vec_sl(d, sl1);
     z = vec_xor(z, w);
     y = vec_and(y, mask);

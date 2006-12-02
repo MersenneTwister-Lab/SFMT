@@ -86,13 +86,12 @@ INLINE static __m128i mm_recursion(__m128i *a, __m128i *b,
     __m128i v, x, y, z;
     
     x = _mm_load_si128(a);
-    y = _mm_load_si128(b);
+    y = _mm_srli_epi32(*b, SR1);
     z = _mm_srli_si128(c, SR2);
     v = _mm_slli_epi32(d, SL1);
-    z = _mm_xor_si128(z, v);
     z = _mm_xor_si128(z, x);
+    z = _mm_xor_si128(z, v);
     x = _mm_slli_si128(x, SL2);
-    y = _mm_srli_epi32(y, SR1);
     y = _mm_and_si128(y, mask);
     z = _mm_xor_si128(z, x);
     z = _mm_xor_si128(z, y);
