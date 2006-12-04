@@ -69,8 +69,7 @@ PRNG, named SIMD-oriented Fast Mersenne Twister
 of these features. Its recursion fits pipeline processing
 better than MT, and it is roughly twice as fast as 
 optimised MT using SIMD operations.
-Moreover, the dimension of equidistribution of SFMT, 
-as a 32-bit integer generator,
+Moreover, the dimension of equidistribution of SFMT
 is better than MT. 
 
 We also introduce 
@@ -442,9 +441,9 @@ of that started from $s_p$ and that started from $s_r$. Hence,
 if $s_p \neq 0$, then the period is a nonzero multiple of $2^p-1$. 
 We checked the following. 
 \begin{proposition}
-The period of SFMT19937 as 128-bit integer generator is 
+The period of SFMT19937 as a 128-bit integer generator is 
 a nonzero multiple of $2^{19937}-1$, if the 32 MSBs of 
-$\bw_0$ is set to 
+$\bw_0$ are set to 
 the value {\tt 6d736d6d} in hexadecimal form.
 \end{proposition}
 This value of $\bw_0$ assures that $s_p\neq 0$,
@@ -497,7 +496,7 @@ where the multiplicity of each element in $T$ is
 multiplied by $m$. Then, the above definition of
 equidistribution is equivalent to 
 $$
-W_k(\chi)=(m\cdot O^k) \setminus \{{\mathbf 0}\},
+W_k(\chi)=(m\cdot \F2^{vk}) \setminus \{{\mathbf 0}\},
 $$
 where $m$ is the multiplicity of the occurrences,
 and the operator $\setminus$ means that the multiplicity
@@ -506,13 +505,13 @@ of ${\mathbf 0}$ is subtracted by one.
 \begin{definition}
 In the above setting, if there exist a positive integer $m$ 
 and a multi-subset
-$D \subset (m\cdot O^k)$
+$D \subset (m\cdot \F2^{vk})$
 such that
 $$
-W_k(\chi)=(m\cdot O^k) \setminus D,
+W_k(\chi)=(m\cdot \F2^{vk}) \setminus D,
 $$
 we say that $\chi$ is $k$-dimensionally equidistributed 
-with defect ratio $\#(D)/\#(m \cdot O^k)$, 
+with defect ratio $\#(D)/\#(m \cdot \F2^{vk})$, 
 where the cardinality is counted with multiplicity. 
 \end{definition}
 Thus, in Definition~\ref{def:DE}, the defect ratio up to $1/(P+1)$
@@ -524,7 +523,7 @@ allows the defect ratio up to $2^{-19937}$.
 For a $w$-bit integer sequence, its {\em dimension of 
 equidistribution at $v$-bit accuracy} $k(v)$
 is defined as the DE of the $v$-bit sequence, obtained by extracting
-the $v$ MSBs from each of $w$-bit integers.
+the $v$ MSBs from each of the $w$-bit integers.
 If the defect ratio is $1/(P+1)$, 
 then there is an upper bound 
 $$
@@ -581,7 +580,7 @@ such that
 \begin{equation}\label{eq:chi-k-i}
 o_k(-,i): V_p \subset S \to \F2^{kv}, \quad s \mapsto o_k(s,i)
 \end{equation}
-is surjective for all $i=0,1,2,3$. 
+are surjective for all $i=0,1,2,3$. 
 Take the initial state $s$ satisfying $s_p \neq 0$.
 Then, the 32-bit output sequence is at least $k'(v)$-dimensionally
 equidistributed with $v$-bit accuracy with defect ratio
@@ -603,7 +602,7 @@ since $p>r$ and $2^p-1$ is a prime.
 The surjectivity of the linear mapping $o_{k'}(-,i)$
 implies that the image of 
 $$
-o_{k'+1}(-,i): V_p \times U \to \F2^{kv}
+o_{k'}(-,i): V_p \times U \to \F2^{kv}
 $$
 is $m\cdot \F2^{kv}$ as a multi-set for some $m$.
 The defect comes from $0 \in V_p$, whose ratio
@@ -614,7 +613,7 @@ $o_{k'}(-,i)((V_p-\{0\})\times U)$ for $i=0,1,2,3$.
 For the latter half, we define
 $L_i$ as the multiset of the image of 
 $o_{k'+1}(-,i): V_p \to \F2^{(k'+1)v}$.
-By the choice of $s_r=0$, we have $U=\{0\}$, and
+Because of $s_r=0$, we have $U=\{0\}$, and
 the union of $(L_i-\{0\})$ $(i=0,1,2,3)$ as a multi-set is 
 $W_{k'+1}(\chi)$. If the sequence is $(k'+1)$-dimensionally
 equidistributed, then the multiplicity of
@@ -659,7 +658,7 @@ of nonzero element in the intersection.
 
 The dimension of equidistribution $k(v)$ depends on 
 the choice of the initial state $s$. The above 
-proposition implies that $k'(v)$ concides 
+proposition implies that $k'(v)$ coincides 
 with $k(v)$ for the worst choice of $s$ under the condition 
 $s_p \neq 0$. Thus, we adopt the following definition.
 
@@ -674,7 +673,7 @@ We define the dimension defect at $v$
 %for SFMT19937 used as 32-bit integer generators
 by
 $$
-d(v):=\lceil p/v \rceil - k(v) 
+d(v):=\lfloor p/v \rfloor - k(v) 
 \mbox{ and } \Delta:=\sum_{v=1}^w d(v).
 $$
 \end{definition}
@@ -684,7 +683,7 @@ a weighted norm,
 %{\em weighted lattice method} to compute $k'(v)$,
 generalising \cite{CLT}. This will be written 
 somewhere else,
-because of the lack of the space.
+because of lack of space.
 %rather complicated mathematics, we omit it here
 %(we plan another article for this). 
 
@@ -766,7 +765,7 @@ Pentium-M & block & 1.122  & 0.627  & 0.689  & 0.298 \\ \cline{3-6}
 1.4GHz & (ratio) & 3.77  & 2.10  & 2.31  & 1.00 \\ \cline{2-6}
 Intel C/C++ & seq & 1.511  & 1.221  & 1.017  & 0.597 \\ \cline{3-6}
 ver. 9.0 & (ratio) & 5.07  & 4.10  & 3.41  & 2.00 \\ \hline
-Pentium 4 & block & 0.633  & 0.391  & 0.412  & 0.217 \\ \cline{3-6}
+Pentium IV & block & 0.633  & 0.391  & 0.412  & 0.217 \\ \cline{3-6}
 3GHz & (ratio) & 2.92  & 1.80  & 1.90  & 1.00 \\ \cline{2-6}
 Intel C/C++ & seq & 1.014  & 0.757  & 0.736  & 0.412 \\ \cline{3-6}
 ver. 9.0 & (ratio) & 4.67  & 3.49  & 3.39  & 1.90 \\ \hline
@@ -819,22 +818,24 @@ a WELL generator {\tt well} (WELL19937c in \cite{WELL}),
 and a XORSHIFT generator {\tt xor3} 
 \cite{XORSHIFT} \cite{XORSHIFT-MAR}.
 The table shows that SFMT(SIMD) is faster than
-these PRNGs, except for the lagged-fibonacci
-generator {\tt random256g2} with a Pentium IV
-(but this method is known to
+these PRNGs, except for the outdated
+linear congruential generator {\tt rand},
+the lagged-fibonacci
+generator {\tt random256g2} 
+(which is known to
  have poor randomness, cf. \cite{SUM}),
 and {\tt xor3} with a Pentium-M.
 
 \section{Dimension of equidistribution}
-The total dimension defect $\Delta'$ of SFMT19937
-as a 32-bit integer generator is $4188$, 
-which is smaller than the total dimension defect $6750$ of MT19937.
 Table~\ref{tab:dd} lists the dimension defects $d(v)$
 of SFMT19937 (as a 32-bit integer generator) 
-and the dimension defects MT19937 for $v=1,2,\ldots, 32$.
+and of MT19937, for $v=1,2,\ldots, 32$.
 SFMT has smaller values of the defect $d(v)$
 at 26 values of $v$. The converse holds for 6 values of
 $v$, but the difference is small.
+The total dimension defect $\Delta$ of SFMT19937
+as a 32-bit integer generator is $4188$, 
+which is smaller than the total dimension defect $6750$ of MT19937.
 
 \begin{table}
 \begin{center}
@@ -877,7 +878,7 @@ at that accuracy.
 
 We also computed the dimension defects of SFMT19937 as a 64-bit
 (128-bit) integer generator, and the total dimension 
-defect $\Delta'$ is 14089 (28676, respectively). In some applications, 
+defect $\Delta$ is 14089 (28676, respectively). In some applications, 
 the distribution of LSBs is important. 
 To check them, we inverted the order of the bits (i.e. the $i$-th
 bit is exchanged with the $(w-i)$-th bit) in each integer, 
@@ -887,7 +888,7 @@ a 32-bit (64-bit, 128-bit, respectively) integer generator.
 Throughout the experiments, $d'(v)$ is very small for $v\leq 10$.
 We consider that these values are satisfactorily small, since
 they are comparable with MT
-for which no statistical problem 
+for which no statistical deviation
 related to the dimension defect has been reported, 
 as far as we know.
 
@@ -926,7 +927,9 @@ for the following generators: (1) WELL19937c,
 %has the period being a nonzero multiple of $2^{19937}-1$,
 %see \S\ref{sec:period}.
 \begin{figure}
+\begin{center}
 \includegraphics[width=0.7\linewidth]{sfmt-zero.eps}
+\end{center}
 \caption{$\gamma_k \ (k=0,\ldots,20000)$:
 Starting from extreme 0-excess states,
 discard the first $k$ outputs and then measure
@@ -1039,8 +1042,8 @@ According to \cite{TESTWEIGHT}, it requires $10^{28}$
 samples to detect an $\F2$-linear relation with 
 15 (or more) terms among 521 bits, by a standard
 statistical test. If the number of 
-terms is increased, 
-the necessary sample size is increased exponentially. Thus, it seems
+bits is increased, 
+the necessary sample size is increased rapidly. Thus, it seems
 that $k(v)$ of SFMT19937 is sufficiently large, far beyond
 the level of the observable bias. 
 On the other hand, the speed of the generator is 
@@ -1087,5 +1090,3 @@ which emulates the Pentium's shift by a multiple of 8.
 %\begin{received}
 %\end{received}
 \end{document}
-
-% LocalWords:  exor ver gcc mrg
