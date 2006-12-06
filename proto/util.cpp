@@ -37,19 +37,16 @@ int non_reducible(GF2X& fpoly, int degree) {
     t2m = t2;
     add(t, t2m, t1);
     for (m = 1; df > degree; m++) {
-	for(;;) {
-	    GCD(alpha, fpoly, t);
-	    if (IsOne(alpha)) {
-		break;
-	    }
+	GCD(alpha, fpoly, t);
+	if (!IsOne(alpha)) {
 	    if (df - deg(alpha) < degree) {
 		return 0;
 	    }
 	    fpoly /= alpha;
 	    df = deg(fpoly);
-	}
-	if (df == degree) {
-	    break;
+	    if (df == degree) {
+		break;
+	    }
 	}
 	if (df <= degree + m) {
 	    return 0;
