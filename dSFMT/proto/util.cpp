@@ -9,43 +9,107 @@
 
 NTL_CLIENT;
 
+long IterIrredTest(const GF2X& f, long d, GF2X& g)
+{
+   long df = deg(f);
+
+   if (df <= 0) return 0;
+   if (df == 1) return 1;
+
+   GF2XModulus F;
+
+   g %= f;
+   build(F, f);
+   
+   long i, limit, limit_sqr;
+   GF2X X, t, prod;
+
+
+   SetX(X);
+
+   i = 0;
+   limit = 2;
+   limit_sqr = limit*limit;
+
+   set(prod);
+
+   while (2*d <= df) {
+      add(t, g, X);
+      MulMod(prod, prod, t, F);
+      i++;
+      if (i == limit_sqr) {
+         GCD(t, f, prod);
+         if (!IsOne(t)) return 0;
+
+         set(prod);
+         limit++;
+         limit_sqr = limit*limit;
+         i = 0;
+      }
+
+      d = d + 1;
+      if (2*d <= deg(f)) {
+         SqrMod(g, g, F);
+      }
+   }
+
+   if (i > 0) {
+      GCD(t, f, prod);
+      if (!IsOne(t)) return 0;
+   }
+
+   return 1;
+}
+
 int non_reducible(GF2X& fpoly, int degree) {
-    static const GF2X t2(2, 1);
-    static const GF2X t1(1, 1);
+    int m;
+    long df;
+
+    df = deg(fpoly);
+    if (df < degree) {
+	return 0;
+    }
+    // lazy square free
+    GF2X d, g;
+    diff(d, fpoly);
+    GCD(g, fpoly, d);
+    if (df - deg(g) < degree) {
+	return 0;
+    }
+    fpoly /= g;
+    df = deg(fpoly);
+    // end
+    GF2X t2(2, 1);
+    GF2X t1(1, 1);
     GF2X t2m;
     GF2X t;
     GF2X alpha;
-    int m;
-
+    GF2XModulus modf;
+    build(modf, fpoly);
     t2m = t2;
-    if (deg(fpoly) < degree) {
-	return 0;
-    }
-    t = t1;
-    t += t2m;
-  
-    for (m = 1; deg(fpoly) > degree; m++) {
-	for(;;) {
-	    GCD(alpha, fpoly, t);
-	    if (IsOne(alpha)) {
-		break;
-	    }
-	    fpoly /= alpha;
-	    if (deg(fpoly) < degree) {
+    add(t, t2m, t1);
+    for (m = 1; df > degree; m++) {
+	GCD(alpha, fpoly, t);
+	if (!IsOne(alpha)) {
+	    if (df - deg(alpha) < degree) {
 		return 0;
 	    }
+	    fpoly /= alpha;
+	    df = deg(fpoly);
+	    if (df == degree) {
+		break;
+	    }
 	}
-//	if ((deg(fpoly) > degree) && (deg(fpoly) <= degree + m)) {
-//	    return 0;
-//	}
-	t2m *= t2m;
-	t2m %= fpoly;
+	if (df <= degree + m) {
+	    return 0;
+	}
+	SqrMod(t2m, t2m, modf);
 	add(t, t2m, t1);
     }
-    if (deg(fpoly) != degree) {
+    if (df != degree) {
 	return 0;
     }
-    return IterIrredTest(fpoly);
+    return IterIrredTest(fpoly, m, t2m);
 }
 
 void berlekampMassey(GF2X& minpoly, unsigned int maxdegree, vec_GF2& genvec) 

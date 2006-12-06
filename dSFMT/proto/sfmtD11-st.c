@@ -52,8 +52,8 @@ void print_param(FILE *fp) {
     fprintf(fp, "SL2 = %u\n", SL2);
     fprintf(fp, "SR1 = %u\n", SR1);
     fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "MSK1 = %016llx\n", MSK1);
-    fprintf(fp, "MSK2 = %016llx\n", MSK2);
+    fprintf(fp, "MSK1 = %016"PRIx64"\n", MSK1);
+    fprintf(fp, "MSK2 = %016"PRIx64"\n", MSK2);
     fflush(fp);
 }
 

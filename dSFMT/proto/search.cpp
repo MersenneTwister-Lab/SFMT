@@ -29,7 +29,7 @@ void search(unsigned int n) {
     GF2X minpoly;
     vec_GF2 vec;
     unsigned int maxdegree;
-    unsigned int mexp;
+    int mexp;
   
     maxdegree = get_rnd_maxdegree();
     mexp = get_rnd_mexp();
@@ -52,7 +52,7 @@ void search(unsigned int n) {
 	init_gen_rand(&dsfmt, genrand_int32()+3);
 	bmOk = 1;
 	//    for (j = 0; j < 32; j++) {
-	for (j = 0; j < 2; j++) {
+	for (j = 0; j < 1; j++) {
 	    generating_polynomial104(&dsfmt, vec, j, maxdegree);
 	    berlekampMassey(minpoly, maxdegree, vec);
 	    if (deg(minpoly) == -1) {
@@ -64,6 +64,10 @@ void search(unsigned int n) {
 		break;
 	    }
 	    all_count++;
+	    if (deg(minpoly) < mexp) {
+		bmOk = 0;
+		break;
+	    }
 	    if (!non_reducible(minpoly, mexp)) {
 		bmOk = 0;
 		if (j == 1) {
@@ -90,6 +94,9 @@ void search(unsigned int n) {
 	if (all_count % 10000 == 0) {
 	    printf("count = %llu\n", all_count);
 	    fflush(stdout);
+	    if ((all_count % 50000) == 0 && (n < 10)) {
+		break;
+	    }
 	}
     }
     printf("count = %llu\n", all_count);
