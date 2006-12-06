@@ -67,7 +67,7 @@ void search(unsigned int n) {
 	//print_param2(stdout);
 	bmOk = 1;
 	//    for (j = 0; j < 32; j++) {
-	for (j = 0; j < 2; j++) {
+	for (j = 0; j < 1; j++) {
 	    generating_polynomial(vec, j, maxdegree);
 	    berlekampMassey(minpoly, maxdegree, vec);
 	    if (deg(minpoly) == -1) {
@@ -79,6 +79,10 @@ void search(unsigned int n) {
 		break;
 	    }
 	    all_count++;
+	    if (deg(minpoly) < mexp) {
+		bmOk = 0;
+		break;
+	    }
 	    if (!non_reducible(minpoly, mexp)) {
 		bmOk = 0;
 		if (j == 1) {
@@ -105,6 +109,9 @@ void search(unsigned int n) {
 	if (all_count % 10000 == 0) {
 	    printf("count = %llu\n", all_count);
 	    fflush(stdout);
+	    if (all_count % 50000 == 0) {
+		break;
+	    }
 	}
     }
     printf("count = %llu\n", all_count);
