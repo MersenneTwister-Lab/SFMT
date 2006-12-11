@@ -51,6 +51,8 @@ static int maxdegree;
 int main(int argc, char *argv[]) {
     GF2X f;
     FILE *fp;
+    char c;
+    char s[257];
 
     if (argc != 2) {
 	printf("usage:%s filename %d\n", argv[0], argc);
@@ -69,6 +71,12 @@ int main(int argc, char *argv[]) {
     }
     read_random_param(fp);
     print_param(stdout);
+    c = getc(fp);
+    if (c < '0' || c > '9') {
+	fgets(s, 256, fp);
+    } else {
+	ungetc(c, fp);
+    }
     readFile(f, fp);
     printf("deg poly = %ld\n", deg(f));
     fclose(fp);
