@@ -16,7 +16,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include "sfmt19937.c"
+#include "SFMTp-std.c"
 
 #define BLOCK_SIZE 100000
 #define COUNT 1000

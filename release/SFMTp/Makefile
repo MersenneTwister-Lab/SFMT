@@ -12,7 +12,7 @@
 # The new BSD License is applied to this software.
 # see LICENSE.txt
 #
-# @note ???
+# @note
 # We could comple sfmt19937-sse2.c using gcc 3.4.4 of cygwin.
 # We could comple sfmt19937-sse2.c using gcc 4.0.1 of Linux.
 # We coundn't comple sfmt19937-sse2.c using gcc 3.3.2 of Linux.
@@ -60,10 +60,10 @@ TARGET = $(ALTI_TARGET)
 
 all:$(TARGET)
 
-test-ref32: sfmt-ref.c sfmt.h
-	${CC} -DTEST -o $@ sfmt-ref.c
+test-ref32: SFMTp-ref.c SFMTp.h
+	${CC} -DMAIN -o $@ SFMTp-ref.c
 
-test-std32: test32.c sfmt19937.c sfmt19937.h Makefile
+test-std32: test32.c SFMTp.c SFMTp.h Makefile
 	${CC} -o $@ test32.c
 
 test-std64: test64.c sfmt19937.c sfmt19937.h Makefile
