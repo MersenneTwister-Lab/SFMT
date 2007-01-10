@@ -4,9 +4,9 @@
 # @author Mutsuo Saito (Hiroshima University)
 # @author Makoto Matsumoto (Hiroshima University)
 #
-# @date 2006-09-06
+# @date 2007-01-10
 #
-# Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+# Copyright (C) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
 # University. All rights reserved.
 #
 # The new BSD License is applied to this software.
@@ -37,6 +37,9 @@ SSE_TARGET = $(STD_TARGET) test-sse32 test-sse64
 SSE_CHECK_TARGET = $(STD_CHECK_TARGET) check-sse32 check-sse64
 CHECK32_FILE = sfmt19937-32.out.txt
 CHECK64_FILE = sfmt19937-64.out.txt
+# ======================================
+# comment out or EDIT following settings
+# ======================================
 # --------------------
 # for UNIX like system
 # --------------------

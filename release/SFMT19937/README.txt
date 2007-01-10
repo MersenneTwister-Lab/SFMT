@@ -1,5 +1,5 @@
  =================================================================
- sfmt19937 ver. 1.0
+ sfmt19937 ver. 1.1
  SIMD oriented Fast Mersenne Twister(SFMT)
 
  Mutsuo Saito (Hiroshima University) and

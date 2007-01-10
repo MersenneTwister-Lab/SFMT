@@ -5,11 +5,11 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2006-09-07
+ * @date 2007-01-10
  *
  * @note We assume LITTLE ENDIAN in this file
  *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
@@ -67,11 +67,14 @@
 /** A bitmask, used in the recursion.  These parameters are introduced
  * to break symmetry of SIMD.*/
 #define MSK4 0xbffffff6U
-/** The 32 MSBs of the internal state array is seto to this
- * value. This peculiar value assures that the period length of the
- * output sequence is a multiple of 2^19937-1.
- */
-#define INIT_LUNG 0x6d736d6dU
+/** This definitions is a part of a 128-bit period certification vector.*/
+#define PARITY1	0x00000001U
+/** This definitions is a part of a 128-bit period certification vector.*/
+#define PARITY2	0x00000000U
+/** This definitions is a part of a 128-bit period certification vector.*/
+#define PARITY3	0x00000000U
+/** This definitions is a part of a 128-bit period certification vector.*/
+#define PARITY4	0x13c9e684U
 
 /*--------------------------------------
   FILE GLOBAL VARIABLES
@@ -88,6 +91,8 @@ static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int initialized = 0;
+/** a parity check vector which certificate the period of 2^{MEXP} */
+static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
 
 /*----------------
   STATIC FUNCTIONS
@@ -98,6 +103,7 @@ INLINE static void gen_rand_all(void);
 INLINE static void gen_rand_array(__m128i array[], int size);
 INLINE static uint32_t func1(uint32_t x);
 INLINE static uint32_t func2(uint32_t x);
+static void period_certification(void);
 
 /**
  * This function represents the recursion formula.
@@ -218,6 +224,38 @@ INLINE static uint32_t func1(uint32_t x) {
  */
 INLINE static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
+}
+
+/**
+ * This function certificate the period of 2^19937
+ */
+static void period_certification(void) {
+    int inner = 0;
+    int i, j;
+    uint32_t work;
+
+    for (i = 0; i < 4; i++) {
+	work = psfmt32[i] & parity[i];
+	for (j = 0; j < 32; j++) {
+	    inner ^= work & 1;
+	    work = work >> 1;
+	}
+    }
+    /* check OK */
+    if (inner == 1) {
+	return;
+    }
+    /* check NG, and modification */
+    for (i = 0; i < 4; i++) {
+	work = 1;
+	for (j = 0; j < 32; j++) {
+	    if ((work & parity[i]) != 0) {
+		psfmt32[i] ^= work;
+		return;
+	    }
+	    work = work << 1;
+	}
+    }
 }
 
 /*----------------
@@ -350,8 +388,9 @@ void init_gen_rand(uint32_t seed)
 	psfmt32[i] = 1812433253UL * (psfmt32[i - 1] ^ (psfmt32[i - 1] >> 30))
 	    + i;
     }
-    psfmt32[3] = INIT_LUNG;
+
     idx = N32;
+    period_certification();
     initialized = 1;
 }
 
@@ -408,7 +447,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
 	i = (i + 1) % N32;
     }
 
-    psfmt32[3] = INIT_LUNG;
     idx = N32;
+    period_certification();
     initialized = 1;
 }
