@@ -4,7 +4,8 @@
  * This is SIMD oriented Fast Mersenne Twister pseudorandom number
  * generator Pulmonary version (SFMTp).
  *
- * This Project provides following functions of various Mersenne Prime Period.
+ * This Project provides following functions of various Mersenne Prime Period:
+ * from 2<sup>607</sup> to 2<sup>132049</sup>.
  *
  * - void init_gen_rand() initializes the generator with a 32-bit
  *   integer seed.
@@ -26,7 +27,7 @@
  *
  * @date 2007-01-11
  *
- * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software.

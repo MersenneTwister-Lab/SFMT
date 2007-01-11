@@ -63,8 +63,8 @@
 
 #if MEXP == 607
   #include "params607.h"
-#elif MEXP == 2203
-  #include "params2203.h"
+#elif MEXP == 2281
+  #include "params2281.h"
 #elif MEXP == 4253
   #include "params4253.h"
 #elif MEXP == 11213

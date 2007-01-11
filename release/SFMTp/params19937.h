@@ -11,4 +11,8 @@
 #define PARITY2	0x00000000U
 #define PARITY3	0x00000000U
 #define PARITY4	0xc98e126aU
+#define ALTI_SL2_PERM \
+(vector unsigned char)(1,2,3,23,5,6,7,0,9,10,11,4,13,14,15,8)
+#define ALTI_SL2_PERM64 \
+(vector unsigned char)(1,2,3,4,5,6,7,31,9,10,11,12,13,14,15,0)
 #define IDSTR	"SFMTp-19937:65-20-1-1-8:b9fffff7-cbdfffbf-4feb7f99-ff6ffdfb"

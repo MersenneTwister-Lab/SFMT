@@ -59,31 +59,77 @@ TARGET = $(ALTI_TARGET)
 #CC = $(GCC) -msse2
 #TARGET = $(SSE_TARGET)
 
+# -----------------
+# start GNU make
+# -----------------
+%607:MEXP=607
+%2281:MEXP=2281
+%4253:MEXP=4253
+%11213:MEXP=11213
+%19937:MEXP=19937
+%44497:MEXP=44497
+%86243:MEXP=86243
+%132049:MEXP=132049
+#%216091:MEXP=216091
+# -----------------
+# end GNU make
+# -----------------
+
 all:$(TARGET)
 
 test-ref32: SFMTp-ref.c SFMTp.h
-	${CC} -DMAIN -o $@ SFMTp-ref.c
+	${CC} -DMEXP=19937 -DMAIN -o $@ SFMTp-ref.c
 
 test-std32: test32.c SFMTp.c SFMTp.h
-	${CC} -o $@ test32.c
+	${CC} -DMEXP=19937 -o $@ test32.c
 
-test-std64: test64.c sfmt19937.c sfmt19937.h Makefile
-	${CC} -o $@ test64.c
+test-alti32: test32.c SFMTp-alti32.c SFMTp.h
+	${CC} -DMEXP=19937 -DALTIVEC -o $@ test32.c
 
-test-big64: test_big64.c sfmt19937-big64.c sfmt19937.h Makefile
-	${CC} -o $@ test_big64.c
+test-std64: test64.c SFMTp.c SFMTp.h
+	${CC} -DMEXP=19937 -o $@ test64.c
 
-test-alti32: test_alti32.c sfmt19937-alti32.c sfmt19937.h Makefile
-	${CC} -o $@ test_alti32.c
+test-big64: test64.c SFMTp-big64.c sFMTp.h
+	${CC} -DMEXP=19937 -DBIG -o $@ test64.c
 
-test-alti64: test_alti64.c sfmt19937-alti64.c sfmt19937.h Makefile
-	${CC} -o $@ test_alti64.c
+test-alti64: test64.c SFMTp-alti64.c SFMTp.h
+	${CC} -DMEXP=19937 -DALTIVEC -o $@ test64.c
 
-test-sse32: test_sse32.c sfmt19937-sse2.c sfmt19937.h Makefile
-	${CC} -o $@ test_sse32.c
+test-sse32: test32.c SFMTp-sse2.c SFMTp.h
+	${CC} -DMEXP=19937 -o $@ test32.c
 
-test-sse64: test_sse64.c sfmt19937-sse2.c sfmt19937.h Makefile
-	${CC} -o $@ test_sse64.c
+test-sse64: test64.c SFMTp-sse2.c SFMTp.h
+	${CC} -DMEXP=19937 -o $@ test64.c
+
+# -----------------
+# start GNU make
+# -----------------
+test-ref32-M%: SFMTp-ref.c SFMTp.h
+	${CC} -DMEXP=${MEXP} -DMAIN -o $@ SFMTp-ref.c
+
+test-std32-M%: test32.c SFMTp.c SFMTp.h
+	${CC} -DMEXP=${MEXP} -o $@ test32.c
+
+test-alti32-M%: test32.c SFMTp-alti32.c SFMTp.h
+	${CC} -DMEXP=${MEXP} -DALTIVEC -o $@ test32.c
+
+test-std64-M%: test64.c SFMTp.c SFMTp.h
+	${CC} -DMEXP=${MEXP} -o $@ test64.c
+
+test-big64-M%: test64.c SFMTp-big64.c sFMTp.h
+	${CC} -DMEXP=${MEXP} -DBIG -o $@ test64.c
+
+test-alti64-M%: test64.c SFMTp-alti64.c SFMTp.h
+	${CC} -DMEXP=${MEXP} -DALTIVEC -o $@ test64.c
+
+test-sse32-M%: test32.c SFMTp-sse2.c SFMTp.h
+	${CC} -DMEXP=${MEXP} -o $@ test32.c
+
+test-sse64-M%: test64.c SFMTp-sse2.c SFMTp.h
+	${CC} -DMEXP=${MEXP} -o $@ test64.c
+# -----------------
+# end GNU make
+# -----------------
 
 .c.o:
 	${CC} -c $<

@@ -60,6 +60,7 @@ INLINE static void assign128(uint32_t to[4], uint32_t from[4]);
 INLINE static void xor128(uint32_t to[4], uint32_t from[4]);
 static void endian_check(void);
 static void period_certification(void);
+
 /**
  * This function simulates SIMD 128-bit left shift by the standard C.
  * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
@@ -129,7 +130,7 @@ __attribute__((always_inline))
  */
 static INLINE
 #if defined(__GNUC__)
- __attribute__((always_inline)) 
+__attribute__((always_inline)) 
 #endif
     void do_recursion(uint32_t r[4], uint32_t a[4], uint32_t b[4],
 		      uint32_t c[4], uint32_t d[4]) {
@@ -502,6 +503,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
     }
 
     idx = N32;
+    endian_check();
     period_certification();
     initialized = 1;
 }

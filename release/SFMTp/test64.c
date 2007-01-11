@@ -1,11 +1,11 @@
 /**
  * @file  test64.c
- * @brief test program for 64-bit output of SFMT19937.
+ * @brief test program for 64-bit output of SFMTp.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
  * @date 2007-01-10
  *
- * Copyright (C) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
@@ -19,13 +19,13 @@
 
 #if defined(SSE2)
 #include <emmintrin.h>
-#include "sfmt19937-sse2.c"
+#include "SFMTp-sse2.c"
 #elif defined(ALTIVEC)
-#include "sfmt19937-alti64.c"
+#include "SFMTp-alti64.c"
 #elif defined(BIG)
-#include "sfmt19937-big64.c"
+#include "SFMTp-big64.c"
 #else
-#include "sfmt19937.c"
+#include "SFMTp.c"
 #endif
 
 #define BLOCK_SIZE 50000
