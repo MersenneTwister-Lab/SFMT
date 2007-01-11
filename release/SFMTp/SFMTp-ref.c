@@ -171,6 +171,15 @@ static void period_certification(void) {
   PUBLIC FUNCTIONS
   ----------------*/
 /**
+ * This function returns the identification string.
+ * The string shows the word size, the mersenne expornent,
+ * and all parameters of this generator.
+ */
+char *get_idstring(void)
+{
+    return IDSTR;
+}
+/**
  * This function generates and returns 32-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
  * @return 32-bit pseudorandom number
@@ -281,6 +290,7 @@ int main(void) {
     uint32_t ini[4] = {0x1234, 0x5678, 0x9abc, 0xdef0};
 
     init_gen_rand(1234);
+    printf("%s\ngenerated randoms\n", get_idstring());
     printf("init_gen_rand__________\n");
     for (i = 0; i < 1000; i++) {
 	printf("%10u ", gen_rand32());
@@ -297,7 +307,6 @@ int main(void) {
 	    printf("\n");
 	}
     }
-    printf("\n");
     return 0;
 }
 #endif

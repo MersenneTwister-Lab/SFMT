@@ -3,9 +3,9 @@
  * @brief test program for 64-bit output of SFMT19937.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
- * @date 2006-08-29
+ * @date 2007-01-10
  *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
@@ -16,7 +16,17 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
+
+#if defined(SSE2)
+#include <emmintrin.h>
+#include "sfmt19937-sse2.c"
+#elif defined(ALTIVEC)
+#include "sfmt19937-alti64.c"
+#elif defined(BIG)
+#include "sfmt19937-big64.c"
+#else
 #include "sfmt19937.c"
+#endif
 
 #define BLOCK_SIZE 50000
 #define COUNT 2000
@@ -24,8 +34,16 @@
 void check64(void);
 void speed64(void);
 
+#if defined(SSE2)
+static __m128i array1[BLOCK_SIZE / 2];
+static __m128i array2[700 / 2];
+#elif defined(ALTIVEC)
+static vector unsigned int array1[BLOCK_SIZE / 2];
+static vector unsigned int array2[700 / 2];
+#else
 static uint64_t array1[BLOCK_SIZE];
 static uint64_t array2[700];
+#endif
 
 void check64(void) {
     int i;
@@ -104,14 +122,15 @@ void speed64(void) {
 }
 
 int main(int argc, char *argv[]) {
-    int verbose = 0;
+    int speed = 0;
 
-    if ((argc >= 2) && (strncmp(argv[1],"-v",2) == 0)) {
-	verbose = 1;
+    if ((argc >= 2) && (strncmp(argv[1],"-s",2) == 0)) {
+	speed = 1;
     }
-    if (verbose) {
+    if (speed) {
+	speed64();
+    } else {
 	check64();
     }
-    speed64();
     return 0;
 }

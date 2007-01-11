@@ -154,7 +154,7 @@ static INLINE void gen_rand_all(void) {
     int i;
     uint32_t lung[4];
 
-    assign128(lung1, sfmt[N]);
+    assign128(lung, sfmt[N]);
     do_recursion(sfmt[0], sfmt[0], sfmt[POS1], sfmt[N - 1], lung);
     xor128(lung, sfmt[0]);
     for (i = 1; i + POS1 < N; i++) {
@@ -183,22 +183,22 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
 
     assign128(lung, sfmt[N]);
     do_recursion(array[0].a, sfmt[0], sfmt[POS1], sfmt[N - 1], lung);
-    xor128(lung, array[0]);
+    xor128(lung, array[0].a);
     for (i = 1; i < N - POS1; i++) {
-	do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], sfmt[i - 1], lung);
+	do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], array[i - 1].a, lung);
 	xor128(lung, array[i].a);
     }
     for (; i < N; i++) {
-	do_recursion(array[i].a, sfmt[i], array[i + POS1 - N].a, sfmt[i - 1],
+	do_recursion(array[i].a, sfmt[i], array[i + POS1 - N].a, array[i - 1].a,
 		     lung);
 	xor128(lung, array[i].a);
     }
     for (; i < size; i++) {
 	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a,
-		     sfmt[i - 1], lung);
+		     array[i - 1].a, lung);
 	xor128(lung, array[i].a);
     }
-    assign(sfmt[N], lung);
+    assign128(sfmt[N], lung);
 }
 
 /**
@@ -271,6 +271,16 @@ static void period_certification(void) {
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/
+/**
+ * This function returns the identification string.
+ * The string shows the word size, the mersenne expornent,
+ * and all parameters of this generator.
+ */
+char *get_idstring(void)
+{
+    return IDSTR;
+}
+
 /**
  * This function generates and returns 32-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
@@ -417,7 +427,7 @@ void init_gen_rand(uint32_t seed)
     int i;
 
     psfmt32[0] = seed;
-    for (i = 1; i < N32; i++) {
+    for (i = 1; i < (N + 1) * 4; i++) {
 	psfmt32[i] = 1812433253UL * (psfmt32[i - 1] ^ (psfmt32[i - 1] >> 30))
 	    + i;
     }
@@ -457,37 +467,37 @@ void init_by_array(uint32_t init_key[], int key_length) {
     } else {
 	count = size;
     }
-    r = func1(sfmt32[0] ^ sfmt32[mid % size] ^ sfmt32[size - 1]);
-    sfmt32[mid % size] += r;
+    r = func1(psfmt32[0] ^ psfmt32[mid % size] ^ psfmt32[size - 1]);
+    psfmt32[mid % size] += r;
     r += key_length;
-    sfmt32[(mid + lag) % size] += r;
-    sfmt32[0] = r;
+    psfmt32[(mid + lag) % size] += r;
+    psfmt32[0] = r;
     count--;
     for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
-	r = func1(sfmt32[i] ^ sfmt32[(i + mid) % size] 
-		  ^ sfmt32[(i + size - 1) % size]);
-	sfmt32[(i + mid) % size] += r;
+	r = func1(psfmt32[i] ^ psfmt32[(i + mid) % size] 
+		  ^ psfmt32[(i + size - 1) % size]);
+	psfmt32[(i + mid) % size] += r;
 	r += init_key[j] + i;
-	sfmt32[(i + mid + lag) % size] += r;
-	sfmt32[i] = r;
+	psfmt32[(i + mid + lag) % size] += r;
+	psfmt32[i] = r;
 	i = (i + 1) % size;
     }
     for (; j < count; j++) {
-	r = func1(sfmt32[i] ^ sfmt32[(i + mid) % size] 
-		  ^ sfmt32[(i + size - 1) % size]);
-	sfmt32[(i + mid) % size] += r;
+	r = func1(psfmt32[i] ^ psfmt32[(i + mid) % size] 
+		  ^ psfmt32[(i + size - 1) % size]);
+	psfmt32[(i + mid) % size] += r;
 	r += i;
-	sfmt32[(i + mid + lag) % size] += r;
-	sfmt32[i] = r;
+	psfmt32[(i + mid + lag) % size] += r;
+	psfmt32[i] = r;
 	i = (i + 1) % size;
     }
     for (j = 0; j < size; j++) {
-	r = func2(sfmt32[i] + sfmt32[(i + mid) % size] 
-		  + sfmt32[(i + size - 1) % size]);
-	sfmt32[(i + mid) % size] ^= r;
+	r = func2(psfmt32[i] + psfmt32[(i + mid) % size] 
+		  + psfmt32[(i + size - 1) % size]);
+	psfmt32[(i + mid) % size] ^= r;
 	r -= i;
-	sfmt32[(i + mid + lag) % size] ^= r;
-	sfmt32[i] = r;
+	psfmt32[(i + mid + lag) % size] ^= r;
+	psfmt32[i] = r;
 	i = (i + 1) % size;
     }
 

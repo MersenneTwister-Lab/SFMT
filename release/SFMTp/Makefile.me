@@ -1,0 +1,30 @@
+#for GNU make
+
+FILES = sfmt19937.h sfmt19937.c sfmt19937-big64.c sfmt19937-alti32.c \
+	sfmt19937-alti64.c sfmt19937-sse2.c test32.c test64.c check.sh \
+	sfmt19937-32.out.txt sfmt19937-64.out.txt \
+	FILES.txt LICENSE.txt Makefile \
+	README.txt html
+VERSION = 1.0
+DIR = SFMTp-src-${VERSION}
+
+doc:
+	rm -rf html
+	/Applications/Doxygen.app/Contents/Resources/doxygen doxygen.cfg
+
+.PHONY : tar.gz
+tar.gz: $(FILES)
+	mkdir ${DIR}
+	cp -r ${FILES} ${DIR}
+	tar czvf ${DIR}.tar.gz ${DIR}/*
+	rm -rf ${DIR}
+
+.PHONY : zip
+zip: $(FILES)
+	mkdir ${DIR}
+	cp -r ${FILES} ${DIR}
+	zip ${DIR}.zip ${DIR}/* ${DIR}/html/*
+	rm -rf ${DIR}
+
+clean:
+	rm -f *.o *~

@@ -7,9 +7,9 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2006-08-29
+ * @date 2007-01-11
  *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software.
@@ -63,6 +63,7 @@ INLINE uint32_t gen_rand32(void);
 INLINE uint64_t gen_rand64(void);
 INLINE void fill_array32(uint32_t array[], int size);
 INLINE void fill_array64(uint64_t array[], int size);
+char *get_idstring(void);
 void init_gen_rand(uint32_t seed);
 void init_by_array(uint32_t init_key[], int key_length);
 

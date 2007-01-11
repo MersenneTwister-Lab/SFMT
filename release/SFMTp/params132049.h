@@ -1,0 +1,14 @@
+#define POS1	439
+#define SL1	10
+#define SL2	3
+#define SR1	3
+#define SR2	8
+#define MSK1	0xcfffffffU
+#define MSK2	0xfbefffffU
+#define MSK3	0xfdff7fffU
+#define MSK4	0xb5d77fffU
+#define PARITY1	0x00000001U
+#define PARITY2	0x00000000U
+#define PARITY3	0xe98b0000U
+#define PARITY4	0x72af2ff8U
+#define IDSTR	"SFMTp-132049:439-10-3-3-8:cfffffff-fbefffff-fdff7fff-b5d77fff"

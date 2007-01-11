@@ -4,9 +4,9 @@
 # @author Mutsuo Saito (Hiroshima University)
 # @author Makoto Matsumoto (Hiroshima University)
 #
-# @date 2006-09-06
+# @date 2007-01-11
 #
-# Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+# Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
 # University. All rights reserved.
 #
 # The new BSD License is applied to this software.
@@ -21,7 +21,8 @@
 # We could comple sfmt19937-alti32.c and sfmt19937-alti64.c 
 # using gcc 4.0 of osx.
 
-WARN = -Wmissing-prototypes -Wall -Winline
+#WARN = -Wmissing-prototypes -Wall -Winline
+WARN = -Wmissing-prototypes -Wall
 OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG 
 #STD =
 #STD = -std=c89 -pedantic
@@ -63,7 +64,7 @@ all:$(TARGET)
 test-ref32: SFMTp-ref.c SFMTp.h
 	${CC} -DMAIN -o $@ SFMTp-ref.c
 
-test-std32: test32.c SFMTp.c SFMTp.h Makefile
+test-std32: test32.c SFMTp.c SFMTp.h
 	${CC} -o $@ test32.c
 
 test-std64: test64.c sfmt19937.c sfmt19937.h Makefile

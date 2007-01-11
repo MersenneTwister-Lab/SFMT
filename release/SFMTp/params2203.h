@@ -11,3 +11,4 @@
 #define PARITY2	0x00ad1771U
 #define PARITY3	0x01311bb4U
 #define PARITY4	0x1414dc81U
+#define IDSTR	"SFMTp-2203:9-18-1-11-5:cbbfffdf-ffdfbfff-fdfffff3-7adfbbef"
