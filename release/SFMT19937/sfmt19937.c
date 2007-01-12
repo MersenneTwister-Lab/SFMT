@@ -124,7 +124,7 @@ static int idx;
 static int initialized = 0;
 /** a flag: it is 1 if CPU is BIG ENDIAN. */
 static int big_endian;
-/** a parity check vector which certificate the period of 2^{MEXP} */
+/** a parity check vector which certificate the period of 2^{MEXP}-1. */
 static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
 
 /*------------------------------------------
@@ -307,7 +307,7 @@ static void endian_check(void) {
 }
 
 /**
- * This function certificate the period of 2^19937
+ * This function certificate the period of 2^19937-1.
  */
 static void period_certification(void) {
     int inner = 0;
