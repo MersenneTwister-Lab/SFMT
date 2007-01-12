@@ -6,7 +6,6 @@ LICENSE.txt:		License file.
 Makefile:		Makefile for test program.
 sfmt19937.h:		Header file.
 sfmt19937.c:		C code for standard C (c99) and unix like systems.
-sfmt19937-big32.c:	C code for BIG ENDIAN machines.
 sfmt19937-big64.c:	C code optimized initialization and generation for
 			64-bit output for BIG ENDIAN machines.
 sfmt19937-alti32.c:	C code optimized for PowerPC AltiVec.

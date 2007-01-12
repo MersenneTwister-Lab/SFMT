@@ -22,10 +22,11 @@
 # using gcc 4.0 of osx.
 
 WARN = -Wmissing-prototypes -Wall
-OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG 
+OPTI = -O9 -finline-functions -fomit-frame-pointer -fno-strict-aliasing -DNDEBUG 
 #STD =
 #STD = -std=c89 -pedantic
-STD = -std=c99 -pedantic
+#STD = -std=c99 -pedantic
+STD = -std=c99
 GCC = gcc $(OPTI) $(WARN) $(STD)
 STD_TARGET = test-std32 test-std64
 STD_CHECK_TARGET = check-std32 check-std64
