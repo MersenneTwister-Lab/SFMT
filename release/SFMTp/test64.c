@@ -36,13 +36,13 @@ void speed64(void);
 
 #if defined(SSE2)
 static __m128i array1[BLOCK_SIZE / 2];
-static __m128i array2[700 / 2];
+static __m128i array2[10000 / 2];
 #elif defined(ALTIVEC)
 static vector unsigned int array1[BLOCK_SIZE / 2];
-static vector unsigned int array2[700 / 2];
+static vector unsigned int array2[10000 / 2];
 #else
 static uint64_t array1[BLOCK_SIZE];
-static uint64_t array2[700];
+static uint64_t array2[10000];
 #endif
 
 void check64(void) {
@@ -57,13 +57,15 @@ void check64(void) {
     printf("generated randoms\n");
     /* 64 bit generation */
     init_by_array(ini, 5);
-    fill_array64(array64, 1000);
-    fill_array64(array64_2, 700);
+    fill_array64(array64, 10000);
+    fill_array64(array64_2, 10000);
     init_by_array(ini, 5);
-    for (i = 0; i < 1000; i++) {
-	printf("%20"PRIu64" ", array64[i]);
-	if (i % 3 == 2) {
-	    printf("\n");
+    for (i = 0; i < 10000; i++) {
+	if (i < 1000) {
+	    printf("%20"PRIu64" ", array64[i]);
+	    if (i % 3 == 2) {
+		printf("\n");
+	    }
 	}
 	r = gen_rand64();
 	if (r != array64[i]) {

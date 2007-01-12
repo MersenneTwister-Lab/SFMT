@@ -34,13 +34,13 @@ void speed32(void);
 
 #if defined(ALTIVEC)
 static vector unsigned int array1[BLOCK_SIZE / 4];
-static vector unsigned int array2[700 / 4];
+static vector unsigned int array2[10000 / 4];
 #elif defined(SSE2)
 static __m128i array1[BLOCK_SIZE / 4];
-static __m128i array2[700 / 4];
+static __m128i array2[10000 / 4];
 #else
 static uint32_t array1[BLOCK_SIZE / 4][4];
-static uint32_t array2[700 / 4][4];
+static uint32_t array2[10000 / 4][4];
 #endif
 
 void check32(void) {
@@ -54,13 +54,15 @@ void check32(void) {
     printf("init_gen_rand__________\n");
     /* 32 bit generation */
     init_gen_rand(1234);
-    fill_array32(array32, 1000);
-    fill_array32(array32_2, 700);
+    fill_array32(array32, 10000);
+    fill_array32(array32_2, 10000);
     init_gen_rand(1234);
-    for (i = 0; i < 1000; i++) {
-	printf("%10u ", array32[i]);
-	if (i % 5 == 4) {
-	    printf("\n");
+    for (i = 0; i < 10000; i++) {
+	if (i < 1000) {
+	    printf("%10u ", array32[i]);
+	    if (i % 5 == 4) {
+		printf("\n");
+	    }
 	}
 	r32 = gen_rand32();
 	if (r32 != array32[i]) {
@@ -80,13 +82,15 @@ void check32(void) {
     printf("\n");
     init_by_array(ini, 4);
     printf("init_by_array__________\n");
-    fill_array32(array32, 1000);
-    fill_array32(array32_2, 700);
+    fill_array32(array32, 10000);
+    fill_array32(array32_2, 10000);
     init_by_array(ini, 4);
-    for (i = 0; i < 1000; i++) {
-	printf("%10u ", array32[i]);
-	if (i % 5 == 4) {
-	    printf("\n");
+    for (i = 0; i < 10000; i++) {
+	if (i < 1000) {
+	    printf("%10u ", array32[i]);
+	    if (i % 5 == 4) {
+		printf("\n");
+	    }
 	}
 	r32 = gen_rand32();
 	if (r32 != array32[i]) {

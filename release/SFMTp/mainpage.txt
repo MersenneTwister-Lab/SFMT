@@ -4,8 +4,17 @@
  * This is SIMD oriented Fast Mersenne Twister pseudorandom number
  * generator Pulmonary version (SFMTp).
  *
- * This Project provides following functions of various Mersenne Prime Period:
- * from 2<sup>607</sup> to 2<sup>132049</sup>.
+ * This Project provides pesudorandom number generators of various
+ * Mersenne Prime Period: from 2<sup>607</sup>-1 to
+ * 2<sup>132049</sup>-1.
+ *
+ * To get SFMTp which has the period of 2<sup>607</sup>-1, you have to
+ * specify -DMEXP=607 as a compile option. For example, 
+ * @verbatim
+ gcc -DMEXP=607 -msse2 -c SFMTp-sse2.c 
+@endverbatim
+ * will make SFMTp which has the period of 2<sup>607</sup>-1 and is
+ * optimized for SSE2.
  *
  * - void init_gen_rand() initializes the generator with a 32-bit
  *   integer seed.
@@ -25,7 +34,7 @@
  *
  * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
  *
- * @date 2007-01-11
+ * @date 2007-01-12
  *
  * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
