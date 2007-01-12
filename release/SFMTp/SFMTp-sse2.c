@@ -39,7 +39,7 @@ static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int initialized = 0;
-/** a parity check vector which certificate the period of 2^{MEXP} */
+/** a parity check vector which certificate the period of 2^{MEXP}-1. */
 static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
 
 /*----------------
@@ -172,7 +172,7 @@ INLINE static uint32_t func2(uint32_t x) {
 }
 
 /**
- * This function certificate the period of 2^{MEXP}
+ * This function certificate the period of 2^{MEXP}-1.
  */
 static void period_certification(void) {
     int inner = 0;
@@ -262,9 +262,9 @@ INLINE uint64_t gen_rand64(void)
 /**
  * This function generates pseudorandom 32-bit integers in the
  * specified array[] by one call. The number of pseudorandom integers
- * is specified by the argument size, which must be at least 624 and a
- * multiple of four.  The generation by this function is much faster
- * than the following gen_rand function.
+ * is specified by the argument size, which must be at least (MEXP /
+ * 128) * 4 and a multiple of four.  The generation by this function
+ * is much faster than the following gen_rand function.
  *
  * For initialization, \b init_gen_rand or \b init_by_array must be
  * called before the first call of this function. This function can
@@ -279,7 +279,7 @@ INLINE uint64_t gen_rand64(void)
  *
  * @param size the number of 32-bit pseudorandom integers to be
  * generated.  size must be a multiple of 4, and greater than or equal
- * to 624.
+ * to (MEXP / 128) * 4.
  */
 INLINE void fill_array32(uint32_t array[], int size)
 {
@@ -296,9 +296,9 @@ INLINE void fill_array32(uint32_t array[], int size)
 /**
  * This function generates pseudorandom 64-bit integers in the
  * specified array[] by one call. The number of pseudorandom integers
- * is specified by the argument size, which must be at least 312 and a
- * multiple of two.  The generation by this function is much faster
- * than the following gen_rand function.
+ * is specified by the argument size, which must be at least (MEXP /
+ * 128) * 2 and a multiple of two.  The generation by this function is
+ * much faster than the following gen_rand function.
  *
  * For initialization, \b init_gen_rand or \b init_by_array must be
  * called before the first call of this function. This function can
@@ -313,7 +313,7 @@ INLINE void fill_array32(uint32_t array[], int size)
  *
  * @param size the number of 64-bit pseudorandom integers to be
  * generated.  size must be a multiple of 2, and greater than or equal
- * to 312.
+ * to (MEXP / 128) * 2.
  */
 INLINE void fill_array64(uint64_t array[], int size)
 {
