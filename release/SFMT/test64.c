@@ -1,11 +1,11 @@
 /**
  * @file  test64.c
- * @brief test program for 64-bit output of SFMT19937.
+ * @brief test program for 64-bit output of SFMTp.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
- * @date 2006-08-29
+ * @date 2007-01-10
  *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
@@ -16,7 +16,17 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include "sfmt19937.c"
+
+#if defined(SSE2)
+#include <emmintrin.h>
+#include "SFMTp-sse2.c"
+#elif defined(ALTIVEC)
+#include "SFMTp-alti64.c"
+#elif defined(BIG)
+#include "SFMTp-big64.c"
+#else
+#include "SFMTp.c"
+#endif
 
 #define BLOCK_SIZE 50000
 #define COUNT 2000
@@ -24,8 +34,16 @@
 void check64(void);
 void speed64(void);
 
+#if defined(SSE2)
+static __m128i array1[BLOCK_SIZE / 2];
+static __m128i array2[10000 / 2];
+#elif defined(ALTIVEC)
+static vector unsigned int array1[BLOCK_SIZE / 2];
+static vector unsigned int array2[10000 / 2];
+#else
 static uint64_t array1[BLOCK_SIZE];
-static uint64_t array2[700];
+static uint64_t array2[10000];
+#endif
 
 void check64(void) {
     int i;
@@ -39,13 +57,15 @@ void check64(void) {
     printf("generated randoms\n");
     /* 64 bit generation */
     init_by_array(ini, 5);
-    fill_array64(array64, 1000);
-    fill_array64(array64_2, 700);
+    fill_array64(array64, 10000);
+    fill_array64(array64_2, 10000);
     init_by_array(ini, 5);
-    for (i = 0; i < 1000; i++) {
-	printf("%20"PRIu64" ", array64[i]);
-	if (i % 3 == 2) {
-	    printf("\n");
+    for (i = 0; i < 10000; i++) {
+	if (i < 1000) {
+	    printf("%20"PRIu64" ", array64[i]);
+	    if (i % 3 == 2) {
+		printf("\n");
+	    }
 	}
 	r = gen_rand64();
 	if (r != array64[i]) {
@@ -104,14 +124,15 @@ void speed64(void) {
 }
 
 int main(int argc, char *argv[]) {
-    int verbose = 0;
+    int speed = 0;
 
-    if ((argc >= 2) && (strncmp(argv[1],"-v",2) == 0)) {
-	verbose = 1;
+    if ((argc >= 2) && (strncmp(argv[1],"-s",2) == 0)) {
+	speed = 1;
     }
-    if (verbose) {
+    if (speed) {
+	speed64();
+    } else {
 	check64();
     }
-    speed64();
     return 0;
 }
