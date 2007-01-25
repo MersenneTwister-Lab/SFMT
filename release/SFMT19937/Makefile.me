@@ -11,6 +11,7 @@ DIR = sfmt19937src-${VERSION}
 doc:
 	rm -rf html
 	/Applications/Doxygen.app/Contents/Resources/doxygen sfmt-std-c.cfg
+	cp howto-compile.html html
 
 .PHONY : tar.gz
 tar.gz: $(FILES)

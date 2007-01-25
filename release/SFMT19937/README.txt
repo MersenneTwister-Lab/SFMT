@@ -1,6 +1,6 @@
  =================================================================
  sfmt19937 ver. 1.1
- SIMD oriented Fast Mersenne Twister(SFMT)
+ SIMD oriented Fast Mersenne Twister (SFMT)
 
  Mutsuo Saito (Hiroshima University) and
  Makoto Matsumoto (Hiroshima University)
@@ -24,8 +24,10 @@
  will show the time to generating 10^8 pseudorandom numbers.
 
  Optional `make check' will check compiled programs.
- 
 
+ See also html/howto-compile.html to compile your program with
+ optimized SFMT for SIMD.
+ 
  If you want to redistribute and/or change source files, see LICENSE.txt.
 
  When you change these files and redistribute them, PLEASE write your

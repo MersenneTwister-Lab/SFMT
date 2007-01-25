@@ -5,7 +5,7 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2007-01-10
+ * @date 2007-01-25
  *
  * Copyright (C) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
@@ -33,13 +33,32 @@
  *   psedorandom integers.
  * - INLINE void fill_array64() fills the user-specified array with 64-bit
  *   psedorandom integers.
+ * - INLINE static double to_real1(uint32_t v) convert v to double on
+ *   [0,1]-real-interval. 
+ * - INLINE static double genrand_real1() generates a random number on 
+ *   [0,1]-real-interval. 
+ * - INLINE static double to_real2(uint32_t v) convert v to double on
+ *   [0,1)-real-interval.
+ * - INLINE static double genrand_real2() generates a random number on 
+ *   [0,1)-real-interval.
+ * - INLINE static double to_real3(uint32_t v) convert v to double on
+ *   (0,1)-real-interval.
+ * - INLINE static double genrand_real3() generates a random number on 
+ *   (0,1)-real-interval.
+ * - INLINE static double to_res53(uint64_t v) convert v to double on
+ *   [0,1) with 53-bit resolution
+ * - INLINE static double genrand_res53() generates a random number on 
+ *   [0,1) with 53-bit resolution
  *
+ *   see <a href="howto-compile.html">How to compile</a> to compile
+ *   your program with SFMT optimized for SIMD.
+ * 
  * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
  * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
  *
  * Please change `our-domain' to `math.sci.hiroshima-u.ac.jp'
  *
- * @date 2007-01-10
+ * @date 2007-01-25
  *
  * Copyright (C) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
