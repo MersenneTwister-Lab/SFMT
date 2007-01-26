@@ -271,7 +271,7 @@ int main(int argc, char* argv[]) {
     </p>
     <h4>2-3. Use sequential call and inline functions.</h4>
     <p>
-      Here is <strong>sample3.c</strong> which is modified sample1.c.
+      Here is <strong>sample3.c</strong> which modifies sample1.c.
       This is very similar to sample1.c. The difference is only one line.
       It include <strong>"sfmt19937.c"</strong> instead of <strong>"sfmt19937.h"
       </strong>.
@@ -322,6 +322,63 @@ int main(int argc, char* argv[]) {
       "sfmt19937-alti32.c" or "sfmt19937-alti64.c" and type</p>
     <blockquote>
       <pre>gcc -faltivec -o sample3 sample3.c</pre>
+    </blockquote>
+    <h4>2-4. Initialize SFMT using init_by_array function.</h4>
+    <p>
+      Here is <strong>sample4.c</strong> which modifies sample1.c.
+      The 32-bit integer seed can only make 2<sup>32</sup> kinds of
+      initial state, to avoid this problem, SFMT
+      provides <strong>init_by_array</strong> function.  This sample
+      uses init_by_array function which initialize the internal state
+      array with an array of 32-bit. The size of an array can be
+      larger than the internal state array and all elements of the
+      array are used for initialization, but too large array is
+      wasteful.
+    </p>
+    <blockquote>
+      <pre>
+#include &lt;stdio.h&gt;
+#include &lt;strings.h&gt;
+#include "sfmt19937.h"
+
+int main(int argc, char* argv[]) {
+    int i, cnt, seed_cnt;
+    double x, y, pi;
+    const int NUM = 10000;
+    uint32_t seeds[100];
+
+    if (argc &gt;= 2) {
+	seed_cnt = 0;
+	for (i = 0; (i &lt; 100) &amp;&amp; (i &lt; strlen(argv[1])); i++) {
+	    seeds[i] = argv[1][i];
+	    seed_cnt++;
+	}
+    } else {
+	seeds[0] = 12345;
+	seed_cnt = 1;
+    }
+    cnt = 0;
+    init_by_array(seeds, seed_cnt);
+    for (i = 0; i &lt; NUM; i++) {
+	x = genrand_res53();
+	y = genrand_res53();
+	if (x * x + y * y &lt; 1.0) {
+	    cnt++;
+	}
+    }
+    pi = (double)cnt / NUM * 4;
+    printf("%lf\n", pi);
+    return 0;
+}
+      </pre>
+    </blockquote>
+    <p>To compile <strong>sample4.c</strong>, type</p>
+    <blockquote>
+      <pre>gcc -o sample4 sfmt19937.c sample4.c</pre>
+    </blockquote>
+    <p>Now, seed can be a string. Like this:</p>
+    <blockquote>
+      <pre>./sample4 your-full-name</pre>
     </blockquote>
   </body>
 </html>
