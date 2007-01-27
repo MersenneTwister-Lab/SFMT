@@ -1,5 +1,6 @@
 \documentclass{svmult}
 \usepackage{amssymb}
+\usepackage{url}
 %\usepackage{amsmath}
 \usepackage[dvipdfm]{graphicx}
 %\usepackage{color}
@@ -76,7 +77,9 @@ which fills an array of 32-bit integers at one time.
 It speeds up the generation by a factor of two. 
 A speed comparison with other modern generators, 
 such as multiplicative recursive generators,
-shows an advantage of SFMT.
+shows an advantage of SFMT. The implemented 
+C-codes are downloadable from 
+\url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/index.html}.
 %\keywords{
 %Mersenne Twister,
 %SFMT, 
@@ -675,7 +678,7 @@ d(v):=\lfloor p/v \rfloor - k(v)
 \mbox{ and } \Delta:=\sum_{v=1}^w d(v).
 $$
 \end{definition}
-We may compute $k'(v)$ by standard linear algebra.
+We may compute $k(v)$ by standard linear algebra.
 We used a more efficient algorithm based on 
 a weighted norm,
 %{\em weighted lattice method} to compute $k'(v)$,
@@ -1056,9 +1059,8 @@ functions specified in C99 only, (2) an optimized C code for
 Intel Pentium SSE2, and 
 (3) an optimized C code for PowerPC AltiVec. The optimized codes require
 icl (Intel C Compiler) or gcc compiler with suitable options.
-We will put the newest version of the codes 
-in a link from the homepage of \cite{MT}, together with some notes 
-on compiling with SIMD.
+We had put and will keep the newest version of the codes 
+in the homepage \cite{SFMT}.
 
 There is a problem of the endian when 128-bit integers 
 are converted into 32-bit integers. When a 128-bit integer
