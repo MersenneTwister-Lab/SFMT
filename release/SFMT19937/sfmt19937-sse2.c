@@ -97,12 +97,12 @@ static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static __m128i mm_recursion(__m128i *a, __m128i *b, 
+inline static __m128i mm_recursion(__m128i *a, __m128i *b, 
 				   __m128i c, __m128i d, __m128i mask);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(__m128i array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(__m128i array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
 static void period_certification(void);
 
 /**
@@ -114,7 +114,7 @@ static void period_certification(void);
  * @param mask 128-bit mask
  * @return output
  */
-INLINE static 
+inline static 
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -139,7 +139,7 @@ __attribute__((always_inline))
  * This function fills the internal state array with psedorandom
  * integers.
  */
-INLINE void gen_rand_all(void) {
+inline void gen_rand_all(void) {
     int i;
     __m128i r, r1, r2, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);
@@ -167,7 +167,7 @@ INLINE void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-INLINE static void gen_rand_array(__m128i array[], int size) {
+inline static void gen_rand_array(__m128i array[], int size) {
     int i, j;
     __m128i r, r1, r2, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);
@@ -212,7 +212,7 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
  * @param x 32-bit integer
  * @return 32-bit integer
  */
-INLINE static uint32_t func1(uint32_t x) {
+inline static uint32_t func1(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1664525UL;
 }
 
@@ -222,7 +222,7 @@ INLINE static uint32_t func1(uint32_t x) {
  * @param x 32-bit integer
  * @return 32-bit integer
  */
-INLINE static uint32_t func2(uint32_t x) {
+inline static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
 }
 
@@ -268,7 +268,7 @@ static void period_certification(void) {
  *
  * @return 32-bit pseudorandom number
  */
-INLINE uint32_t gen_rand32(void)
+inline uint32_t gen_rand32(void)
 {
     uint32_t r;
 
@@ -288,7 +288,7 @@ INLINE uint32_t gen_rand32(void)
  *
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint64_t r;
 
@@ -326,7 +326,7 @@ INLINE uint64_t gen_rand64(void)
  * generated.  size must be a multiple of 4, and greater than or equal
  * to 624.
  */
-INLINE void fill_array32(uint32_t array[], int size)
+inline void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
     assert((uint64_t)array % 16 == 0);
@@ -360,7 +360,7 @@ INLINE void fill_array32(uint32_t array[], int size)
  * generated.  size must be a multiple of 2, and greater than or equal
  * to 312.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     assert((uint64_t)array % 16 == 0);

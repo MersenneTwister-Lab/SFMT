@@ -25,29 +25,29 @@
  *   integer seed.
  * - void init_by_array() initializes the generator with an array of
  *   32-bit integers as the seeds.
- * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
+ * - inline uint32_t gen_rand32() generates and returns a pseudorandom
  *   32-bit unsigned integer.
- * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
+ * - inline uint32_t gen_rand64() generates and returns a pseudorandom
  *   64-bit unsigned integer.
- * - INLINE void fill_array32() fills the user-specified array with 32-bit
+ * - inline void fill_array32() fills the user-specified array with 32-bit
  *   psedorandom integers.
- * - INLINE void fill_array64() fills the user-specified array with 64-bit
+ * - inline void fill_array64() fills the user-specified array with 64-bit
  *   psedorandom integers.
- * - INLINE static double to_real1(uint32_t v) convert v to double on
+ * - inline static double to_real1(uint32_t v) convert v to double on
  *   [0,1]-real-interval. 
- * - INLINE static double genrand_real1() generates a random number on 
+ * - inline static double genrand_real1() generates a random number on 
  *   [0,1]-real-interval. 
- * - INLINE static double to_real2(uint32_t v) convert v to double on
+ * - inline static double to_real2(uint32_t v) convert v to double on
  *   [0,1)-real-interval.
- * - INLINE static double genrand_real2() generates a random number on 
+ * - inline static double genrand_real2() generates a random number on 
  *   [0,1)-real-interval.
- * - INLINE static double to_real3(uint32_t v) convert v to double on
+ * - inline static double to_real3(uint32_t v) convert v to double on
  *   (0,1)-real-interval.
- * - INLINE static double genrand_real3() generates a random number on 
+ * - inline static double genrand_real3() generates a random number on 
  *   (0,1)-real-interval.
- * - INLINE static double to_res53(uint64_t v) convert v to double on
+ * - inline static double to_res53(uint64_t v) convert v to double on
  *   [0,1) with 53-bit resolution
- * - INLINE static double genrand_res53() generates a random number on 
+ * - inline static double genrand_res53() generates a random number on 
  *   [0,1) with 53-bit resolution
  *
  *   see <a href="howto-compile.html">How to compile</a> to compile
@@ -159,14 +159,14 @@ typedef struct W128_T w128_t;
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
+inline static void rshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift);
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(w128_t array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(w128_t array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
 static void endian_check(void);
 static void period_certification(void);
 /**
@@ -177,7 +177,7 @@ static void period_certification(void);
  * @param in the 128-bit data to be shifted
  * @param shift the shift value
  */
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
+inline static void rshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
     uint64_t th, tl, oh, ol;
 
@@ -201,7 +201,7 @@ INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
  * @param in the 128-bit data to be shifted
  * @param shift the shift value
  */
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
     uint64_t th, tl, oh, ol;
 
@@ -242,7 +242,7 @@ INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
  * This function fills the internal state array with psedorandom
  * integers.
  */
-INLINE static void gen_rand_all(void) {
+inline static void gen_rand_all(void) {
     int i;
     uint32_t *r1, *r2;
 
@@ -267,7 +267,7 @@ INLINE static void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-INLINE static void gen_rand_array(w128_t array[], int size) {
+inline static void gen_rand_array(w128_t array[], int size) {
     int i;
     uint32_t *r1, *r2;
 
@@ -364,7 +364,7 @@ static void period_certification(void) {
  * init_gen_rand or init_by_array must be called before this function.
  * @return 32-bit pseudorandom number
  */
-INLINE uint32_t gen_rand32(void)
+inline uint32_t gen_rand32(void)
 {
     uint32_t r;
 
@@ -384,7 +384,7 @@ INLINE uint32_t gen_rand32(void)
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint32_t r1, r2;
     uint64_t r;
@@ -433,7 +433,7 @@ INLINE uint64_t gen_rand64(void)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to a memory block aligned multiple of 16.
  */
-INLINE void fill_array32(uint32_t array[], int size)
+inline void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
     /* assert(array % 16 == 0); */
@@ -471,7 +471,7 @@ INLINE void fill_array32(uint32_t array[], int size)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to memory block aligned multiple of 16.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     /* assert(array % 16 == 0); */

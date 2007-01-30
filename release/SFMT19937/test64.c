@@ -45,6 +45,32 @@ static uint64_t array1[BLOCK_SIZE];
 static uint64_t array2[700];
 #endif
 
+#if defined(SSE2) && defined(__GNUC__)
+int sse_check(void);
+
+int sse_check(void) {
+    int sse2;
+
+   __asm__ __volatile__ (
+       "movl  $0, %%eax\n\t"
+       "cpuid\n\t"
+       "cmp   $1, %%eax\n\t"
+       "jb    2f\n\t"
+       "movl  $1, %%eax\n\t"
+       "cpuid \n\t"
+       "testl $0x04000000, %%edx\n\t"
+       "jnz   1f\n\t"
+       "movl  $0, %0\n\t"
+       "jmp   2f\n\t"
+       "1:\n\t"
+       "movl  $1, %0\n\t"
+       "2:\n\t"
+       : "=m" (sse2) : 
+       : "%eax", "%ebx", "%ecx", "%edx");
+   return sse2;
+}
+
+#endif
 void check64(void) {
     int i;
     uint64_t *array64;
@@ -123,6 +149,15 @@ void speed64(void) {
 
 int main(int argc, char *argv[]) {
     int speed = 0;
+    int simd_support = 1;
+
+#if defined(SSE2) && defined(__GNUC__)
+    simd_support = sse_check();
+#endif
+    if (!simd_support) {
+	printf("This CPU doesn't support SSE2.\n");
+	return 1;
+    }
 
     if ((argc >= 2) && (strncmp(argv[1],"-s",2) == 0)) {
 	speed = 1;

@@ -103,8 +103,8 @@ static void gen_rand_all(void);
 static void gen_rand_array(vector unsigned int array[], int size);
 static uint32_t func1(uint32_t x);
 static uint32_t func2(uint32_t x);
-INLINE static int idxof(int i);
-INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+inline static int idxof(int i);
+inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
 						vector unsigned int c,
 						vector unsigned int d);
@@ -120,7 +120,7 @@ static void period_certification(void);
  * @param d a 128-bit part of the interal state array
  * @return output
  */
-INLINE static __attribute__((always_inline)) 
+inline static __attribute__((always_inline)) 
     vector unsigned int vec_recursion(vector unsigned int a,
 				      vector unsigned int b,
 				      vector unsigned int c,
@@ -153,7 +153,7 @@ INLINE static __attribute__((always_inline))
  * This function fills the internal state array with psedorandom
  * integers.
  */
-INLINE void gen_rand_all(void) {
+inline void gen_rand_all(void) {
     int i;
     vector unsigned int r, r1, r2;
 
@@ -242,7 +242,7 @@ static uint32_t func2(uint32_t x) {
  * This function simulate a 64-bit index of LITTLE ENDIAN 
  * in BIG ENDIAN machine.
  */
-INLINE static int idxof(int i) {
+inline static int idxof(int i) {
     return i ^ 1;
 }
 
@@ -288,7 +288,7 @@ static void period_certification(void) {
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint64_t r;
 
@@ -325,7 +325,7 @@ INLINE uint64_t gen_rand64(void)
  * generated.  size must be a multiple of 2, and greater than or equal
  * to 312.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     assert((uint32_t)array % 16 == 0);

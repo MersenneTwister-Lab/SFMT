@@ -93,11 +93,11 @@ static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(vector unsigned int array[], int size);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(vector unsigned int array[], int size);
 static uint32_t func1(uint32_t x);
 static uint32_t func2(uint32_t x);
-INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
 						vector unsigned int c,
 						vector unsigned int d);
@@ -111,7 +111,7 @@ static void period_certification(void);
  * @param d a 128-bit part of the interal state array
  * @return output
  */
-INLINE static __attribute__((always_inline)) 
+inline static __attribute__((always_inline)) 
     vector unsigned int vec_recursion(vector unsigned int a,
 				      vector unsigned int b,
 				      vector unsigned int c,
@@ -144,7 +144,7 @@ INLINE static __attribute__((always_inline))
  * This function fills the internal state array with psedorandom
  * integers.
  */
-INLINE static void gen_rand_all(void) {
+inline static void gen_rand_all(void) {
     int i;
     vector unsigned int r, r1, r2;
 
@@ -171,7 +171,7 @@ INLINE static void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-INLINE static void gen_rand_array(vector unsigned int array[], int size)
+inline static void gen_rand_array(vector unsigned int array[], int size)
 {
     int i, j;
     vector unsigned int r, r1, r2;
@@ -216,7 +216,7 @@ INLINE static void gen_rand_array(vector unsigned int array[], int size)
  * @param array an 128-bit array to be swaped.
  * @param size size of 128-bit array.
  */
-INLINE static void vec_swap(vector unsigned int array[], uint32_t size)
+inline static void vec_swap(vector unsigned int array[], uint32_t size)
 {
     int i;
     const vector unsigned char perm = (vector unsigned char)
@@ -286,7 +286,7 @@ static void period_certification(void) {
  * init_gen_rand or init_by_array must be called before this function.
  * @return 32-bit pseudorandom number
  */
-INLINE uint32_t gen_rand32(void)
+inline uint32_t gen_rand32(void)
 {
     uint32_t r;
 
@@ -305,7 +305,7 @@ INLINE uint32_t gen_rand32(void)
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint32_t r1, r2;
 
@@ -343,7 +343,7 @@ INLINE uint64_t gen_rand64(void)
  * generated.  size must be a multiple of 4, and greater than or equal
  * to 624.
  */
-INLINE void fill_array32(uint32_t array[], int size)
+inline void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
     assert((uint32_t)array % 16 == 0);
@@ -376,7 +376,7 @@ INLINE void fill_array32(uint32_t array[], int size)
  * generated.  size must be a multiple of 2, and greater than or equal
  * to 312.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     assert((uint32_t)array % 16 == 0);

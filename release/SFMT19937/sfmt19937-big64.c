@@ -109,15 +109,15 @@ typedef struct W128_T w128_t;
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
+inline static void rshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift);
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(w128_t array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
-INLINE static int idxof(int i);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(w128_t array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
+inline static int idxof(int i);
 static void period_certification(void);
 
 /**
@@ -132,7 +132,7 @@ static void period_certification(void);
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
+inline static void rshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
     uint64_t th, tl, oh, ol;
 
@@ -160,7 +160,7 @@ INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
     uint64_t th, tl, oh, ol;
 
@@ -211,7 +211,7 @@ INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE static void gen_rand_all(void) {
+inline static void gen_rand_all(void) {
     int i;
     uint32_t *r1, *r2;
 
@@ -240,7 +240,7 @@ INLINE static void gen_rand_all(void) {
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE static void gen_rand_array(w128_t array[], int size) {
+inline static void gen_rand_array(w128_t array[], int size) {
     int i;
     uint32_t *r1, *r2;
 
@@ -287,7 +287,7 @@ static uint32_t func2(uint32_t x) {
  * This function simulate a 64-bit index of LITTLE ENDIAN 
  * in BIG ENDIAN machine.
  */
-INLINE static int idxof(int i) {
+inline static int idxof(int i) {
     return i ^ 1;
 }
 
@@ -337,7 +337,7 @@ static void period_certification(void) {
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint64_t r;
 
@@ -378,7 +378,7 @@ INLINE uint64_t gen_rand64(void)
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     /* assert((uint32_t)array % 16 == 0); */

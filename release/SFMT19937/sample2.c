@@ -1,4 +1,7 @@
 #include <stdio.h>
+#if !defined(_POSIX_C_SOURCE)
+#include <malloc.h>
+#endif
 #define _XOPEN_SOURCE 600
 #include <stdlib.h>
 #include "sfmt19937.h"
@@ -15,14 +18,30 @@ int main(int argc, char* argv[]) {
     } else {
 	seed = 12345;
     }
-#ifdef __APPLE__
+#if defined(__APPLE__)
+    printf("malloc used\n");
     array = malloc(sizeof(uint64_t) * R_SIZE);
     if (array == NULL) {
 	printf("can't allocate memory.\n");
 	return 1;
     }
-#else
+#elif defined(_POSIX_C_SOURCE)
+    printf("posix_memalign used\n");
     if (posix_memalign((void **)&array, 16, sizeof(uint64_t) * R_SIZE) != 0) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#elif defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+    printf("memalign used\n");
+    array = memalign(16, sizeof(uint64_t) * R_SIZE);
+    if (array == NULL) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#else /* in this case, gcc doesn't suppport SSE2 */
+    printf("malloc used\n");
+    array = malloc(sizeof(uint64_t) * R_SIZE);
+    if (array == NULL) {
 	printf("can't allocate memory.\n");
 	return 1;
     }

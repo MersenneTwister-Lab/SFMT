@@ -30,7 +30,7 @@
       Then, type
     </p>
       <blockquote>
-	<pre>make test-std32</pre>
+	<pre>make std</pre>
       </blockquote>
     <p>
       If it causes an error, try to type
@@ -86,7 +86,7 @@ diff -w foo.txt sfmt19937-32.out.txt</pre>
       you can make test-sse32. To do this, type
     </p>
     <blockquote>
-      <pre>make SYSTEM=sse2_uinx test-sse32</pre>
+      <pre>make sse2</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
@@ -105,7 +105,7 @@ diff -w foo.txt sfmt19937-32.out.txt</pre>
       do this, type
     </p>
     <blockquote>
-      <pre>make SYSTEM=ppc_osx test-alti32</pre>
+      <pre>make alti</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
@@ -123,19 +123,19 @@ diff -w foo.txt sfmt19937-32.out.txt</pre>
       automatically, type
     </p>
     <blockquote>
-      <pre>make check</pre>
+      <pre>make std-check</pre>
     </blockquote>
     <p>
       To check test program optimized for SSE2, type
     </p>
     <blockquote>
-      <pre>make SYSTEM=sse2_unix check</pre>
+      <pre>make sse2-check</pre>
     </blockquote>
     <p>
       To check test program optimized for AltiVec, type
     </p>
     <blockquote>
-      <pre>make SYSTEM=ppc_osx check</pre>
+      <pre>make alti-check</pre>
     </blockquote>
 
     <h3>2. Second Step: Use SFMT pseudorandom number generator with
@@ -195,12 +195,17 @@ int main(int argc, char* argv[]) {
     <p>
       Here is <strong>sample2.c</strong> which modifies sample1.c.
       The block call <strong>fill_array64</strong> is much faster than
-      sequential call, but it needs an aligned memory.
+      sequential call, but it needs an aligned memory. The standard function
+      to get an alligned memory is <strong>posix_memalign</strong>, but 
+      it isn't usable in every OS.
     </p>
     <blockquote>
       <pre>
-#define _XOPEN_SOURCE 600
 #include &lt;stdio.h&gt;
+#if !defined(_POSIX_C_SOURCE)
+#include &lt;malloc.h&gt;
+#endif
+#define _XOPEN_SOURCE 600
 #include &lt;stdlib.h&gt;
 #include "sfmt19937.h"
 
@@ -216,14 +221,30 @@ int main(int argc, char* argv[]) {
     } else {
 	seed = 12345;
     }
-#ifdef __APPLE__
+#if defined(__APPLE__)
+    printf("malloc used\n");
     array = malloc(sizeof(uint64_t) * R_SIZE);
     if (array == NULL) {
 	printf("can't allocate memory.\n");
 	return 1;
     }
-#else
-    if (posix_memalign(&amp;array, 16, sizeof(uint64_t) * R_SIZE) != 0) {
+#elif defined(_POSIX_C_SOURCE)
+    printf("posix_memalign used\n");
+    if (posix_memalign((void **)&amp;array, 16, sizeof(uint64_t) * R_SIZE) != 0) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#elif defined(__GNUC__) &amp;&amp; (__GNUC__ &gt; 3 || (__GNUC__ == 3 &amp;&amp; __GNUC_MINOR__ &gt;= 3))
+    printf("memalign used\n");
+    array = memalign(16, sizeof(uint64_t) * R_SIZE);
+    if (array == NULL) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#else /* in this case, gcc doesn't suppport SSE2 */
+    printf("malloc used\n");
+    array = malloc(sizeof(uint64_t) * R_SIZE);
+    if (array == NULL) {
 	printf("can't allocate memory.\n");
 	return 1;
     }
