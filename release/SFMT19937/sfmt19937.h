@@ -43,8 +43,10 @@
   #define inline
 #else
   #include <inttypes.h>
-  #if !defined(__GNUC__)
+  #if defined(__GNUC__)
     #define inline __inline__
+  #else
+    #define inline
   #endif
 #endif
 
