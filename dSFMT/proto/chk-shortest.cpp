@@ -86,30 +86,6 @@ void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
     int w, z;
     uint64_t x;
 
-    for (i = 0; i <= N; i++) {
-	for (j = 0; j < 2; j++) {
-	    w = getw(frandom);
-	    z = getw(frandom);
-	    if (feof(frandom) || ferror(frandom)) {
-		if (errno != 0) {
-		    printf("test_shortest:%s\n", strerror(errno));
-		} else {
-		    printf("test_shortest:/dev/urandom reached to EOF!\n");
-		}
-		fclose(frandom);
-		exit(1);
-	    }
-	    x = ((uint64_t)w << 32) | z;
-	    sfmt->status[i][j] = x;
-	}
-    }
-}
-#else
-void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
-    int i, j;
-    int w, z;
-    uint64_t x;
-
     i = ((uint32_t)getw(frandom)) % (N + 1);
     j = ((uint32_t)getw(frandom)) % 2;
     w = getw(frandom);
@@ -125,6 +101,20 @@ void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
     }
     x = ((uint64_t)w << 32) | z;
     sfmt->status[i][j] = x;
+}
+#else
+void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
+    static int bit_pos = 0;
+    uint32_t i, j, k;
+    uint32_t mask;
+
+    k = bit_pos % 52;
+    j = (bit_pos / 52) % 2;
+    i = bit_pos / (52 * 2);
+    memset(sfmt, 0, sizeof(dsfmt_t));
+    mask = 1U << k;
+    sfmt->status[i][j] = mask;
+    bit_pos++;
 }
 
 #endif
@@ -289,12 +279,9 @@ void test_shortest(char *filename) {
 	}
 #endif
     }
-    lcmcount = 0;
-    while (deg(lcmpoly) < (long)maxdegree) {
-	if (lcmcount > 5000) {
-	    printf("failure to get max LCM\n");
-	    break;
-	}
+    //lcmcount = 0;
+    //while (deg(lcmpoly) < (long)maxdegree) {
+    for (i = 0; i < maxdegree; i++) {
 	fill_state_random(&sfmt, frandom);
 	for (int j = 0; j < 104; j++) {
 	    generating_polynomial104(&sfmt, vec, j, maxdegree);

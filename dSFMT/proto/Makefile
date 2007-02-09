@@ -171,6 +171,13 @@ searchD11-parity86243: search-parity-vector.o sfmtD11-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-parity-vector.o sfmtD11-st.o mt19937ar.o util.o \
 		${LINKOPT}
 
+searchD11-parity132049: search-parity-vector.o sfmtD11-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector.o sfmtD11-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+check-affin-bm607: chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o
+	${CPP} -o $@ chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
