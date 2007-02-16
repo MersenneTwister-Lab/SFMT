@@ -208,9 +208,8 @@ INLINE double genrand_real2(void)
 }
 
 /* generates a random number on [0,1) with 53-bit resolution*/
-double genrand_res53(void) 
+inline static double genrand_res53(uint64_t v) 
 { 
-    unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6; 
-    return(a*67108864.0+b)*(1.0/9007199254740992.0); 
-} 
+    return genran_int64() * (1.0/18446744073709551616.0L);
+}
 #include "test_time2.c"

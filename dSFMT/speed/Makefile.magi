@@ -1,0 +1,58 @@
+#for GNU make
+#DDEBUG = -O0 -g -DDEBUG
+OPT = --param max-inline-insns-single=1800 --param inline-unit-growth=200 \
+--param large-function-growth=900
+
+CC = gcc -Wall -O9 -std=c99 -Wmissing-prototypes -Winline -finline-functions -march=athlon64 -fomit-frame-pointer $(OPT) -DNDEBUG
+#CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -Winline -maltivec -arch ppc  -DNDEBUG $(DDEBUG) $(DMEXP) $(DPG)
+#CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  -fprefetch-loop-arrays $(DDEBUG) $(DMEXP) $(DPG)
+CPP = g++ -Wall -fast $(DDEBUG) $(DMEXP) $(DPG)
+
+LINKOPT = -lntl -lgmp
+
+inline_all:sfmt4a_fastc_inline pmt_fastc_inline mt_fastc_inline
+
+##### ALTIVEC ####
+sfmtD01_alti: sfmtD01_alti.c test_time.c  paramsD01.h
+	${CC} -o $@ sfmtD01_alti.c
+
+sfmtD11_alti: sfmtD11_alti.c test_time.c  paramsD11.h
+	${CC} -o $@ sfmtD11_alti.c
+
+sfmtP37_alti: sfmtP37_alti.c test_time.c
+	${CC} -o $@ sfmtP37_alti.c
+
+##### SSE2 ####
+sfmtD01_sse2: sfmtD01_sse2.c test_time.c  paramsD01.h
+	${CC} -o $@ sfmtD01_sse2.c
+
+sfmtD11_sse2: sfmtD11_sse2.c test_time.c  paramsD11.h
+	${CC} -o $@ sfmtD11_sse2.c
+
+sfmtP37_sse2: sfmtP37_sse2.c test_time.c
+	${CC} -o $@ sfmtP37_sse2.c
+
+sfmtX78_sse2: sfmtX78_sse2.c test_time.c
+	${CC} -o $@ sfmtX78_sse2.c
+
+mt_msk_sse2: mt_msk_sse2.c test_time.c
+	${CC} -o $@ mt_msk_sse2.c
+
+#### NORMAL C ####
+sfmtD01_fastc: sfmtD01_fastc.c test_time.c paramsD01.h
+	${CC} -o $@ sfmtD01_fastc.c
+
+sfmtD11_fastc: sfmtD11_fastc.c test_time.c paramsD11.h
+	${CC} -o $@ sfmtD11_fastc.c
+
+sfmtP37_fastc: sfmtP37_fastc.c test_time2.c
+	${CC} -o $@ sfmtP37_fastc.c
+
+mt19937ar_fastc: mt19937ar.c test_time2.c
+	${CC} -o $@ mt19937ar.c
+
+.c.o:
+	${CC} -c $<
+
+clean:
+	rm -f *.o *~

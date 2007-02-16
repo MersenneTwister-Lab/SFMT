@@ -30,23 +30,6 @@ static void setup_const(void) {
     sse2_high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
     sse2_double_two = _mm_set_pd(2.0L, 2.0L);
     first = false;
-#if defined(DEBUG)
- {
-     uint32_t *x;
-     double *y;
-     double one = 1.0L;
-     x = (uint32_t *)&sse2_param_mask;
-     printf("sse2_param_mask = %08x%08x, %08x%08x\n", x[1],x[0], x[3],x[2]);
-     x = (uint32_t *)&sse2_low_mask;
-     printf("sse2_low_mask = %08x%08x, %08x%08x\n", x[1],x[0], x[3],x[2]);
-     x = (uint32_t *)&sse2_high_const;
-     printf("sse2_high_const = %08x%08x, %08x%08x\n", x[1],x[0], x[3],x[2]);
-     y = (double *)&sse2_double_two;
-     x = (uint32_t *)&one;
-     printf("sse2_double_two = %.16lf, %.16lf\n", y[0], y[1]);
-     printf("sse2_double_one = %08x%08x\n", x[1],x[0]);
- }
-#endif
 }
 
 INLINE static
@@ -57,41 +40,20 @@ __m128i
 mm_recursion(__m128i *a, __m128i *b, __m128i c, __m128i d) {
     __m128i v, w, x, y, z;
     
-    x = _mm_load_si128(a);
-    y = _mm_load_si128(b);
-    w = _mm_slli_epi64(c, SL1);
-    z = _mm_srli_epi64(c, SR2);
-    v = _mm_shuffle_epi32(d, SSE2_SHUFF);
-    w = _mm_xor_si128(w, z);
-    v = _mm_xor_si128(v, x);
-    v = _mm_xor_si128(v, w);
-    x = _mm_slli_si128(x, SL2);
-    y = _mm_srli_epi64(y, SR1);
+    z = _mm_load_si128(a);
+    y = _mm_srli_epi64(*b, SR1);
     y = _mm_and_si128(y, sse2_param_mask);
-    v = _mm_xor_si128(v, x);
-    v = _mm_xor_si128(v, y);
-    w = v;
+    w = _mm_slli_epi64(c, SL1);
+    x = _mm_srli_epi64(c, SR2);
+    v = _mm_shuffle_epi32(d, SSE2_SHUFF);
+    w = _mm_xor_si128(w, x);
+    v = _mm_xor_si128(v, z);
+    z = _mm_slli_si128(z, SL2);
+    w = _mm_xor_si128(w, y);
+    v = _mm_xor_si128(v, z);
+    v = _mm_xor_si128(v, w);
     v = _mm_and_si128(v, sse2_low_mask);
     v = _mm_or_si128(v, sse2_high_const);
-#if defined(DEBUG)
- {
-     static int first = true;
-     union {
-	 __m128i m;
-	 double d[2];
-	 unsigned int i[4];
-     } sse;
-     if (first) {
-	 first = false;
-	 sse.m = w;
-	 printf("w = %08x%08x, %08x%08x\n", 
-		sse.i[1], sse.i[0], sse.i[3], sse.i[2]);
-	 sse.m = v;
-	 printf("v = %08x%08x, %08x%08x\n", 
-		sse.i[1], sse.i[0], sse.i[3], sse.i[2]);
-     }
- }
-#endif
     return v;
 }
 
@@ -116,22 +78,6 @@ __attribute__((always_inline))
 	lung = _mm_xor_si128(lung, r);
     }
     _mm_store_si128(&sfmt[N], lung);
-#if defined(DEBUG)
- {
-     static int first = true;
-     union {
-	 __m128i m;
-	 double d[2];
-	 unsigned int i[4];
-     } sse;
-     if (first) {
-	 first = false;
-	 sse.m = sfmt[0];
-	 printf("sfmt[0] = %08x%08x, %08x%08x\n", 
-		sse.i[1], sse.i[0], sse.i[3], sse.i[2]);
-     }
- }
-#endif
 }
 
 INLINE static void gen_rand_array(__m128i array[], int size) {
@@ -147,22 +93,6 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
 	_mm_store_si128(&array[i], r);
 	lung = _mm_xor_si128(lung, r);
     }
-#if defined(DEBUG)
- {
-     static int first = true;
-     union {
-	 __m128i m;
-	 double d[2];
-	 unsigned int i[4];
-     } sse;
-     if (first) {
-	 first = false;
-	 sse.m = array[0];
-	 printf("array[0] = %08x%08x, %08x%08x\n", 
-		sse.i[1], sse.i[0], sse.i[3], sse.i[2]);
-     }
- }
-#endif
     for (; i < N; i++) {
 	r = mm_recursion(&sfmt[i], &array[i + POS1 - N], r, lung);
 	_mm_store_si128(&array[i], r);
@@ -208,11 +138,7 @@ __attribute__((always_inline))
     return r;
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    void fill_array(double array[], int size) {
+void fill_array(double array[], int size) {
     assert(size >= N * 2);
     assert(size % 2 == 0);
     assert((int)array % 16 == 0);

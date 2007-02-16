@@ -14,7 +14,7 @@ vector unsigned int dummy[NUM_RANDS / 2 + 1];
 __m128i dummy[NUM_RANDS / 2 + 1];
 #endif
 int main(int argc, char *argv[]) {
-    uint32_t i, j;
+    uint32_t i, j, k;
     uint64_t clo;
     uint64_t sum;
     uint64_t min;
@@ -62,17 +62,17 @@ int main(int argc, char *argv[]) {
 	}
     }
     printf("consumed time for generating %u randoms.\n", NUM_RANDS * TIC_COUNT);
-    printf("BLOCK MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    //printf("BLOCK MIN:%4llums.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("BLOCK AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
     min = LONG_MAX;
-    r = 0;
     sum = 0;
-    total = 0;
+    r = 0;
     for (i = 0; i < 10; i++) {
 	clo = clock();
-	for (j = 0; j < NUM_RANDS * TIC_COUNT; j++) {
-	    r = gen_rand();
-	    total += r;
+	for (j = 0; j < TIC_COUNT; j++) {
+	    for (k = 0; k < NUM_RANDS; k++) {
+		r += gen_rand();
+	    }
 	}
 	clo = clock() - clo;
 	sum += clo;
@@ -80,17 +80,18 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("SEQUE MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    total = r;
+    //printf("SEQUE MIN:%4llums.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("SEQ 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
-    r = 0;
     sum = 0;
-    total = 0;
     for (i = 0; i < 10; i++) {
 	clo = clock();
-	for (j = 0; j < NUM_RANDS * TIC_COUNT; j++) {
-	    total += 1.0;
+	for (j = 0; j < TIC_COUNT; j++) {
+	    for (k = 0; k < NUM_RANDS; k++) {
+		array[k] = gen_rand();
+	    }
 	}
 	clo = clock() - clo;
 	sum += clo;
@@ -98,8 +99,34 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("ADD   MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    total = 0;
+    for (k = 0; k < NUM_RANDS; k++) {
+	total += array[k];
+    }
+    //printf("SEQUE MIN:%4llums.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("SEQ 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("total = %lf\n", total);
+    min = LONG_MAX;
+    sum = 0;
+    for (i = 0; i < 10; i++) {
+	clo = clock();
+	for (j = 0; j < TIC_COUNT; j++) {
+	    for (k = 0; k < NUM_RANDS; k++) {
+		array[k] = 1.0L;
+	    }
+	}
+	clo = clock() - clo;
+	sum += clo;
+	if (clo < min) {
+	    min = clo;
+	}
+    }
+    total = 0;
+    for (k = 0; k < NUM_RANDS; k++) {
+	total += array[k];
+    }
+    //printf("ADD   MIN:%4llums.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("ADD   AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     return 0;
 }

@@ -12,7 +12,7 @@ static vector unsigned int sfmt[N + 1];
 static double *dsfmt = (double *)&(sfmt[0]);
 static int idx;
 
-INLINE static void gen_rand_array(vector unsigned int array[], int size);
+static void gen_rand_array(vector unsigned int array[], int size);
 INLINE static void gen_rand_all(void);
 
 INLINE static
@@ -33,27 +33,6 @@ __attribute__((always_inline))
  * @param reg may keep in register. changed.
  * @param lung may keep in register. changed.
  */
-#if 0
-#define vec_recursion(dist, a, b, reg, lung)	\
-    do {					\
-	vector unsigned int v, w, x, y, z;	\
-	x = vec_perm(a, perm_sl, perm_sl);	\
-	v = a;					\
-	y = vec_srl(b, sr1);			\
-	z = vec_and(vec_sll(reg, sl1), sl1_msk);		\
-	w = vec_and(vec_srl(reg, sr2), sr2_msk);		\
-	w = vec_xor(w, z);					\
-	z = vec_perm(lung, perm, perm);				\
-	z = vec_xor(z, w);					\
-	y = vec_and(vec_and(y, sr1_msk), mask);			\
-	v = vec_xor(v, x);					\
-	z = vec_xor(z, y);					\
-	z = vec_xor(z, v);					\
-	reg = vec_or(vec_and(z, low_mask), high_const);		\
-	dist = reg;						\
-	lung = vec_xor(lung, reg);				\
-    } while(0)
-#else
 INLINE static
 #if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
@@ -74,14 +53,14 @@ __attribute__((always_inline))
     const vector unsigned int low_mask = ALTI_LOW_MSK;
     const vector unsigned int high_const = ALTI_HIGH_CONST;
 
-    x = vec_perm(a, sl2_perm, sl2_perm);
+    x = vec_perm(a, (vector unsigned int)sl2_perm, sl2_perm);
     y = vec_srl(b, sr1);
     y = vec_and(y, sr1_msk);
-    z = vec_perm(reg, sl1_perm, sl1_perm);
+    z = vec_perm(reg, (vector unsigned int)sl1_perm, sl1_perm);
     z = vec_sll(z, sl1);
     z = vec_and(z, sl1_msk);
-    w = vec_perm(reg, sr2_perm, sr2_perm);
-    v = vec_perm(lung, perm, perm);
+    w = vec_perm(reg, (vector unsigned int)sr2_perm, sr2_perm);
+    v = vec_perm(lung, (vector unsigned int)perm, perm);
     s = vec_xor(a, x);
     t = vec_xor(y, z);
     u = vec_xor(w, v);
@@ -91,7 +70,6 @@ __attribute__((always_inline))
     r = vec_or(r, high_const);
     return r;
 }
-#endif
 
 INLINE static
 #if defined(__GNUC__) && (!defined(DEBUG))
@@ -116,7 +94,7 @@ __attribute__((always_inline))
     sfmt[N] = lung;
 }
 
-INLINE static void gen_rand_array(vector unsigned int array[], int size)
+static void gen_rand_array(vector unsigned int array[], int size)
 {
     int i, j;
     vector unsigned int r, lung;
