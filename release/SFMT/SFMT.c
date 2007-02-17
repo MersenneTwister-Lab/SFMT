@@ -1,108 +1,19 @@
 /** 
- * @file  sfmt19937.c
+ * @file  SFMT.c
  * @brief SIMD oriented Fast Mersenne Twister(SFMT)
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2006-08-29
- *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
  */
-
-/**
- * \mainpage 
- *
- * This is SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
- * number generator.
- *
- * This file provides:
- *
- * - void init_gen_rand() initializes the generator with a 32-bit
- *   integer seed.
- * - void init_by_array() initializes the generator with an array of
- *   32-bit integers as the seeds.
- * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
- *   32-bit unsigned integer.
- * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
- *   64-bit unsigned integer.
- * - INLINE void fill_array32() fills the user-specified array with 32-bit
- *   psedorandom integers.
- * - INLINE void fill_array64() fills the user-specified array with 64-bit
- *   psedorandom integers.
- *
- * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
- * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
- *
- * ??? Please change our-domin to math.sci.hiroshima-u.ac.jp
- *
- * @date 2006-08-29
- *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
- * University. All rights reserved.
- *
- * The new BSD License is applied to this software.
- * \verbinclude LICENSE.txt
- */
 #include <string.h>
 #include <assert.h>
-#include "sfmt19937.h"
-
-/*-----------------
-  BASIC DEFINITIONS
-  -----------------*/
-/** Mersenne Exponent. The period of the sequence 
- *  is a multiple of 2^MEXP-1. */
-#define MEXP 19937
-/** the word size of the recursion of SFMT is 128-bit. */
-#define WORDSIZE 128
-/** SFMT generator has an internal state array of 128-bit integers,
- * and N is its size. */
-#define N (MEXP / WORDSIZE + 1)
-/** N32 is the size of internal state array when regarded as an array
- * of 32-bit integers.*/
-#define N32 (N * 4)
-/** N64 is the size of internal state array when regarded as an array
- * of 64-bit integers.*/
-#define N64 (N * 2)
-
-/*----------------------
-  the parameters of SFMT
-  ----------------------*/
-/** the pick up position of the array. */
-#define POS1 122
-/** the parameter of shift left as four 32-bit registers. */
-#define SL1 18
-/** the parameter of shift left as one 128-bit register. 
- * The 128-bit integer is shifted by (SL2 * 8) bits. 
- */
-#define SL2 1
-/** the parameter of shift right as four 32-bit registers. */
-#define SR1 11
-/** the parameter of shift right as one 128-bit register. 
- * The 128-bit integer is shifted by (SL2 * 8) bits. 
- */
-#define SR2 1
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK1 0xdfffffefU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK2 0xddfecb7fU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK3 0xbffaffffU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK4 0xbffffff6U
-/** The 32 MSBs of the internal state array is seto to this
- * value. This peculiar value assures that the period length of the
- * output sequence is a multiple of 2^19937-1.
- */
-#define INIT_LUNG 0x6d736d6dU
+#include "SFMT.h"
+#include "SFMT-params.h"
 
 /*--------------------------------------
   FILE GLOBAL VARIABLES
@@ -119,6 +30,8 @@ static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int initialized = 0;
+/** a parity check vector which certificate the period of 2^{MEXP} */
+static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
 /** a flag: it is 1 if CPU is BIG ENDIAN. */
 static int big_endian;
 
@@ -144,6 +57,7 @@ INLINE static void gen_rand_array(w128_t array[], int size);
 INLINE static uint32_t func1(uint32_t x);
 INLINE static uint32_t func2(uint32_t x);
 static void endian_check(void);
+static void period_certification(void);
 
 /**
  * This function simulates SIMD 128-bit right shift by the standard C.
@@ -301,9 +215,51 @@ static void endian_check(void) {
     }
 }
 
+/**
+ * This function certificate the period of 2^{MEXP}
+ */
+static void period_certification(void) {
+    int inner = 0;
+    int i, j;
+    uint32_t work;
+
+    for (i = 0; i < 4; i++) {
+	work = psfmt32[i] & parity[i];
+	for (j = 0; j < 32; j++) {
+	    inner ^= work & 1;
+	    work = work >> 1;
+	}
+    }
+    /* check OK */
+    if (inner == 1) {
+	return;
+    }
+    /* check NG, and modification */
+    for (i = 0; i < 4; i++) {
+	work = 1;
+	for (j = 0; j < 32; j++) {
+	    if ((work & parity[i]) != 0) {
+		psfmt32[i] ^= work;
+		return;
+	    }
+	    work = work << 1;
+	}
+    }
+}
+
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/
+/**
+ * This function returns the identification string.
+ * The string shows the word size, the mersenne expornent,
+ * and all parameters of this generator.
+ */
+char *get_idstring(void)
+{
+    return IDSTR;
+}
+
 /**
  * This function generates and returns 32-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
@@ -372,9 +328,9 @@ INLINE uint64_t gen_rand64(void)
  *
  * @param size the number of 32-bit pseudorandom integers to be
  * generated.  size must be a multiple of 4, and greater than or equal
- * to 624.
+ * to (MEXP / 128 + 1) * 4.
  *
- * @note ??? \b memalign or \b posix_memalign is available to get aligned
+ * @note \b memalign or \b posix_memalign is available to get aligned
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
@@ -410,9 +366,9 @@ INLINE void fill_array32(uint32_t array[], int size)
  *
  * @param size the number of 64-bit pseudorandom integers to be
  * generated.  size must be a multiple of 2, and greater than or equal
- * to 312.
+ * to (MEXP / 128 + 1) * 2
  *
- * @note ??? \b memalign or \b posix_memalign is available to get aligned
+ * @note \b memalign or \b posix_memalign is available to get aligned
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
@@ -470,52 +426,63 @@ void init_gen_rand(uint32_t seed)
 void init_by_array(uint32_t init_key[], int key_length) {
     int i, j, count;
     uint32_t r;
-    const int MID = 306;
-    const int LAG = 11;
+    int lag;
+    int mid;
+    int size = N * 4;
+
+    if (size >= 623) {
+	lag = 11;
+    } else if (size >= 68) {
+	lag = 7;
+    } else if (size >= 39) {
+	lag = 5;
+    } else {
+	lag = 3;
+    }
+    mid = (size - lag) / 2;
 
     memset(sfmt, 0x8b, sizeof(sfmt));
-    if (key_length + 1 > N32) {
+    if (key_length + 1 > size) {
 	count = key_length + 1;
     } else {
-	count = N32;
+	count = size;
     }
-    r = func1(psfmt32[0] ^ psfmt32[MID] ^ psfmt32[N32 - 1]);
-    psfmt32[MID] += r;
+    r = func1(psfmt32[0] ^ psfmt32[mid % size] ^ psfmt32[size - 1]);
+    psfmt32[mid % size] += r;
     r += key_length;
-    psfmt32[MID + LAG] += r;
+    psfmt32[(mid + lag) % size] += r;
     psfmt32[0] = r;
-    i = 1;
     count--;
     for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
-	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
-		  ^ psfmt32[(i + N32 - 1) % N32]);
-	psfmt32[(i + MID) % N32] += r;
+	r = func1(psfmt32[i] ^ psfmt32[(i + mid) % size] 
+		  ^ psfmt32[(i + size - 1) % size]);
+	psfmt32[(i + mid) % size] += r;
 	r += init_key[j] + i;
-	psfmt32[(i + MID + LAG) % N32] += r;
+	psfmt32[(i + mid + lag) % size] += r;
 	psfmt32[i] = r;
-	i = (i + 1) % N32;
+	i = (i + 1) % size;
     }
     for (; j < count; j++) {
-	r = func1(psfmt32[i] ^ psfmt32[(i + MID) % N32] 
-		  ^ psfmt32[(i + N32 - 1) % N32]);
-	psfmt32[(i + MID) % N32] += r;
+	r = func1(psfmt32[i] ^ psfmt32[(i + mid) % size] 
+		  ^ psfmt32[(i + size - 1) % size]);
+	psfmt32[(i + mid) % size] += r;
 	r += i;
-	psfmt32[(i + MID + LAG) % N32] += r;
+	psfmt32[(i + mid + lag) % size] += r;
 	psfmt32[i] = r;
-	i = (i + 1) % N32;
+	i = (i + 1) % size;
     }
-    for (j = 0; j < N32; j++) {
-	r = func2(psfmt32[i] + psfmt32[(i + MID) % N32] 
-		  + psfmt32[(i + N32 - 1) % N32]);
-	psfmt32[(i + MID) % N32] ^= r;
+    for (j = 0; j < size; j++) {
+	r = func2(psfmt32[i] + psfmt32[(i + mid) % size] 
+		  + psfmt32[(i + size - 1) % size]);
+	psfmt32[(i + mid) % size] ^= r;
 	r -= i;
-	psfmt32[(i + MID + LAG) % N32] ^= r;
+	psfmt32[(i + mid + lag) % size] ^= r;
 	psfmt32[i] = r;
-	i = (i + 1) % N32;
+	i = (i + 1) % size;
     }
 
-    psfmt32[3] = INIT_LUNG;
     idx = N32;
     endian_check();
+    period_certification();
     initialized = 1;
 }

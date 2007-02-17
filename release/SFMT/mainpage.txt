@@ -1,0 +1,44 @@
+/**
+ * \mainpage 
+ *
+ * This is SIMD oriented Fast Mersenne Twister pseudorandom number
+ * generator Pulmonary version (SFMTp).
+ *
+ * This Project provides pesudorandom number generators of various
+ * Mersenne Prime Period: from 2<sup>607</sup>-1 to
+ * 2<sup>132049</sup>-1.
+ *
+ * To get SFMTp which has the period of 2<sup>607</sup>-1, you have to
+ * specify -DMEXP=607 as a compile option. For example, 
+ * @verbatim
+ gcc -DMEXP=607 -msse2 -c SFMTp-sse2.c 
+@endverbatim
+ * will make SFMTp which has the period of 2<sup>607</sup>-1 and is
+ * optimized for SSE2.
+ *
+ * - void init_gen_rand() initializes the generator with a 32-bit
+ *   integer seed.
+ * - void init_by_array() initializes the generator with an array of
+ *   32-bit integers as the seeds.
+ * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
+ *   32-bit unsigned integer.
+ * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
+ *   64-bit unsigned integer.
+ * - void fill_array32() fills the user-specified array with 32-bit
+ *   psedorandom integers.
+ * - void fill_array64() fills the user-specified array with 64-bit
+ *   psedorandom integers.
+ *
+ * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
+ * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
+ *
+ * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
+ *
+ * @date 2007-01-12
+ *
+ * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University. All rights reserved.
+ *
+ * The new BSD License is applied to this software.
+ * \verbinclude LICENSE.txt
+ */
