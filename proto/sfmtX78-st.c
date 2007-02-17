@@ -333,6 +333,13 @@ uint32_t get_lung(sfmt_t *sfmt) {
     return sfmt->sfmt[0][3];
 }
 
+void get_lung2(sfmt_t *sfmt, uint32_t lung[4]) {
+    lung[0] = sfmt->sfmt[0][0];
+    lung[1] = sfmt->sfmt[0][1];
+    lung[2] = sfmt->sfmt[0][2];
+    lung[3] = sfmt->sfmt[0][3];
+}
+
 static unsigned int get_uint(char *line, int radix);
 static unsigned int get_uint(char *line, int radix) {
     unsigned int result;

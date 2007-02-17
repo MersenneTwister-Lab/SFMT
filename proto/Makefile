@@ -7,14 +7,15 @@
 %607:MEXP=607
 %1279:MEXP=1279
 %2203:MEXP=2203
+%2281:MEXP=2281
 %4253:MEXP=4253
 %11213:MEXP=11213
 %19937:MEXP=19937
 %44497:MEXP=44497
 %86243:MEXP=86243
-#%110503:MEXP=110503
-#%132049:MEXP=132049
-#%216091:MEXP=216091
+%110503:MEXP=110503
+%132049:MEXP=132049
+%216091:MEXP=216091
 
 #DDEBUG = -DDEBUG=1
 #DPG = -pg
@@ -336,6 +337,15 @@ param-searchP3h-607: search.o sfmtP3h.o mt19937ar.o util.o debug.o
 param-searchP3h-1279: search.o sfmtP3h.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtP3h.o mt19937ar.o util.o debug.o ${LINKOPT}
 
+param-searchY01-607: search.o sfmtY01.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtY01.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchY01-1279: search.o sfmtY01.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtY01.o mt19937ar.o util.o debug.o ${LINKOPT}
+
+param-searchY02-607: search.o sfmtY02.o mt19937ar.o util.o debug.o
+	${CPP} -o $@ search.o sfmtY02.o mt19937ar.o util.o debug.o ${LINKOPT}
+
 search9-all521: search9-all.o sfmt9-st.o mt19937ar.o util.o shortbase9.o
 	${CPP} -o $@ search9-all.o shortbase9.o sfmt9-st.o mt19937ar.o util.o  \
 		${LINKOPT}
@@ -475,6 +485,10 @@ searchP37-parity2203: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o \
 		${LINKOPT}
 
+searchP37-parity2281: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
 searchP37-parity4253: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o \
 		${LINKOPT}
@@ -493,6 +507,50 @@ searchP37-parity44497: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
 
 searchP37-parity86243: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchP37-parity132049: search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector.o sfmtP37-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity607: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity1279: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity2203: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity2281: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity4253: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity11213: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity19937: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity44497: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity86243: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
+searchX78-parity132049: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
 		${LINKOPT}
 
 testP37-parity607:test-parity.o sfmtP37-st.o util.o
