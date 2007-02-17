@@ -7,7 +7,7 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2007-01-10
+ * @date 2007-02-12
  *
  * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
@@ -136,10 +136,10 @@ inline static __attribute__((always_inline))
 
     vector unsigned int v, w, x, y, z;
 
-    x = vec_perm(a, perm_sl, perm_sl);
+    x = vec_perm(a, (vector unsigned int)perm_sl, perm_sl);
     v = a;
     y = vec_sr(b, sr1);
-    z = vec_perm(c, perm_sr, perm_sr);
+    z = vec_perm(c, (vector unsigned int)perm_sr, perm_sr);
     w = vec_sl(d, sl1);
     z = vec_xor(z, w);
     y = vec_and(y, mask);

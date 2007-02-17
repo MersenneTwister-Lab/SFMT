@@ -19,7 +19,7 @@
 # We could comple sfmt19937-alti32.c and sfmt19937-alti64.c 
 # using gcc 4.0 of osx.
 
-WARN = -Wmissing-prototypes -Wall
+WARN = -Wmissing-prototypes -Wall -Wext
 OPTI = -O9 -finline-functions -fomit-frame-pointer -fno-strict-aliasing \
 	-DNDEBUG 
 #STD =

@@ -1,3 +1,9 @@
+ver 1.1.1
+-------
+Fix typo in LICENSE.txt.
+Add cast to vec_perm for sfmt19937-alti32.c, sfmt19937-alti64.c.
+combine source codes. 
+
 ver 1.1
 -------
 The period certification method is changed from constant to function.

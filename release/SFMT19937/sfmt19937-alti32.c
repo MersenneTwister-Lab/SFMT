@@ -5,7 +5,7 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2007-01-10
+ * @date 2007-02-12
  *
  * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
@@ -127,10 +127,10 @@ inline static __attribute__((always_inline))
     (7, 0, 1, 2, 11, 4, 5, 6, 15, 8, 9, 10, 17, 12, 13, 14);
 
     vector unsigned int v, w, x, y, z;
-    x = vec_perm(a, perm_sl, perm_sl);
+    x = vec_perm(a, (vector unsigned int)perm_sl, perm_sl);
     v = a;
     y = vec_sr(b, sr1);
-    z = vec_perm(c, perm_sr, perm_sr);
+    z = vec_perm(c, (vector unsigned int)perm_sr, perm_sr);
     w = vec_sl(d, sl1);
     z = vec_xor(z, w);
     y = vec_and(y, mask);
@@ -223,7 +223,7 @@ inline static void vec_swap(vector unsigned int array[], uint32_t size)
 	(4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11);
 
     for (i = 0; i < size; i++) {
-	array[i] = vec_perm(array[i], perm, perm);
+	array[i] = (vector unsigned int)vec_perm(array[i], perm, perm);
     }
 }
 
