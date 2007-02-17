@@ -80,45 +80,23 @@ void option(int argc, char * argv[]) {
     }
 }
 
-#if 0
-void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
-    int i, j;
-    int w, z;
-    uint64_t x;
-
-    i = ((uint32_t)getw(frandom)) % (N + 1);
-    j = ((uint32_t)getw(frandom)) % 2;
-    w = getw(frandom);
-    z = getw(frandom);
-    if (feof(frandom) || ferror(frandom)) {
-	if (errno != 0) {
-	    printf("test_shortest:%s\n", strerror(errno));
-	} else {
-	    printf("test_shortest:/dev/urandom reached to EOF!\n");
-	}
-	fclose(frandom);
-	exit(1);
-    }
-    x = ((uint64_t)w << 32) | z;
-    sfmt->status[i][j] = x;
-}
-#else
-void fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
+int fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
     static int bit_pos = 0;
-    uint32_t i, j, k;
-    uint32_t mask;
+    int i, j, k;
+    uint64_t mask;
 
     k = bit_pos % 52;
     j = (bit_pos / 52) % 2;
     i = bit_pos / (52 * 2);
     memset(sfmt, 0, sizeof(dsfmt_t));
-    mask = 1U << k;
+    mask = (uint64_t)1 << k;
     sfmt->status[i][j] = mask;
     bit_pos++;
+    if (bit_pos >= maxdegree) {
+	return 0;
+    }
+    return 1;
 }
-
-#endif
-
 
 bool check_minpoly128_hi(dsfmt_t *sfmt, const GF2X& minpoly,
 			 unsigned int bitpos) {
@@ -282,7 +260,9 @@ void test_shortest(char *filename) {
     //lcmcount = 0;
     //while (deg(lcmpoly) < (long)maxdegree) {
     for (i = 0; i < maxdegree; i++) {
-	fill_state_random(&sfmt, frandom);
+	if (fill_state_random(&sfmt, frandom) == 0) {
+	    break;
+	}
 	for (int j = 0; j < 104; j++) {
 	    generating_polynomial104(&sfmt, vec, j, maxdegree);
 	    if (IsZero(vec)) {

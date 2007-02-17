@@ -4,6 +4,7 @@ CC = gcc
 DMEXP = -DMEXP=19937
 OPT_PPC = -faltivec -maltivec -arch ppc 
 OPT_ATHLON = -march=athlon64 
+CCFLAGS_INTEL = /Wcheck /O3 /QxB /Qc99 /Qprefetch /Qip /Fa -DNDEBUG
 OPT = --param max-inline-insns-single=1800 --param inline-unit-growth=300 \
 --param large-function-growth=900 
 CCFLAGS = -Wall -O9 -Wmissing-prototypes -Winline $(OPT) -DNDEBUG $(DDEBUG) \
@@ -15,8 +16,11 @@ SSE2_TARGET = sfmtD11_sse2 sfmtX78_sse2 mt_msk_sse2
 
 std: ${STD_TARGET}
 
-sse2:
+athlon:
 	${MAKE} CCFLAGS="${CCFLAGS} ${OPT_ATHLON}" ${STD_TARGET} ${SSE2_TARGET}
+
+intel:
+	${MAKE} CC=icl CCFLAGS="${CCFLAGS_INTEL}" ${STD_TARGET} ${SSE2_TARGET}
 
 alti:
 	${MAKE} CCFLAGS="${CCFLAGS} ${OPT_PPC} -DBIG_ENDIAN" ${STD_TARGET} \

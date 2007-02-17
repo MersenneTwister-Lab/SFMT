@@ -24,16 +24,28 @@ static FILE *frandom;
 static char* filename = NULL;
 
 
-void set_bit(dsfmt_t *sfmt, int bit_pos) {
-  uint32_t i, j, k;
-  uint32_t mask;
+void set_bit(dsfmt_t *sfmt, int bit_pos, int mode) {
+  int i, j, k;
+  uint64_t mask;
+  uint64_t high;
+
+  if (mode == 0) {
+      high = 0;
+  } else {
+      high = 0xBFF0000000000000ULL;
+  }
 
   k = bit_pos % 52;
   j = (bit_pos / 52) % 2;
   i = bit_pos / (52 * 2);
   memset(sfmt, 0, sizeof(dsfmt_t));
-  mask = 1U << k;
+  mask = 1UL << k;
   sfmt->status[i][j] = mask;
+  for (i = 0; i < N + 1; i++) {
+      for (j = 0; j < 2; j++) {
+	  sfmt->status[i][j] |= high;
+      }
+  }
 }
 
 void fill_state_random(dsfmt_t *sfmt, FILE *frandom, int k) {
@@ -96,9 +108,9 @@ void test_bm(GF2X& lcmpoly, char *filename, int mode) {
 	lcmpoly = tmp;
     }
     //while (deg(lcmpoly) < (long)maxdegree) {
-    for (i = 0; i < maxdegree; i++) {
+    for (i = 1; i < maxdegree; i++) {
 	//fill_state_random(&sfmt, frandom);
-	set_bit(&sfmt, i);
+	set_bit(&sfmt, i, mode);
 	for (int j = 0; j < 104; j++) {
 	    generating_polynomial104(&sfmt, vec, j, max);
 	    if (IsZero(vec)) {
