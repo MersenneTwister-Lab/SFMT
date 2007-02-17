@@ -6,8 +6,6 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2007-01-11
- *
  * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
@@ -54,15 +52,15 @@ typedef struct W128_T w128_t;
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(w128_t array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
-INLINE static void assign128(uint32_t to[4], uint32_t from[4]);
-INLINE static void xor128(uint32_t to[4], uint32_t from[4]);
-INLINE static int idxof(int i);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(w128_t array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
+inline static void assign128(uint32_t to[4], uint32_t from[4]);
+inline static void xor128(uint32_t to[4], uint32_t from[4]);
+inline static int idxof(int i);
 static void period_certification(void);
 
 /**
@@ -77,7 +75,7 @@ static void period_certification(void);
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift) {
     uint64_t th, tl, oh, ol;
 
@@ -98,7 +96,7 @@ INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
  * @param to the output of this function
  * @param from the 128-bit data to be assigned
  */
-static INLINE
+static inline
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -114,7 +112,7 @@ __attribute__((always_inline))
  * @param to the output of this function
  * @param from the 128-bit data to be assigned
  */
-static INLINE
+static inline
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -137,7 +135,7 @@ __attribute__((always_inline))
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-static INLINE
+static inline
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -164,7 +162,7 @@ __attribute__((always_inline))
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-static INLINE void gen_rand_all(void) {
+static inline void gen_rand_all(void) {
     int i;
     uint32_t lung[4];
 
@@ -195,7 +193,7 @@ static INLINE void gen_rand_all(void) {
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE static void gen_rand_array(w128_t array[], int size) {
+inline static void gen_rand_array(w128_t array[], int size) {
     int i;
     uint32_t lung[4];
 
@@ -243,7 +241,7 @@ static uint32_t func2(uint32_t x) {
  * This function simulate a 64-bit index of LITTLE ENDIAN 
  * in BIG ENDIAN machine.
  */
-INLINE static int idxof(int i) {
+inline static int idxof(int i) {
     return i ^ 1;
 }
 
@@ -283,6 +281,26 @@ static void period_certification(void) {
   PUBLIC FUNCTIONS
   ----------------*/
 /**
+ * This function returns the identification string.
+ * The string shows the word size, the mersenne expornent,
+ * and all parameters of this generator.
+ * @return id string.
+ */
+char *get_idstring(void)
+{
+    return IDSTR;
+}
+
+/**
+ * This function returns the minimum size of array used for \b fill_array64.
+ * @return minimum size of array used for fill_array64.
+ */
+int get_min_array_size64(void)
+{
+    return N64;
+}
+
+/**
  * This function generates and returns 64-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
  * The function gen_rand64 should not be called after gen_rand32,
@@ -293,7 +311,7 @@ static void period_certification(void) {
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint64_t r;
 
@@ -334,7 +352,7 @@ INLINE uint64_t gen_rand64(void)
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     /* assert((uint32_t)array % 16 == 0); */

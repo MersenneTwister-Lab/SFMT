@@ -5,8 +5,6 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2007-01-04
- *
  * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
@@ -50,14 +48,14 @@ typedef struct W128_T w128_t;
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
+inline static void lshift128(uint32_t out[4], const uint32_t in[4],
 			     int shift);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(w128_t array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
-INLINE static void assign128(uint32_t to[4], uint32_t from[4]);
-INLINE static void xor128(uint32_t to[4], uint32_t from[4]);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(w128_t array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
+inline static void assign128(uint32_t to[4], uint32_t from[4]);
+inline static void xor128(uint32_t to[4], uint32_t from[4]);
 static void endian_check(void);
 static void period_certification(void);
 
@@ -69,7 +67,7 @@ static void period_certification(void);
  * @param in the 128-bit data to be shifted
  * @param shift the shift value
  */
-static INLINE
+static inline
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -93,7 +91,7 @@ __attribute__((always_inline))
  * @param to the output of this function
  * @param from the 128-bit data to be assigned
  */
-static INLINE
+static inline
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -109,7 +107,7 @@ __attribute__((always_inline))
  * @param to the output of this function
  * @param from the 128-bit data to be assigned
  */
-static INLINE
+static inline
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -128,7 +126,7 @@ __attribute__((always_inline))
  * @param c a 128-bit part of the interal state array
  * @param d a 128-bit part of the interal state array
  */
-static INLINE
+static inline
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -151,7 +149,7 @@ __attribute__((always_inline))
  * This function fills the internal state array with psedorandom
  * integers.
  */
-static INLINE void gen_rand_all(void) {
+static inline void gen_rand_all(void) {
     int i;
     uint32_t lung[4];
 
@@ -178,7 +176,7 @@ static INLINE void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-INLINE static void gen_rand_array(w128_t array[], int size) {
+inline static void gen_rand_array(w128_t array[], int size) {
     int i;
     uint32_t lung[4];
 
@@ -276,6 +274,7 @@ static void period_certification(void) {
  * This function returns the identification string.
  * The string shows the word size, the mersenne expornent,
  * and all parameters of this generator.
+ * @return id string.
  */
 char *get_idstring(void)
 {
@@ -283,11 +282,29 @@ char *get_idstring(void)
 }
 
 /**
+ * This function returns the minimum size of array used for \b fill_array32.
+ * @return minimum size of array used for fill_array32.
+ */
+int get_min_array_size32(void)
+{
+    return N32;
+}
+
+/**
+ * This function returns the minimum size of array used for \b fill_array64.
+ * @return minimum size of array used for fill_array64.
+ */
+int get_min_array_size64(void)
+{
+    return N64;
+}
+
+/**
  * This function generates and returns 32-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
  * @return 32-bit pseudorandom number
  */
-INLINE uint32_t gen_rand32(void)
+inline uint32_t gen_rand32(void)
 {
     uint32_t r;
 
@@ -307,7 +324,7 @@ INLINE uint32_t gen_rand32(void)
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint32_t r1, r2;
     uint64_t r;
@@ -356,7 +373,7 @@ INLINE uint64_t gen_rand64(void)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-INLINE void fill_array32(uint32_t array[], int size)
+inline void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
     /* assert(array % 16 == 0); */
@@ -394,7 +411,7 @@ INLINE void fill_array32(uint32_t array[], int size)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     /* assert(array % 16 == 0); */

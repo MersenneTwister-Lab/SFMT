@@ -1,12 +1,10 @@
 /** 
- * @file sfmt19937-sse2.c 
+ * @file SFMTp-sse2.c 
  * @brief SIMD oriented Fast Mersenne Twister Pulmonary version
  * (SFMTp) for intel SSE2.
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
- *
- * @date 2007-01-11
  *
  * @note We assume LITTLE ENDIAN in this file
  *
@@ -45,12 +43,12 @@ static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static __m128i mm_recursion(__m128i *a, __m128i *b, 
+inline static __m128i mm_recursion(__m128i *a, __m128i *b, 
 				   __m128i c, __m128i d, __m128i mask);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(__m128i array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(__m128i array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
 static void period_certification(void);
 
 /**
@@ -62,7 +60,7 @@ static void period_certification(void);
  * @param mask 128-bit mask
  * @return output
  */
-INLINE static 
+inline static 
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
@@ -88,7 +86,7 @@ __attribute__((always_inline))
  * This function fills the internal state array with psedorandom
  * integers.
  */
-INLINE static void gen_rand_all(void) {
+inline static void gen_rand_all(void) {
     int i;
     __m128i r, u, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);
@@ -115,7 +113,7 @@ INLINE static void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-INLINE static void gen_rand_array(__m128i array[], int size) {
+inline static void gen_rand_array(__m128i array[], int size) {
     int i, j;
     __m128i r, u, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);
@@ -157,7 +155,7 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
  * @param x 32-bit integer
  * @return 32-bit integer
  */
-INLINE static uint32_t func1(uint32_t x) {
+inline static uint32_t func1(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1664525UL;
 }
 
@@ -167,7 +165,7 @@ INLINE static uint32_t func1(uint32_t x) {
  * @param x 32-bit integer
  * @return 32-bit integer
  */
-INLINE static uint32_t func2(uint32_t x) {
+inline static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
 }
 
@@ -217,13 +215,31 @@ char *get_idstring(void)
 }
 
 /**
+ * This function returns the minimum size of array used for \b fill_array32.
+ * @return minimum size of array used for fill_array32.
+ */
+int get_min_array_size32(void)
+{
+    return N32;
+}
+
+/**
+ * This function returns the minimum size of array used for \b fill_array64.
+ * @return minimum size of array used for fill_array64.
+ */
+int get_min_array_size64(void)
+{
+    return N64;
+}
+
+/**
  * This function generates and returns 32-bit pseudorandom number.  \b
  * init_gen_rand or \b init_by_array must be called before this
  * function.
  *
  * @return 32-bit pseudorandom number
  */
-INLINE uint32_t gen_rand32(void)
+inline uint32_t gen_rand32(void)
 {
     uint32_t r;
 
@@ -243,7 +259,7 @@ INLINE uint32_t gen_rand32(void)
  *
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint64_t r;
 
@@ -281,7 +297,7 @@ INLINE uint64_t gen_rand64(void)
  * generated.  size must be a multiple of 4, and greater than or equal
  * to (MEXP / 128) * 4.
  */
-INLINE void fill_array32(uint32_t array[], int size)
+inline void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
     assert((uint64_t)array % 16 == 0);
@@ -315,7 +331,7 @@ INLINE void fill_array32(uint32_t array[], int size)
  * generated.  size must be a multiple of 2, and greater than or equal
  * to (MEXP / 128) * 2.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
     assert(initialized);
     assert((uint64_t)array % 16 == 0);
