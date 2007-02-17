@@ -21,6 +21,7 @@
 # We could comple sfmt19937-alti32.c and sfmt19937-alti64.c 
 # using gcc 4.0 of osx.
 
+SYSTEM = std_unix
 #WARN = -Wmissing-prototypes -Wall -Winline
 WARN = -Wmissing-prototypes -Wall
 OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG -fno-strict-aliasing
@@ -43,15 +44,27 @@ SSE_CHECK_TARGET = $(STD_CHECK_TARGET) check-sse
 # --------------------
 # for UNIX like system
 # --------------------
+ifeq ($(SYSTEM), std_unix)
 CC = $(GCC)
 TARGET = $(STD_TARGET)
 CHECK_TARGET = $(STD_CHECK_TARGET)
+endif
 # -----------------
 # for PowerPC
 # -----------------
-#CC = $(GCC) -faltivec -maltivec -arch ppc
-#TARGET = $(ALTI_TARGET)
-#CHECK_TARGET = $(ALTI_CHECK_TARGET)
+ifeq ($(SYSTEM), ppc_osx)
+CC = $(GCC) -faltivec -maltivec -arch ppc
+TARGET = $(ALTI_TARGET)
+CHECK_TARGET = $(ALTI_CHECK_TARGET)
+endif
+# -----------------
+# for other sse2 CPU
+# -----------------
+ifeq ($(SYSTEM), sse2_unix)
+CC = $(GCC) -msse2
+TARGET = $(SSE_TARGET)
+CHECK_TARGET = $(SSE_CHECK_TARGET)
+endif
 # -----------------
 # for Pentium M
 # -----------------
@@ -63,12 +76,6 @@ CHECK_TARGET = $(STD_CHECK_TARGET)
 # for Athlon
 # -----------------
 #CC = $(GCC) -march=nocona -msse2
-#TARGET = $(SSE_TARGET)
-#CHECK_TARGET = $(SSE_CHECK_TARGET)
-# -----------------
-# for other sse2 CPU
-# -----------------
-#CC = $(GCC) -msse2
 #TARGET = $(SSE_TARGET)
 #CHECK_TARGET = $(SSE_CHECK_TARGET)
 
