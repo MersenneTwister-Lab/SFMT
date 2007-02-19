@@ -1,0 +1,64 @@
+/**
+ * \mainpage 
+ *
+ * This is double precision SIMD oriented Fast Mersenne Twister pseudorandom
+ * number generator (SFMTp).
+ *
+ * This Project provides pesudorandom number generators of various
+ * Mersenne Prime Period: from 2<sup>607</sup>-1 to
+ * 2<sup>132049</sup>-1.
+ *
+ * To get SFMTp which has the period of 2<sup>607</sup>-1, you have to
+ * specify -DMEXP=607 as a compile option. For example, 
+ * @verbatim
+ gcc -DMEXP=607 -msse2 -c SFMTp-sse2.c 
+@endverbatim
+ * will make SFMTp which has the period of 2<sup>607</sup>-1 and is
+ * optimized for SSE2.
+ *
+ * - void init_gen_rand() initializes the generator with a 32-bit
+ *   integer seed.
+ * - void init_by_array() initializes the generator with an array of
+ *   32-bit integers as the seeds.
+ * - inline uint32_t gen_rand32() generates and returns a pseudorandom
+ *   32-bit unsigned integer.
+ * - inline uint32_t gen_rand64() generates and returns a pseudorandom
+ *   64-bit unsigned integer.
+ * - get_min_array_size32() returns the minimum size of array used for
+ *   fill_array32.   
+ * - get_min_array_size64() returns the minimum size of array used for
+ *   fill_array64.   
+ * - void fill_array32() fills the user-specified array with 32-bit
+ *   psedorandom integers.
+ * - void fill_array64() fills the user-specified array with 64-bit
+ *   psedorandom integers.
+ * - inline static double to_real1(uint32_t v) convert v to double on
+ *   [0,1]-real-interval. 
+ * - inline static double genrand_real1() generates a random number on 
+ *   [0,1]-real-interval. 
+ * - inline static double to_real2(uint32_t v) convert v to double on
+ *   [0,1)-real-interval.
+ * - inline static double genrand_real2() generates a random number on 
+ *   [0,1)-real-interval.
+ * - inline static double to_real3(uint32_t v) convert v to double on
+ *   (0,1)-real-interval.
+ * - inline static double genrand_real3() generates a random number on 
+ *   (0,1)-real-interval.
+ * - inline static double to_res53(uint64_t v) convert v to double on
+ *   [0,1) with 53-bit resolution
+ * - inline static double genrand_res53() generates a random number on 
+ *   [0,1) with 53-bit resolution
+ *
+ * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
+ * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
+ *
+ * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
+ *
+ * @date 2007-01-31
+ *
+ * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University. All rights reserved.
+ *
+ * The new BSD License is applied to this software.
+ * \verbinclude LICENSE.txt
+ */
