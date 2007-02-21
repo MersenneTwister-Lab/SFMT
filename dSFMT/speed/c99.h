@@ -20,6 +20,7 @@ typedef unsigned long long uint64_t;
 #define PRIu32 "u"
 #define PRIx32 "x"
 #define PRIu64 "I64u"
+#define PRIx64 "I64x"
 typedef unsigned int bool;
 #define true 1
 #define false 0

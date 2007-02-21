@@ -27,6 +27,15 @@ static w128_t sfmt[N + 1];
 static double *psfmt = (double *)&(sfmt[0].d[0]);
 static int idx;
 
+void fill_array_open_close(double array[], int size);
+void fill_array_close_open(double array[], int size);
+void fill_array_open_open(double array[], int size);
+void fill_array_close1_open2(double array[], int size);
+INLINE double genrand_open_close(void);
+INLINE double genrand_close_open(void);
+INLINE double genrand_open_open(void);
+INLINE double genrand_close1_open2(void);
+
 INLINE static
 #if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
@@ -55,12 +64,52 @@ __attribute__((always_inline))
     lung->a[1] ^= r->a[1];
 }
 
-INLINE static void convert(w128_t *x) {
-    x->d[0] += 2.0L;
-    x->d[1] += 2.0L;
+INLINE
+#if defined(__GNUC__) && (!defined(DEBUG))
+__attribute__((always_inline)) 
+#endif
+    static void convert_co(w128_t array[], int size) {
+    int i;
+
+    for (i = 0; i < size; i++) {
+	array[i].d[0] = array[i].d[0] - 1.0L;
+	array[i].d[1] = array[i].d[1] - 1.0L;
+    }
 }
 
-INLINE static void gen_rand_all(void) {
+INLINE
+#if defined(__GNUC__) && (!defined(DEBUG))
+__attribute__((always_inline)) 
+#endif
+    static void convert_oc(w128_t array[], int size) {
+    int i;
+
+    for (i = 0; i < size; i++) {
+	array[i].d[0] = 2.0L - array[i].d[0];
+	array[i].d[1] = 2.0L - array[i].d[1];
+    }
+}
+
+INLINE
+#if defined(__GNUC__) && (!defined(DEBUG))
+__attribute__((always_inline)) 
+#endif
+    static void convert_oo(w128_t array[], int size) {
+    int i;
+
+    for (i = 0; i < size; i++) {
+	array[i].a[0] |= 1;
+	array[i].a[1] |= 1;
+	array[i].d[0] -= 1.0L;
+	array[i].d[1] -= 1.0L;
+    }
+}
+
+INLINE
+#if defined(__GNUC__) && (!defined(DEBUG))
+__attribute__((always_inline)) 
+#endif
+    static void gen_rand_all(void) {
     int i;
     w128_t lung;
 
@@ -76,7 +125,11 @@ INLINE static void gen_rand_all(void) {
     sfmt[N] = lung;
 }
 
-INLINE static void gen_rand_array(w128_t array[], int size) {
+INLINE
+#if defined(__GNUC__) && (!defined(DEBUG))
+__attribute__((always_inline)) 
+#endif
+    static void gen_rand_array(w128_t array[], int size) {
     int i, j;
     w128_t lung;
 
@@ -93,7 +146,6 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
     for (; i < size - N; i++) {
 	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
 		     &array[i - 1], &lung);
-	convert(&array[i - N]);
     }
     for (j = 0; j < 2 * N - size; j++) {
 	sfmt[j] = array[j + size - N];
@@ -102,10 +154,6 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
 	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
 		     &array[i - 1], &lung);
 	sfmt[j] = array[i];
-	convert(&array[i - N]);
-    }
-    for (j = size - N; j < size; j++) {
-	convert(&array[j]);
     }
     sfmt[N] = lung;
 }
@@ -114,7 +162,7 @@ INLINE
 #if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
 #endif
-    double gen_rand(void)
+    double genrand_close_open(void)
 {
     double r;
 
@@ -123,15 +171,83 @@ __attribute__((always_inline))
 	idx = 0;
     }
     r = psfmt[idx++];
-    r += 2.0L;
-    return r;
+    return r - 1.0L;
 }
 
 INLINE
 #if defined(__GNUC__) && (!defined(DEBUG))
 __attribute__((always_inline)) 
 #endif
-    void fill_array(double array[], int size)
+    double genrand_open_close(void) {
+    double r;
+
+    if (idx >= N * 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r = psfmt[idx++];
+    return 2.0L - r;
+}
+
+INLINE
+#if defined(__GNUC__) && (!defined(DEBUG))
+__attribute__((always_inline)) 
+#endif
+    double genrand_open_open(void) {
+    union {
+	uint64_t u;
+	double d;
+    } conv;
+
+    if (idx >= N * 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    conv.d = psfmt[idx++];
+    conv.u |= 1;
+    return conv.d - 1.0L;
+}
+
+INLINE
+#if defined(__GNUC__) && (!defined(DEBUG))
+__attribute__((always_inline)) 
+#endif
+    double genrand_close1_open2(void) {
+    double r;
+
+    if (idx >= N * 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r = psfmt[idx++];
+    return r;
+}
+
+void fill_array_open_close(double array[], int size)
+{
+    assert(size % 2 == 0);
+    assert(size >= 2 * N * 2);
+    gen_rand_array((w128_t *)array, size / 2);
+    convert_oc((w128_t *)array, size / 2);
+}
+
+void fill_array_close_open(double array[], int size)
+{
+    assert(size % 2 == 0);
+    assert(size >= 2 * N * 2);
+    gen_rand_array((w128_t *)array, size / 2);
+    convert_co((w128_t *)array, size / 2);
+}
+
+void fill_array_open_open(double array[], int size)
+{
+    assert(size % 2 == 0);
+    assert(size >= 2 * N * 2);
+    gen_rand_array((w128_t *)array, size / 2);
+    convert_oo((w128_t *)array, size / 2);
+}
+
+void fill_array_close1_open2(double array[], int size)
 {
     assert(size % 2 == 0);
     assert(size >= 2 * N * 2);
@@ -152,4 +268,4 @@ void init_gen_rand(uint64_t seed)
     idx = N * 2;
 }
 
-#include "test_time.c"
+#include "test_time3.c"
