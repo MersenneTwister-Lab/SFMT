@@ -22,7 +22,7 @@
 
 /*----------------------
   the parameters of SFMT
-  following definitions are in paramsXXXX.h file.
+  following definitions are in dSFMT-paramsXXXX.h file.
   ----------------------*/
 /** the pick up position of the array.
 #define POS1 122 
@@ -48,35 +48,40 @@
 
 /** A bitmask, used in the recursion.  These parameters are introduced
  * to break symmetry of SIMD.
-#define MSK1 0xdfffffefU
-#define MSK2 0xddfecb7fU
-#define MSK3 0xbffaffffU
-#define MSK4 0xbffffff6U 
+#define MSK1 (uint64_t)0xdfffffefULL
+#define MSK2 (uint64_t)0xddfecb7fULL
 */
 
 /** These definitions are part of a 128-bit period certification vector.
-#define PARITY1	0x00000001U
-#define PARITY2	0x00000000U
-#define PARITY3	0x00000000U
-#define PARITY4	0xc98e126aU
+#define PCV1	UINT64_C(0x00000001)
+#define PCV2	UINT64_C(0x00000000)
 */
 
+#define LOW_MASK  UINT64_C(0x000FFFFFFFFFFFFF)
+#define LOW_MASK32_1 0x000fffffU
+#define LOW_MASK32_2 0xffffffffU
+#define HIGH_CONST UINT64_C(0x3FF0000000000000)
+#define HIGH_CONST32 0x3ff00000U
+
+/* for sse2 */
+#define SSE2_SHUFF 0x4e
+
 #if MEXP == 607
-  #include "params607.h"
+  #include "dSFMT-params607.h"
 #elif MEXP == 2281
-  #include "params2281.h"
+  #include "dSFMT-params2281.h"
 #elif MEXP == 4253
-  #include "params4253.h"
+  #include "dSFMT-params4253.h"
 #elif MEXP == 11213
-  #include "params11213.h"
+  #include "dSFMT-params11213.h"
 #elif MEXP == 19937
-  #include "params19937.h"
+  #include "dSFMT-params19937.h"
 #elif MEXP == 44497
-  #include "params44497.h"
+  #include "dSFMT-params44497.h"
 #elif MEXP == 86243
-  #include "params86243.h"
+  #include "dSFMT-params86243.h"
 #elif MEXP == 132049
-  #include "params132049.h"
+  #include "dSFMT-params132049.h"
 #else
 #ifdef __GNUC__
   #error "MEXP is not valid."

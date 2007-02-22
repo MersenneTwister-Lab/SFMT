@@ -28,6 +28,7 @@ def get_params(filename)
 end
 
 def sl_perm(sl)
+  sl = sl.to_i
   tbl = [8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7]
   str = '('
   (0..15).each{
@@ -85,34 +86,53 @@ def print_alti_sl1(sl1)
          sl1_m1, sl1_m2, sl1_m1, sl1_m2)
 end
 
-def print_alti_sr1(sr1)
+def print_alti_sr1(sr1, msk1, msk2)
   sr1 = sr1.to_i
+  msk1 = msk1.hex
+  msk2 = msk2.hex
   printf("#define ALTI_SR1 %d\n", sr1)
   sr1_m1 = 0xffffffff >> sr1
   sr1_m2 = 0xffffffff
   printf("#define SR1_MSK \\\n")
   printf("(vector unsigned int)(0x%08xU,0x%08xU,0x%08xU,0x%08xU)\n",
-         sr1_m1 & ($MSK1 >> 32), sr1_m2 & $MSK1,
-         sr1_m1 & ($MSK2 >> 32), sr1_m2 & $MSK2)
+         sr1_m1 & (msk1 >> 32), sr1_m2 & msk1,
+         sr1_m1 & (msk2 >> 32), sr1_m2 & msk2)
 end
 
 ARGV.each{
   |f|
+  mexp = f.sub(/parity.resD11./,"").sub(/.magi.*txt/,"")
   params = get_params(f)
   $param_name.each {
     |key|
-    if key.include? 'MSK'
-      printf("#define %s\t0x%sU\n", key, params[key])
-    elsif key.include? 'PARITY'
-      printf("#define %s\t%sU\n", key, params[key])
-    else
+    if !(key.include? 'MSK') and !(key.include? 'PARITY')
       printf("#define %s\t%s\n", key, params[key])
     end
   }
+  printf("#define %s\tUINT64_C(0x%s)\n", 'MSK1', params['MSK1'])
+  printf("#define %s\tUINT64_C(0x%s)\n", 'MSK2', params['MSK2'])
+  printf("#define MSK32_1\t0x%sU\n", params['MSK1'][0,8])
+  printf("#define MSK32_2\t0x%sU\n", params['MSK1'][8,8])
+  printf("#define MSK32_3\t0x%sU\n", params['MSK2'][0,8])
+  printf("#define MSK32_4\t0x%sU\n", params['MSK2'][8,8])
+  printf("#define %s\tUINT64_C(%s)\n", "PCV1", params['PARITY1'])
+  printf("#define %s\tUINT64_C(%s)\n", "PCV2", params['PARITY2'])
+  printf("#define IDSTR\t\"dSFMT-%s:%s-%s-%s-%s-%s:%s-%s\"\n",
+         mexp, params['POS1'], params['SL1'],
+         params['SL2'], params['SR1'], params['SR2'],
+         params['MSK1'], params['MSK2'])
 
   printf("\n\n/* PARAMETERS FOR ALTIVEC */\n")
   print_alti_sl1(params['SL1'])
   printf("#define SL2_PERM \\\n(vector unsigned char)%s\n",
          sl_perm(params['SL2']))
-  print_alti_sr1(params['SR1']);
+  print_alti_sr1(params['SR1'], params['MSK1'], params['MSK2'])
+  printf("#define SR2_PERM \\\n(vector unsigned char)%s\n",
+         sr_perm64(params['SR2'].to_i/8))
+  printf("#define ALTI_PERM (vector unsigned char) \\\n")
+  printf("  (8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7)\n")
+  printf("#define ALTI_LOW_MSK (vector unsigned int) \\\n")
+  printf("  (LOW_MASK32_1, LOW_MASK32_2, LOW_MASK32_1, LOW_MASK32_2)\n")
+  printf("#define ALTI_HIGH_CONST ")
+  printf("(vector unsigned int)(HIGH_CONST32, 0, HIGH_CONST32, 0)\n")
 }
