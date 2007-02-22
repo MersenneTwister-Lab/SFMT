@@ -51,7 +51,6 @@ void check_co(void) {
     union W64_T *array = (union W64_T *)dummy;
     union W64_T r;
 
-    init_gen_rand(1234);
     printf("generated randoms [0,1)\n");
     init_gen_rand(1234);
     fill_array_close_open(&array[0].d, 5000);
@@ -83,7 +82,6 @@ void check_oc(void) {
     union W64_T *array = (union W64_T *)dummy;
     union W64_T r;
 
-    init_gen_rand(1234);
     printf("generated randoms (0, 1]\n");
     init_gen_rand(1234);
     fill_array_open_close(&array[0].d, 5000);
@@ -115,7 +113,6 @@ void check_oo(void) {
     union W64_T *array = (union W64_T *)dummy;
     union W64_T r;
 
-    init_gen_rand(1234);
     printf("generated randoms (0,1)\n");
     init_gen_rand(1234);
     fill_array_open_open(&array[0].d, 5000);
@@ -147,7 +144,6 @@ void check_12(void) {
     union W64_T *array = (union W64_T *)dummy;
     union W64_T r;
 
-    init_gen_rand(1234);
     printf("generated randoms [1, 2)\n");
     init_gen_rand(1234);
     fill_array_close1_open2(&array[0].d, 5000);
@@ -555,7 +551,10 @@ void test_seq_12(void) {
 }
 
 int main(int argc, char *argv[]) {
-    if ((argc >= 2) && (strncmp(argv[1],"-s",2) == 0)) {
+    if ((argc >= 2) && (strncmp(argv[1],"-v",2) == 0)) {
+	printf("%s\n", get_idstring());
+	check_12();
+    } else if ((argc >= 2) && (strncmp(argv[1],"-s",2) == 0)) {
 	printf("consumed time for generating %u randoms.\n",
 	       NUM_RANDS * TIC_COUNT);
 	test_co();

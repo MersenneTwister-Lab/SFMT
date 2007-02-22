@@ -1,6 +1,7 @@
 /** 
  * @file dSFMT.c 
  * @brief double precision SIMD-oriented Fast Mersenne Twister (dSFMT)
+ * based on IEEE 754 format.
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
@@ -86,7 +87,7 @@ static void period_certification(void);
 #endif
 /**
  * This function simulates SIMD 128-bit left shift by the standard C.
- * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
+ * The 128-bit integer given in \b in is shifted by (shift * 8) bits.
  * This function simulates the LITTLE ENDIAN SIMD.
  * @param out the output of this function
  * @param in the 128-bit data to be shifted
@@ -104,7 +105,7 @@ inline static void lshift128(w128_t *out, const w128_t *in, int shift) {
  * @param a a 128-bit part of the interal state array
  * @param b a 128-bit part of the interal state array
  * @param c a 128-bit part of the interal state array
- * @param d a 128-bit part of the interal state array
+ * @param lung a 128-bit part of the interal state
  */
 inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 				w128_t *lung) {
@@ -122,6 +123,13 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 }
 
 #if !defined(SSE2)
+/**
+ * This function converts the double precision floating point numbers which
+ * distribute uniformly in the range [1, 2) to those which distribute uniformly
+ * in the range [0, 1).
+ * @param array array of double precision floating point numbers
+ * @param size size of the array
+ */
 inline static void convert_co(w128_t array[], int size) {
     int i;
 
@@ -131,6 +139,13 @@ inline static void convert_co(w128_t array[], int size) {
     }
 }
 
+/**
+ * This function converts the double precision floating point numbers which
+ * distribute uniformly in the range [1, 2) to those which distribute uniformly
+ * in the range (0, 1].
+ * @param array array of double precision floating point numbers
+ * @param size size of the array
+ */
 inline static void convert_oc(w128_t array[], int size) {
     int i;
 
@@ -140,6 +155,13 @@ inline static void convert_oc(w128_t array[], int size) {
     }
 }
 
+/**
+ * This function converts the double precision floating point numbers which
+ * distribute uniformly in the range [1, 2) to those which distribute uniformly
+ * in the range (0, 1).
+ * @param array array of double precision floating point numbers
+ * @param size size of the array
+ */
 inline static void convert_oo(w128_t array[], int size) {
     int i;
 
@@ -154,8 +176,8 @@ inline static void convert_oo(w128_t array[], int size) {
 
 #if (!defined(ALTIVEC)) && (!defined(SSE2))
 /**
- * This function fills the internal state array with psedorandom
- * integers.
+ * This function fills the internal state array with double precision
+ * floating point psedorandom numbers of the IEEE 754 format.
  */
 inline static void gen_rand_all(void) {
     int i;
@@ -174,9 +196,8 @@ inline static void gen_rand_all(void) {
 }
 
 /**
- * This function fills the user-specified array with psedorandom
- * integers.
- *
+ * This function fills the user-specified array with double precision
+ * floating point psedorandom numbers of the IEEE 754 format.
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
@@ -230,15 +251,14 @@ static uint32_t func2(uint32_t x) {
 }
 
 /**
- * This function initializes the internal state array with a 32-bit
- * integer seed.
- * @param seed a 32-bit integer used as the seed.
+ * This function initializes the internal state array to fit the IEEE
+ * 754 format.
  */
 void initial_mask(void) {
     int i;
     uint64_t *psfmt;
 
-    psfmt = (uint64_t *)&sfmt[0];
+    psfmt = &sfmt[0].u[0];
     for (i = 0; i < (N + 1) * 2; i++) {
         psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
     }
@@ -280,9 +300,8 @@ static void period_certification(void) {
   PUBLIC FUNCTIONS
   ----------------*/
 /**
- * This function returns the identification string.
- * The string shows the word size, the mersenne expornent,
- * and all parameters of this generator.
+ * This function returns the identification string.  The string shows
+ * the mersenne expornent, and all parameters of this generator.
  * @return id string.
  */
 char *get_idstring(void) {
@@ -290,57 +309,25 @@ char *get_idstring(void) {
 }
 
 /**
- * This function returns the minimum size of array used for \b fill_array64.
- * @return minimum size of array used for fill_array64.
+ * This function returns the minimum size of array used for \b
+ * fill_array functions.
+ * @return minimum size of array used for fill_array functions.
  */
 int get_min_array_size(void) {
     return N64;
 }
 
 /**
- * This function generates and returns 32-bit pseudorandom number.
- * init_gen_rand or init_by_array must be called before this function.
- * @return 32-bit pseudorandom number
+ * This function generates and returns double precision pseudorandom
+ * number which distributes uniformly in the range [1, 2).
+ * init_gen_rand() or init_by_array() must be called before this
+ * function.
+ * @return double precision floating point pseudorandom number
  */
-inline double genrand_close_open(void) {
-    double r;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    r = psfmt64[idx++];
-    return r - 1.0L;
-}
-
-inline double genrand_open_close(void) {
-    double r;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    r = psfmt64[idx++];
-    return 2.0L - r;
-}
-
-inline double genrand_open_open(void) {
-    union {
-	uint64_t u;
-	double d;
-    } conv;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    conv.d = psfmt64[idx++];
-    conv.u |= 1;
-    return conv.d - 1.0L;
-}
-
 inline double genrand_close1_open2(void) {
     double r;
+
+    assert(initialized);
 
     if (idx >= N * 2) {
 	gen_rand_all();
@@ -351,17 +338,19 @@ inline double genrand_close1_open2(void) {
 }
 
 /**
- * This function generates pseudorandom 64-bit integers in the
- * specified array[] by one call. The number of pseudorandom integers
- * is specified by the argument size, which must be at least (MEXP /
- * 128) * 2 and a multiple of two.  The generation by this function is
- * much faster than the following gen_rand function.
+ * This function generates double precision floating point
+ * pseudorandom numbers which distribute in the range [1, 2) to the
+ * specified array[] by one call. The number of pseudorandom numbers
+ * is specified by the argument \b size, which must be at least (MEXP
+ * / 128) * 2 and a multiple of two.  The function
+ * get_min_array_size() returns this minimum size.  The generation by
+ * this function is much faster than the following gen_rand function.
  *
- * For initialization, init_gen_rand or init_by_array must be called
+ * For initialization, init_gen_rand() or init_by_array() must be called
  * before the first call of this function. This function can not be
- * used after calling gen_rand function, without initialization.
+ * used after calling genrand_xxx functions, without initialization.
  *
- * @param array an array where pseudorandom 64-bit integers are filled
+ * @param array an array where pseudorandom numbers are filled
  * by this function.  The pointer to the array must be "aligned"
  * (namely, must be a multiple of 16) in the SIMD version, since it
  * refers to the address of a 128-bit integer.  In the standard C
@@ -375,31 +364,64 @@ inline double genrand_close1_open2(void) {
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
+void fill_array_close1_open2(double array[], int size) {
+    assert(size % 2 == 0);
+    assert(size >= N64);
+    gen_rand_array((w128_t *)array, size / 2);
+}
+
+/**
+ * This function generates double precision floating point
+ * pseudorandom numbers which distribute in the range (0, 1] to the
+ * specified array[] by one call. This function is the same as
+ * fill_array_close1_open2() except the distribution range.
+ *
+ * @param array an array where pseudorandom numbers are filled
+ * by this function.
+ * @param size the number of pseudorandom numbers to be generated.
+ * see also \sa fill_array_close1_open2()
+ */
 void fill_array_open_close(double array[], int size) {
     assert(size % 2 == 0);
-    assert(size >= 2 * N * 2);
+    assert(size >= N64);
     gen_rand_array((w128_t *)array, size / 2);
     convert_oc((w128_t *)array, size / 2);
 }
 
+/**
+ * This function generates double precision floating point
+ * pseudorandom numbers which distribute in the range [0, 1) to the
+ * specified array[] by one call. This function is the same as
+ * fill_array_close1_open2() except the distribution range.
+ *
+ * @param array an array where pseudorandom numbers are filled
+ * by this function.
+ * @param size the number of pseudorandom numbers to be generated.
+ * see also \sa fill_array_close1_open2()
+ */
 void fill_array_close_open(double array[], int size) {
     assert(size % 2 == 0);
-    assert(size >= 2 * N * 2);
+    assert(size >= N64);
     gen_rand_array((w128_t *)array, size / 2);
     convert_co((w128_t *)array, size / 2);
 }
 
+/**
+ * This function generates double precision floating point
+ * pseudorandom numbers which distribute in the range (0, 1) to the
+ * specified array[] by one call. This function is the same as
+ * fill_array_close1_open2() except the distribution range.
+ *
+ * @param array an array where pseudorandom numbers are filled
+ * by this function.
+ * @param size the number of pseudorandom numbers to be generated.
+ * see also \sa fill_array_close1_open2()
+ */
 void fill_array_open_open(double array[], int size) {
     assert(size % 2 == 0);
-    assert(size >= 2 * N * 2);
+    assert(size >= N64);
     gen_rand_array((w128_t *)array, size / 2);
     convert_oo((w128_t *)array, size / 2);
-}
-
-void fill_array_close1_open2(double array[], int size) {
-    assert(size % 2 == 0);
-    assert(size >= 2 * N * 2);
-    gen_rand_array((w128_t *)array, size / 2);
 }
 
 /**

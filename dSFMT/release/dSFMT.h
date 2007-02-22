@@ -2,7 +2,7 @@
  * @file dSFMT.h 
  *
  * @brief double precision SIMD oriented Fast Mersenne Twister(dSFMT)
- * pseudorandom number generator
+ * pseudorandom number generator based on IEEE 754 format.
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
@@ -62,20 +62,65 @@
   #define UINT64_C(v) (v ## ULL) 
 #endif
 
-/** generates a random number on [0,1) with 53-bit resolution*/
-inline double genrand_res53(void);
-inline double genrand_open_close(void);
-inline double genrand_close_open(void);
-inline double genrand_open_open(void);
+#ifdef __GNUC__
 inline double genrand_close1_open2(void);
+inline double genrand_close_open(void) __attribute__((always_inline));
+inline double genrand_open_close(void) __attribute__((always_inline));
+inline double genrand_open_open(void) __attribute__((always_inline));
+#else
+inline double genrand_close1_open2(void);
+inline double genrand_close_open(void);
+inline double genrand_open_close(void);
+inline double genrand_open_open(void);
+#endif
+
 void fill_array_open_close(double array[], int size);
 void fill_array_close_open(double array[], int size);
 void fill_array_open_open(double array[], int size);
 void fill_array_close1_open2(double array[], int size);
 char *get_idstring(void);
 int get_min_array_size(void);
-void set_type(int type);
 void init_gen_rand(uint32_t seed);
 void init_by_array(uint32_t init_key[], int key_length);
+
+/**
+ * This function generates and returns double precision pseudorandom
+ * number which distributes uniformly in the range [0, 1).
+ * init_gen_rand() or init_by_array() must be called before this
+ * function.  
+ * @return double precision floating point pseudorandom number
+ */
+inline double genrand_close_open(void) {
+    return genrand_close1_open2() - 1.0L;
+}
+
+/**
+ * This function generates and returns double precision pseudorandom
+ * number which distributes uniformly in the range (0, 1].
+ * init_gen_rand() or init_by_array() must be called before this
+ * function.
+ * @return double precision floating point pseudorandom number
+ */
+inline double genrand_open_close(void) {
+    return 2.0L - genrand_close1_open2();
+}
+
+/**
+ * This function generates and returns double precision pseudorandom
+ * number which distributes uniformly in the range (0, 1).
+ * init_gen_rand() or init_by_array() must be called before this
+ * function.
+ * @return double precision floating point pseudorandom number
+ */
+inline double genrand_open_open(void) {
+    union {
+	uint64_t u;
+	double d;
+    } conv;
+
+    conv.d = genrand_close1_open2();
+    conv.u |= 1;
+    return conv.d - 1.0L;
+}
 
 #endif

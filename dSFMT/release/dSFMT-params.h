@@ -70,8 +70,8 @@
   #include "dSFMT-params607.h"
 #elif MEXP == 2281
   #include "dSFMT-params2281.h"
-#elif MEXP == 4253
-  #include "dSFMT-params4253.h"
+#elif MEXP == 4423
+  #include "dSFMT-params4423.h"
 #elif MEXP == 11213
   #include "dSFMT-params11213.h"
 #elif MEXP == 19937
