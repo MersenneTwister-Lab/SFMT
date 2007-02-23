@@ -29,7 +29,7 @@ FILES = dSFMT.h \
 	LICENSE.txt \
 	Makefile \
 	README.txt \
-	CHAMGE-LOG.txt \
+	CHANGE-LOG.txt \
 	html
 VERSION = 1.0
 DIR = dSFMT-src-${VERSION}
@@ -37,6 +37,7 @@ DIR = dSFMT-src-${VERSION}
 doc:
 	rm -rf html
 	/Applications/Doxygen.app/Contents/Resources/doxygen doxygen.cfg
+	cp howto-compile.html html
 
 .PHONY : tar.gz
 tar.gz: $(FILES)
@@ -51,6 +52,9 @@ zip: $(FILES)
 	cp -r ${FILES} ${DIR}
 	zip ${DIR}.zip ${DIR}/* ${DIR}/html/*
 	rm -rf ${DIR}
+
+out:
+	./make-out.sh
 
 clean:
 	rm -f *.o *~

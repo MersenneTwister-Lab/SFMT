@@ -7,7 +7,7 @@
  * This program is based on the IEEE Standard for Binary
  * Floating-Point Arithmetic (ANSI/IEEE Std 754-1985) format.
  *
- * This Project provides pesudorandom number generators of various
+ * This Project provides pseudorandom number generators of various
  * Mersenne Prime Period: from 2<sup>607</sup>-1 to
  * 2<sup>132049</sup>-1.
  *
@@ -19,6 +19,9 @@
  * will make dSFMT which has the period of 2<sup>607</sup>-1 and is
  * optimized for SSE2.
  *
+ *   see <a href="howto-compile.html">How to compile</a> to compile
+ *   your program with SFMT optimized for SIMD.
+ * 
  * - void init_gen_rand() initializes the generator with a 32-bit
  *   integer seed.
  * - void init_by_array() initializes the generator with an array of
@@ -39,16 +42,16 @@
  *   precision pseudorandom number which distributes uniformly in the
  *   range (0, 1).
  * - void fill_array_close1_open2() fills the user-specified array
- *   with double precision psedorandom numbers which distribute
+ *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range [1, 2).
  * - void fill_array_close_open() fills the user-specified array
- *   with double precision psedorandom numbers which distribute
+ *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range [0, 1).
  * - void fill_array_open_close() fills the user-specified array
- *   with double precision psedorandom numbers which distribute
+ *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range (0, 1].
  * - void fill_array_open_open() fills the user-specified array
- *   with double precision psedorandom numbers which distribute
+ *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range (0, 1).
  *
  * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
@@ -56,7 +59,7 @@
  *
  * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
  *
- * @date 2007-02-22
+ * @date 2007-02-23
  *
  * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.

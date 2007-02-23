@@ -12,7 +12,7 @@
  * #define MEXP 19937 */
 /** SFMT generator has an internal state array of 128-bit integers,
  * and N is its size. */
-#define N (MEXP / 128)
+#define N (MEXP / 104)
 /** N32 is the size of internal state array when regarded as an array
  * of 32-bit integers.*/
 #define N32 (N * 4)

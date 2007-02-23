@@ -75,7 +75,7 @@ def print_alti_sl1(sl1)
   printf("#define ALTI_SL1 %d\n", sl1 % 8)
   sl1_pm = sl1 / 8
   printf("#define SL1_PERM \\\n(vector unsigned char)%s\n", sl_perm(sl1_pm))
-  if sl1 > 32
+  if sl1 > 32 # bug?
     sl1_m1 = (0xffffffff << (sl1 - 32)) & 0xffffffff
   else
     sl1_m1 = 0xffffffff

@@ -1,0 +1,4 @@
+2007.2.23
+period_certification でworkがuint32_tだった。
+uint64_tに修正
+初期化にidxofが必要であった。

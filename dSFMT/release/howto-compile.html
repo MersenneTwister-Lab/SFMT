@@ -5,17 +5,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html" />
-    <title>How to compile SFMTp</title>
+    <title>How to compile dSFMT</title>
     <style type="text/css">
       BLOCKQUOTE {background-color:#a0ffa0;
                   padding-left: 1em;}
     </style>
   </head>
   <body>
-    <h2> How to compile SFMT </h2>
+    <h2> How to compile dSFMT</h2>
 
     <p>
-      This document explains how to compile SFMTp for users who
+      This document explains how to compile dSFMT for users who
       are using UNIX like systems (for example Linux, Free BSD,
       cygwin, osx, etc) on terminal. I can't help those who use IDE
       (Integrated Development Environment,) please see your IDE's help
@@ -25,7 +25,7 @@
     <h3>1. First Step: Compile test programs using Makefile.</h3>
     <h4>1-1. Compile standard C test program.</h4>
     <p>
-      Check if SFMTp.c and Makefile are in your current directory.
+      Check if dSFMT.c and Makefile are in your current directory.
       If not, <strong>cd</strong> to the directory where they exist.
       Then, type
     </p>
@@ -36,38 +36,38 @@
       If it causes an error, try to type
     </p>
     <blockquote>
-      <pre>cc -o test-std32-M19937 test32.c</pre>
+      <pre>cc -DMEXP=19937 -o test-std-M19937 test.c</pre>
     </blockquote>
     <p>
       or try to type
     </p>
     <blockquote>
-      <pre>gcc -o test-std32-M19937 test32.c</pre>
+      <pre>gcc -DMEXP=19937 -o test-std-M19937 test.c</pre>
     </blockquote>
     <p>
       If success, then check the test program. Type
     </p>
     <blockquote>
-      <pre>./test-std32-M19937</pre>
+      <pre>./test-std-M19937 -v</pre>
     </blockquote>
     <p>
       You will see many random numbers displayed on your screen.
       If you want to check these random numbers are correct output,
       redirect output to a file and <strong>diff</strong> it with
-      <strong>SFMTp.19937.out.txt</strong>, like this:</p>
+      <strong>dSFMT.19937.out.txt</strong>, like this:</p>
     <blockquote>
-      <pre>./test-std32-M19937 > foo.txt
-diff -w foo.txt SFMTp.19937.out.txt</pre>
+      <pre>./test-std-M19937 -v > foo.txt
+diff -w foo.txt dSFMT.19937.out.txt</pre>
     </blockquote>
     <p>
       Silence means they are the same because <strong>diff</strong>
-      reports the diffrence of two file.
+      reports the difference of two file.
     </p>
     <p>
-      If you want to know the generation speed of SFMTp, type
+      If you want to know the generation speed of dSFMT, type
     </p>
     <blockquote>
-      <pre>./test-std32-M19937 -s</pre>
+      <pre>./test-std-M19937 -s</pre>
     </blockquote>
     <p>
       It is very slow. To make it fast, compile it
@@ -76,32 +76,36 @@ diff -w foo.txt SFMTp.19937.out.txt</pre>
       with <strong>-O3</strong>. type
     </p>
     <blockquote>
-      <pre>gcc -O3 -fno-strict-aliasing -o test-std32-M19937 test32.c
-./test-std32-M19937 -s</pre>
+      <pre>gcc -O3 -fno-strict-aliasing -DMEXP=19937 -o test-std-M19937 test.c
+./test-std-M19937 -s</pre>
     </blockquote>
+    <p>
+      gcc needs more options to get full speed of dSFMT because dSFMT
+      uses inline functions heavily. See Makefile for details.
+    </p>
 
     <h4>1-2. Compile SSE2 test program.</h4>
     <p>
       If your CPU supports SSE2 and you can use gcc version 3.4 or later,
-      you can make test-sse32. To do this, type
+      you can make test-sse. To do this, type
     </p>
     <blockquote>
       <pre>make sse2</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DSSE2=1 -o test-sse32-M19937 test32.c</pre>
+      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DSSE2=1 -DMEXP=19937 -o test-sse2-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
-      <pre>./test-sse32-M19937 -s</pre>
+      <pre>./test-sse2-M19937 -s</pre>
     </blockquote>
-      <p>shows much shorter time than <strong>test-std32-M19937 -s</strong>.</p>
+      <p>shows much shorter time than <strong>test-std-M19937 -s</strong>.</p>
 
     <h4>1-3. Compile AltiVec test program.</h4>
     <p>
       If you are using Macintosh computer with PowerPC G4 or G5, and
-      your gcc version is later 3.3, you can make test-alti32-M19937. To
+      your gcc version is later 3.3, you can make test-alti-M19937. To
       do this, type
     </p>
     <blockquote>
@@ -109,18 +113,18 @@ diff -w foo.txt SFMTp.19937.out.txt</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DALTIVEC=1 -o test-alti32-M19937 test32.c</pre>
+      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DALTIVEC=1 -o test-alti-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
-      <pre>./test-alti32-M19937 -s</pre>
+      <pre>./test-alti-M19937 -s</pre>
     </blockquote>
-    <p>shows much shorter time than <strong>test-std32-M19937 -s</strong>.</p>
+    <p>shows much shorter time than <strong>test-std-M19937 -s</strong>.</p>
 
     <h4>1-4. Compile and check output automatically.</h4>
     <p>
-      To make test program and check 32-bit and 64-bit output
-      automatically for all supported MEXPs of SFMTp, type
+      To make test program and check output
+      automatically for all supported MEXPs of dSFMT, type
     </p>
     <blockquote>
       <pre>make std-check</pre>
@@ -141,7 +145,7 @@ diff -w foo.txt SFMTp.19937.out.txt</pre>
       These commands may take some time.
     </p>
 
-    <h3>2. Second Step: Use SFMTp pseudorandom number generator with
+    <h3>2. Second Step: Use dSFMT pseudorandom number generator with
     your C program.</h3>
     <h4>2-1. Use sequential call and static link.</h4>
     <p>
@@ -152,7 +156,7 @@ diff -w foo.txt SFMTp.19937.out.txt</pre>
       <pre>
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
-#include "SFMTp.h"
+#include "dSFMT.h"
 
 int main(int argc, char* argv[]) {
     int i, cnt, seed;
@@ -167,8 +171,8 @@ int main(int argc, char* argv[]) {
     cnt = 0;
     init_gen_rand(seed);
     for (i = 0; i &lt; NUM; i++) {
-	x = genrand_res53();
-	y = genrand_res53();
+	x = genrand_close_open();
+	y = genrand_close_open();
 	if (x * x + y * y &lt; 1.0) {
 	    cnt++;
 	}
@@ -179,75 +183,77 @@ int main(int argc, char* argv[]) {
 }
       </pre>
     </blockquote>
-    <p>To compile <strong>sample1.c</strong> with SFMTp.c with the period of 
+    <p>To compile <strong>sample1.c</strong> with dSFMT.c with the period of 
       2<sup>607</sup>, type</p>
     <blockquote>
-      <pre>gcc -DMEXP=607 -o sample1 SFMTp.c sample1.c</pre>
+      <pre>gcc -DMEXP=607 -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
-    <p>If your CPU supports SSE2 and you want to use optimized SFMTp for
+    <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=607 -o sample1 SFMTp-sse2.c sample1.c</pre>
+      <pre>gcc -msse2 -DMEXP=607 -DSSE2 -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
-    <p>If your CPU supports AltiVec and you want to use optimized SFMTp
+    <p>If your CPU supports AltiVec and you want to use optimized dSFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=607 -o sample1 SFMTp-alti32.c sample1.c</pre>
+      <pre>gcc -faltivec -DMEXP=607 -DALTIVEC -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
 
     <h4>2-2. Use block call and static link.</h4>
     <p>
       Here is <strong>sample2.c</strong> which modifies sample1.c.
-      The block call <strong>fill_array64</strong> is much faster than
+      The block call <strong>fill_array_close_open</strong> is much faster than
       sequential call, but it needs an aligned memory. The standard function
-      to get an alligned memory is <strong>posix_memalign</strong>, but 
+      to get an aligned memory is <strong>posix_memalign</strong>, but 
       it isn't usable in every OS.
     </p>
     <blockquote>
       <pre>
 #include &lt;stdio.h&gt;
-#if !defined(_POSIX_C_SOURCE)
-#include &lt;malloc.h&gt;
-#endif
 #define _XOPEN_SOURCE 600
 #include &lt;stdlib.h&gt;
-#include "SFMTp.h"
+#include "dSFMT.h"
 
 int main(int argc, char* argv[]) {
     int i, j, cnt, seed;
     double x, y, pi;
     const int NUM = 10000;
     const int R_SIZE = 2 * NUM;
-    uint64_t *array;
+    int size;
+    double *array;
 
     if (argc &gt;= 2) {
 	seed = strtol(argv[1], NULL, 10);
     } else {
 	seed = 12345;
     }
+    size = get_min_array_size();
+    if (size &lt; R_SIZE) {
+	size = R_SIZE;
+    }
 #if defined(__APPLE__)
     printf("malloc used\n");
-    array = malloc(sizeof(uint64_t) * R_SIZE);
+    array = malloc(sizeof(double) * size);
     if (array == NULL) {
 	printf("can't allocate memory.\n");
 	return 1;
     }
 #elif defined(_POSIX_C_SOURCE)
     printf("posix_memalign used\n");
-    if (posix_memalign((void **)&amp;array, 16, sizeof(uint64_t) * R_SIZE) != 0) {
+    if (posix_memalign((void **)&amp;array, 16, sizeof(double) * size) != 0) {
 	printf("can't allocate memory.\n");
 	return 1;
     }
 #elif defined(__GNUC__) &amp;&amp; (__GNUC__ &gt; 3 || (__GNUC__ == 3 &amp;&amp; __GNUC_MINOR__ &gt;= 3))
     printf("memalign used\n");
-    array = memalign(16, sizeof(uint64_t) * R_SIZE);
+    array = memalign(16, sizeof(double) * size);
     if (array == NULL) {
 	printf("can't allocate memory.\n");
 	return 1;
     }
-#else /* in this case, gcc doesn't suppport SSE2 */
+#else /* in this case, gcc doesn't support SSE2 */
     printf("malloc used\n");
-    array = malloc(sizeof(uint64_t) * R_SIZE);
+    array = malloc(sizeof(double) * size);
     if (array == NULL) {
 	printf("can't allocate memory.\n");
 	return 1;
@@ -256,10 +262,10 @@ int main(int argc, char* argv[]) {
     cnt = 0;
     j = 0;
     init_gen_rand(seed);
-    fill_array64(array, R_SIZE);
+    fill_array_close_open(array, size);
     for (i = 0; i &lt; NUM; i++) {
-	x = to_res53(array[j++]);
-	y = to_res53(array[j++]);
+	x = array[j++];
+	y = array[j++];
 	if (x * x + y * y &lt; 1.0) {
 	    cnt++;
 	}
@@ -271,42 +277,33 @@ int main(int argc, char* argv[]) {
 }
       </pre>
     </blockquote>
-    <p>To compile <strong>sample2.c</strong> with SFMTp.c with the period of
+    <p>To compile <strong>sample2.c</strong> with dSFMT.c with the period of
       2<sup>2281</sup>, type</p>
     <blockquote>
-      <pre>gcc -o -DMEXP=2281 sample2 SFMTp.c sample2.c</pre>
+      <pre>gcc -DMEXP=2281 -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
-    <p>If your CPU supports SSE2 and you want to use optimized SFMTp for
+    <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=2281 -o sample2 SFMTp-sse2.c sample2.c</pre>
+      <pre>gcc -msse2 -DMEXP=2281 -DSSE2 -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=2281 -o sample2 SFMTp-alti32.c sample2.c</pre>
+      <pre>gcc -faltivec -DMEXP=2281 -DALTIVEC -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
-    <p>or type</p>
-    <blockquote>
-      <pre>gcc -faltivec -DMEXP=2281 -o sample2 SFMTp-alti64.c sample2.c</pre>
-    </blockquote>
-    <p>The difference between SFMTp-alti32.c and SFMTp-alti64.c is:
-      SFMTp-alti32.c support 32-bit and 64-bit output, but 64-bit output
-      is slower, on the other hand, SFMTp-alti64.c support 64-bit output
-      only, but it's faster than SFMTp-alti32.c
-    </p>
     <h4>2-3. Use sequential call and inline functions.</h4>
     <p>
       Here is <strong>sample3.c</strong> which modifies sample1.c.
       This is very similar to sample1.c. The difference is only one line.
-      It include <strong>"sfmt19937.c"</strong> instead of <strong>"sfmt19937.h"
+      It include <strong>"dSFMT.c"</strong> instead of <strong>"dSFMT.h"
       </strong>.
     </p>
     <blockquote>
       <pre>
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
-#include "sfmt19937.c"
+#include "dSFMT.c"
 
 int main(int argc, char* argv[]) {
     int i, cnt, seed;
@@ -321,8 +318,8 @@ int main(int argc, char* argv[]) {
     cnt = 0;
     init_gen_rand(seed);
     for (i = 0; i &lt; NUM; i++) {
-	x = genrand_res53();
-	y = genrand_res53();
+	x = genrand_close_open();
+	y = genrand_close_open();
 	if (x * x + y * y &lt; 1.0) {
 	    cnt++;
 	}
@@ -335,25 +332,23 @@ int main(int argc, char* argv[]) {
     </blockquote>
     <p>To compile <strong>sample3.c</strong>, type</p>
     <blockquote>
-      <pre>gcc -o sample3 sample3.c</pre>
+      <pre>gcc -DMEXP=19937 -o sample3 sample3.c</pre>
     </blockquote>
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
-      SSE2, change "sfmt19937.c" in sample3.c to "sfmt19937-sse2.c"
-      and type</p>
+      SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -o sample3 sample3.c</pre>
+      <pre>gcc -msse2 -DMEXP=19937 -DSSE2 -o sample3 sample3.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
-      for AltiVec, change "sfmt19937.c" in sample3.c to
-      "sfmt19937-alti32.c" or "sfmt19937-alti64.c" and type</p>
+      for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -o sample3 sample3.c</pre>
+      <pre>gcc -faltivec -DMEXP=19937 -DALTIVEC -o sample3 sample3.c</pre>
     </blockquote>
-    <h4>2-4. Initialize SFMT using init_by_array function.</h4>
+    <h4>2-4. Initialize dSFMT using init_by_array function.</h4>
     <p>
       Here is <strong>sample4.c</strong> which modifies sample1.c.
       The 32-bit integer seed can only make 2<sup>32</sup> kinds of
-      initial state, to avoid this problem, SFMT
+      initial state, to avoid this problem, dSFMT
       provides <strong>init_by_array</strong> function.  This sample
       uses init_by_array function which initialize the internal state
       array with an array of 32-bit. The size of an array can be
@@ -365,7 +360,7 @@ int main(int argc, char* argv[]) {
       <pre>
 #include &lt;stdio.h&gt;
 #include &lt;strings.h&gt;
-#include "sfmt19937.h"
+#include "dSFMT.h"
 
 int main(int argc, char* argv[]) {
     int i, cnt, seed_cnt;
@@ -386,8 +381,8 @@ int main(int argc, char* argv[]) {
     cnt = 0;
     init_by_array(seeds, seed_cnt);
     for (i = 0; i &lt; NUM; i++) {
-	x = genrand_res53();
-	y = genrand_res53();
+	x = genrand_close_open();
+	y = genrand_close_open();
 	if (x * x + y * y &lt; 1.0) {
 	    cnt++;
 	}
@@ -400,7 +395,7 @@ int main(int argc, char* argv[]) {
     </blockquote>
     <p>To compile <strong>sample4.c</strong>, type</p>
     <blockquote>
-      <pre>gcc -o sample4 sfmt19937.c sample4.c</pre>
+      <pre>gcc -DMEXP=132049 -o sample4 dSFMT.c sample4.c</pre>
     </blockquote>
     <p>Now, seed can be a string. Like this:</p>
     <blockquote>

@@ -64,14 +64,14 @@
 
 #ifdef __GNUC__
 inline double genrand_close1_open2(void);
-inline double genrand_close_open(void) __attribute__((always_inline));
-inline double genrand_open_close(void) __attribute__((always_inline));
-inline double genrand_open_open(void) __attribute__((always_inline));
+inline static double genrand_close_open(void) __attribute__((always_inline));
+inline static double genrand_open_close(void) __attribute__((always_inline));
+inline static double genrand_open_open(void) __attribute__((always_inline));
 #else
 inline double genrand_close1_open2(void);
-inline double genrand_close_open(void);
-inline double genrand_open_close(void);
-inline double genrand_open_open(void);
+inline static double genrand_close_open(void);
+inline static double genrand_open_close(void);
+inline static double genrand_open_open(void);
 #endif
 
 void fill_array_open_close(double array[], int size);
@@ -90,7 +90,7 @@ void init_by_array(uint32_t init_key[], int key_length);
  * function.  
  * @return double precision floating point pseudorandom number
  */
-inline double genrand_close_open(void) {
+inline static double genrand_close_open(void) {
     return genrand_close1_open2() - 1.0L;
 }
 
@@ -101,7 +101,7 @@ inline double genrand_close_open(void) {
  * function.
  * @return double precision floating point pseudorandom number
  */
-inline double genrand_open_close(void) {
+inline static double genrand_open_close(void) {
     return 2.0L - genrand_close1_open2();
 }
 
@@ -112,7 +112,7 @@ inline double genrand_open_close(void) {
  * function.
  * @return double precision floating point pseudorandom number
  */
-inline double genrand_open_open(void) {
+inline static double genrand_open_open(void) {
     union {
 	uint64_t u;
 	double d;

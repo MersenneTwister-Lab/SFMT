@@ -71,8 +71,7 @@ inline static void gen_rand_all(void) {
     sfmt[N].s = lung;
 }
 
-inline static void gen_rand_array(w128_t array[], int size)
-{
+inline static void gen_rand_array(w128_t array[], int size) {
     int i, j;
     vector unsigned int r, lung;
 

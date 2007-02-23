@@ -40,9 +40,9 @@ typedef union W128_T w128_t;
   --------------------------------------*/
 /** the 128-bit internal state array */
 static w128_t sfmt[N + 1];
-/** the 64bit interger pointer to the 128-bit internal state array */
+/** the double pointer to the 128-bit internal state array */
 static double *psfmt64 = &sfmt[0].d[0];
-/** index counter to the 64-bit internal state array */
+/** index counter to the internal state array as double */
 static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
@@ -53,21 +53,6 @@ static uint64_t pcv[2] = {PCV1, PCV2};
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-#if defined(__GNUC__)
-inline static void lshift128(w128_t *out, const w128_t *in, int shift)
-    __attribute__((always_inline));
-inline static void gen_rand_all(void) __attribute__((always_inline));
-inline static void gen_rand_array(w128_t array[], int size)
-    __attribute__((always_inline));
-inline static uint32_t func1(uint32_t x)__attribute__((always_inline));
-inline static uint32_t func2(uint32_t x)__attribute__((always_inline));
-inline static void convert_co(w128_t array[], int size)
-    __attribute__((always_inline));
-inline static void convert_oc(w128_t array[], int size)
-    __attribute__((always_inline));
-inline static void convert_oo(w128_t array[], int size)
-    __attribute__((always_inline));
-#else
 inline static void lshift128(w128_t *out, const w128_t *in, int shift);
 inline static void gen_rand_all(void);
 inline static void gen_rand_array(w128_t array[], int size);
@@ -76,7 +61,7 @@ inline static uint32_t func2(uint32_t x);
 inline static void convert_co(w128_t array[], int size);
 inline static void convert_oc(w128_t array[], int size);
 inline static void convert_oo(w128_t array[], int size);
-#endif
+inline static int idxof(int i);
 static void initial_mask(void);
 static void period_certification(void);
 
@@ -85,6 +70,21 @@ static void period_certification(void);
 #elif defined(SSE2)
   #include "dSFMT-sse2.c"
 #endif
+
+#if defined(BIG_ENDIAN) || defined(__ppc__)
+/**
+ * This function simulate a 64-bit index of LITTLE ENDIAN 
+ * in BIG ENDIAN machine.
+ */
+inline static int idxof(int i) {
+    return i ^ 1;
+}
+#else
+inline static int idxof(int i) {
+    return i;
+}
+#endif
+
 /**
  * This function simulates SIMD 128-bit left shift by the standard C.
  * The 128-bit integer given in \b in is shifted by (shift * 8) bits.
@@ -102,10 +102,10 @@ inline static void lshift128(w128_t *out, const w128_t *in, int shift) {
 /**
  * This function represents the recursion formula.
  * @param r output
- * @param a a 128-bit part of the interal state array
- * @param b a 128-bit part of the interal state array
- * @param c a 128-bit part of the interal state array
- * @param lung a 128-bit part of the interal state
+ * @param a a 128-bit part of the internal state array
+ * @param b a 128-bit part of the internal state array
+ * @param c a 128-bit part of the internal state array
+ * @param lung a 128-bit part of the internal state array
  */
 inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 				w128_t *lung) {
@@ -177,7 +177,7 @@ inline static void convert_oo(w128_t array[], int size) {
 #if (!defined(ALTIVEC)) && (!defined(SSE2))
 /**
  * This function fills the internal state array with double precision
- * floating point psedorandom numbers of the IEEE 754 format.
+ * floating point pseudorandom numbers of the IEEE 754 format.
  */
 inline static void gen_rand_all(void) {
     int i;
@@ -197,9 +197,9 @@ inline static void gen_rand_all(void) {
 
 /**
  * This function fills the user-specified array with double precision
- * floating point psedorandom numbers of the IEEE 754 format.
+ * floating point pseudorandom numbers of the IEEE 754 format.
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
- * @param size number of 128-bit pesudorandom numbers to be generated.
+ * @param size number of 128-bit pseudorandom numbers to be generated.
  */
 inline static void gen_rand_array(w128_t array[], int size) {
     int i, j;
@@ -270,7 +270,7 @@ void initial_mask(void) {
 static void period_certification(void) {
     int inner = 0;
     int i, j;
-    uint32_t work;
+    uint64_t work;
 
     for (i = 0; i < 2; i++) {
 	work = sfmt[N].u[i] & pcv[i];
@@ -301,7 +301,7 @@ static void period_certification(void) {
   ----------------*/
 /**
  * This function returns the identification string.  The string shows
- * the mersenne expornent, and all parameters of this generator.
+ * the Mersenne exponent, and all parameters of this generator.
  * @return id string.
  */
 char *get_idstring(void) {
@@ -344,7 +344,7 @@ inline double genrand_close1_open2(void) {
  * is specified by the argument \b size, which must be at least (MEXP
  * / 128) * 2 and a multiple of two.  The function
  * get_min_array_size() returns this minimum size.  The generation by
- * this function is much faster than the following gen_rand function.
+ * this function is much faster than the following genrand_xxx functions.
  *
  * For initialization, init_gen_rand() or init_by_array() must be called
  * before the first call of this function. This function can not be
@@ -434,9 +434,10 @@ void init_gen_rand(uint32_t seed) {
     uint32_t *psfmt;
 
     psfmt = (uint32_t *)&sfmt[0];
-    psfmt[0] = seed;
+    psfmt[idxof(0)] = seed;
     for (i = 1; i < (N + 1) * 4; i++) {
-        psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 30)) + i;
+        psfmt[idxof(i)] = 1812433253UL * (psfmt[idxof(i - 1)] 
+					  ^ (psfmt[idxof(i - 1)] >> 30)) + i;
     }
     initial_mask();
     period_certification();
@@ -461,7 +462,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
     int mid;
     int size = (N + 1) * 4;	/* pulmonary */
 
-    psfmt32 = (uint32_t *)&sfmt[0];
+
     if (size >= 623) {
 	lag = 11;
     } else if (size >= 68) {
@@ -473,46 +474,48 @@ void init_by_array(uint32_t init_key[], int key_length) {
     }
     mid = (size - lag) / 2;
 
+    psfmt32 = (uint32_t *)&sfmt[0];
     memset(sfmt, 0x8b, sizeof(sfmt));
     if (key_length + 1 > size) {
 	count = key_length + 1;
     } else {
 	count = size;
     }
-    r = func1(psfmt32[0] ^ psfmt32[mid % size] ^ psfmt32[size - 1]);
-    psfmt32[mid % size] += r;
+    r = func1(psfmt32[idxof(0)] ^ psfmt32[idxof(mid % size)] 
+	      ^ psfmt32[idxof((size - 1) % size)]);
+    psfmt32[idxof(mid % size)] += r;
     r += key_length;
-    psfmt32[(mid + lag) % size] += r;
-    psfmt32[0] = r;
+    psfmt32[idxof((mid + lag) % size)] += r;
+    psfmt32[idxof(0)] = r;
+    i = 1;
     count--;
     for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
-	r = func1(psfmt32[i] ^ psfmt32[(i + mid) % size] 
-		  ^ psfmt32[(i + size - 1) % size]);
-	psfmt32[(i + mid) % size] += r;
+	r = func1(psfmt32[idxof(i)] ^ psfmt32[idxof((i + mid) % size)] 
+		  ^ psfmt32[idxof((i + size - 1) % size)]);
+	psfmt32[idxof((i + mid) % size)] += r;
 	r += init_key[j] + i;
-	psfmt32[(i + mid + lag) % size] += r;
-	psfmt32[i] = r;
+	psfmt32[idxof((i + mid + lag) % size)] += r;
+	psfmt32[idxof(i)] = r;
 	i = (i + 1) % size;
     }
     for (; j < count; j++) {
-	r = func1(psfmt32[i] ^ psfmt32[(i + mid) % size] 
-		  ^ psfmt32[(i + size - 1) % size]);
-	psfmt32[(i + mid) % size] += r;
+	r = func1(psfmt32[idxof(i)] ^ psfmt32[idxof((i + mid) % size)] 
+		  ^ psfmt32[idxof((i + size - 1) % size)]);
+	psfmt32[idxof((i + mid) % size)] += r;
 	r += i;
-	psfmt32[(i + mid + lag) % size] += r;
-	psfmt32[i] = r;
+	psfmt32[idxof((i + mid + lag) % size)] += r;
+	psfmt32[idxof(i)] = r;
 	i = (i + 1) % size;
     }
     for (j = 0; j < size; j++) {
-	r = func2(psfmt32[i] + psfmt32[(i + mid) % size] 
-		  + psfmt32[(i + size - 1) % size]);
-	psfmt32[(i + mid) % size] ^= r;
+	r = func2(psfmt32[idxof(i)] + psfmt32[idxof((i + mid) % size)] 
+		  + psfmt32[idxof((i + size - 1) % size)]);
+	psfmt32[idxof((i + mid) % size)] ^= r;
 	r -= i;
-	psfmt32[(i + mid + lag) % size] ^= r;
-	psfmt32[i] = r;
+	psfmt32[idxof((i + mid + lag) % size)] ^= r;
+	psfmt32[idxof(i)] = r;
 	i = (i + 1) % size;
     }
-
     initial_mask();
     period_certification();
     idx = N64;

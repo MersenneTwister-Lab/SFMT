@@ -11,17 +11,17 @@
 # see LICENSE.txt
 #
 # @note
-# We could comple dSFMT-sse2.c using gcc 3.4.4 of cygwin.
-# We could comple dSFMT-sse2.c using gcc 4.0.1 of Linux.
-# We coundn't comple dSFMT-sse2.c using gcc 3.3.2 of Linux.
-# We could comple dSFMT-alti32.c and dSFMT-alti64.c 
-# using gcc 3.3 of osx.
-# We could comple dSFMT-alti32.c and dSFMT-alti64.c 
-# using gcc 4.0 of osx.
+# We could comple test-sse2-Mxxx using gcc 3.4.4 of cygwin.
+# We could comple test-sse2-Mxxx using gcc 4.0.1 of Linux.
+# We coundn't comple test-sse2-Mxxx using gcc 3.3.2 of Linux.
+# We could comple test-alti-Mxxx using gcc 3.3 of osx.
+# We could comple test-alti-Mxxx using gcc 4.0 of osx.
 
-#WARN = -Wmissing-prototypes -Wall -Winline
-WARN = -Wmissing-prototypes -Wall -W
-OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG -fno-strict-aliasing
+WARN = -Wmissing-prototypes -Wall -Winline 
+#WARN = -Wmissing-prototypes -Wall -W
+OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG \
+-fno-strict-aliasing --param max-inline-insns-single=1800 
+#--param inline-unit-growth=500 --param large-function-growth=900 #for gcc 4
 #STD =
 #STD = -std=c89 -pedantic
 #STD = -std=c99 -pedantic
@@ -39,34 +39,30 @@ SSE2_TARGET = $(STD_TARGET) test-sse2-M19937
 ALL_SSE2_TARGET = test-sse2-M607 test-sse2-M2281 test-sse2-M4423 \
 test-sse2-M11213 test-sse2-M19937 test-sse2-M44497 test-sse2-M86243 \
 test-sse2-M132049
-# ======================================
-# comment out or EDIT following settings
-# ======================================
+# ==========================================================
+# comment out or EDIT following lines to get max performance
+# ==========================================================
 # --------------------
-# for UNIX like system
+# for gcc 4
 # --------------------
-#TARGET = $(STD_TARGET)
+#CCFLAGS = $(CCFLAGS) --param inline-unit-growth=500 \
+#--param large-function-growth=900
+# --------------------
+# for icl
+# --------------------
+#CC = icl /Wcheck /O3 /QxB /Qprefetch
 # -----------------
 # for PowerPC
 # -----------------
-#CCFLAGS = $(CCFLAGS) -faltivec -maltivec -arch ppc
-#TARGET = $(ALTI_TARGET)
+#CCFLAGS = $(CCFLAGS) -arch ppc
 # -----------------
 # for Pentium M
 # -----------------
-#CCFLAGS = $(CCFLAGS) -march=prescott -msse2
-#CC = icl /Wcheck /O3 /QxB /Qprefetch
-#TARGET = $(SSE_TARGET)
+#CCFLAGS = $(CCFLAGS) -march=prescott
 # -----------------
-# for Athlon
+# for Athlon 64
 # -----------------
-#CCFLAGS = $(CCFLAGS) -march=nocona -msse2
-#TARGET = $(SSE_TARGET)
-# -----------------
-# for other sse2 CPU
-# -----------------
-#CCFLAGS = $(CCFLAGS) -msse2
-#TARGET = $(SSE_TARGET)
+#CCFLAGS = $(CCFLAGS) -march=athlon64
 
 .PHONY: std-check sse2-check alti-check
 
@@ -91,7 +87,7 @@ test-std-M607: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=607 -o $@ test.c
 
 test-alti-M607: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=607 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=607 -DALTIVEC -o $@ test.c
 
 test-sse2-M607: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=607 -DSSE2 -o $@ test.c
@@ -100,7 +96,7 @@ test-std-M2281: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=2281 -o $@ test.c
 
 test-alti-M2281: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=2281 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=2281 -DALTIVEC -o $@ test.c
 
 test-sse2-M2281: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=2281 -DSSE2 -o $@ test.c
@@ -109,7 +105,7 @@ test-std-M4423: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=4423 -o $@ test.c
 
 test-alti-M4423: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=4423 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=4423 -DALTIVEC -o $@ test.c
 
 test-sse2-M4423: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=4423 -DSSE2 -o $@ test.c
@@ -118,7 +114,7 @@ test-std-M11213: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=11213 -o $@ test.c
 
 test-alti-M11213: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=11213 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=11213 -DALTIVEC -o $@ test.c
 
 test-sse2-M11213: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=11213 -DSSE2 -o $@ test.c
@@ -127,7 +123,7 @@ test-std-M19937: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=19937 -o $@ test.c
 
 test-alti-M19937: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=19937 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=19937 -DALTIVEC -o $@ test.c
 
 test-sse2-M19937: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=19937 -DSSE2 -o $@ test.c
@@ -136,7 +132,7 @@ test-std-M44497: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=44497 -o $@ test.c
 
 test-alti-M44497: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=44497 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=44497 -DALTIVEC -o $@ test.c
 
 test-sse2-M44497: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=44497 -DSSE2 -o $@ test.c
@@ -145,7 +141,7 @@ test-std-M86243: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=86243 -o $@ test.c
 
 test-alti-M86243: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=86243 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=86243 -DALTIVEC -o $@ test.c
 
 test-sse2-M86243: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=86243 -DSSE2 -o $@ test.c
@@ -154,7 +150,8 @@ test-std-M132049: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=132049 -o $@ test.c
 
 test-alti-M132049: test.c dSFMT.c dSFMT.h
-	${CC} ${CCFLAGS} -faltivec -DMEXP=132049 -DALTIVEC -o $@ test.c
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=132049 -DALTIVEC -o $@ \
+	test.c
 
 test-sse2-M132049: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=132049 -DSSE2 -o $@ test.c

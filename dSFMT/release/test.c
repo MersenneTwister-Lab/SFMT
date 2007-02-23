@@ -43,7 +43,7 @@ void test_seq_12(void);
 #endif
 
 void check_co(void) {
-    uint32_t i;
+    int i;
     union W64_T {
 	uint64_t u;
 	double d;
@@ -74,7 +74,7 @@ void check_co(void) {
 }
 
 void check_oc(void) {
-    uint32_t i;
+    int i;
     union W64_T {
 	uint64_t u;
 	double d;
@@ -105,7 +105,7 @@ void check_oc(void) {
 }
 
 void check_oo(void) {
-    uint32_t i;
+    int i;
     union W64_T {
 	uint64_t u;
 	double d;
@@ -136,7 +136,7 @@ void check_oo(void) {
 }
 
 void check_12(void) {
-    uint32_t i;
+    int i;
     union W64_T {
 	uint64_t u;
 	double d;
