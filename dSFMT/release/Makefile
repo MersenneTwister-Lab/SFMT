@@ -17,7 +17,7 @@
 # We could comple test-alti-Mxxx using gcc 3.3 of osx.
 # We could comple test-alti-Mxxx using gcc 4.0 of osx.
 
-WARN = -Wmissing-prototypes -Wall -Winline 
+WARN = -Wmissing-prototypes -Wall #-Winline 
 #WARN = -Wmissing-prototypes -Wall -W
 OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG \
 -fno-strict-aliasing --param max-inline-insns-single=1800 
@@ -45,7 +45,7 @@ test-sse2-M132049
 # --------------------
 # for gcc 4
 # --------------------
-#CCFLAGS = $(CCFLAGS) --param inline-unit-growth=500 \
+#CCFLAGS += --param inline-unit-growth=500 \
 #--param large-function-growth=900
 # --------------------
 # for icl
@@ -54,15 +54,15 @@ test-sse2-M132049
 # -----------------
 # for PowerPC
 # -----------------
-#CCFLAGS = $(CCFLAGS) -arch ppc
+#CCFLAGS += -arch ppc
 # -----------------
 # for Pentium M
 # -----------------
-#CCFLAGS = $(CCFLAGS) -march=prescott
+#CCFLAGS += -march=prescott
 # -----------------
 # for Athlon 64
 # -----------------
-#CCFLAGS = $(CCFLAGS) -march=athlon64
+#CCFLAGS += -march=athlon64
 
 .PHONY: std-check sse2-check alti-check
 

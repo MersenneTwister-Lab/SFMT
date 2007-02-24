@@ -71,7 +71,7 @@ static void period_certification(void);
   #include "dSFMT-sse2.c"
 #endif
 
-#if defined(BIG_ENDIAN) || defined(__ppc__)
+#if defined(__ppc__)
 /**
  * This function simulate a 64-bit index of LITTLE ENDIAN 
  * in BIG ENDIAN machine.

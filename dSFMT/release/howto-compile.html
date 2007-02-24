@@ -80,8 +80,11 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
 ./test-std-M19937 -s</pre>
     </blockquote>
     <p>
-      gcc needs more options to get full speed of dSFMT because dSFMT
-      uses inline functions heavily. See Makefile for details.
+      If you are using gcc 4.0, you will get more performance of dSFMT
+      by giving additional options
+      <strong>--param max-inline-insns-single=1800</strong>, 
+      <strong>--param inline-unit-growth=500</strong> and 
+      <strong>--param large-function-growth=900</strong>.
     </p>
 
     <h4>1-2. Compile SSE2 test program.</h4>
@@ -113,7 +116,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DALTIVEC=1 -o test-alti-M19937 test.c</pre>
+      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DALTIVEC=1 -DMEXP=19937 -o test-alti-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>

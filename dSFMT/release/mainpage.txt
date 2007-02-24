@@ -31,7 +31,8 @@
  *   fill_array functions.   
  * - inline double genrand_close1_open2() generates and returns a
  *   double precision pseudorandom number which distributes uniformly
- *   in the range [1, 2).
+ *   in the range [1, 2).  This is the primitive and faster than
+ *   generating numbers in other ranges.
  * - inline double genrand_close_open() generates and returns a double
  *   precision pseudorandom number which distributes uniformly in the
  *   range [0, 1).
@@ -59,7 +60,7 @@
  *
  * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
  *
- * @date 2007-02-23
+ * @date 2007-02-24
  *
  * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
