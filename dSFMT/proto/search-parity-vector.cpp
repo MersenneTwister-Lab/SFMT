@@ -85,8 +85,8 @@ int main(int argc, char *argv[]) {
 }
 
 void set_bit(in_status *st, GF2X& f, int *bit_pos) {
-  uint32_t i, j, k;
-  uint32_t mask;
+  int i, j, k;
+  uint64_t mask;
 
   for (;*bit_pos <= maxdegree;) {
     k = *bit_pos % 52;

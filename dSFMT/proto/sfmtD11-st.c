@@ -32,18 +32,26 @@ unsigned int get_rnd_mexp(void)
     return MEXP;
 }
 
-void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
-		 unsigned int p4, unsigned int p5, unsigned int p6,
-		 unsigned int p7, unsigned int p8, unsigned int p9,
-		 unsigned int p10, unsigned int p11, unsigned int p12,
-		 unsigned int p13) {
-    POS1 = p1 % (N-2) + 1;
-    SL1 = (p2 & 0xffff) % (52 - 1) + 1;
-    SL2 = (p13 % 4) * 2 + 1; 
-    SR1 = (p2 >> 16) % (8 - 1) + 1;
-    SR2 = ((p3 & 0xffff) % (6 - 1) + 1) * 8;
-    MSK1= ((uint64_t)(p4 | p5 | p6) << 32) | (p8 | p9 | p10);
-    MSK2= ((uint64_t)(p6 | p7 | p8) << 32) | (p10 | p11 | p12);
+void setup_param(uint32_t array[], int *index) {
+    POS1 = array[(*index)++] % (N-2) + 1;
+    SL1 = array[(*index)++] % (52 - 1) + 1;
+    SL2 = (array[(*index)++] % 4) * 2 + 1; 
+    SR1 = array[(*index)++] % (8 - 1) + 1;
+    SR2 = (array[(*index)++] % (6 - 1) + 1) * 8;
+    MSK1 = array[(*index)++];
+    MSK1 |= array[(*index)++];
+    MSK1 |= array[(*index)++];
+    MSK1 <<= 32;
+    MSK1 |= array[(*index)++];
+    MSK1 |= array[(*index)++];
+    MSK1 |= array[(*index)++];
+    MSK2 = array[(*index)++];
+    MSK2 |= array[(*index)++];
+    MSK2 |= array[(*index)++];
+    MSK2 <<= 32;
+    MSK2 |= array[(*index)++];
+    MSK2 |= array[(*index)++];
+    MSK2 |= array[(*index)++];
 }
 
 void print_param(FILE *fp) {
@@ -79,7 +87,7 @@ static inline void do_recursion(uint64_t a[2], uint64_t b[2],
     lshift128(x, a, SL2);
     r0 = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ (c[0] << SL1) ^ (c[0] >> SR2)
 	^ lung[1];
-    r1 = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] << SL1) ^ (c[0] >> SR2)
+    r1 = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ (c[1] << SL1) ^ (c[1] >> SR2)
 	^ lung[0];
     r0 = (r0 & LOW_MASK) | HIGH_CONST;
     r1 = (r1 & LOW_MASK) | HIGH_CONST;

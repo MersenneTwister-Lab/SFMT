@@ -1,3 +1,12 @@
+2007.02.26
+sfmtD11-st.c, sfmtD11-ref-st.c, sfmtD11-afst.c
+do_recursionでc[1]であるべきところがc[0]になっていた。
+がーん！
+
+2007.02.25
+search-parity-vector.cpp
+set_bit でmaskがuint32_tだった。uint64_tに変更。
+
 2007.02.09
 chk-shortest.cpp の fill_state_random でマスクをセットしていなかったので、
 上位ビットまで乱数がセットされていた。

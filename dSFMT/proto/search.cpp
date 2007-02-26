@@ -8,7 +8,7 @@
 
 extern "C" {
   #include "dsfmt-st.h"
-  #include "mt19937ar.h"
+  #include "mt19937blk.h"
 }
 
 #include <NTL/GF2X.h>
@@ -30,26 +30,21 @@ void search(unsigned int n) {
     vec_GF2 vec;
     unsigned int maxdegree;
     int mexp;
+    const int rndarray_cnt = 100000;
+    int rndarray_idx = 0;
+    static uint32_t rndarray[rndarray_cnt];
   
     maxdegree = get_rnd_maxdegree();
     mexp = get_rnd_mexp();
     vec.FixLength(2 * maxdegree);
-
+    mt_fill(rndarray, rndarray_cnt);
     for (;;) {
-	setup_param(genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32(),
-		    genrand_int32());
-	init_gen_rand(&dsfmt, genrand_int32()+3);
+	setup_param(rndarray, &rndarray_idx);
+	init_gen_rand(&dsfmt, rndarray[rndarray_idx++]);
+	if (rndarray_idx + 100 > rndarray_cnt) {
+	    mt_fill(rndarray, rndarray_cnt);
+	    rndarray_idx = 0;
+	}
 	bmOk = 1;
 	//    for (j = 0; j < 32; j++) {
 	for (j = 0; j < 1; j++) {
@@ -108,8 +103,6 @@ int main(int argc, char* argv[]){
     int n;
     unsigned long seed;
 
-    setup_param(1, 0, 21, 4, 3, 29, 2, 2, 2, 0, 0, 0, 0);
-
     if (argc != 2) {
 	//limit = 32;
 	n = 1;
@@ -122,7 +115,7 @@ int main(int argc, char* argv[]){
 	   get_rnd_mexp(), get_rnd_maxdegree(), N);
     seed = (long)time(NULL);
     printf("seed = %lu\n", seed);
-    init_genrand(seed);
+    mt_init(seed);
     //printf("search limit degree = %d\n", limit);
     printf("now search %d times\n", n);
     fflush(stdout);

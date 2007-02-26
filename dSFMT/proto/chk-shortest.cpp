@@ -13,6 +13,7 @@
 
 extern "C" {
 #include "dsfmt-st.h"
+#include "mt19937blk.h"
 }
 
 NTL_CLIENT;
@@ -80,7 +81,8 @@ void option(int argc, char * argv[]) {
     }
 }
 
-int fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
+#if 0
+int fill_state_base(dsfmt_t *sfmt) {
     static int bit_pos = 0;
     int i, j, k;
     uint64_t mask;
@@ -92,9 +94,61 @@ int fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
     mask = (uint64_t)1 << k;
     sfmt->status[i][j] = mask;
     bit_pos++;
-    if (bit_pos >= maxdegree) {
+    if (bit_pos > maxdegree) {
 	return 0;
     }
+    return 1;
+}
+#endif
+
+void fill_rnd(dsfmt_t *sfmt) {
+    const int a_max = 100000;
+    static int idx = a_max;
+    static uint32_t array[a_max];
+    int i, j;
+
+    if (idx + (N + 1) * 2 >= a_max) {
+	mt_fill(array, a_max);
+	idx = 0;
+    }
+    for (i = 0; i < N + 1; i++) {
+	for (j = 0; j < 2; j++) {
+	    sfmt->status[i][j] = array[idx++] & 0x000FFFFFFFFFFFFFULL;
+	}
+    }
+}
+
+int fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
+    static int count = 0;
+    int i, j;
+    int w1, w2, w3;
+    unsigned int pos;
+    uint64_t num;
+
+    if (count > 5000) {
+	//return fill_state_base(sfmt);
+	return 0;
+    }
+    fill_rnd(sfmt);
+    w1 = getw(frandom);
+    w2 = getw(frandom);
+    w3 = getw(frandom);
+    if (feof(frandom) || ferror(frandom)) {
+	if (errno != 0) {
+	    printf("test_shortest:%s\n", strerror(errno));
+	} else {
+	    printf("test_shortest:/dev/urandom reached to EOF!\n");
+	}
+	fclose(frandom);
+	exit(1);
+    }
+    num = ((uint64_t)w1 << 20) | (uint64_t)w2;
+    num &= 0x000FFFFFFFFFFFFFULL;
+    pos = (unsigned int)w3;
+    j = pos % 2;
+    i = pos % (N + 1);
+    sfmt->status[i][j] = num;
+    count++;
     return 1;
 }
 
@@ -222,6 +276,7 @@ void test_shortest(char *filename) {
 	fclose(fp);
 	exit(1);
     }
+    mt_init(1234);
     read_random_param(fp);
     init_gen_rand(&sfmt, 123);
     sfmt_save = sfmt;
@@ -280,7 +335,8 @@ void test_shortest(char *filename) {
 	    }
 	}
     }
-    if (deg(lcmpoly) > maxdegree) {
+    //if (deg(lcmpoly) > maxdegree) {
+    if (deg(lcmpoly) != maxdegree) {
 	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
 	exit(1);
     }

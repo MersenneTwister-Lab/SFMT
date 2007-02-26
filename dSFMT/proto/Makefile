@@ -17,7 +17,7 @@
 %132049:MEXP=132049
 %216091:MEXP=216091
 
-#DDEBUG = -O0 -g
+DDEBUG = -O0 -g
 
 DMEXP = -DMEXP=${MEXP}
 
@@ -86,8 +86,8 @@ param-searchD10-607: search.o sfmtD10-st.o mt19937ar.o util.o dsfmt-util.o
 	${CPP} -o $@ search.o sfmtD10-st.o mt19937ar.o util.o dsfmt-util.o \
 		${LINKOPT}
 
-param-searchD11-607: search.o sfmtD11-st.o mt19937ar.o util.o dsfmt-util.o 
-	${CPP} -o $@ search.o sfmtD11-st.o mt19937ar.o util.o dsfmt-util.o \
+param-searchD11-607: search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o 
+	${CPP} -o $@ search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o \
 		${LINKOPT}
 
 shortest-baseD01-607: chk-shortest.o shortbase128.o sfmtD01-st.o util.o \
@@ -136,9 +136,9 @@ shortest-baseD10-607: chk-shortest.o shortbase128.o sfmtD10-st.o util.o \
 			dsfmt-util.o ${LINKOPT}
 
 shortest-baseD11-607: chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
-			dsfmt-util.o
+			dsfmt-util.o mt19937blk.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
-			dsfmt-util.o ${LINKOPT}
+			dsfmt-util.o mt19937blk.o ${LINKOPT}
 
 searchX78-lung607: search-lung.o sfmtX78-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-lung.o sfmtX78-st.o mt19937ar.o util.o ${LINKOPT}
@@ -177,6 +177,9 @@ searchD11-parity132049: search-parity-vector.o sfmtD11-st.o mt19937ar.o util.o
 
 check-affin-bm607: chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o
 	${CPP} -o $@ chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o ${LINKOPT}
+
+testD11-parity607:test-parity.o dSFMT-ref-st.o util.o
+	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<
