@@ -4,8 +4,6 @@
 # @author Mutsuo Saito (Hiroshima University)
 # @author Makoto Matsumoto (Hiroshima University)
 #
-# @date 2007-01-11
-#
 # Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
 # University. All rights reserved.
 #
@@ -13,286 +11,153 @@
 # see LICENSE.txt
 #
 # @note
-# We could comple sfmt19937-sse2.c using gcc 3.4.4 of cygwin.
-# We could comple sfmt19937-sse2.c using gcc 4.0.1 of Linux.
-# We coundn't comple sfmt19937-sse2.c using gcc 3.3.2 of Linux.
-# We could comple sfmt19937-alti32.c and sfmt19937-alti64.c 
-# using gcc 3.3 of osx.
-# We could comple sfmt19937-alti32.c and sfmt19937-alti64.c 
-# using gcc 4.0 of osx.
+# We could comple test-sse2-Mxxx using gcc 3.4.4 of cygwin.
+# We could comple test-sse2-Mxxx using gcc 4.0.1 of Linux.
+# We coundn't comple test-sse2-Mxxx using gcc 3.3.2 of Linux.
+# We could comple test-alti-Mxxx using gcc 3.3 of osx.
+# We could comple test-alti-Mxxx using gcc 4.0 of osx.
 
-SYSTEM = std_unix
-#WARN = -Wmissing-prototypes -Wall -Winline
-WARN = -Wmissing-prototypes -Wall
-OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG -fno-strict-aliasing
+WARN = -Wmissing-prototypes -Wall #-Winline 
+#WARN = -Wmissing-prototypes -Wall -W
+OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG \
+-fno-strict-aliasing --param max-inline-insns-single=1800 
+#--param inline-unit-growth=500 --param large-function-growth=900 #for gcc 4
 #STD =
 #STD = -std=c89 -pedantic
 #STD = -std=c99 -pedantic
 STD = -std=c99
-GCC = gcc $(OPTI) $(WARN) $(STD)
-STD_TARGET = test-std32-M19937 test-std64-M19937
-STD_CHECK_TARGET = check-std
-BIG_TARGET = $(STD_TARGET) test-big64-M19937
-BIG_CHECK_TARGET = $(STD_CHECK_TARGET) check-big
-ALTI_TARGET = $(BIG_TARGET) test-alti32-M19937 test-alti64-M19937
-ALTI_CHECK_TARGET = $(BIG_CHECK_TARGET) check-alti
-SSE_TARGET = $(STD_TARGET) test-sse32-M19937 test-sse64-M19937
-SSE_CHECK_TARGET = $(STD_CHECK_TARGET) check-sse
-# ======================================
-# comment out or EDIT following settings
-# ======================================
+CC = gcc
+CCFLAGS = $(OPTI) $(WARN) $(STD)
+STD_TARGET = test-std-M19937
+ALL_STD_TARGET = test-std-M607 test-std-M2281 test-std-M4423 test-std-M11213 \
+test-std-M19937 test-std-M44497 test-std-M86243 test-std-M132049
+ALTI_TARGET = $(STD_TARGET) test-alti-M19937
+ALL_ALTI_TARGET = test-alti-M607 test-alti-M2281 test-alti-M4423 \
+test-alti-M11213 test-alti-M19937 test-alti-M44497 test-alti-M86243 \
+test-alti-M132049
+SSE2_TARGET = $(STD_TARGET) test-sse2-M19937
+ALL_SSE2_TARGET = test-sse2-M607 test-sse2-M2281 test-sse2-M4423 \
+test-sse2-M11213 test-sse2-M19937 test-sse2-M44497 test-sse2-M86243 \
+test-sse2-M132049
+# ==========================================================
+# comment out or EDIT following lines to get max performance
+# ==========================================================
 # --------------------
-# for UNIX like system
+# for gcc 4
 # --------------------
-ifeq ($(SYSTEM), std_unix)
-CC = $(GCC)
-TARGET = $(STD_TARGET)
-CHECK_TARGET = $(STD_CHECK_TARGET)
-endif
+#CCFLAGS += --param inline-unit-growth=500 \
+#--param large-function-growth=900
+# --------------------
+# for icl
+# --------------------
+#CC = icl /Wcheck /O3 /QxB /Qprefetch
 # -----------------
 # for PowerPC
 # -----------------
-ifeq ($(SYSTEM), ppc_osx)
-CC = $(GCC) -faltivec -maltivec -arch ppc
-TARGET = $(ALTI_TARGET)
-CHECK_TARGET = $(ALTI_CHECK_TARGET)
-endif
-# -----------------
-# for other sse2 CPU
-# -----------------
-ifeq ($(SYSTEM), sse2_unix)
-CC = $(GCC) -msse2
-TARGET = $(SSE_TARGET)
-CHECK_TARGET = $(SSE_CHECK_TARGET)
-endif
+#CCFLAGS += -arch ppc
 # -----------------
 # for Pentium M
 # -----------------
-#CC = $(GCC) -march=prescott -msse2
-#CC = icl /Wcheck /O3 /QxB /Qprefetch
-#TARGET = $(SSE_TARGET)
-#CHECK_TARGET = $(SSE_CHECK_TARGET)
+#CCFLAGS += -march=prescott
 # -----------------
-# for Athlon
+# for Athlon 64
 # -----------------
-#CC = $(GCC) -march=nocona -msse2
-#TARGET = $(SSE_TARGET)
-#CHECK_TARGET = $(SSE_CHECK_TARGET)
+#CCFLAGS += -march=athlon64
 
-all:$(TARGET)
+.PHONY: std-check sse2-check alti-check
 
-.PHONY: check
-check:${CHECK_TARGET}
+std: ${STD_TARGET}
 
-test-ref32-M607: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=607 -DMAIN -o $@ SFMTp-ref.c
+sse2:
+	${MAKE} CCFLAGS="${CCFLAGS} -msse2" ${SSE2_TARGET}
 
-test-std32-M607: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=607 -o $@ test32.c
+alti:
+	${MAKE} CCFLAGS="${CCFLAGS} -faltivec" ${ALTI_TARGET}
 
-test-alti32-M607: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=607 -DALTIVEC -o $@ test32.c
+std-check: ${ALL_STD_TARGET}
+	./check.sh test-std
 
-test-std64-M607: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=607 -o $@ test64.c
+sse2-check: ${ALL_SSE2_TARGET}
+	./check.sh test-sse2
 
-test-big64-M607: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=607 -DBIG -o $@ test64.c
+alti-check: ${ALL_ALTI_TARGET}
+	./check.sh test-alti
 
-test-alti64-M607: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=607 -DALTIVEC -o $@ test64.c
+test-std-M607: test32.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=607 -o $@ test32.c
 
-test-sse32-M607: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=607 -DSSE2 -o $@ test32.c
+test-alti-M607: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=607 -DALTIVEC -o $@ test.c
 
-test-sse64-M607: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=607 -DSSE2 -o $@ test64.c
+test-sse2-M607: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=607 -DSSE2 -o $@ test.c
 
-test-ref32-M2281: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=2281 -DMAIN -o $@ SFMTp-ref.c
+test-std-M2281: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=2281 -o $@ test.c
 
-test-std32-M2281: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=2281 -o $@ test32.c
+test-alti-M2281: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=2281 -DALTIVEC -o $@ test.c
 
-test-alti32-M2281: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=2281 -DALTIVEC -o $@ test32.c
+test-sse2-M2281: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=2281 -DSSE2 -o $@ test.c
 
-test-std64-M2281: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=2281 -o $@ test64.c
+test-std-M4423: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=4423 -o $@ test.c
 
-test-big64-M2281: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=2281 -DBIG -o $@ test64.c
+test-alti-M4423: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=4423 -DALTIVEC -o $@ test.c
 
-test-alti64-M2281: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=2281 -DALTIVEC -o $@ test64.c
+test-sse2-M4423: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=4423 -DSSE2 -o $@ test.c
 
-test-sse32-M2281: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=2281 -DSSE2 -o $@ test32.c
+test-std-M11213: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=11213 -o $@ test.c
 
-test-sse64-M2281: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=2281 -DSSE2 -o $@ test64.c
+test-alti-M11213: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=11213 -DALTIVEC -o $@ test.c
 
-test-ref32-M4253: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=4253 -DMAIN -o $@ SFMTp-ref.c
+test-sse2-M11213: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=11213 -DSSE2 -o $@ test.c
 
-test-std32-M4253: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=4253 -o $@ test32.c
+test-std-M19937: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=19937 -o $@ test.c
 
-test-alti32-M4253: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=4253 -DALTIVEC -o $@ test32.c
+test-alti-M19937: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=19937 -DALTIVEC -o $@ test.c
 
-test-std64-M4253: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=4253 -o $@ test64.c
+test-sse2-M19937: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=19937 -DSSE2 -o $@ test.c
 
-test-big64-M4253: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=4253 -DBIG -o $@ test64.c
+test-std-M44497: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=44497 -o $@ test.c
 
-test-alti64-M4253: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=4253 -DALTIVEC -o $@ test64.c
+test-alti-M44497: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=44497 -DALTIVEC -o $@ test.c
 
-test-sse32-M4253: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=4253 -DSSE2 -o $@ test32.c
+test-sse2-M44497: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=44497 -DSSE2 -o $@ test.c
 
-test-sse64-M4253: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=4253 -DSSE2 -o $@ test64.c
+test-std-M86243: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=86243 -o $@ test.c
 
-test-ref32-M11213: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=11213 -DMAIN -o $@ SFMTp-ref.c
+test-alti-M86243: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=86243 -DALTIVEC -o $@ test.c
 
-test-std32-M11213: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=11213 -o $@ test32.c
+test-sse2-M86243: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=86243 -DSSE2 -o $@ test.c
 
-test-alti32-M11213: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=11213 -DALTIVEC -o $@ test32.c
+test-std-M132049: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -DMEXP=132049 -o $@ test.c
 
-test-std64-M11213: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=11213 -o $@ test64.c
+test-alti-M132049: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=132049 -DALTIVEC -o $@ \
+	test.c
 
-test-big64-M11213: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=11213 -DBIG -o $@ test64.c
-
-test-alti64-M11213: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=11213 -DALTIVEC -o $@ test64.c
-
-test-sse32-M11213: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=11213 -DSSE2 -o $@ test32.c
-
-test-sse64-M11213: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=11213 -DSSE2 -o $@ test64.c
-
-test-ref32-M19937: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=19937 -DMAIN -o $@ SFMTp-ref.c
-
-test-std32-M19937: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=19937 -o $@ test32.c
-
-test-alti32-M19937: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=19937 -DALTIVEC -o $@ test32.c
-
-test-std64-M19937: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=19937 -o $@ test64.c
-
-test-big64-M19937: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=19937 -DBIG -o $@ test64.c
-
-test-alti64-M19937: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=19937 -DALTIVEC -o $@ test64.c
-
-test-sse32-M19937: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=19937 -DSSE2 -o $@ test32.c
-
-test-sse64-M19937: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=19937 -DSSE2 -o $@ test64.c
-
-test-ref32-M44497: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=44497 -DMAIN -o $@ SFMTp-ref.c
-
-test-std32-M44497: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=44497 -o $@ test32.c
-
-test-alti32-M44497: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=44497 -DALTIVEC -o $@ test32.c
-
-test-std64-M44497: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=44497 -o $@ test64.c
-
-test-big64-M44497: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=44497 -DBIG -o $@ test64.c
-
-test-alti64-M44497: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=44497 -DALTIVEC -o $@ test64.c
-
-test-sse32-M44497: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=44497 -DSSE2 -o $@ test32.c
-
-test-sse64-M44497: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=44497 -DSSE2 -o $@ test64.c
-
-test-ref32-M86243: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=86243 -DMAIN -o $@ SFMTp-ref.c
-
-test-std32-M86243: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=86243 -o $@ test32.c
-
-test-alti32-M86243: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=86243 -DALTIVEC -o $@ test32.c
-
-test-std64-M86243: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=86243 -o $@ test64.c
-
-test-big64-M86243: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=86243 -DBIG -o $@ test64.c
-
-test-alti64-M86243: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=86243 -DALTIVEC -o $@ test64.c
-
-test-sse32-M86243: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=86243 -DSSE2 -o $@ test32.c
-
-test-sse64-M86243: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=86243 -DSSE2 -o $@ test64.c
-
-test-ref32-M132049: SFMTp-ref.c SFMTp.h
-	${CC} -DMEXP=132049 -DMAIN -o $@ SFMTp-ref.c
-
-test-std32-M132049: test32.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=132049 -o $@ test32.c
-
-test-alti32-M132049: test32.c SFMTp-alti32.c SFMTp.h
-	${CC} -DMEXP=132049 -DALTIVEC -o $@ test32.c
-
-test-std64-M132049: test64.c SFMTp.c SFMTp.h
-	${CC} -DMEXP=132049 -o $@ test64.c
-
-test-big64-M132049: test64.c SFMTp-big64.c sFMTp.h
-	${CC} -DMEXP=132049 -DBIG -o $@ test64.c
-
-test-alti64-M132049: test64.c SFMTp-alti64.c SFMTp.h
-	${CC} -DMEXP=132049 -DALTIVEC -o $@ test64.c
-
-test-sse32-M132049: test32.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=132049 -DSSE2 -o $@ test32.c
-
-test-sse64-M132049: test64.c SFMTp-sse2.c SFMTp.h
-	${CC} -DMEXP=132049 -DSSE2 -o $@ test64.c
-
-check-std:
-	./check.sh 32 test-std
-	./check.sh 64 test-std
-
-check-alti:
-	./check.sh 32 test-alti
-	./check.sh 64 test-alti
-
-check-big:
-	./check.sh 64 test-big
-
-check-sse:
-	./check.sh 32 test-sse
-	./check.sh 64 test-sse
+test-sse2-M132049: test.c SFMT.c SFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=132049 -DSSE2 -o $@ test.c
 
 .c.o:
-	${CC} -c $<
+	${CC} ${CCFLAGS} -c $<
 
 clean:
 	rm -f *.o *~

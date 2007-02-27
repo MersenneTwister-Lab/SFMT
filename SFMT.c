@@ -27,10 +27,11 @@
 struct W128_T {
     uint32_t u[4];
 };
-#endif
 
 /** 128-bit data type */
-typedef union W128_T w128_t;
+typedef struct W128_T w128_t;
+
+#endif
 
 /*--------------------------------------
   FILE GLOBAL VARIABLES
@@ -192,7 +193,7 @@ inline static void gen_rand_array(w128_t array[], int size) {
     for (j = 0; j < 2 * N - size; j++) {
 	sfmt[j] = array[j + size - N];
     }
-    for (; i < size - N; i++) {
+    for (; i < size; i++, j++) {
 	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N], r1, r2);
 	r1 = r2;
 	r2 = &array[i];
@@ -261,8 +262,7 @@ static void period_certification(void) {
  * The string shows the word size, the mersenne expornent,
  * and all parameters of this generator.
  */
-char *get_idstring(void)
-{
+char *get_idstring(void) {
     return IDSTR;
 }
 
@@ -271,8 +271,7 @@ char *get_idstring(void)
  * init_gen_rand or init_by_array must be called before this function.
  * @return 32-bit pseudorandom number
  */
-inline uint32_t gen_rand32(void)
-{
+inline uint32_t gen_rand32(void) {
     uint32_t r;
 
     assert(initialized);
@@ -291,9 +290,10 @@ inline uint32_t gen_rand32(void)
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
-inline uint64_t gen_rand64(void)
-{
+inline uint64_t gen_rand64(void) {
+#ifdef BIG_ENDIAN64
     uint32_t r1, r2;
+#endif
     uint64_t r;
 
     assert(initialized);
@@ -304,14 +304,14 @@ inline uint64_t gen_rand64(void)
 	idx = 0;
     }
 #ifdef BIG_ENDIAN64
-	r1 = psfmt32[idx];
-	r2 = psfmt32[idx + 1];
-	idx += 2;
-	return ((uint64_t)r2 << 32) | r1;
+    r1 = psfmt32[idx];
+    r2 = psfmt32[idx + 1];
+    idx += 2;
+    return ((uint64_t)r2 << 32) | r1;
 #else
-	r = psfmt64[idx / 2];
-	idx += 2;
-	return r;
+    r = psfmt64[idx / 2];
+    idx += 2;
+    return r;
 #endif
 }
 
@@ -340,8 +340,7 @@ inline uint64_t gen_rand64(void)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-inline void fill_array32(uint32_t array[], int size)
-{
+inline void fill_array32(uint32_t array[], int size) {
     assert(initialized);
     assert(array % 16 == 0);
     assert(idx == N32);
@@ -377,8 +376,7 @@ inline void fill_array32(uint32_t array[], int size)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-inline void fill_array64(uint64_t array[], int size)
-{
+inline void fill_array64(uint64_t array[], int size) {
 #ifdef BIG_ENDIAN64
     int i;
     uint32_t x;
@@ -410,8 +408,7 @@ inline void fill_array64(uint64_t array[], int size)
  *
  * @param seed a 32-bit integer used as the seed.
  */
-void init_gen_rand(uint32_t seed)
-{
+void init_gen_rand(uint32_t seed) {
     int i;
 
     psfmt32[0] = seed;
@@ -419,8 +416,8 @@ void init_gen_rand(uint32_t seed)
 	psfmt32[i] = 1812433253UL * (psfmt32[i - 1] ^ (psfmt32[i - 1] >> 30))
 	    + i;
     }
-    psfmt32[3] = INIT_LUNG;
     idx = N32;
+    period_certification();
     initialized = 1;
 }
 
