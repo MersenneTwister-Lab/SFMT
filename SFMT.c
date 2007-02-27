@@ -15,16 +15,33 @@
 #include "SFMT.h"
 #include "SFMT-params.h"
 
+#if defined(ALTIVEC)
+  #include "SFMT-alti.h"
+#elif defined(SSE2)
+  #include "SFMT-sse2.h"
+#else
+/*------------------------------------------
+  128-bit SIMD like data type for standard C
+  ------------------------------------------*/
+/** 128-bit data structure */
+struct W128_T {
+    uint32_t u[4];
+};
+#endif
+
+/** 128-bit data type */
+typedef union W128_T w128_t;
+
 /*--------------------------------------
   FILE GLOBAL VARIABLES
   internal state, index counter and flag 
   --------------------------------------*/
 /** the 128-bit internal state array */
-static uint32_t sfmt[N][4];
+static w128_t sfmt[N];
 /** the 32bit interger pointer to the 128-bit internal state array */
-static uint32_t *psfmt32 = &sfmt[0][0];
+static uint32_t *psfmt32 = &sfmt[0].u[0];
 /** the 64bit interger pointer to the 128-bit internal state array */
-static uint64_t *psfmt64 = (uint64_t *)&sfmt[0][0];
+static uint64_t *psfmt64 = (uint64_t *)&sfmt[0].u[0];
 /** index counter to the 32-bit internal state array */
 static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
@@ -32,79 +49,68 @@ static int idx;
 static int initialized = 0;
 /** a parity check vector which certificate the period of 2^{MEXP} */
 static uint32_t parity[4] = {PARITY1, PARITY2, PARITY3, PARITY4};
-/** a flag: it is 1 if CPU is BIG ENDIAN. */
-static int big_endian;
-
-/*------------------------------------------
-  128-bit SIMD like data type for standard C
-  ------------------------------------------*/
-/** 128-bit data structure */
-struct W128_T {
-    uint32_t a[4];
-};
-/** 128-bit data type */
-typedef struct W128_T w128_t;
 
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift);
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(w128_t array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
-static void endian_check(void);
+inline static void rshift128(w128_t *out,  w128_t const *in, int shift);
+inline static void lshift128(w128_t *out,  w128_t const *in, int shift);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(w128_t array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
 static void period_certification(void);
+
+#if defined(ALTIVEC)
+  #include "SFMT-alti.c"
+#elif defined(SSE2)
+  #include "SFMT-sse2.c"
+#endif
 
 /**
  * This function simulates SIMD 128-bit right shift by the standard C.
- * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
+ * The 128-bit integer given in in is shifted by (shift * 8) bits.
  * This function simulates the LITTLE ENDIAN SIMD.
  * @param out the output of this function
  * @param in the 128-bit data to be shifted
  * @param shift the shift value
  */
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
+inline static void rshift128(w128_t *out, w128_t const *in, int shift) {
     uint64_t th, tl, oh, ol;
 
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
+    th = ((uint64_t)in->u[3] << 32) | ((uint64_t)in->u[2]);
+    tl = ((uint64_t)in->u[1] << 32) | ((uint64_t)in->u[0]);
 
     oh = th >> (shift * 8);
     ol = tl >> (shift * 8);
     ol |= th << (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
+    out->u[1] = (uint32_t)(ol >> 32);
+    out->u[0] = (uint32_t)ol;
+    out->u[3] = (uint32_t)(oh >> 32);
+    out->u[2] = (uint32_t)oh;
 }
 
 /**
  * This function simulates SIMD 128-bit left shift by the standard C.
- * The 128-bit integer given in in[4] is shifted by (shift * 8) bits.
+ * The 128-bit integer given in in is shifted by (shift * 8) bits.
  * This function simulates the LITTLE ENDIAN SIMD.
  * @param out the output of this function
  * @param in the 128-bit data to be shifted
  * @param shift the shift value
  */
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
+inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
     uint64_t th, tl, oh, ol;
 
-    th = ((uint64_t)in[3] << 32) | ((uint64_t)in[2]);
-    tl = ((uint64_t)in[1] << 32) | ((uint64_t)in[0]);
+    th = ((uint64_t)in->u[3] << 32) | ((uint64_t)in->u[2]);
+    tl = ((uint64_t)in->u[1] << 32) | ((uint64_t)in->u[0]);
 
     oh = th << (shift * 8);
     ol = tl << (shift * 8);
     oh |= tl >> (64 - shift * 8);
-    out[1] = (uint32_t)(ol >> 32);
-    out[0] = (uint32_t)ol;
-    out[3] = (uint32_t)(oh >> 32);
-    out[2] = (uint32_t)oh;
+    out->u[1] = (uint32_t)(ol >> 32);
+    out->u[0] = (uint32_t)ol;
+    out->u[3] = (uint32_t)(oh >> 32);
+    out->u[2] = (uint32_t)oh;
 }
 
 /**
@@ -115,38 +121,43 @@ INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
  * @param c a 128-bit part of the interal state array
  * @param d a 128-bit part of the interal state array
  */
-#define do_recursion(r, a, b, c, d) \
-    do { \
-    uint32_t x[4];\
-    uint32_t y[4];\
-\
-    lshift128(x, a, SL2);\
-    rshift128(y, c, SR2);\
-    r[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ y[0] ^ (d[0] << SL1);\
-    r[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ y[1] ^ (d[1] << SL1);\
-    r[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ y[2] ^ (d[2] << SL1);\
-    r[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ y[3] ^ (d[3] << SL1);\
-    } while(0)
+inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
+				w128_t *d) {
+    w128_t x;
+    w128_t y;
 
+    lshift128(&x, a, SL2);
+    rshift128(&y, c, SR2);
+    r->u[0] = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SR1) & MSK1) ^ y.u[0] 
+	^ (d->u[0] << SL1);
+    r->u[1] = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ y.u[1] 
+	^ (d->u[1] << SL1);
+    r->u[2] = a->u[2] ^ x.u[2] ^ ((b->u[2] >> SR1) & MSK3) ^ y.u[2] 
+	^ (d->u[2] << SL1);
+    r->u[3] = a->u[3] ^ x.u[3] ^ ((b->u[3] >> SR1) & MSK4) ^ y.u[3] 
+	^ (d->u[3] << SL1);
+}
+
+#if (!defined(ALTIVEC)) && (!defined(SSE2))
 /**
  * This function fills the internal state array with psedorandom
  * integers.
  */
-INLINE static void gen_rand_all(void) {
+inline static void gen_rand_all(void) {
     int i;
-    uint32_t *r1, *r2;
+    w128_t *r1, *r2;
 
-    r1 = sfmt[N - 2];
-    r2 = sfmt[N - 1];
+    r1 = &sfmt[N - 2];
+    r2 = &sfmt[N - 1];
     for (i = 0; i < N - POS1; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1], r1, r2);
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1], r1, r2);
 	r1 = r2;
-	r2 = sfmt[i];
+	r2 = &sfmt[i];
     }
     for (; i < N; i++) {
-	do_recursion(sfmt[i], sfmt[i], sfmt[i + POS1 - N], r1, r2);
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1 - N], r1, r2);
 	r1 = r2;
-	r2 = sfmt[i];
+	r2 = &sfmt[i];
     }
 }
 
@@ -157,28 +168,38 @@ INLINE static void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-INLINE static void gen_rand_array(w128_t array[], int size) {
-    int i;
-    uint32_t *r1, *r2;
+inline static void gen_rand_array(w128_t array[], int size) {
+    int i, j;
+    w128_t *r1, *r2;
 
-    r1 = sfmt[N - 2];
-    r2 = sfmt[N - 1];
+    r1 = &sfmt[N - 2];
+    r2 = &sfmt[N - 1];
     for (i = 0; i < N - POS1; i++) {
-	do_recursion(array[i].a, sfmt[i], sfmt[i + POS1], r1, r2);
+	do_recursion(&array[i], &sfmt[i], &sfmt[i + POS1], r1, r2);
 	r1 = r2;
-	r2 = array[i].a;
+	r2 = &array[i];
     }
     for (; i < N; i++) {
-	do_recursion(array[i].a, sfmt[i], array[i + POS1 - N].a, r1, r2);
+	do_recursion(&array[i], &sfmt[i], &array[i + POS1 - N], r1, r2);
 	r1 = r2;
-	r2 = array[i].a;
+	r2 = &array[i];
     }
-    for (; i < size; i++) {
-	do_recursion(array[i].a, array[i - N].a, array[i + POS1 - N].a, r1, r2);
+    for (; i < size - N; i++) {
+	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N], r1, r2);
 	r1 = r2;
-	r2 = array[i].a;
+	r2 = &array[i];
+    }
+    for (j = 0; j < 2 * N - size; j++) {
+	sfmt[j] = array[j + size - N];
+    }
+    for (; i < size - N; i++) {
+	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N], r1, r2);
+	r1 = r2;
+	r2 = &array[i];
+	sfmt[j] = array[i];
     }
 }
+#endif
 
 /**
  * This function represents a function used in the initialization
@@ -198,21 +219,6 @@ static uint32_t func1(uint32_t x) {
  */
 static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
-}
-
-/**
- * This function checks ENDIAN of CPU and set big_endian flag.
- */
-static void endian_check(void) {
-    uint32_t a[2] = {0, 1};
-    uint64_t *pa;
-
-    pa = (uint64_t *)a;
-    if (*pa == 1) {
-	big_endian = 1;
-    } else {
-	big_endian = 0;
-    }
 }
 
 /**
@@ -265,7 +271,7 @@ char *get_idstring(void)
  * init_gen_rand or init_by_array must be called before this function.
  * @return 32-bit pseudorandom number
  */
-INLINE uint32_t gen_rand32(void)
+inline uint32_t gen_rand32(void)
 {
     uint32_t r;
 
@@ -285,7 +291,7 @@ INLINE uint32_t gen_rand32(void)
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
+inline uint64_t gen_rand64(void)
 {
     uint32_t r1, r2;
     uint64_t r;
@@ -297,16 +303,16 @@ INLINE uint64_t gen_rand64(void)
 	gen_rand_all();
 	idx = 0;
     }
-    if (big_endian) {
+#ifdef BIG_ENDIAN64
 	r1 = psfmt32[idx];
 	r2 = psfmt32[idx + 1];
 	idx += 2;
 	return ((uint64_t)r2 << 32) | r1;
-    } else {
+#else
 	r = psfmt64[idx / 2];
 	idx += 2;
 	return r;
-    }
+#endif
 }
 
 /**
@@ -334,16 +340,15 @@ INLINE uint64_t gen_rand64(void)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-INLINE void fill_array32(uint32_t array[], int size)
+inline void fill_array32(uint32_t array[], int size)
 {
     assert(initialized);
-    /* assert(array % 16 == 0); */
+    assert(array % 16 == 0);
     assert(idx == N32);
     assert(size % 4 == 0);
     assert(size >= N32);
 
     gen_rand_array((w128_t *)array, size / 4);
-    memcpy(psfmt32, array + size - N32, sizeof(uint32_t) * N32);
     idx = N32;
 }
 
@@ -372,8 +377,14 @@ INLINE void fill_array32(uint32_t array[], int size)
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-INLINE void fill_array64(uint64_t array[], int size)
+inline void fill_array64(uint64_t array[], int size)
 {
+#ifdef BIG_ENDIAN64
+    int i;
+    uint32_t x;
+    uint32_t *pa;
+#endif
+
     assert(initialized);
     /* assert(array % 16 == 0); */
     assert(idx == N32);
@@ -381,19 +392,16 @@ INLINE void fill_array64(uint64_t array[], int size)
     assert(size >= N64);
 
     gen_rand_array((w128_t *)array, size / 2);
-    memcpy(psfmt64, array + size - N64, sizeof(uint64_t) * N64);
     idx = N32;
-    if (big_endian) {
-	int i;
-	uint32_t x;
-	uint32_t *pa;
-	pa = (uint32_t *)array;
-	for (i = 0; i < size * 2; i += 2) {
-	    x = pa[i];
-	    pa[i] = pa[i + 1];
-	    pa[i + 1] = x;
-	}
+
+#ifdef BIG_ENDIAN64
+    pa = (uint32_t *)array;
+    for (i = 0; i < size * 2; i += 2) {
+	x = pa[i];
+	pa[i] = pa[i + 1];
+	pa[i + 1] = x;
     }
+#endif
 }
 
 /**
@@ -413,7 +421,6 @@ void init_gen_rand(uint32_t seed)
     }
     psfmt32[3] = INIT_LUNG;
     idx = N32;
-    endian_check();
     initialized = 1;
 }
 
@@ -482,7 +489,6 @@ void init_by_array(uint32_t init_key[], int key_length) {
     }
 
     idx = N32;
-    endian_check();
     period_certification();
     initialized = 1;
 }
