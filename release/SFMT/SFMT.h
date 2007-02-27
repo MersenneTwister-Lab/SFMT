@@ -37,15 +37,14 @@
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
   #include <inttypes.h>
-  #define INLINE inline
 #elif defined(_MSC_VER)
   typedef unsigned int uint32_t;
   typedef unsigned long long uint64_t;
-  #define INLINE
+  #define inline
 #else
   #include <inttypes.h>
   #if defined(__GNUC__)
-    #define INLINE __inline__
+    #define inline __inline__
   #endif
 #endif
 
@@ -59,11 +58,12 @@
   #endif
 #endif
 
-INLINE uint32_t gen_rand32(void);
-INLINE uint64_t gen_rand64(void);
-INLINE void fill_array32(uint32_t array[], int size);
-INLINE void fill_array64(uint64_t array[], int size);
+inline uint32_t gen_rand32(void);
+inline uint64_t gen_rand64(void);
+inline void fill_array32(uint32_t array[], int size);
+inline void fill_array64(uint64_t array[], int size);
 void init_gen_rand(uint32_t seed);
 void init_by_array(uint32_t init_key[], int key_length);
+char *get_idstring(void);
 
 #endif

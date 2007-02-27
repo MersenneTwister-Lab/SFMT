@@ -75,7 +75,7 @@ ARGV.each{
          sl_perm("-"+params['SR2'], $tbl32))
   printf("#define ALTI_SR2_PERM64 \\\n(vector unsigned char)%s\n",
          sl_perm("-"+params['SR2'], $tbl64))
-  printf("#define IDSTR\t\"SFMTp-%s:%s-%s-%s-%s-%s:%s-%s-%s-%s\"\n",
+  printf("#define IDSTR\t\"SFMT-%s:%s-%s-%s-%s-%s:%s-%s-%s-%s\"\n",
          mexp, params['POS1'], params['SL1'],
          params['SL2'], params['SR1'], params['SR2'],
          params['MSK1'], params['MSK2'], params['MSK3'],

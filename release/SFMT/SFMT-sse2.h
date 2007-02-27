@@ -23,6 +23,8 @@ union W128_T {
     uint32_t u[4];
 };
 
+typedef union W128_T w128_t;
+
 inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c, __m128i d)
     __attribute__((always_inline));
 #endif

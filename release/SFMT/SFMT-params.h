@@ -62,21 +62,23 @@
 */
 
 #if MEXP == 607
-  #include "params607.h"
+  #include "SFMT-params607.h"
+#elif MEXP == 1279
+  #include "SFMT-params1279.h"
 #elif MEXP == 2281
-  #include "params2281.h"
+  #include "SFMT-params2281.h"
 #elif MEXP == 4253
-  #include "params4253.h"
+  #include "SFMT-params4253.h"
 #elif MEXP == 11213
-  #include "params11213.h"
+  #include "SFMT-params11213.h"
 #elif MEXP == 19937
-  #include "params19937.h"
+  #include "SFMT-params19937.h"
 #elif MEXP == 44497
-  #include "params44497.h"
+  #include "SFMT-params44497.h"
 #elif MEXP == 86243
-  #include "params86243.h"
+  #include "SFMT-params86243.h"
 #elif MEXP == 132049
-  #include "params132049.h"
+  #include "SFMT-params132049.h"
 #else
 #ifdef __GNUC__
   #error "MEXP is not valid."

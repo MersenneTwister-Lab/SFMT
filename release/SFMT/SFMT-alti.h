@@ -22,6 +22,8 @@ union W128_T {
     uint32_t u[4];
 };
 
+typedef union W128_T w128_t;
+
 inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
 						vector unsigned int c,
