@@ -19,7 +19,7 @@
 #define SL1_PERM \
 (vector unsigned char)(4,5,6,7,28,28,28,28,12,13,14,15,0,1,2,3)
 #define SL1_MSK \
-(vector unsigned int)(0xfffffffeU,0xfffffffeU,0xfffffffeU,0xfffffffeU)
+(vector unsigned int)(0xfffffffeU,0x00000000U,0xfffffffeU,0x00000000U)
 #define SL2_PERM \
 (vector unsigned char)(1,2,3,4,5,6,7,31,9,10,11,12,13,14,15,0)
 #define ALTI_SR1 4

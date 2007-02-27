@@ -80,10 +80,11 @@ def print_alti_sl1(sl1)
   printf("#define SL1_PERM \\\n(vector unsigned char)%s\n", sl_perm(sl1_pm))
   if sl1 > 32
     sl1_m1 = (0xffffffff << (sl1 - 32)) & 0xffffffff
+    sl1_m2 = 0
   else
     sl1_m1 = 0xffffffff
+    sl1_m2 = (0xffffffff << (sl1 % 32)) & 0xffffffff
   end
-  sl1_m2 = (0xffffffff << (sl1 % 32)) & 0xffffffff
   printf("#define SL1_MSK \\\n")
   printf("(vector unsigned int)(0x%08xU,0x%08xU,0x%08xU,0x%08xU)\n",
          sl1_m1, sl1_m2, sl1_m1, sl1_m2)
