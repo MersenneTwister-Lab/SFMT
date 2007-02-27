@@ -1,11 +1,11 @@
  =================================================================
- SFMTp ver. 1.0
- SIMD oriented Fast Mersenne Twister Pulmonary version (SFMTp)
+ SFMT ver. 1.0
+ SIMD oriented Fast Mersenne Twister(SFMT)
 
  Mutsuo Saito (Hiroshima University) and
  Makoto Matsumoto (Hiroshima University)
 
- Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  University. All rights reserved.
 
  The (modified) BSD License is applied to this software, see LICENSE.txt
