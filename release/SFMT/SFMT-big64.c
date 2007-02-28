@@ -1,14 +1,12 @@
 /** 
- * @file  sfmt19937-big64.c
+ * @file  SFMT-big64.c
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) for 64-bit output
  * for BIG ENDIAN machine.
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2006-08-29
- *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
@@ -20,99 +18,49 @@
 
 #include <string.h>
 #include <assert.h>
-#include "sfmt19937.h"
+#include "SFMT.h"
+#include "SFMT-params.h"
 
-/*-----------------
-  BASIC DEFINITIONS
-  -----------------*/
-/** Mersenne Exponent. The period of the sequence 
- *  is a multiple of 2^MEXP-1. */
-#define MEXP 19937
-/** the word size of the recursion of SFMT is 128-bit. */
-#define WORDSIZE 128
-/** SFMT generator has an internal state array of 128-bit integers,
- * and N is its size. */
-#define N (MEXP / WORDSIZE + 1)
-/** N32 is the size of internal state array when regarded as an array
- * of 32-bit integers.*/
-#define N32 (N * 4)
-/** N64 is the size of internal state array when regarded as an array
- * of 64-bit integers.*/
-#define N64 (N * 2)
-
-/*----------------------
-  the parameters of SFMT
-  ----------------------*/
-/** the pick up position of the array. */
-#define POS1 122
-/** the parameter of shift left as four 32-bit registers. */
-#define SL1 18
-/** the parameter of shift left as one 128-bit register. 
- * The 128-bit integer is shifted by (SL2 * 8) bits. 
- */
-#define SL2 1
-/** the parameter of shift right as four 32-bit registers. */
-#define SR1 11
-/** the parameter of shift right as one 128-bit register. 
- * The 128-bit integer is shifted by (SL2 * 8) bits. 
- */
-#define SR2 1
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK1 0xdfffffefU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK2 0xddfecb7fU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK3 0xbffaffffU
-/** A bitmask, used in the recursion.  These parameters are introduced
- * to break symmetry of SIMD.*/
-#define MSK4 0xbffffff6U
-/** The 32 MSBs of the internal state array is seto to this
- * value. This peculiar value assures that the period length of the
- * output sequence is a multiple of 2^19937-1.
- */
-#define INIT_LUNG 0x6d736d6dU
+#if defined(ALTIVEC)
+  #include "SFMT-alti.h"
+#else
+/*------------------------------------------
+  128-bit SIMD like data type for standard C
+  ------------------------------------------*/
+/** 128-bit data structure */
+struct W128_T {
+    uint32_t u[4];
+};
+/** 128-bit data type */
+typedef struct W128_T w128_t;
+#endif
 
 /*--------------------------------------
   FILE GLOBAL VARIABLES
   internal state, index counter and flag 
   --------------------------------------*/
 /** the 128-bit internal state array */
-static uint32_t sfmt[N][4];
+static w128_t sfmt[N];
 /** the 32bit interger pointer to the 128-bit internal state array */
-static uint32_t *psfmt32 = &sfmt[0][0];
+static uint32_t *psfmt32 = &sfmt[0].u[0];
 /** the 64bit interger pointer to the 128-bit internal state array */
-static uint64_t *psfmt64 = (uint64_t *)&sfmt[0][0];
+static uint64_t *psfmt64 = (uint64_t *)&sfmt[0].u[0];
 /** index counter to the 32-bit internal state array */
 static int idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int initialized = 0;
 
-/*------------------------------------------
-  128-bit SIMD like data type for standard C
-  ------------------------------------------*/
-/** 128-bit data structure */
-struct W128_T {
-    uint32_t a[4];
-};
-/** 128-bit data type */
-typedef struct W128_T w128_t;
-
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift);
-INLINE static void lshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift);
-INLINE static void gen_rand_all(void);
-INLINE static void gen_rand_array(w128_t array[], int size);
-INLINE static uint32_t func1(uint32_t x);
-INLINE static uint32_t func2(uint32_t x);
-INLINE static int idxof(int i);
+inline static void rshift128(w128_t *out, const w128_t *in, int shift);
+inline static void lshift128(w128_t *out, const w128_t *in, int shift);
+inline static void gen_rand_all(void);
+inline static void gen_rand_array(w128_t array[], int size);
+inline static uint32_t func1(uint32_t x);
+inline static uint32_t func2(uint32_t x);
+inline static int idxof(int i);
 
 /**
  * This function simulates SIMD 128-bit right shift by the standard C.
@@ -126,8 +74,7 @@ INLINE static int idxof(int i);
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE static void rshift128(uint32_t out[4], const uint32_t in[4],
-			     int shift) {
+inline static void rshift128(w128_t *out[4], w128_t const *in, int shift) {
     uint64_t th, tl, oh, ol;
 
     th = ((uint64_t)in[2] << 32) | ((uint64_t)in[3]);
@@ -299,8 +246,7 @@ INLINE static int idxof(int i) {
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE uint64_t gen_rand64(void)
-{
+INLINE uint64_t gen_rand64(void) {
     uint64_t r;
 
     assert(initialized);
@@ -340,8 +286,7 @@ INLINE uint64_t gen_rand64(void)
  * initialization must be done by \b init_gen_rand or \b init_by_array
  * in this file.
  */
-INLINE void fill_array64(uint64_t array[], int size)
-{
+INLINE void fill_array64(uint64_t array[], int size) {
     assert(initialized);
     /* assert((uint32_t)array % 16 == 0); */
     assert(idx == N32);
@@ -363,8 +308,7 @@ INLINE void fill_array64(uint64_t array[], int size)
  * pseudorandom number generation must be done by \b gen_rand64 or \b
  * fill_array64 in this file.
  */
-void init_gen_rand(uint32_t seed)
-{
+void init_gen_rand(uint32_t seed) {
     int i;
 
     psfmt32[idxof(0)] = seed;
