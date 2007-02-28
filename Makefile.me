@@ -1,38 +1,38 @@
 #for GNU make
 
-FILES = SFMTp.h \
-	SFMTp-params.h \
-	SFMTp.c \
-	SFMTp-big64.c \
-	SFMTp-alti32.c \
-	SFMTp-alti64.c \
-	SFMTp-sse2.c \
-	test32.c \
-	test64.c \
-	check.sh \
-	params607.h \
-	params2281.h \
-	params4253.h \
-	params11213.h \
-	params19937.h \
-	params44497.h \
-	params86243.h \
-	params132049.h \
-	SFMTp.607.out.txt \
-	SFMTp.2281.out.txt \
-	SFMTp.4253.out.txt \
-	SFMTp.11213.out.txt \
-	SFMTp.19937.out.txt \
-	SFMTp.44497.out.txt \
-	SFMTp.86243.out.txt \
-	SFMTp.132049.out.txt \
+FILES = SFMT.h \
+	SFMT-params.h \
+	SFMT.c \
+	SFMT-alti.c \
+	SFMT-sse2.c \
+	SFMT-params607.h \
+	SFMT-params1279.h \
+	SFMT-params2281.h \
+	SFMT-params4253.h \
+	SFMT-params11213.h \
+	SFMT-params19937.h \
+	SFMT-params44497.h \
+	SFMT-params86243.h \
+	SFMT-params132049.h \
+	SFMT.607.out.txt \
+	SFMT.1279.out.txt \
+	SFMT.2281.out.txt \
+	SFMT.4253.out.txt \
+	SFMT.11213.out.txt \
+	SFMT.19937.out.txt \
+	SFMT.44497.out.txt \
+	SFMT.86243.out.txt \
+	SFMT.132049.out.txt \
 	FILES.txt \
 	LICENSE.txt \
 	Makefile \
+	test.c \
+	check.sh \
+	CHANGE-LOG.txt \
 	README.txt \
 	html
-VERSION = 1.0
-DIR = SFMTp-src-${VERSION}
+VERSION = 1.2
+DIR = SFMT-src-${VERSION}
 
 doc:
 	rm -rf html

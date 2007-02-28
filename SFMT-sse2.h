@@ -25,6 +25,12 @@ union W128_T {
 
 typedef union W128_T w128_t;
 
-inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c, __m128i d)
+#ifdef __GNUC__
+inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
+				   __m128i d, __m128i mask)
     __attribute__((always_inline));
+#else
+inline static __m128i mm_recursion(__m128i *a, __m128i *b,
+				   __m128i c, __m128i d, __m128i mask);
+#endif
 #endif

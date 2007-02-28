@@ -1,0 +1,18 @@
+ver 1.2
+-------
+Support many periods: 2^{607}, 2^{1279}, 2^{2281}, 2^{4253}, 2^{11213},
+2^{19937}, 2^{44497}, 2^{86243}, 2^{132049}
+Fix typo in LICENSE.txt.
+Add cast to vec_perm for SFMT-alti.c, SFMT-alti64.c.
+combine source codes.
+
+ver 1.1
+-------
+The period certification method is changed from constant to function.
+The convert functions from 32-bit and 64-bit integer to double are added.
+The documentation is changed.
+Sample programs are added.
+
+ver 1.0
+-------
+The first version.

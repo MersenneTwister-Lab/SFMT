@@ -1,5 +1,5 @@
 /** 
- * @file sfmt19937-alti64.c 
+ * @file SFMT-alti64.c 
  *
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) for 64-bit output
  * for PowerPC G4, G5
@@ -7,9 +7,7 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * @date 2006-09-06
- *
- * Copyright (C) 2006 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
@@ -174,8 +172,7 @@ INLINE void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-static void gen_rand_array(vector unsigned int array[], int size)
-{
+static void gen_rand_array(vector unsigned int array[], int size) {
     int i, j;
     vector unsigned int r, r1, r2;
  
@@ -236,7 +233,7 @@ static uint32_t func2(uint32_t x) {
  * ??? This function simulate a 64-bit index of LITTLE ENDIAN 
  * in BIG ENDIAN machine.
  */
-INLINE static int idxof(int i) {
+inline static int idxof(int i) {
     return i ^ 1;
 }
 
@@ -250,8 +247,7 @@ INLINE static int idxof(int i) {
  * unless an initialization is again executed. 
  * @return 64-bit pseudorandom number
  */
-INLINE uint64_t gen_rand64(void)
-{
+inline uint64_t gen_rand64(void) {
     uint64_t r;
 
     assert(initialized);
@@ -287,8 +283,7 @@ INLINE uint64_t gen_rand64(void)
  * generated.  size must be a multiple of 2, and greater than or equal
  * to 312.
  */
-INLINE void fill_array64(uint64_t array[], int size)
-{
+inline void fill_array64(uint64_t array[], int size) {
     assert(initialized);
     assert((uint32_t)array % 16 == 0);
     assert(idx == N32);
@@ -305,8 +300,7 @@ INLINE void fill_array64(uint64_t array[], int size)
  *
  * @param seed a 32-bit integer used as the seed.
  */
-void init_gen_rand(uint32_t seed)
-{
+void init_gen_rand(uint32_t seed) {
     int i;
 
     psfmt32[idxof(0)] = seed;

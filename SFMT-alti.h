@@ -24,9 +24,17 @@ union W128_T {
 
 typedef union W128_T w128_t;
 
+#ifdef __GNUC__
 inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
 						vector unsigned int c,
 						vector unsigned int d)
     __attribute__((always_inline));
+#else
+inline static vector unsigned int vec_recursion(vector unsigned int a,
+						vector unsigned int b,
+						vector unsigned int c,
+						vector unsigned int d);
+#endif
+
 #endif

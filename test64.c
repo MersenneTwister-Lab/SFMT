@@ -1,9 +1,8 @@
 /**
  * @file  test64.c
- * @brief test program for 64-bit output of SFMTp.
+ * @brief test program for 64-bit output of SFMT.
  *
  * @author Mutsuo Saito (Hiroshima-univ)
- * @date 2007-01-10
  *
  * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
@@ -17,32 +16,30 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if defined(SSE2)
-#include <emmintrin.h>
-#include "SFMTp-sse2.c"
-#elif defined(ALTIVEC)
-#include "SFMTp-alti64.c"
-#elif defined(BIG)
-#include "SFMTp-big64.c"
-#else
-#include "SFMTp.c"
+#if defined(__ppc__) && !defined(BIG_ENDIAN64)
+  #define BIG_ENDIAN64
 #endif
 
-#define BLOCK_SIZE 50000
-#define COUNT 2000
+#include "SFMT.c"
 
+#define BLOCK_SIZE 100000
+#define BLOCK_SIZE64 50000
+#define COUNT 1000
+
+void check32(void);
+void speed32(void);
 void check64(void);
 void speed64(void);
 
-#if defined(SSE2)
-static __m128i array1[BLOCK_SIZE / 2];
-static __m128i array2[10000 / 2];
-#elif defined(ALTIVEC)
-static vector unsigned int array1[BLOCK_SIZE / 2];
-static vector unsigned int array2[10000 / 2];
+#if defined(ALTIVEC)
+static vector unsigned int array1[BLOCK_SIZE / 4];
+static vector unsigned int array2[10000 / 4];
+#elif defined(SSE2)
+static __m128i array1[BLOCK_SIZE / 4];
+static __m128i array2[10000 / 4];
 #else
-static uint64_t array1[BLOCK_SIZE];
-static uint64_t array2[10000];
+static uint64_t array1[BLOCK_SIZE / 4][2];
+static uint64_t array2[10000 / 4][2];
 #endif
 
 void check64(void) {
@@ -54,13 +51,17 @@ void check64(void) {
 
     array64 = (uint64_t *)array1;
     array64_2 = (uint64_t *)array2;
+    if (get_min_array_size64() > 5000) {
+	printf("array size too small!\n");
+	exit(1);
+    }
     printf("generated randoms\n");
     /* 64 bit generation */
     init_by_array(ini, 5);
-    fill_array64(array64, 10000);
-    fill_array64(array64_2, 10000);
+    fill_array64(array64, 5000);
+    fill_array64(array64_2, 5000);
     init_by_array(ini, 5);
-    for (i = 0; i < 10000; i++) {
+    for (i = 0; i < 5000; i++) {
 	if (i < 1000) {
 	    printf("%20"PRIu64" ", array64[i]);
 	    if (i % 3 == 2) {
@@ -91,12 +92,16 @@ void speed64(void) {
     uint64_t min = LONG_MAX;
     uint64_t *array64 = (uint64_t *)array1;
 
+    if (get_min_array_size64() > BLOCK_SIZE64) {
+	printf("array size too small!\n");
+	exit(1);
+    }
     /* 64 bit generation */
     init_gen_rand(1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < COUNT; j++) {
-	    fill_array64(array64, BLOCK_SIZE);
+	    fill_array64(array64, BLOCK_SIZE64);
 	}
 	clo = clock() - clo;
 	if (clo < min) {
@@ -105,12 +110,12 @@ void speed64(void) {
     }
     printf("64 bit BLOCK:%.0f", (double)min * 1000/ CLOCKS_PER_SEC);
     printf("ms for %u randoms generation\n",
-	   BLOCK_SIZE * COUNT);
+	   BLOCK_SIZE64 * COUNT);
     min = LONG_MAX;
     init_gen_rand(1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
-	for (j = 0; j < BLOCK_SIZE * COUNT; j++) {
+	for (j = 0; j < BLOCK_SIZE64 * COUNT; j++) {
 	    gen_rand64();
 	}
 	clo = clock() - clo;
@@ -120,18 +125,30 @@ void speed64(void) {
     }
     printf("64 bit SEQUE:%.0f", (double)min * 1000 / CLOCKS_PER_SEC);
     printf("ms for %u randoms generation\n",
-	   BLOCK_SIZE * COUNT);
+	   BLOCK_SIZE64 * COUNT);
 }
 
 int main(int argc, char *argv[]) {
+    int i;
     int speed = 0;
+    int bit64 = 0;
 
-    if ((argc >= 2) && (strncmp(argv[1],"-s",2) == 0)) {
-	speed = 1;
+    for (i = 1; i < argc; i++) {
+	if (strncmp(argv[1],"-s",2) == 0) {
+	    speed = 1;
+	}
+	if (strncmp(argv[1],"-b64",4) == 0) {
+	    bit64 = 1;
+	}
+    }
+    if (speed + bit64 == 0) {
+	printf("usage:\n%s [-s | -b32 | -b64]\n", argv[0]);
+	return 0;
     }
     if (speed) {
 	speed64();
-    } else {
+    }
+    if (bit64) {
 	check64();
     }
     return 0;
