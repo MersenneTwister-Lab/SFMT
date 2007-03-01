@@ -39,10 +39,10 @@ typedef struct W128_T w128_t;
   --------------------------------------*/
 /** the 128-bit internal state array */
 static w128_t sfmt[N];
-/** the 32bit interger pointer to the 128-bit internal state array */
+/** the 32bit integer pointer to the 128-bit internal state array */
 static uint32_t *psfmt32 = &sfmt[0].u[0];
 #if !defined(BIG_ENDIAN64) || defined(ONLY64)
-/** the 64bit interger pointer to the 128-bit internal state array */
+/** the 64bit integer pointer to the 128-bit internal state array */
 static uint64_t *psfmt64 = (uint64_t *)&sfmt[0].u[0];
 #endif
 /** index counter to the 32-bit internal state array */
@@ -169,11 +169,29 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
 /**
  * This function represents the recursion formula.
  * @param r output
- * @param a a 128-bit part of the interal state array
- * @param b a 128-bit part of the interal state array
- * @param c a 128-bit part of the interal state array
- * @param d a 128-bit part of the interal state array
+ * @param a a 128-bit part of the internal state array
+ * @param b a 128-bit part of the internal state array
+ * @param c a 128-bit part of the internal state array
+ * @param d a 128-bit part of the internal state array
  */
+#ifdef ONLY64
+inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
+				w128_t *d) {
+    w128_t x;
+    w128_t y;
+
+    lshift128(&x, a, SL2);
+    rshift128(&y, c, SR2);
+    r->u[0] = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SR1) & MSK2) ^ y.u[0] 
+	^ (d->u[0] << SL1);
+    r->u[1] = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK1) ^ y.u[1] 
+	^ (d->u[1] << SL1);
+    r->u[2] = a->u[2] ^ x.u[2] ^ ((b->u[2] >> SR1) & MSK4) ^ y.u[2] 
+	^ (d->u[2] << SL1);
+    r->u[3] = a->u[3] ^ x.u[3] ^ ((b->u[3] >> SR1) & MSK3) ^ y.u[3] 
+	^ (d->u[3] << SL1);
+}
+#else
 inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 				w128_t *d) {
     w128_t x;
@@ -190,10 +208,11 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
     r->u[3] = a->u[3] ^ x.u[3] ^ ((b->u[3] >> SR1) & MSK4) ^ y.u[3] 
 	^ (d->u[3] << SL1);
 }
+#endif
 
 #if (!defined(ALTIVEC)) && (!defined(SSE2))
 /**
- * This function fills the internal state array with psedorandom
+ * This function fills the internal state array with pseudorandom
  * integers.
  */
 inline static void gen_rand_all(void) {
@@ -215,11 +234,11 @@ inline static void gen_rand_all(void) {
 }
 
 /**
- * This function fills the user-specified array with psedorandom
+ * This function fills the user-specified array with pseudorandom
  * integers.
  *
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
- * @param size number of 128-bit pesudorandom numbers to be generated.
+ * @param size number of 128-bit pseudorandom numbers to be generated.
  */
 inline static void gen_rand_array(w128_t array[], int size) {
     int i, j;
@@ -326,7 +345,7 @@ static void period_certification(void) {
   ----------------*/
 /**
  * This function returns the identification string.
- * The string shows the word size, the mersenne expornent,
+ * The string shows the word size, the Mersenne exponent,
  * and all parameters of this generator.
  */
 char *get_idstring(void) {
