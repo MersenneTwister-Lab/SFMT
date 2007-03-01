@@ -13,12 +13,14 @@ inline static vector unsigned int vec_recursion(vector unsigned int a,
 
     const vector unsigned int sl1 = (vector unsigned int)(SL1, SL1, SL1, SL1);
     const vector unsigned int sr1 = (vector unsigned int)(SR1, SR1, SR1, SR1);
-    const vector unsigned int mask = (vector unsigned int)
-    (MSK1, MSK2, MSK3, MSK4);
 #ifdef ONLY64
+    const vector unsigned int mask = (vector unsigned int)
+    (MSK2, MSK1, MSK4, MSK3);
     const vector unsigned char perm_sl = ALTI_SL2_PERM64;
     const vector unsigned char perm_sr = ALTI_SR2_PERM64;
 #else
+    const vector unsigned int mask = (vector unsigned int)
+    (MSK1, MSK2, MSK3, MSK4);
     const vector unsigned char perm_sl = ALTI_SL2_PERM;
     const vector unsigned char perm_sr = ALTI_SR2_PERM;
 #endif
