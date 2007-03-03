@@ -1,4 +1,14 @@
 2007.02.26
+do_recursion でlungにHIGH_CONSTを入れると交互にゼロになる。
+HIGH_CONSTを入れないようにする。
+パラメータサーチには関係なかった。よかった。
+
+2007.02.26
+test-parity-vector
+周期が保証範囲でも、NGになることはある。
+勘違いしていた。
+
+2007.02.26
 sfmtD11-st.c, sfmtD11-ref-st.c, sfmtD11-afst.c
 do_recursionでc[1]であるべきところがc[0]になっていた。
 がーん！

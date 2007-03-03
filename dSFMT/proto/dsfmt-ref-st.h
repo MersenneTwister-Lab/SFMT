@@ -47,7 +47,9 @@ void setup_param(unsigned int p1, unsigned int p2, unsigned int p3,
 unsigned int get_rnd_maxdegree(void);
 unsigned int get_rnd_mexp(void);
 void print_param(FILE *fp);
-
+void set_high_const(void);
+void reset_high_const(void);
+void initial_mask(dsfmt_t *dsfmt);
 void init_gen_rand(dsfmt_t *dsfmt, uint32_t seed);
 uint64_t gen_rand104sp(dsfmt_t *dsfmt, uint64_t arrary[2], int mode);
 void get_lung(dsfmt_t *dsfmt, uint64_t lung[2]);

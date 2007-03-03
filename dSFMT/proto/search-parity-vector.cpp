@@ -10,7 +10,7 @@
 
 extern "C" {
 #include "dsfmt-st.h"
-#include "mt19937ar.h"
+//#include "mt19937ar.h"
 }
 
 #include <NTL/GF2X.h>

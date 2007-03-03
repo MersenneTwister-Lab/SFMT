@@ -18,6 +18,11 @@
 #include "dsfmt-ref-st.h"
 #include "dSFMT-params607.h"
 
+#undef HIGH_CONST
+#undef HIGH_CONST32
+static uint64_t HIGH_CONST = UINT64_C(0x3FF0000000000000);
+static uint64_t HIGH_CONST32 = 0x3ff00000U;
+
 #if defined(__ppc__)
 /**
  * This function simulate a 64-bit index of LITTLE ENDIAN 
@@ -44,6 +49,15 @@ int get_min_array_size(void);
 /** a period certification vector which certificate the period of 2^{MEXP}-1. */
 static uint64_t pcv[2] = {PCV1, PCV2};
 
+void set_high_const(void) {
+    HIGH_CONST = UINT64_C(0x3FF0000000000000);
+    HIGH_CONST32 = 0x3ff00000U;
+}
+void reset_high_const(void) {
+    HIGH_CONST = 0;
+    HIGH_CONST32 = 0;
+}
+
 unsigned int get_rnd_maxdegree(void)
 {
     return MAXDEGREE;
@@ -59,7 +73,7 @@ unsigned int get_rnd_mexp(void)
   ----------------*/
 static void lshift128(w128_t *out, const w128_t *in, int shift);
 static void gen_rand_all(dsfmt_t *dsfmt);
-static void initial_mask(dsfmt_t *dsfmt);
+//static void initial_mask(dsfmt_t *dsfmt);
 
 /**
  * This function simulates SIMD 128-bit left shift by the standard C.
@@ -93,10 +107,10 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 	^ (c->u[0] << SL1) ^ lung->u[1];
     r1 = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ (c->u[1] >> SR2)
 	^ (c->u[1] << SL1) ^ lung->u[0];
-    r0 = (r0 & LOW_MASK) | HIGH_CONST;
-    r1 = (r1 & LOW_MASK) | HIGH_CONST;
-    r->u[0] = r0;
-    r->u[1] = r1;
+    r0 = r0 & LOW_MASK;
+    r1 = r1 & LOW_MASK;
+    r->u[0] = r0 | HIGH_CONST;
+    r->u[1] = r1 | HIGH_CONST;
     lung->u[0] ^= r0;
     lung->u[1] ^= r1;
 }
@@ -137,9 +151,79 @@ void initial_mask(dsfmt_t *dsfmt) {
     }
 }
 
+static void next_lung(w128_t *new, w128_t *a, w128_t *b, w128_t *c,
+		      w128_t *lung) {
+    w128_t x;
+    uint64_t r0, r1;
+
+    lshift128(&x, a, SL2);
+    r0 = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SR1) & MSK1) ^ (c->u[0] >> SR2)
+	^ (c->u[0] << SL1) ^ lung->u[1];
+    r1 = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ (c->u[1] >> SR2)
+	^ (c->u[1] << SL1) ^ lung->u[0];
+    r0 &= LOW_MASK;
+    r1 &= LOW_MASK;
+    /* new->u[0] = lung->u[0] ^ r0;*/
+    /* new->u[1] = lung->u[1] ^ r1;*/
+    new->u[0] = r0;
+    new->u[1] = r1;
+}
+
 /**
  * This function certificate the period of 2^{MEXP}-1.
  */
+#if 1
+int period_certification(dsfmt_t *dsfmt) {
+    int inner = 0;
+    int i, j;
+    w128_t new;
+    uint64_t work;
+    uint64_t w[2];
+
+    printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
+    printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[1]);
+    next_lung(&new, &dsfmt->sfmt[0], &dsfmt->sfmt[POS1], &dsfmt->sfmt[N - 1],
+	      &dsfmt->sfmt[N]);
+    //printf("new lung %016"PRIx64"\n", new.u[0]);
+    //printf("new lung %016"PRIx64"\n", new.u[1]);
+    //new.u[0] ^= dsfmt->sfmt[N].u[0];
+    //new.u[1] ^= dsfmt->sfmt[N].u[1];
+    printf("dif lung %016"PRIx64"\n", new.u[0]);
+    printf("dif lung %016"PRIx64"\n", new.u[1]);
+    for (i = 0; i < 2; i++) {
+	work = new.u[i] & pcv[i];
+	for (j = 0; j < 52; j++) {
+	    inner ^= work & 1;
+	    work = work >> 1;
+	}
+    }
+    /* check OK */
+    if (inner == 1) {
+	return 1;
+    }
+    /* check NG, and modification */
+    w[0] = pcv[0] & MSK1;
+    w[1] = pcv[1] & MSK2;
+    w[0] = w[0] << SR1;
+    w[1] = w[1] << SR1;
+    for (i = 0; i < 2; i++) {
+	work = (uint64_t)1 << SR1;
+	for (j = 0; j < 52 - SR1; j++) {
+	    if ((work & w[i]) != 0) {
+		dsfmt->sfmt[POS1].u[i] ^= work;
+		i = 2;
+		break;
+	    }
+	    work = work << 1;
+	}
+    }
+    next_lung(&new, &dsfmt->sfmt[0], &dsfmt->sfmt[POS1], &dsfmt->sfmt[N - 1],
+	      &dsfmt->sfmt[N]);
+    printf("mod lung %016"PRIx64"\n", new.u[0]);
+    printf("mod lung %016"PRIx64"\n", new.u[1]);
+    return 0;
+}
+#else
 int period_certification(dsfmt_t *dsfmt) {
     int inner = 0;
     int i, j;
@@ -169,7 +253,7 @@ int period_certification(dsfmt_t *dsfmt) {
     }
     return 0;
 }
-
+#endif
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/

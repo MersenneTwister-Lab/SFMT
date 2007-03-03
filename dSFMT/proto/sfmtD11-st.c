@@ -79,7 +79,7 @@ inline static void lshift128(uint64_t out[2], const uint64_t in[2],
     out[1] |= in[0] >> (64 - shift * 8);
 }
 
-static inline void do_recursion(uint64_t a[2], uint64_t b[2],
+inline static void do_recursion(uint64_t a[2], uint64_t b[2],
 				uint64_t c[2], uint64_t lung[2]) {
     uint64_t x[2];
     uint64_t r0, r1;
@@ -100,7 +100,7 @@ static inline void do_recursion(uint64_t a[2], uint64_t b[2],
 /*
  * これは直接呼び出さないでgenrandを呼び出している。
  */
-static void next_state(dsfmt_t *dsfmt) {
+inline static void next_state(dsfmt_t *dsfmt) {
     uint32_t i;
 
     if (dsfmt->idx >= N * 2) {
@@ -140,6 +140,23 @@ uint64_t gen_rand104sp(dsfmt_t *dsfmt, uint64_t array[2], int mode)
 	dsfmt->idx = 0;
     }
     return array[0];
+}
+
+void gen_rand104spar(dsfmt_t *dsfmt, uint64_t array[][2], int size) {
+    uint32_t i;
+    int j;
+
+    for (j = 0; j < size; j++) {
+	i = dsfmt->idx / 2;
+	array[j][0] = dsfmt->status[i][0] & LOW_MASK;
+	array[j][1] = dsfmt->status[i][1] & LOW_MASK;
+
+	next_state(dsfmt);
+	dsfmt->idx += 2;
+	if (dsfmt->idx >= N * 2) {
+	    dsfmt->idx = 0;
+	}
+    }
 }
 
 void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed)

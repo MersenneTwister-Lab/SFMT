@@ -28,6 +28,7 @@ void print_param(FILE *fp);
 
 void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed);
 uint64_t gen_rand104sp(dsfmt_t *dsfmt, uint64_t arrary[2], int mode);
+void gen_rand104spar(dsfmt_t *dsfmt, uint64_t array[][2], int size);
 void get_lung(dsfmt_t *dsfmt, uint64_t lung[2]);
 void add_rnd(dsfmt_t *dist, dsfmt_t *src);
 void read_random_param(FILE *fp);

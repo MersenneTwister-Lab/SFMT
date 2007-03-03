@@ -99,7 +99,9 @@ void generating_polynomial104(dsfmt_t *dsfmt, vec_GF2& vec,
 }
 
 static void test_parity(GF2X& f) {
+    uint64_t ar[2];
     dsfmt_t sfmt;
+    dsfmt_t zero;
     GF2X minpoly;
     GF2X q, rem;
     vec_GF2 vec;
@@ -109,7 +111,7 @@ static void test_parity(GF2X& f) {
     for (i = 0; i < 10; i++) {
 	printf("------\n");
 	printf("==shoki\n");
-	init_gen_rand(&sfmt, 1234 * (i + 1));
+	init_gen_rand(&sfmt, i + 1);
 	vec.SetLength(2 * maxdegree);
 	generating_polynomial104(&sfmt, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
@@ -124,9 +126,17 @@ static void test_parity(GF2X& f) {
 	    printf("period certification OK\n");
 	} else {
 	    printf("period certification NG -> OK\n");
+	    if (!period_certification(&sfmt)) {
+		printf("error!!\n");
+	    }
 	}
-
-	make_zero_state(&sfmt, f);
+	reset_high_const();
+	initial_mask(&sfmt);
+	init_gen_rand(&zero, i+1);
+	make_zero_state(&zero, f);
+	set_high_const();
+	initial_mask(&sfmt);
+	add_rnd(&sfmt, &zero);
 	printf("==zero\n");
 	generating_polynomial104(&sfmt, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
@@ -135,8 +145,12 @@ static void test_parity(GF2X& f) {
 	r = period_certification(&sfmt);
 	if (r == 1) {
 	    printf("period certification OK\n");
+	    printf("error OK!\n");
 	} else {
 	    printf("period certification NG -> OK\n");
+	    if (!period_certification(&sfmt)) {
+		printf("error!!\n");
+	    }
 	}
 	generating_polynomial104(&sfmt, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
@@ -146,6 +160,9 @@ static void test_parity(GF2X& f) {
 	    printf("period certification OK\n");
 	} else {
 	    printf("period certification NG -> OK\n");
+	    if (!period_certification(&sfmt)) {
+		printf("error!!\n");
+	    }
 	}
     }
 }

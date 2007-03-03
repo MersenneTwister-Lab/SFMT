@@ -1,17 +1,20 @@
+extern "C" {
+#include "dsfmt-st.h"
+}
 #include "dsfmt-util.h"
 
 void static generating_polynomial104_hi(dsfmt_t *dsfmt, vec_GF2& vec,
 					unsigned int bitpos, 
 					unsigned int maxdegree) {
     unsigned int i;
-    uint64_t ar[2];
+    uint64_t ar[MAXDEGREE*2][2];
     uint64_t mask;
     uint64_t bit;
 
     mask = (uint64_t)1UL << (51 - bitpos);
+    gen_rand104spar(dsfmt, ar, 2 * maxdegree);
     for (i = 0; i <= 2 * maxdegree - 1; i++) {
-	gen_rand104sp(dsfmt, ar, 0);
-	bit = (ar[1] & mask);
+	bit = (ar[i][1] & mask);
 	vec[i] = (bit != 0);
     }
 }
@@ -20,14 +23,14 @@ void static generating_polynomial104_low(dsfmt_t *dsfmt, vec_GF2& vec,
 					 unsigned int bitpos, 
 					 unsigned int maxdegree) {
     unsigned int i;
-    uint64_t ar[2];
+    uint64_t ar[MAXDEGREE*2][2];
     uint64_t mask;
     uint64_t bit;
 
     mask = (uint64_t)1UL << (51 - bitpos);
+    gen_rand104spar(dsfmt, ar, 2 * maxdegree);
     for (i = 0; i <= 2 * maxdegree - 1; i++) {
-	gen_rand104sp(dsfmt, ar, 0);
-	bit = (ar[0] & mask);
+	bit = (ar[i][0] & mask);
 	vec[i] = (bit != 0);
     }
 }
