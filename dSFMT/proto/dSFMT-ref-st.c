@@ -169,6 +169,26 @@ static void next_lung(w128_t *new, w128_t *a, w128_t *b, w128_t *c,
     new->u[1] = r1;
 }
 
+void make_fix_point(dsfmt_t *dsfmt) {
+    int i;
+    uint64_t ar[2];
+    
+    dsfmt->idx = 0;
+    for (i = 0; i < N; i++) {
+	dsfmt->sfmt[i].u[0] = HIGH_CONST;
+	dsfmt->sfmt[i].u[1] = HIGH_CONST;
+    }
+    dsfmt->sfmt[N].u[0] = 0;
+    dsfmt->sfmt[N].u[1] = 0;
+    next_lung(&dsfmt->sfmt[N], &dsfmt->sfmt[0], &dsfmt->sfmt[POS1], 
+	      &dsfmt->sfmt[N - 1], &dsfmt->sfmt[N]);
+    dsfmt->sfmt[N].u[0] |= HIGH_CONST;
+    dsfmt->sfmt[N].u[1] |= HIGH_CONST;
+    ar[0] = dsfmt->sfmt[N].u[0];
+    dsfmt->sfmt[N].u[0] = dsfmt->sfmt[N].u[1];
+    dsfmt->sfmt[N].u[1] = ar[0];
+    gen_rand104sp(dsfmt, ar, 0);
+}
 /**
  * This function certificate the period of 2^{MEXP}-1.
  */
@@ -179,6 +199,13 @@ int period_certification(dsfmt_t *dsfmt) {
     w128_t new;
     uint64_t work;
     uint64_t w[2];
+    uint64_t fix[2];
+
+    fix[0] = ((HIGH_CONST >> SR1) & MSK2) | (HIGH_CONST >> SR2) | HIGH_CONST;
+    fix[1] = ((HIGH_CONST >> SR1) & MSK1) | (HIGH_CONST >> SR2) | HIGH_CONST;
+    fix[0] = fix[0] | (HIGH_CONST >> (64 - 8 * SL2));
+    printf("fix lung %016"PRIx64"\n", fix[0]);
+    printf("fix lung %016"PRIx64"\n", fix[1]);
 
     printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
     printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[1]);

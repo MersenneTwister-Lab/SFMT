@@ -318,8 +318,8 @@ void test_shortest(char *filename) {
 	if (fill_state_random(&sfmt, frandom) == 0) {
 	    break;
 	}
-	for (int j = 0; j < 104; j++) {
-	    generating_polynomial104(&sfmt, vec, j, maxdegree);
+//	for (int j = 0; j < 104; j++) {
+	    generating_polynomial104(&sfmt, vec, i % 104, maxdegree);
 	    if (IsZero(vec)) {
 		break;
 	    }
@@ -333,7 +333,7 @@ void test_shortest(char *filename) {
 	    if (deg(lcmpoly) >= (long)maxdegree) {
 		break;
 	    }
-	}
+//	}
     }
     //if (deg(lcmpoly) > maxdegree) {
     if (deg(lcmpoly) != maxdegree) {

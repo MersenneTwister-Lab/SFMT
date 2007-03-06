@@ -130,25 +130,26 @@ static void test_parity(GF2X& f) {
 		printf("error!!\n");
 	    }
 	}
-	reset_high_const();
-	initial_mask(&sfmt);
-	init_gen_rand(&zero, i+1);
-	make_zero_state(&zero, f);
-	set_high_const();
-	initial_mask(&sfmt);
-	add_rnd(&sfmt, &zero);
+	//reset_high_const();
+	//initial_mask(&sfmt);
+	//init_gen_rand(&zero, i+1);
+	//make_zero_state(&zero, f);
+	make_fix_point(&zero);
+	//set_high_const();
+	//initial_mask(&sfmt);
+	//add_rnd(&sfmt, &zero);
 	printf("==zero\n");
-	generating_polynomial104(&sfmt, vec, 0, maxdegree);
+	generating_polynomial104(&zero, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
 	printf("minpoly = %ld\n", deg(minpoly));
 
-	r = period_certification(&sfmt);
+	r = period_certification(&zero);
 	if (r == 1) {
 	    printf("period certification OK\n");
 	    printf("error OK!\n");
 	} else {
 	    printf("period certification NG -> OK\n");
-	    if (!period_certification(&sfmt)) {
+	    if (!period_certification(&zero)) {
 		printf("error!!\n");
 	    }
 	}
@@ -207,16 +208,20 @@ static void initial_status_parity_check(dsfmt_t *sfmt) {
 #endif
 
 void make_zero_state(dsfmt_t *sfmt, GF2X& poly) {
-  static dsfmt_t sfmtnew;
-  uint64_t array[2];
-  int i;
-
-  memset(&sfmtnew, 0, sizeof(sfmtnew));
-  for (i = 0; i <= deg(poly); i++) {
-    if (coeff(poly, i) != 0) {
-	add_rnd(&sfmtnew, sfmt);
+    const uint64_t high = 0x3FF0000000000000ULL;
+    const uint64_t msk1 = 0xffcfeef7fdffffffULL;
+    const uint64_t msk2 = 0xfdffffb7ffffffffULL;
+    const int sr1 = 7;
+    const int sr2 = 24;
+    int i;
+    uint64_t ar[2];
+    for (i = 0; i <= N; i++) {
+	sfmt->sfmt[i].u[0] = high;
+	sfmt->sfmt[i].u[1] = high;
     }
-    gen_rand104sp(sfmt, array, 0);
-  }
-  *sfmt = sfmtnew;
+    sfmt->sfmt[N].u[0] = ((high >> sr2) & msk2) | (high >> sr1) | high;
+    sfmt->sfmt[N].u[1] = ((high >> sr2) & msk1) | (high >> sr1) | high;
+    printf("%016llx\n", sfmt->sfmt[N].u[0]);
+    printf("%016llx\n", sfmt->sfmt[N].u[0]);
+    gen_rand104sp(sfmt, ar, 0);
 }

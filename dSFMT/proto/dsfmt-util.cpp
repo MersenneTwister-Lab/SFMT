@@ -7,7 +7,7 @@ void static generating_polynomial104_hi(dsfmt_t *dsfmt, vec_GF2& vec,
 					unsigned int bitpos, 
 					unsigned int maxdegree) {
     unsigned int i;
-    uint64_t ar[MAXDEGREE*2][2];
+    static uint64_t ar[MAXDEGREE*2][2];
     uint64_t mask;
     uint64_t bit;
 
@@ -23,7 +23,7 @@ void static generating_polynomial104_low(dsfmt_t *dsfmt, vec_GF2& vec,
 					 unsigned int bitpos, 
 					 unsigned int maxdegree) {
     unsigned int i;
-    uint64_t ar[MAXDEGREE*2][2];
+    static uint64_t ar[MAXDEGREE*2][2];
     uint64_t mask;
     uint64_t bit;
 

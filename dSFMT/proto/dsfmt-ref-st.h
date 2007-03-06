@@ -56,5 +56,5 @@ void get_lung(dsfmt_t *dsfmt, uint64_t lung[2]);
 void add_rnd(dsfmt_t *dist, dsfmt_t *src);
 void read_random_param(FILE *fp);
 int period_certification(dsfmt_t *dsfmt);
-
+void make_fix_point(dsfmt_t *dsfmt);
 #endif
