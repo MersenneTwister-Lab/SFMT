@@ -297,7 +297,7 @@ int period_certification(dsfmt_t *dsfmt) {
     }
     /* check NG, and modification */
     for (i = 0; i < 2; i++) {
-	work = (uint64_t)1 << SR1;
+	work = 1;
 	for (j = 0; j < 52 - SR1; j++) {
 	    if ((work & pcv[i]) != 0) {
 		dsfmt->status[N][i] ^= work;
