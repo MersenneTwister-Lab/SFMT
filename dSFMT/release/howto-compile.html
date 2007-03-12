@@ -61,7 +61,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     </blockquote>
     <p>
       Silence means they are the same because <strong>diff</strong>
-      reports the difference of two file.
+      reports the difference of two files.
     </p>
     <p>
       If you want to know the generation speed of dSFMT, type
@@ -90,7 +90,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     <h4>1-2. Compile SSE2 test program.</h4>
     <p>
       If your CPU supports SSE2 and you can use gcc version 3.4 or later,
-      you can make test-sse. To do this, type
+      you can make test-sse2-M19937. To do this, type
     </p>
     <blockquote>
       <pre>make sse2</pre>
@@ -398,7 +398,7 @@ int main(int argc, char* argv[]) {
     </blockquote>
     <p>To compile <strong>sample4.c</strong>, type</p>
     <blockquote>
-      <pre>gcc -DMEXP=132049 -o sample4 dSFMT.c sample4.c</pre>
+      <pre>gcc -DMEXP=1279 -o sample4 dSFMT.c sample4.c</pre>
     </blockquote>
     <p>Now, seed can be a string. Like this:</p>
     <blockquote>

@@ -127,10 +127,12 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 	^ (c->u[0] << SL1) ^ lung->u[1];
     r->u[1] = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ (c->u[1] >> SR2)
 	^ (c->u[1] << SL1) ^ lung->u[0];
-    r->u[0] = (r->u[0] & LOW_MASK) | HIGH_CONST;
-    r->u[1] = (r->u[1] & LOW_MASK) | HIGH_CONST;
+    r->u[0] &= LOW_MASK;
+    r->u[1] &= LOW_MASK;
     lung->u[0] ^= r->u[0];
     lung->u[1] ^= r->u[1];
+    r->u[0] |= HIGH_CONST;
+    r->u[1] |= HIGH_CONST;
 }
 
 /**
@@ -170,26 +172,33 @@ void initial_mask(void) {
 /**
  * This function certificate the period of 2^{MEXP}-1.
  */
-static void period_certification(void) {
+static void period_certification() {
     int inner = 0;
     int i, j;
+    uint64_t new[2];
     uint64_t work;
+    uint64_t fix[2];
 
+    fix[0] = (((HIGH_CONST >> SR1) & MSK2) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
+    fix[1] = (((HIGH_CONST >> SR1) & MSK1) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
+    fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SL2));
+    new[0] = sfmt[N].u[0] ^ fix[0];
+    new[1] = sfmt[N].u[1] ^ fix[1];
     for (i = 0; i < 2; i++) {
-	work = sfmt[N].u[i] & pcv[i];
+	work = new[i] & pcv[i];
 	for (j = 0; j < 52; j++) {
 	    inner ^= work & 1;
 	    work = work >> 1;
 	}
     }
-    /* check OK */
+    /* check OK, the period is 2^{MEXP}-1 */
     if (inner == 1) {
 	return;
     }
-    /* check NG, and modification */
+    /* check NG, the period may not be 2^{MEXP}-1 then modify */
     for (i = 0; i < 2; i++) {
 	work = 1;
-	for (j = 0; j < 52; j++) {
+	for (j = 0; j < 52 - SR1; j++) {
 	    if ((work & pcv[i]) != 0) {
 		sfmt[N].u[i] ^= work;
 		return;

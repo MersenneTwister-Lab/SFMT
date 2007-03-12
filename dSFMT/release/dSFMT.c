@@ -15,31 +15,32 @@
 #include <assert.h>
 #include "dSFMT.h"
 #include "dSFMT-params.h"
-
-#if defined(ALTIVEC)
-  #include "dSFMT-alti.h"
-#elif defined(SSE2)
-  #include "dSFMT-sse2.h"
-#else
 /*------------------------------------------
   128-bit SIMD like data type for standard C
   ------------------------------------------*/
+#if !defined(ALTIVEC) && !defined(SSE2)
 /** 128-bit data structure */
 union W128_T {
     uint64_t u[2];
     double d[2];
 };
-#endif
 
 /** 128-bit data type */
 typedef union W128_T w128_t;
 
+/** the 128-bit internal state array */
+static w128_t sfmt[N + 1];
+#endif
+
+#if defined(ALTIVEC)
+  #include "dSFMT-alti.c"
+#elif defined(SSE2)
+  #include "dSFMT-sse2.c"
+#endif
 /*--------------------------------------
   FILE GLOBAL VARIABLES
   internal state, index counter and flag 
   --------------------------------------*/
-/** the 128-bit internal state array */
-static w128_t sfmt[N + 1];
 /** the double pointer to the 128-bit internal state array */
 static double *psfmt64 = &sfmt[0].d[0];
 /** index counter to the internal state array as double */
@@ -65,17 +66,12 @@ inline static int idxof(int i);
 static void initial_mask(void);
 static void period_certification(void);
 
-#if defined(ALTIVEC)
-  #include "dSFMT-alti.c"
-#elif defined(SSE2)
-  #include "dSFMT-sse2.c"
-#endif
 
-#if defined(__ppc__)
 /**
- * This function simulate a 64-bit index of LITTLE ENDIAN 
- * in BIG ENDIAN machine.
+ * This function simulate a 32-bit array index overlapped to 64-bit
+ * array of LITTLE ENDIAN in BIG ENDIAN machine.
  */
+#if defined(__ppc__)
 inline static int idxof(int i) {
     return i ^ 1;
 }
@@ -116,10 +112,12 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 	^ (c->u[0] << SL1) ^ lung->u[1];
     r->u[1] = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ (c->u[1] >> SR2)
 	^ (c->u[1] << SL1) ^ lung->u[0];
-    r->u[0] = (r->u[0] & LOW_MASK) | HIGH_CONST;
-    r->u[1] = (r->u[1] & LOW_MASK) | HIGH_CONST;
+    r->u[0] &= LOW_MASK;
+    r->u[1] &= LOW_MASK;
     lung->u[0] ^= r->u[0];
     lung->u[1] ^= r->u[1];
+    r->u[0] |= HIGH_CONST;
+    r->u[1] |= HIGH_CONST;
 }
 
 #if !defined(SSE2)
@@ -267,13 +265,20 @@ void initial_mask(void) {
 /**
  * This function certificate the period of 2^{MEXP}-1.
  */
-static void period_certification(void) {
+static void period_certification() {
     int inner = 0;
     int i, j;
+    uint64_t new[2];
     uint64_t work;
+    uint64_t fix[2];
 
+    fix[0] = (((HIGH_CONST >> SR1) & MSK2) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
+    fix[1] = (((HIGH_CONST >> SR1) & MSK1) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
+    fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SL2));
+    new[0] = sfmt[N].u[0] ^ fix[0];
+    new[1] = sfmt[N].u[1] ^ fix[1];
     for (i = 0; i < 2; i++) {
-	work = sfmt[N].u[i] & pcv[i];
+	work = new[i] & pcv[i];
 	for (j = 0; j < 52; j++) {
 	    inner ^= work & 1;
 	    work = work >> 1;
@@ -286,7 +291,7 @@ static void period_certification(void) {
     /* check NG, and modification */
     for (i = 0; i < 2; i++) {
 	work = 1;
-	for (j = 0; j < 52; j++) {
+	for (j = 0; j < 52 - SR1; j++) {
 	    if ((work & pcv[i]) != 0) {
 		sfmt[N].u[i] ^= work;
 		return;
@@ -319,7 +324,8 @@ int get_min_array_size(void) {
 
 /**
  * This function generates and returns double precision pseudorandom
- * number which distributes uniformly in the range [1, 2).
+ * number which distributes uniformly in the range [1, 2).  This is
+ * the primitive and faster than generating numbers in other ranges.
  * init_gen_rand() or init_by_array() must be called before this
  * function.
  * @return double precision floating point pseudorandom number
@@ -344,7 +350,7 @@ inline double genrand_close1_open2(void) {
  * is specified by the argument \b size, which must be at least (MEXP
  * / 128) * 2 and a multiple of two.  The function
  * get_min_array_size() returns this minimum size.  The generation by
- * this function is much faster than the following genrand_xxx functions.
+ * this function is much faster than the following fill_array_xxx functions.
  *
  * For initialization, init_gen_rand() or init_by_array() must be called
  * before the first call of this function. This function can not be

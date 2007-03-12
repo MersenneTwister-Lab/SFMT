@@ -11,12 +11,26 @@
  * The new BSD License is applied to this software, see LICENSE.txt
  */
 
+/** 128-bit data structure */
+union W128_T {
+    vector unsigned int s;
+    uint64_t u[2];
+    double d[2];
+};
+
+/** 128-bit data type */
+typedef union W128_T w128_t;
+
+/** the 128-bit internal state array */
+static w128_t sfmt[N + 1];
+
 /**
- * @param dist posion of array. may equal to a. chaneged.
+ * This function represents the recursion formula.
  * @param a position of array.
  * @param b position of array.
- * @param reg may keep in register. changed.
- * @param lung may keep in register. changed.
+ * @param reg position of array which may keep in register.
+ * @param lung special posion of array which may keep in register.
+ * @return next value of recursion
  */
 inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
@@ -32,7 +46,7 @@ inline static vector unsigned int vec_recursion(vector unsigned int a,
     const vector unsigned char sr2_perm = SR2_PERM;
     const vector unsigned char perm = ALTI_PERM;
     const vector unsigned int low_mask = ALTI_LOW_MSK;
-    const vector unsigned int high_const = ALTI_HIGH_CONST;
+    /* const vector unsigned int high_const = ALTI_HIGH_CONST;*/
 
     x = vec_perm(a, (vector unsigned int)sl2_perm, sl2_perm);
     y = vec_srl(b, sr1);
@@ -48,59 +62,77 @@ inline static vector unsigned int vec_recursion(vector unsigned int a,
     r = vec_xor(s, t);
     r = vec_xor(r, u);
     r = vec_and(r, low_mask);
-    r = vec_or(r, high_const);
+    /* r = vec_or(r, high_const);*/
     return r;
 }
 
+/**
+ * This function fills the internal state array with double precision
+ * floating point pseudorandom numbers of the IEEE 754 format.
+ */
 inline static void gen_rand_all(void) {
     int i;
     vector unsigned int r, lung;
+    const vector unsigned int high_const = ALTI_HIGH_CONST;
 
     lung = sfmt[N].s;
     r = sfmt[N - 1].s;
     for (i = 0; i < N - POS1; i++) {
 	r = vec_recursion(sfmt[i].s, sfmt[i + POS1].s, r, lung);
-	sfmt[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	sfmt[i].s = r;
     }
     for (; i < N; i++) {
 	r = vec_recursion(sfmt[i].s, sfmt[i + POS1 - N].s, r, lung);
-	sfmt[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	sfmt[i].s = r;
     }
     sfmt[N].s = lung;
 }
 
+/**
+ * This function fills the user-specified array with double precision
+ * floating point pseudorandom numbers of the IEEE 754 format.
+ * @param array an 128-bit array to be filled by pseudorandom numbers.  
+ * @param size number of 128-bit pseudorandom numbers to be generated.
+ */
 inline static void gen_rand_array(w128_t array[], int size) {
     int i, j;
     vector unsigned int r, lung;
+    const vector unsigned int high_const = ALTI_HIGH_CONST;
 
     /* read from sfmt */
     lung = sfmt[N].s;
     r = sfmt[N - 1].s;
     for (i = 0; i < N - POS1; i++) {
 	r = vec_recursion(sfmt[i].s, sfmt[i + POS1].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
     }
     for (; i < N; i++) {
 	r = vec_recursion(sfmt[i].s, array[i + POS1 - N].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
     }
     /* main loop */
     for (; i < size - N; i++) {
 	r = vec_recursion(array[i - N].s, array[i + POS1 - N].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
     }
     for (j = 0; j < 2 * N - size; j++) {
 	sfmt[j].s = array[j + size - N].s;
     }
     for (; i < size; i++) {
 	r = vec_recursion(array[i - N].s, array[i + POS1 - N].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
 	sfmt[j++].s = r;
     }
     sfmt[N].s = lung;

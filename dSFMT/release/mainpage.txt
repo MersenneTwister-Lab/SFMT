@@ -9,7 +9,7 @@
  *
  * This Project provides pseudorandom number generators of various
  * Mersenne Prime Period: from 2<sup>607</sup>-1 to
- * 2<sup>132049</sup>-1.
+ * 2<sup>86243</sup>-1.
  *
  * To get dSFMT which has the period of 2<sup>607</sup>-1, you have to
  * specify -DMEXP=607 as a compile option. For example, 
@@ -19,16 +19,16 @@
  * will make dSFMT which has the period of 2<sup>607</sup>-1 and is
  * optimized for SSE2.
  *
- *   see <a href="howto-compile.html">How to compile</a> to compile
+ *   See <a href="howto-compile.html">How to compile</a> to compile
  *   your program with SFMT optimized for SIMD.
  * 
  * - void init_gen_rand() initializes the generator with a 32-bit
  *   integer seed.
  * - void init_by_array() initializes the generator with an array of
  *   32-bit integers as the seeds.
- * - char *get_idstring() returns the IDSTRING which identify the generator.
+ * - char * get_idstring() returns the IDSTRING which identify the generator.
  * - int get_min_array_size() returns the minimum size of array used for
- *   fill_array functions.   
+ *   \b fill_array functions.   
  * - inline double genrand_close1_open2() generates and returns a
  *   double precision pseudorandom number which distributes uniformly
  *   in the range [1, 2).  This is the primitive and faster than
@@ -60,7 +60,7 @@
  *
  * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
  *
- * @date 2007-02-24
+ * @date 2007-03-12
  *
  * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.

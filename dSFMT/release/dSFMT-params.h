@@ -68,6 +68,8 @@
 
 #if MEXP == 607
   #include "dSFMT-params607.h"
+#elif MEXP == 1279
+  #include "dSFMT-params1279.h"
 #elif MEXP == 2281
   #include "dSFMT-params2281.h"
 #elif MEXP == 4423
@@ -80,8 +82,6 @@
   #include "dSFMT-params44497.h"
 #elif MEXP == 86243
   #include "dSFMT-params86243.h"
-#elif MEXP == 132049
-  #include "dSFMT-params132049.h"
 #else
 #ifdef __GNUC__
   #error "MEXP is not valid."

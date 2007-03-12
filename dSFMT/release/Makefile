@@ -29,16 +29,16 @@ STD = -std=c99
 CC = gcc
 CCFLAGS = $(OPTI) $(WARN) $(STD)
 STD_TARGET = test-std-M19937
-ALL_STD_TARGET = test-std-M607 test-std-M2281 test-std-M4423 test-std-M11213 \
-test-std-M19937 test-std-M44497 test-std-M86243 test-std-M132049
+ALL_STD_TARGET = test-std-M607 test-std-M1279 test-std-M2281 test-std-M4423 \
+test-std-M11213 test-std-M19937 test-std-M44497 test-std-M86243
 ALTI_TARGET = $(STD_TARGET) test-alti-M19937
-ALL_ALTI_TARGET = test-alti-M607 test-alti-M2281 test-alti-M4423 \
-test-alti-M11213 test-alti-M19937 test-alti-M44497 test-alti-M86243 \
-test-alti-M132049
+ALL_ALTI_TARGET = test-alti-M607 test-alti-M1279 test-alti-M2281 \
+test-alti-M4423 test-alti-M11213 test-alti-M19937 test-alti-M44497 \
+test-alti-M86243
 SSE2_TARGET = $(STD_TARGET) test-sse2-M19937
-ALL_SSE2_TARGET = test-sse2-M607 test-sse2-M2281 test-sse2-M4423 \
-test-sse2-M11213 test-sse2-M19937 test-sse2-M44497 test-sse2-M86243 \
-test-sse2-M132049
+ALL_SSE2_TARGET = test-sse2-M607 test-sse2-M1279 test-sse2-M2281 \
+test-sse2-M4423 test-sse2-M11213 test-sse2-M19937 test-sse2-M44497 \
+test-sse2-M86243
 # ==========================================================
 # comment out or EDIT following lines to get max performance
 # ==========================================================
@@ -91,6 +91,15 @@ test-alti-M607: test.c dSFMT.c dSFMT.h
 
 test-sse2-M607: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -msse2 -DMEXP=607 -DSSE2 -o $@ test.c
+
+test-std-M1279: test.c dSFMT.c dSFMT.h
+	${CC} ${CCFLAGS} -DMEXP=1279 -o $@ test.c
+
+test-alti-M1279: test.c dSFMT.c dSFMT.h
+	${CC} ${CCFLAGS} -faltivec -maltivec -DMEXP=1279 -DALTIVEC -o $@ test.c
+
+test-sse2-M1279: test.c dSFMT.c dSFMT.h
+	${CC} ${CCFLAGS} -msse2 -DMEXP=1279 -DSSE2 -o $@ test.c
 
 test-std-M2281: test.c dSFMT.c dSFMT.h
 	${CC} ${CCFLAGS} -DMEXP=2281 -o $@ test.c
