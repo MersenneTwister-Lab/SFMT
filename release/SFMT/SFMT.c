@@ -15,19 +15,36 @@
 #include "SFMT.h"
 #include "SFMT-params.h"
 
-#if defined(ALTIVEC)
-  #include "SFMT-alti.h"
-#elif defined(SSE2)
-  #include "SFMT-sse2.h"
+/*------------------------------------------------------
+  128-bit SIMD data type for Altivec, SSE2 or standard C
+  ------------------------------------------------------*/
+#if defined(HAVE_ALTIVEC)
+
+/** 128-bit data structure */
+union W128_T {
+    vector unsigned int s;
+    uint32_t u[4];
+};
+/** 128-bit data type */
+typedef union W128_T w128_t;
+
+#elif defined(HAVE_SSE2)
+  #include <emmintrin.h>
+
+/** 128-bit data structure */
+union W128_T {
+    __m128i si;
+    uint32_t u[4];
+};
+/** 128-bit data type */
+typedef union W128_T w128_t;
+
 #else
-/*------------------------------------------
-  128-bit SIMD like data type for standard C
-  ------------------------------------------*/
+
 /** 128-bit data structure */
 struct W128_T {
     uint32_t u[4];
 };
-
 /** 128-bit data type */
 typedef struct W128_T w128_t;
 
@@ -68,10 +85,10 @@ static void period_certification(void);
 inline static void swap(w128_t array[], int size);
 #endif
 
-#if defined(ALTIVEC)
-  #include "SFMT-alti.c"
-#elif defined(SSE2)
-  #include "SFMT-sse2.c"
+#if defined(HAVE_ALTIVEC)
+  #include "SFMT-alti.h"
+#elif defined(HAVE_SSE2)
+  #include "SFMT-sse2.h"
 #endif
 
 /**
@@ -210,7 +227,7 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 }
 #endif
 
-#if (!defined(ALTIVEC)) && (!defined(SSE2))
+#if (!defined(HAVE_ALTIVEC)) && (!defined(HAVE_SSE2))
 /**
  * This function fills the internal state array with pseudorandom
  * integers.
@@ -273,7 +290,7 @@ inline static void gen_rand_array(w128_t array[], int size) {
 }
 #endif
 
-#if defined(BIG_ENDIAN64) && !defined(ONLY64) && !defined(ALTIVEC)
+#if defined(BIG_ENDIAN64) && !defined(ONLY64) && !defined(HAVE_ALTIVEC)
 inline static void swap(w128_t array[], int size) {
     int i;
     uint32_t x, y;

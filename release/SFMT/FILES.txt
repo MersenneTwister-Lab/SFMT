@@ -17,10 +17,8 @@ params44497.h:		parameters for period of 2^{44497}-1
 params86243.h:		parameters for period of 2^{86243}-1
 params132049.h:		parameters for period of 2^{132049}-1
 SFMT.c:			C code for standard C (c99) and unix like systems.
-SFMT-alti.h:		Header file for SFMT-alti.c
-SFMT-alti.c:		C code optimized for PowerPC AltiVec.
-SFMT-sse2.h:		Header file for SFMT-sse2.c
-SFMT-sse2.c:		C code optimized for intel SSE2.
+SFMT-alti.h:		C code optimized for PowerPC AltiVec.
+SFMT-sse2.h:		C code optimized for intel SSE2.
 test.c:			Test driver for 32 bit output for standard C.
 check.sh:		Test shell script.
 SFMT.607.out.txt:	correct 32-bit output of SFMT MEXP=607

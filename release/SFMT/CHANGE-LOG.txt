@@ -1,3 +1,9 @@
+ver 1.2.1
+-------
+Fix typo in SFMT-alti.c SFMT-sse2.c
+marge SFMT-alti.c and SFMT-alti.h into SFMT-alti.h
+marge SFMT-sse2.c and SFMT-sse2.h into SFMT-sse2.h
+
 ver 1.2
 -------
 Support many periods: 2^{607}, 2^{1279}, 2^{2281}, 2^{4253}, 2^{11213},
