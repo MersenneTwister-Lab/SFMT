@@ -31,10 +31,10 @@ void speed32(void);
 void check64(void);
 void speed64(void);
 
-#if defined(ALTIVEC)
+#if defined(HAVE_ALTIVEC)
 static vector unsigned int array1[BLOCK_SIZE / 4];
 static vector unsigned int array2[10000 / 4];
-#elif defined(SSE2)
+#elif defined(HAVE_SSE2)
 static __m128i array1[BLOCK_SIZE / 4];
 static __m128i array2[10000 / 4];
 #else

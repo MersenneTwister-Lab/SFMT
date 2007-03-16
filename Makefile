@@ -28,8 +28,8 @@ OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG \
 STD = -std=c99
 CC = gcc
 CCFLAGS = $(OPTI) $(WARN) $(STD)
-ALTIFLAGS = -faltivec -maltivec -DALTIVEC
-SSE2FLAGS = -msse2 -DSSE2
+ALTIFLAGS = -faltivec -maltivec -DHAVE_ALTIVEC
+SSE2FLAGS = -msse2 -DHAVE_SSE2
 STD_TARGET = test-std-M19937
 BIG_TARGET = test-big64-M19937
 ALL_STD_TARGET = test-std-M607 test-std-M1279 test-std-M2281 test-std-M4253 \
@@ -101,154 +101,154 @@ altibig-check: ${ALL_ALTIBIG_TARGET} ${ALL_STD_TARGET}
 test-std-M607: test.c SFMT.c SFMT.h SFMT-params607.h
 	${CC} ${CCFLAGS} -DMEXP=607 -o $@ test.c
 
-test-alti-M607: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c SFMT-params607.h
+test-alti-M607: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-params607.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=607 -o $@ test.c
 
-test-sse2-M607: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c SFMT-params607.h
+test-sse2-M607: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-params607.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=607 -o $@ test.c
 
 test-std-M1279: test.c SFMT.c SFMT.h SFMT-params1279.h
 	${CC} ${CCFLAGS} -DMEXP=1279 -o $@ test.c
 
-test-alti-M1279: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c SFMT-params1279.h
+test-alti-M1279: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-params1279.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=1279 -o $@ test.c
 
-test-sse2-M1279: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c SFMT-params1279.h
+test-sse2-M1279: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-params1279.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=1279 -o $@ test.c
 
 test-std-M2281: test.c SFMT.c SFMT.h SFMT-params2281.h
 	${CC} ${CCFLAGS} -DMEXP=2281 -o $@ test.c
 
-test-alti-M2281: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c SFMT-params2281.h
+test-alti-M2281: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-params2281.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=2281 -o $@ test.c
 
-test-sse2-M2281: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c SFMT-params2281.h
+test-sse2-M2281: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-params2281.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=2281 -o $@ test.c
 
 test-std-M4253: test.c SFMT.c SFMT.h SFMT-params4253.h
 	${CC} ${CCFLAGS} -DMEXP=4253 -o $@ test.c
 
-test-alti-M4253: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c SFMT-params4253.h
+test-alti-M4253: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-params4253.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=4253 -o $@ test.c
 
-test-sse2-M4253: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c SFMT-params4253.h
+test-sse2-M4253: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-params4253.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=4253 -o $@ test.c
 
 test-std-M11213: test.c SFMT.c SFMT.h SFMT-params11213.h
 	${CC} ${CCFLAGS} -DMEXP=11213 -o $@ test.c
 
-test-alti-M11213: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti-M11213: test.c SFMT.c SFMT.h SFMT-alti.h \
 	SFMT-params11213.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=11213 -o $@ test.c
 
-test-sse2-M11213: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c \
+test-sse2-M11213: test.c SFMT.c SFMT.h SFMT-sse2.h \
 	SFMT-params11213.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=11213 -o $@ test.c
 
 test-std-M19937: test.c SFMT.c SFMT.h SFMT-params19937.h
 	${CC} ${CCFLAGS} -DMEXP=19937 -o $@ test.c
 
-test-alti-M19937: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti-M19937: test.c SFMT.c SFMT.h SFMT-alti.h \
 	SFMT-params19937.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=19937 -o $@ test.c
 
-test-sse2-M19937: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c \
+test-sse2-M19937: test.c SFMT.c SFMT.h SFMT-sse2.h \
 	SFMT-params19937.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=19937 -o $@ test.c
 
 test-std-M44497: test.c SFMT.c SFMT.h SFMT-params44497.h
 	${CC} ${CCFLAGS} -DMEXP=44497 -o $@ test.c
 
-test-alti-M44497: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti-M44497: test.c SFMT.c SFMT.h SFMT-alti.h \
 	SFMT-params44497.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=44497 -o $@ test.c
 
-test-sse2-M44497: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c \
+test-sse2-M44497: test.c SFMT.c SFMT.h SFMT-sse2.h \
 	SFMT-params44497.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=44497 -o $@ test.c
 
 test-std-M86243: test.c SFMT.c SFMT.h SFMT-params86243.h
 	${CC} ${CCFLAGS} -DMEXP=86243 -o $@ test.c
 
-test-alti-M86243: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti-M86243: test.c SFMT.c SFMT.h SFMT-alti.h \
 	SFMT-params86243.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=86243 -o $@ test.c
 
-test-sse2-M86243: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c \
+test-sse2-M86243: test.c SFMT.c SFMT.h SFMT-sse2.h \
 	SFMT-params86243.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=86243 -o $@ test.c
 
 test-std-M132049: test.c SFMT.c SFMT.h SFMT-params132049.h
 	${CC} ${CCFLAGS} -DMEXP=132049 -o $@ test.c
 
-test-alti-M132049: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti-M132049: test.c SFMT.c SFMT.h SFMT-alti.h \
 	SFMT-params132049.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=132049 -o $@ test.c
 
-test-sse2-M132049: test.c SFMT.c SFMT.h SFMT-sse2.h SFMT-sse2.c \
+test-sse2-M132049: test.c SFMT.c SFMT.h SFMT-sse2.h \
 	SFMT-params132049.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=132049 -o $@ test.c
 
 test-big64-M607: test.c SFMT.c SFMT.h SFMT-params607.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=607 -o $@ test.c
 
-test-alti64-M607: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M607: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params607.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=607 -o $@ test.c
 
 test-big64-M1279: test.c SFMT.c SFMT.h SFMT-params1279.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=1279 -o $@ test.c
 
-test-alti64-M1279: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M1279: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params1279.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=1279 -o $@ test.c
 
 test-big64-M2281: test.c SFMT.c SFMT.h SFMT-params2281.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=2281 -o $@ test.c
 
-test-alti64-M2281: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M2281: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params2281.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=2281 -o $@ test.c
 
 test-big64-M4253: test.c SFMT.c SFMT.h SFMT-params4253.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=4253 -o $@ test.c
 
-test-alti64-M4253: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M4253: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params4253.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=4253 -o $@ test.c
 
 test-big64-M11213: test.c SFMT.c SFMT.h SFMT-params11213.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=11213 -o $@ test.c
 
-test-alti64-M11213: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M11213: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params11213.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=11213 -o $@ test.c
 
 test-big64-M19937: test.c SFMT.c SFMT.h SFMT-params19937.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=19937 -o $@ test.c
 
-test-alti64-M19937: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M19937: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params19937.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=19937 -o $@ test.c
 
 test-big64-M44497: test.c SFMT.c SFMT.h SFMT-params44497.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=44497 -o $@ test.c
 
-test-alti64-M44497: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M44497: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params44497.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=44497 -o $@ test.c
 
 test-big64-M86243: test.c SFMT.c SFMT.h SFMT-params86243.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=86243 -o $@ test.c
 
-test-alti64-M86243: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M86243: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params86243.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=86243 -o $@ test.c
 
 test-big64-M132049: test.c SFMT.c SFMT.h SFMT-params132049.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=132049 -o $@ test.c
 
-test-alti64-M132049: test.c SFMT.c SFMT.h SFMT-alti.h SFMT-alti.c \
+test-alti64-M132049: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params132049.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=132049 -o $@ test.c
 
