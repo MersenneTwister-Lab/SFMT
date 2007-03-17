@@ -1,3 +1,6 @@
+#ifndef SFMT_PARAMS11213_H
+#define SFMT_PARAMS11213_H
+
 #define POS1	68
 #define SL1	14
 #define SL2	3
@@ -20,3 +23,5 @@
 #define ALTI_SR2_PERM64 \
 (vector unsigned char)(13,14,15,0,1,2,3,4,19,19,19,8,9,10,11,12)
 #define IDSTR	"SFMT-11213:68-14-3-7-3:effff7fb-ffffffef-dfdfbfff-7fffdbfd"
+
+#endif /* SFMT_PARAMS11213_H */

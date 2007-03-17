@@ -1,3 +1,6 @@
+#ifndef SFMT_PARAMS19937_H
+#define SFMT_PARAMS19937_H
+
 #define POS1	122
 #define SL1	18
 #define SL2	1
@@ -20,3 +23,5 @@
 #define ALTI_SR2_PERM64 \
 (vector unsigned char)(15,0,1,2,3,4,5,6,17,8,9,10,11,12,13,14)
 #define IDSTR	"SFMT-19937:122-18-1-11-1:dfffffef-ddfecb7f-bffaffff-bffffff6"
+
+#endif /* SFMT_PARAMS19937_H */
