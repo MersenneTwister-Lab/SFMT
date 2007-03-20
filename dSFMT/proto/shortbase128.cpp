@@ -2,8 +2,8 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <iostream>
-
 #include "shortbase128.h"
 #include "util.h"
 

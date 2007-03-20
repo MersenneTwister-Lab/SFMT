@@ -99,16 +99,15 @@ void generating_polynomial104(dsfmt_t *dsfmt, vec_GF2& vec,
 }
 
 static void test_parity(GF2X& f) {
-    uint64_t ar[2];
+    uint64_t fix[2];
     dsfmt_t sfmt;
-    dsfmt_t zero;
     GF2X minpoly;
     GF2X q, rem;
     vec_GF2 vec;
     int i;
     int r;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 100; i++) {
 	printf("------\n");
 	printf("==shoki\n");
 	init_gen_rand(&sfmt, i + 1);
@@ -118,8 +117,9 @@ static void test_parity(GF2X& f) {
 	printf("minpoly = %ld\n", deg(minpoly));
 	DivRem(q, rem, minpoly, f);
 	if (deg(rem) != -1) {
-	    printf("rem != 0 deg rempoly = %ld: 0\n", deg(rem));
-	    printf("deg q = %ld: 0\n", deg(q));
+	    printf("rem != 0 deg rempoly = %ld\n", deg(rem));
+	    printf("deg q = %ld\n", deg(q));
+	    return;
 	}
 	r = period_certification(&sfmt);
 	if (r == 1) {
@@ -128,29 +128,32 @@ static void test_parity(GF2X& f) {
 	    printf("period certification NG -> OK\n");
 	    if (!period_certification(&sfmt)) {
 		printf("error!!\n");
+		return;
 	    }
 	}
-	//reset_high_const();
-	//initial_mask(&sfmt);
-	//init_gen_rand(&zero, i+1);
-	//make_zero_state(&zero, f);
-	make_fix_point(&zero);
-	//set_high_const();
-	//initial_mask(&sfmt);
-	//add_rnd(&sfmt, &zero);
+	get_fixed(fix);
+	reset_high_const();
+	initial_mask(&sfmt);
+	make_zero_state(&sfmt, f);
+	sfmt.sfmt[N].u[0] ^= fix[0];
+	sfmt.sfmt[N].u[1] ^= fix[1];
+	set_high_const();
+	initial_mask(&sfmt);
 	printf("==zero\n");
-	generating_polynomial104(&zero, vec, 0, maxdegree);
+	generating_polynomial104(&sfmt, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
 	printf("minpoly = %ld\n", deg(minpoly));
 
-	r = period_certification(&zero);
+	r = period_certification(&sfmt);
 	if (r == 1) {
 	    printf("period certification OK\n");
 	    printf("error OK!\n");
+	    return;
 	} else {
 	    printf("period certification NG -> OK\n");
-	    if (!period_certification(&zero)) {
+	    if (!period_certification(&sfmt)) {
 		printf("error!!\n");
+		return;
 	    }
 	}
 	generating_polynomial104(&sfmt, vec, 0, maxdegree);
@@ -163,6 +166,7 @@ static void test_parity(GF2X& f) {
 	    printf("period certification NG -> OK\n");
 	    if (!period_certification(&sfmt)) {
 		printf("error!!\n");
+		return;
 	    }
 	}
     }
@@ -207,21 +211,17 @@ static void initial_status_parity_check(dsfmt_t *sfmt) {
 }
 #endif
 
-void make_zero_state(dsfmt_t *sfmt, GF2X& poly) {
-    const uint64_t high = 0x3FF0000000000000ULL;
-    const uint64_t msk1 = 0xffcfeef7fdffffffULL;
-    const uint64_t msk2 = 0xfdffffb7ffffffffULL;
-    const int sr1 = 7;
-    const int sr2 = 24;
-    int i;
+static void make_zero_state(dsfmt_t *sfmt, GF2X& poly) {
+    dsfmt_t sfmtnew;
     uint64_t ar[2];
-    for (i = 0; i <= N; i++) {
-	sfmt->sfmt[i].u[0] = high;
-	sfmt->sfmt[i].u[1] = high;
+    int i;
+
+    memset(&sfmtnew, 0, sizeof(sfmtnew));
+    for (i = 0; i <= deg(poly); i++) {
+	if (coeff(poly, i) != 0) {
+	    add_rnd(&sfmtnew, sfmt);
+	}
+	gen_rand104sp(sfmt, ar, 0);
     }
-    sfmt->sfmt[N].u[0] = ((high >> sr2) & msk2) | (high >> sr1) | high;
-    sfmt->sfmt[N].u[1] = ((high >> sr2) & msk1) | (high >> sr1) | high;
-    printf("%016llx\n", sfmt->sfmt[N].u[0]);
-    printf("%016llx\n", sfmt->sfmt[N].u[0]);
-    gen_rand104sp(sfmt, ar, 0);
+    *sfmt = sfmtnew;
 }

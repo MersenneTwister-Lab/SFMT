@@ -16,7 +16,32 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include "dsfmt-ref-st.h"
-#include "dSFMT-params607.h"
+#if MEXP == 607
+  #include "dSFMT-params607.h"
+#elif MEXP == 1279
+  #include "dSFMT-params1279.h"
+#elif MEXP == 2281
+  #include "dSFMT-params2281.h"
+#elif MEXP == 4423
+  #include "dSFMT-params4423.h"
+#elif MEXP == 11213
+  #include "dSFMT-params11213.h"
+#elif MEXP == 19937
+  #include "dSFMT-params19937.h"
+#elif MEXP == 44497
+  #include "dSFMT-params44497.h"
+#elif MEXP == 86243
+  #include "dSFMT-params86243.h"
+#elif MEXP == 132049
+  #include "dSFMT-params132049.h"
+#else
+#ifdef __GNUC__
+  #error "MEXP is not valid."
+  #undef MEXP
+#else
+  #undef MEXP
+#endif
+#endif
 
 #undef HIGH_CONST
 #undef HIGH_CONST32
@@ -151,74 +176,35 @@ void initial_mask(dsfmt_t *dsfmt) {
     }
 }
 
-static void next_lung(w128_t *new, w128_t *a, w128_t *b, w128_t *c,
-		      w128_t *lung) {
-    w128_t x;
-    uint64_t r0, r1;
+void get_fixed(uint64_t fix[2]) {
+    fix[0] = ((HIGH_CONST >> SR1) & MSK2) | (HIGH_CONST >> SR2) | HIGH_CONST;
+    fix[1] = ((HIGH_CONST >> SR1) & MSK1) | (HIGH_CONST >> SR2) | HIGH_CONST;
+    fix[0] = fix[0] | (HIGH_CONST >> (64 - 8 * SL2));
+ }
 
-    lshift128(&x, a, SL2);
-    r0 = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SR1) & MSK1) ^ (c->u[0] >> SR2)
-	^ (c->u[0] << SL1) ^ lung->u[1];
-    r1 = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ (c->u[1] >> SR2)
-	^ (c->u[1] << SL1) ^ lung->u[0];
-    r0 &= LOW_MASK;
-    r1 &= LOW_MASK;
-    /* new->u[0] = lung->u[0] ^ r0;*/
-    /* new->u[1] = lung->u[1] ^ r1;*/
-    new->u[0] = r0;
-    new->u[1] = r1;
-}
-
-void make_fix_point(dsfmt_t *dsfmt) {
-    int i;
-    uint64_t ar[2];
-    
-    dsfmt->idx = 0;
-    for (i = 0; i < N; i++) {
-	dsfmt->sfmt[i].u[0] = HIGH_CONST;
-	dsfmt->sfmt[i].u[1] = HIGH_CONST;
-    }
-    dsfmt->sfmt[N].u[0] = 0;
-    dsfmt->sfmt[N].u[1] = 0;
-    next_lung(&dsfmt->sfmt[N], &dsfmt->sfmt[0], &dsfmt->sfmt[POS1], 
-	      &dsfmt->sfmt[N - 1], &dsfmt->sfmt[N]);
-    dsfmt->sfmt[N].u[0] |= HIGH_CONST;
-    dsfmt->sfmt[N].u[1] |= HIGH_CONST;
-    ar[0] = dsfmt->sfmt[N].u[0];
-    dsfmt->sfmt[N].u[0] = dsfmt->sfmt[N].u[1];
-    dsfmt->sfmt[N].u[1] = ar[0];
-    gen_rand104sp(dsfmt, ar, 0);
-}
 /**
  * This function certificate the period of 2^{MEXP}-1.
  */
-#if 1
 int period_certification(dsfmt_t *dsfmt) {
     int inner = 0;
     int i, j;
-    w128_t new;
+    uint64_t new[2];
     uint64_t work;
-    uint64_t w[2];
     uint64_t fix[2];
 
     fix[0] = ((HIGH_CONST >> SR1) & MSK2) | (HIGH_CONST >> SR2) | HIGH_CONST;
     fix[1] = ((HIGH_CONST >> SR1) & MSK1) | (HIGH_CONST >> SR2) | HIGH_CONST;
     fix[0] = fix[0] | (HIGH_CONST >> (64 - 8 * SL2));
-    printf("fix lung %016"PRIx64"\n", fix[0]);
-    printf("fix lung %016"PRIx64"\n", fix[1]);
-
-    printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
-    printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[1]);
-    next_lung(&new, &dsfmt->sfmt[0], &dsfmt->sfmt[POS1], &dsfmt->sfmt[N - 1],
-	      &dsfmt->sfmt[N]);
-    //printf("new lung %016"PRIx64"\n", new.u[0]);
-    //printf("new lung %016"PRIx64"\n", new.u[1]);
-    //new.u[0] ^= dsfmt->sfmt[N].u[0];
-    //new.u[1] ^= dsfmt->sfmt[N].u[1];
-    printf("dif lung %016"PRIx64"\n", new.u[0]);
-    printf("dif lung %016"PRIx64"\n", new.u[1]);
+    //printf("fix lung %016"PRIx64"\n", fix[0]);
+    //printf("fix lung %016"PRIx64"\n", fix[1]);
+    //printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
+    //printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[1]);
+    new[0] = dsfmt->sfmt[N].u[0] ^ fix[0];
+    new[1] = dsfmt->sfmt[N].u[1] ^ fix[1];
+    //printf("new lung %016"PRIx64"\n", new[0]);
+    //printf("new lung %016"PRIx64"\n", new[1]);
     for (i = 0; i < 2; i++) {
-	work = new.u[i] & pcv[i];
+	work = new[i] & pcv[i];
 	for (j = 0; j < 52; j++) {
 	    inner ^= work & 1;
 	    work = work >> 1;
@@ -229,50 +215,13 @@ int period_certification(dsfmt_t *dsfmt) {
 	return 1;
     }
     /* check NG, and modification */
-    w[0] = pcv[0] & MSK1;
-    w[1] = pcv[1] & MSK2;
-    w[0] = w[0] << SR1;
-    w[1] = w[1] << SR1;
     for (i = 0; i < 2; i++) {
 	work = (uint64_t)1 << SR1;
 	for (j = 0; j < 52 - SR1; j++) {
-	    if ((work & w[i]) != 0) {
-		dsfmt->sfmt[POS1].u[i] ^= work;
-		i = 2;
-		break;
-	    }
-	    work = work << 1;
-	}
-    }
-    next_lung(&new, &dsfmt->sfmt[0], &dsfmt->sfmt[POS1], &dsfmt->sfmt[N - 1],
-	      &dsfmt->sfmt[N]);
-    printf("mod lung %016"PRIx64"\n", new.u[0]);
-    printf("mod lung %016"PRIx64"\n", new.u[1]);
-    return 0;
-}
-#else
-int period_certification(dsfmt_t *dsfmt) {
-    int inner = 0;
-    int i, j;
-    uint64_t work;
-
-    for (i = 0; i < 2; i++) {
-	work = dsfmt->sfmt[N].u[i] & pcv[i];
-	for (j = 0; j < 52; j++) {
-	    inner ^= work & 1;
-	    work = work >> 1;
-	}
-    }
-    /* check OK */
-    if (inner == 1) {
-	return 1;
-    }
-    /* check NG, and modification */
-    for (i = 0; i < 2; i++) {
-	work = 1;
-	for (j = 0; j < 52; j++) {
 	    if ((work & pcv[i]) != 0) {
 		dsfmt->sfmt[N].u[i] ^= work;
+		//printf("mod lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
+		//printf("mod lung %016"PRIx64"\n", dsfmt->sfmt[N].u[1]);
 		return 0;
 	    }
 	    work = work << 1;
@@ -280,7 +229,6 @@ int period_certification(dsfmt_t *dsfmt) {
     }
     return 0;
 }
-#endif
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/

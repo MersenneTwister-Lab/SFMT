@@ -81,6 +81,24 @@ check-affin-bm607: chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o
 testD11-parity607:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
 	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
 
+testD11-parity1279:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
+	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
+
+testD11-parity2281:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
+	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
+
+testD11-parity4423:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
+	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
+
+testD11-parity11213:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
+	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
+
+testD11-parity19937:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
+	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
+
+testD11-parity44497:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
+	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
