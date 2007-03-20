@@ -1,3 +1,8 @@
+ver 1.0.1
+-------
+change name dSFMT-alti.c to SFMT-alti.h
+change name dSFMT-sse2.c to SFMT-sse2.h
+
 ver 1.0
 -------
 The first version.

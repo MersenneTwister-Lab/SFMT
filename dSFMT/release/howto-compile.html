@@ -97,7 +97,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DSSE2=1 -DMEXP=19937 -o test-sse2-M19937 test.c</pre>
+      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DHAVE_SSE2=1 -DMEXP=19937 -o test-sse2-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
@@ -116,7 +116,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DALTIVEC=1 -DMEXP=19937 -o test-alti-M19937 test.c</pre>
+      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DHAVE_ALTIVEC=1 -DMEXP=19937 -o test-alti-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
@@ -194,12 +194,12 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=607 -DSSE2 -o sample1 dSFMT.c sample1.c</pre>
+      <pre>gcc -msse2 -DMEXP=607 -DHAVE_SSE2 -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized dSFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=607 -DALTIVEC -o sample1 dSFMT.c sample1.c</pre>
+      <pre>gcc -faltivec -DMEXP=607 -DHAVE_ALTIVEC -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
 
     <h4>2-2. Use block call and static link.</h4>
@@ -288,12 +288,12 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=2281 -DSSE2 -o sample2 dSFMT.c sample2.c</pre>
+      <pre>gcc -msse2 -DMEXP=2281 -DHAVE_SSE2 -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=2281 -DALTIVEC -o sample2 dSFMT.c sample2.c</pre>
+      <pre>gcc -faltivec -DMEXP=2281 -DHAVE_ALTIVEC -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
     <h4>2-3. Use sequential call and inline functions.</h4>
     <p>
@@ -340,12 +340,12 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=19937 -DSSE2 -o sample3 sample3.c</pre>
+      <pre>gcc -msse2 -DMEXP=19937 -DHAVE_SSE2 -o sample3 sample3.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=19937 -DALTIVEC -o sample3 sample3.c</pre>
+      <pre>gcc -faltivec -DMEXP=19937 -DHAVE_ALTIVEC -o sample3 sample3.c</pre>
     </blockquote>
     <h4>2-4. Initialize dSFMT using init_by_array function.</h4>
     <p>

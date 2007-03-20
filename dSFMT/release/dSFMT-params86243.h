@@ -1,3 +1,6 @@
+#ifndef DSFMT_PARAMS86243_H
+#define DSFMT_PARAMS86243_H
+
 #define POS1	147
 #define SL1	43
 #define SL2	3
@@ -32,3 +35,5 @@
 #define ALTI_LOW_MSK (vector unsigned int) \
   (LOW_MASK32_1, LOW_MASK32_2, LOW_MASK32_1, LOW_MASK32_2)
 #define ALTI_HIGH_CONST (vector unsigned int)(HIGH_CONST32, 0, HIGH_CONST32, 0)
+
+#endif /* DSFMT_PARAMS86243_H */

@@ -123,4 +123,4 @@ inline static double genrand_open_open(void) {
     return conv.d - 1.0L;
 }
 
-#endif
+#endif /* DSFMT_H */

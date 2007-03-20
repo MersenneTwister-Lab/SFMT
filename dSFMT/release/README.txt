@@ -1,5 +1,5 @@
  =================================================================
- dSFMT ver. 1.0
+ dSFMT ver. 1.0.1
  double precision SIMD oriented Fast Mersenne Twister(dSFMT)
  based on IEEE 754 floating point format.
 

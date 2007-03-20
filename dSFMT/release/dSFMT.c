@@ -18,25 +18,38 @@
 /*------------------------------------------
   128-bit SIMD like data type for standard C
   ------------------------------------------*/
-#if !defined(ALTIVEC) && !defined(SSE2)
+#if defined(HAVE_ALTIVEC)
+/** 128-bit data structure */
+union W128_T {
+    vector unsigned int s;
+    uint64_t u[2];
+    double d[2];
+};
+
+#elif defined(HAVE_SSE2)
+#include <emmintrin.h>
+
+/** 128-bit data structure */
+union W128_T {
+    __m128i si;
+    __m128d sd;
+    uint64_t u[2];
+    double d[2];
+};
+#else
 /** 128-bit data structure */
 union W128_T {
     uint64_t u[2];
     double d[2];
 };
+#endif
 
 /** 128-bit data type */
 typedef union W128_T w128_t;
 
 /** the 128-bit internal state array */
 static w128_t sfmt[N + 1];
-#endif
 
-#if defined(ALTIVEC)
-  #include "dSFMT-alti.c"
-#elif defined(SSE2)
-  #include "dSFMT-sse2.c"
-#endif
 /*--------------------------------------
   FILE GLOBAL VARIABLES
   internal state, index counter and flag 
@@ -66,6 +79,11 @@ inline static int idxof(int i);
 static void initial_mask(void);
 static void period_certification(void);
 
+#if defined(HAVE_ALTIVEC)
+  #include "dSFMT-alti.h"
+#elif defined(HAVE_SSE2)
+  #include "dSFMT-sse2.h"
+#endif
 
 /**
  * This function simulate a 32-bit array index overlapped to 64-bit
@@ -120,7 +138,7 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
     r->u[1] |= HIGH_CONST;
 }
 
-#if !defined(SSE2)
+#if !defined(HAVE_SSE2)
 /**
  * This function converts the double precision floating point numbers which
  * distribute uniformly in the range [1, 2) to those which distribute uniformly
@@ -172,7 +190,7 @@ inline static void convert_oo(w128_t array[], int size) {
 }
 #endif
 
-#if (!defined(ALTIVEC)) && (!defined(SSE2))
+#if (!defined(HAVE_ALTIVEC)) && (!defined(HAVE_SSE2))
 /**
  * This function fills the internal state array with double precision
  * floating point pseudorandom numbers of the IEEE 754 format.
@@ -268,17 +286,17 @@ void initial_mask(void) {
 static void period_certification() {
     int inner = 0;
     int i, j;
-    uint64_t new[2];
+    uint64_t new_lung[2];
     uint64_t work;
     uint64_t fix[2];
 
     fix[0] = (((HIGH_CONST >> SR1) & MSK2) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
     fix[1] = (((HIGH_CONST >> SR1) & MSK1) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
     fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SL2));
-    new[0] = sfmt[N].u[0] ^ fix[0];
-    new[1] = sfmt[N].u[1] ^ fix[1];
+    new_lung[0] = sfmt[N].u[0] ^ fix[0];
+    new_lung[1] = sfmt[N].u[1] ^ fix[1];
     for (i = 0; i < 2; i++) {
-	work = new[i] & pcv[i];
+	work = new_lung[i] & pcv[i];
 	for (j = 0; j < 52; j++) {
 	    inner ^= work & 1;
 	    work = work >> 1;
@@ -449,7 +467,7 @@ void init_gen_rand(uint32_t seed) {
     period_certification();
     idx = N64;
     initialized = 1;
-#ifdef SSE2
+#ifdef HAVE_SSE2
     setup_const();
 #endif
 }
@@ -526,7 +544,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
     period_certification();
     idx = N64;
     initialized = 1;
-#ifdef SSE2
+#ifdef HAVE_SSE2
     setup_const();
 #endif
 }

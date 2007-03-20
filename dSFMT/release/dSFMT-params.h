@@ -1,3 +1,6 @@
+#ifndef DSFMT_PARAMS_H
+#define DSFMT_PARAMS_H
+
 #if !defined(MEXP)
 #ifdef __GNUC__
   #warning "MEXP is not defined. I assume MEXP is 19937."
@@ -91,3 +94,5 @@
 #endif
 
 #endif
+
+#endif /* DSFMT_PARAMS_H */

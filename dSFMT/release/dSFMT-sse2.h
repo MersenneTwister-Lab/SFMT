@@ -11,25 +11,10 @@
  *
  * The new BSD License is applied to this software, see LICENSE.txt
  */
+#ifndef DSFMT_SSE2_H
+#define DSFMT_SSE2_H
 
 #include <emmintrin.h>
-/*------------------------------------------
-  128-bit SIMD like data type for SSE2
-  ------------------------------------------*/
-
-/** 128-bit data structure */
-union W128_T {
-    __m128i si;
-    __m128d sd;
-    uint64_t u[2];
-    double d[2];
-};
-
-/** 128-bit data type */
-typedef union W128_T w128_t;
-
-/** the 128-bit internal state array */
-static w128_t sfmt[N + 1];
 
 static __m128i sse2_param_mask;
 static __m128i sse2_low_mask;
@@ -204,3 +189,4 @@ inline static void gen_rand_array(w128_t array[], int size) {
     }
     _mm_store_si128(&sfmt[N].si, lung);
 }
+#endif	/* DSFMT_SSE2_H */

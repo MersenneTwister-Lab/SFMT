@@ -10,20 +10,8 @@
  *
  * The new BSD License is applied to this software, see LICENSE.txt
  */
-
-/** 128-bit data structure */
-union W128_T {
-    vector unsigned int s;
-    uint64_t u[2];
-    double d[2];
-};
-
-/** 128-bit data type */
-typedef union W128_T w128_t;
-
-/** the 128-bit internal state array */
-static w128_t sfmt[N + 1];
-
+#ifndef DSFMT_ALTI_H
+#define DSFMT_ALTI_H
 /**
  * This function represents the recursion formula.
  * @param a position of array.
@@ -137,3 +125,4 @@ inline static void gen_rand_array(w128_t array[], int size) {
     }
     sfmt[N].s = lung;
 }
+#endif	/* DSFMT_ALTI_H*/
