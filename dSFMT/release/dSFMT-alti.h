@@ -1,5 +1,5 @@
 /** 
- * @file dSFMT-alti.c 
+ * @file dSFMT-alti.h 
  * @brief double precision SIMD-oriented Fast Mersenne Twister (dSFMT)
  *
  * @author Mutsuo Saito (Hiroshima University)
@@ -26,12 +26,12 @@ inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int lung) {
     vector unsigned int r, s, t, u, v, w, x, y, z;
     const vector unsigned char sl1 = (vector unsigned char)(ALTI_SL1);
-    const vector unsigned char sl1_perm = SL1_PERM;
-    const vector unsigned int sl1_msk = SL1_MSK;
-    const vector unsigned char sl2_perm = SL2_PERM;
+    const vector unsigned char sl1_perm = ALTI_SL1_PERM;
+    const vector unsigned int sl1_msk = ALTI_SL1_MSK;
+    const vector unsigned char sl2_perm = ALTI_SL2_PERM;
     const vector unsigned char sr1 = (vector unsigned char)(ALTI_SR1);
-    const vector unsigned int sr1_msk = SR1_MSK;
-    const vector unsigned char sr2_perm = SR2_PERM;
+    const vector unsigned int sr1_msk = ALTI_SR1_MSK;
+    const vector unsigned char sr2_perm = ALTI_SR2_PERM;
     const vector unsigned char perm = ALTI_PERM;
     const vector unsigned int low_mask = ALTI_LOW_MSK;
     /* const vector unsigned int high_const = ALTI_HIGH_CONST;*/
@@ -63,21 +63,21 @@ inline static void gen_rand_all(void) {
     vector unsigned int r, lung;
     const vector unsigned int high_const = ALTI_HIGH_CONST;
 
-    lung = sfmt[N].s;
-    r = sfmt[N - 1].s;
-    for (i = 0; i < N - POS1; i++) {
-	r = vec_recursion(sfmt[i].s, sfmt[i + POS1].s, r, lung);
+    lung = sfmt[SFMT_N].s;
+    r = sfmt[SFMT_N - 1].s;
+    for (i = 0; i < SFMT_N - SFMT_POS1; i++) {
+	r = vec_recursion(sfmt[i].s, sfmt[i + SFMT_POS1].s, r, lung);
 	lung = vec_xor(lung, r);
 	r = vec_or(r, high_const);
 	sfmt[i].s = r;
     }
-    for (; i < N; i++) {
-	r = vec_recursion(sfmt[i].s, sfmt[i + POS1 - N].s, r, lung);
+    for (; i < SFMT_N; i++) {
+	r = vec_recursion(sfmt[i].s, sfmt[i + SFMT_POS1 - SFMT_N].s, r, lung);
 	lung = vec_xor(lung, r);
 	r = vec_or(r, high_const);
 	sfmt[i].s = r;
     }
-    sfmt[N].s = lung;
+    sfmt[SFMT_N].s = lung;
 }
 
 /**
@@ -92,37 +92,40 @@ inline static void gen_rand_array(w128_t array[], int size) {
     const vector unsigned int high_const = ALTI_HIGH_CONST;
 
     /* read from sfmt */
-    lung = sfmt[N].s;
-    r = sfmt[N - 1].s;
-    for (i = 0; i < N - POS1; i++) {
-	r = vec_recursion(sfmt[i].s, sfmt[i + POS1].s, r, lung);
+    lung = sfmt[SFMT_N].s;
+    r = sfmt[SFMT_N - 1].s;
+    for (i = 0; i < SFMT_N - SFMT_POS1; i++) {
+	r = vec_recursion(sfmt[i].s, sfmt[i + SFMT_POS1].s, r, lung);
 	lung = vec_xor(lung, r);
 	r = vec_or(r, high_const);
 	array[i].s = r;
     }
-    for (; i < N; i++) {
-	r = vec_recursion(sfmt[i].s, array[i + POS1 - N].s, r, lung);
+    for (; i < SFMT_N; i++) {
+	r = vec_recursion(sfmt[i].s, array[i + SFMT_POS1 - SFMT_N].s, r, lung);
 	lung = vec_xor(lung, r);
 	r = vec_or(r, high_const);
 	array[i].s = r;
     }
     /* main loop */
-    for (; i < size - N; i++) {
-	r = vec_recursion(array[i - N].s, array[i + POS1 - N].s, r, lung);
+    for (; i < size - SFMT_N; i++) {
+	r = vec_recursion(array[i - SFMT_N].s, array[i + SFMT_POS1 - SFMT_N].s,
+			  r, lung);
 	lung = vec_xor(lung, r);
 	r = vec_or(r, high_const);
 	array[i].s = r;
     }
-    for (j = 0; j < 2 * N - size; j++) {
-	sfmt[j].s = array[j + size - N].s;
+    for (j = 0; j < 2 * SFMT_N - size; j++) {
+	sfmt[j].s = array[j + size - SFMT_N].s;
     }
     for (; i < size; i++) {
-	r = vec_recursion(array[i - N].s, array[i + POS1 - N].s, r, lung);
+	r = vec_recursion(array[i - SFMT_N].s, array[i + SFMT_POS1 - SFMT_N].s,
+			  r, lung);
 	lung = vec_xor(lung, r);
 	r = vec_or(r, high_const);
 	array[i].s = r;
 	sfmt[j++].s = r;
     }
-    sfmt[N].s = lung;
+    sfmt[SFMT_N].s = lung;
 }
+
 #endif	/* DSFMT_ALTI_H*/

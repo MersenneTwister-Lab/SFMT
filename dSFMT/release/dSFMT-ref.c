@@ -44,11 +44,11 @@
  * This function simulate a 64-bit index of LITTLE ENDIAN 
  * in BIG ENDIAN machine.
  */
-inline static int idxof(int i) {
+inline static int sfmt_idxof(int i) {
     return i ^ 1;
 }
 #else
-inline static int idxof(int i) {
+inline static int sfmt_idxof(int i) {
     return i;
 }
 #endif
@@ -65,6 +65,7 @@ void init_gen_rand(uint32_t seed);
 /** 128-bit data structure */
 union W128_T {
     uint64_t u[2];
+    uint32_t u32[4];
     double d[2];
 };
 
@@ -76,16 +77,16 @@ typedef union W128_T w128_t;
   internal state, index counter and flag 
   --------------------------------------*/
 /** the 128-bit internal state array */
-static w128_t sfmt[N + 1];
+static w128_t sfmt[SFMT_N + 1];
 /** the double pointer to the 128-bit internal state array */
 static double *psfmt64 = &sfmt[0].d[0];
 /** index counter to the internal state array as double */
-static int idx;
+static int sfmt_idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
-static int initialized = 0;
+static int is_sfmt_initialized = 0;
 /** a period certification vector which certificate the period of 2^{MEXP}-1. */
-static uint64_t pcv[2] = {PCV1, PCV2};
+static uint64_t sfmt_pcv[2] = {SFMT_PCV1, SFMT_PCV2};
 
 /*----------------
   STATIC FUNCTIONS
@@ -122,17 +123,17 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 				w128_t *lung) {
     w128_t x;
 
-    lshift128(&x, a, SL2);
-    r->u[0] = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SR1) & MSK1) ^ (c->u[0] >> SR2)
-	^ (c->u[0] << SL1) ^ lung->u[1];
-    r->u[1] = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ (c->u[1] >> SR2)
-	^ (c->u[1] << SL1) ^ lung->u[0];
-    r->u[0] &= LOW_MASK;
-    r->u[1] &= LOW_MASK;
+    lshift128(&x, a, SFMT_SL2);
+    r->u[0] = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SFMT_SR1) & SFMT_MSK1) 
+	^ (c->u[0] >> SFMT_SR2) ^ (c->u[0] << SFMT_SL1) ^ lung->u[1];
+    r->u[1] = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SFMT_SR1) & SFMT_MSK2) 
+	^ (c->u[1] >> SFMT_SR2) ^ (c->u[1] << SFMT_SL1) ^ lung->u[0];
+    r->u[0] &= SFMT_LOW_MASK;
+    r->u[1] &= SFMT_LOW_MASK;
     lung->u[0] ^= r->u[0];
     lung->u[1] ^= r->u[1];
-    r->u[0] |= HIGH_CONST;
-    r->u[1] |= HIGH_CONST;
+    r->u[0] |= SFMT_HIGH_CONST;
+    r->u[1] |= SFMT_HIGH_CONST;
 }
 
 /**
@@ -143,16 +144,17 @@ inline static void gen_rand_all(void) {
     int i;
     w128_t lung;
 
-    lung = sfmt[N];
-    do_recursion(&sfmt[0], &sfmt[0], &sfmt[POS1], &sfmt[N -1], &lung);
-    for (i = 1; i < N - POS1; i++) {
-	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1], &sfmt[i - 1], &lung);
-    }
-    for (; i < N; i++) {
-	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1 - N], &sfmt[i - 1],
+    lung = sfmt[SFMT_N];
+    do_recursion(&sfmt[0], &sfmt[0], &sfmt[SFMT_POS1], &sfmt[SFMT_N -1], &lung);
+    for (i = 1; i < SFMT_N - SFMT_POS1; i++) {
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + SFMT_POS1], &sfmt[i - 1],
 		     &lung);
     }
-    sfmt[N] = lung;
+    for (; i < SFMT_N; i++) {
+	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + SFMT_POS1 - SFMT_N],
+		     &sfmt[i - 1], &lung);
+    }
+    sfmt[SFMT_N] = lung;
 }
 
 /**
@@ -164,8 +166,8 @@ void initial_mask(void) {
     uint64_t *psfmt;
 
     psfmt = &sfmt[0].u[0];
-    for (i = 0; i < (N + 1) * 2; i++) {
-        psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
+    for (i = 0; i < (SFMT_N + 1) * 2; i++) {
+        psfmt[i] = (psfmt[i] & SFMT_LOW_MASK) | SFMT_HIGH_CONST;
     }
 }
 
@@ -179,13 +181,15 @@ static void period_certification() {
     uint64_t work;
     uint64_t fix[2];
 
-    fix[0] = (((HIGH_CONST >> SR1) & MSK2) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
-    fix[1] = (((HIGH_CONST >> SR1) & MSK1) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
-    fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SL2));
-    new[0] = sfmt[N].u[0] ^ fix[0];
-    new[1] = sfmt[N].u[1] ^ fix[1];
+    fix[0] = (((SFMT_HIGH_CONST >> SFMT_SR1) & SFMT_MSK2) 
+	      ^ (SFMT_HIGH_CONST >> SFMT_SR2)) | SFMT_HIGH_CONST;
+    fix[1] = (((SFMT_HIGH_CONST >> SFMT_SR1) & SFMT_MSK1) 
+	      ^ (SFMT_HIGH_CONST >> SFMT_SR2)) | SFMT_HIGH_CONST;
+    fix[0] = fix[0] ^ (SFMT_HIGH_CONST >> (64 - 8 * SFMT_SL2));
+    new[0] = sfmt[SFMT_N].u[0] ^ fix[0];
+    new[1] = sfmt[SFMT_N].u[1] ^ fix[1];
     for (i = 0; i < 2; i++) {
-	work = new[i] & pcv[i];
+	work = new[i] & sfmt_pcv[i];
 	for (j = 0; j < 52; j++) {
 	    inner ^= work & 1;
 	    work = work >> 1;
@@ -198,9 +202,9 @@ static void period_certification() {
     /* check NG, the period may not be 2^{MEXP}-1 then modify */
     for (i = 0; i < 2; i++) {
 	work = 1;
-	for (j = 0; j < 52 - SR1; j++) {
-	    if ((work & pcv[i]) != 0) {
-		sfmt[N].u[i] ^= work;
+	for (j = 0; j < 52; j++) {
+	    if ((work & sfmt_pcv[i]) != 0) {
+		sfmt[SFMT_N].u[i] ^= work;
 		return;
 	    }
 	    work = work << 1;
@@ -217,7 +221,7 @@ static void period_certification() {
  * @return id string.
  */
 char *get_idstring(void) {
-    return IDSTR;
+    return SFMT_IDSTR;
 }
 
 /**
@@ -226,7 +230,7 @@ char *get_idstring(void) {
  * @return minimum size of array used for fill_array functions.
  */
 int get_min_array_size(void) {
-    return N64;
+    return SFMT_N64;
 }
 
 /**
@@ -239,13 +243,13 @@ int get_min_array_size(void) {
 inline double genrand_close1_open2(void) {
     double r;
 
-    assert(initialized);
+    assert(is_sfmt_initialized);
 
-    if (idx >= N * 2) {
+    if (sfmt_idx >= SFMT_N * 2) {
 	gen_rand_all();
-	idx = 0;
+	sfmt_idx = 0;
     }
-    r = psfmt64[idx++];
+    r = psfmt64[sfmt_idx++];
     return r;
 }
 
@@ -259,15 +263,16 @@ void init_gen_rand(uint32_t seed) {
     uint32_t *psfmt;
 
     psfmt = (uint32_t *)&sfmt[0];
-    psfmt[idxof(0)] = seed;
-    for (i = 1; i < (N + 1) * 4; i++) {
-	psfmt[idxof(i)] = 1812433253UL * (psfmt[idxof(i - 1)] 
-					  ^ (psfmt[idxof(i - 1)] >> 30)) + i;
+    psfmt[sfmt_idxof(0)] = seed;
+    for (i = 1; i < (SFMT_N + 1) * 4; i++) {
+	psfmt[sfmt_idxof(i)] = 1812433253UL 
+	    * (psfmt[sfmt_idxof(i - 1)] 
+	       ^ (psfmt[sfmt_idxof(i - 1)] >> 30)) + i;
     }
     initial_mask();
     period_certification();
-    idx = N64;
-    initialized = 1;
+    sfmt_idx = SFMT_N64;
+    is_sfmt_initialized = 1;
 }
 
 #ifdef MAIN

@@ -1,7 +1,16 @@
+ver 1.1
+-------
+fix bug in period_certification. It's a bug but result is the same for 
+all parameter files.
+add dSFMT-params132049.h
+change macro definition names and global variables. Thank you, Adam Piatyszek.
+fix bug of sfmt_idxof definition for BIG ENDIAN machine.
+
 ver 1.0.1
 -------
 change name dSFMT-alti.c to SFMT-alti.h
 change name dSFMT-sse2.c to SFMT-sse2.h
+This version is not released.
 
 ver 1.0
 -------

@@ -36,13 +36,13 @@
       If it causes an error, try to type
     </p>
     <blockquote>
-      <pre>cc -DMEXP=19937 -o test-std-M19937 test.c</pre>
+      <pre>cc -DSFMT_MEXP=19937 -o test-std-M19937 test.c</pre>
     </blockquote>
     <p>
       or try to type
     </p>
     <blockquote>
-      <pre>gcc -DMEXP=19937 -o test-std-M19937 test.c</pre>
+      <pre>gcc -DSFMT_MEXP=19937 -o test-std-M19937 test.c</pre>
     </blockquote>
     <p>
       If success, then check the test program. Type
@@ -76,7 +76,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
       with <strong>-O3</strong>. type
     </p>
     <blockquote>
-      <pre>gcc -O3 -fno-strict-aliasing -DMEXP=19937 -o test-std-M19937 test.c
+      <pre>gcc -O3 -fno-strict-aliasing -DSFMT_MEXP=19937 -o test-std-M19937 test.c
 ./test-std-M19937 -s</pre>
     </blockquote>
     <p>
@@ -97,7 +97,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DHAVE_SSE2=1 -DMEXP=19937 -o test-sse2-M19937 test.c</pre>
+      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DHAVE_SSE2=1 -DSFMT_MEXP=19937 -o test-sse2-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
@@ -116,7 +116,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DHAVE_ALTIVEC=1 -DMEXP=19937 -o test-alti-M19937 test.c</pre>
+      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DHAVE_ALTIVEC=1 -DSFMT_MEXP=19937 -o test-alti-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
@@ -127,7 +127,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
     <h4>1-4. Compile and check output automatically.</h4>
     <p>
       To make test program and check output
-      automatically for all supported MEXPs of dSFMT, type
+      automatically for all supported SFMT_MEXPs of dSFMT, type
     </p>
     <blockquote>
       <pre>make std-check</pre>
@@ -189,17 +189,17 @@ int main(int argc, char* argv[]) {
     <p>To compile <strong>sample1.c</strong> with dSFMT.c with the period of 
       2<sup>607</sup>, type</p>
     <blockquote>
-      <pre>gcc -DMEXP=607 -o sample1 dSFMT.c sample1.c</pre>
+      <pre>gcc -DSFMT_MEXP=607 -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
     <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=607 -DHAVE_SSE2 -o sample1 dSFMT.c sample1.c</pre>
+      <pre>gcc -msse2 -DSFMT_MEXP=607 -DHAVE_SSE2 -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized dSFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=607 -DHAVE_ALTIVEC -o sample1 dSFMT.c sample1.c</pre>
+      <pre>gcc -faltivec -DSFMT_MEXP=607 -DHAVE_ALTIVEC -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
 
     <h4>2-2. Use block call and static link.</h4>
@@ -283,17 +283,17 @@ int main(int argc, char* argv[]) {
     <p>To compile <strong>sample2.c</strong> with dSFMT.c with the period of
       2<sup>2281</sup>, type</p>
     <blockquote>
-      <pre>gcc -DMEXP=2281 -o sample2 dSFMT.c sample2.c</pre>
+      <pre>gcc -DSFMT_MEXP=2281 -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
     <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=2281 -DHAVE_SSE2 -o sample2 dSFMT.c sample2.c</pre>
+      <pre>gcc -msse2 -DSFMT_MEXP=2281 -DHAVE_SSE2 -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=2281 -DHAVE_ALTIVEC -o sample2 dSFMT.c sample2.c</pre>
+      <pre>gcc -faltivec -DSFMT_MEXP=2281 -DHAVE_ALTIVEC -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
     <h4>2-3. Use sequential call and inline functions.</h4>
     <p>
@@ -335,18 +335,23 @@ int main(int argc, char* argv[]) {
     </blockquote>
     <p>To compile <strong>sample3.c</strong>, type</p>
     <blockquote>
-      <pre>gcc -DMEXP=19937 -o sample3 sample3.c</pre>
+      <pre>gcc -DSFMT_MEXP=19937 -o sample3 sample3.c</pre>
     </blockquote>
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DMEXP=19937 -DHAVE_SSE2 -o sample3 sample3.c</pre>
+      <pre>gcc -msse2 -DSFMT_MEXP=19937 -DHAVE_SSE2 -o sample3 sample3.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DMEXP=19937 -DHAVE_ALTIVEC -o sample3 sample3.c</pre>
+      <pre>gcc -faltivec -DSFMT_MEXP=19937 -DHAVE_ALTIVEC -o sample3 sample3.c</pre>
     </blockquote>
+    <p>
+      Inline sequential call is little bit faster than static link,
+      but it's not a good manner.  And fill_array_xxx is faster than
+      inline sequential call.
+    </p>
     <h4>2-4. Initialize dSFMT using init_by_array function.</h4>
     <p>
       Here is <strong>sample4.c</strong> which modifies sample1.c.
@@ -398,7 +403,7 @@ int main(int argc, char* argv[]) {
     </blockquote>
     <p>To compile <strong>sample4.c</strong>, type</p>
     <blockquote>
-      <pre>gcc -DMEXP=1279 -o sample4 dSFMT.c sample4.c</pre>
+      <pre>gcc -DSFMT_MEXP=1279 -o sample4 dSFMT.c sample4.c</pre>
     </blockquote>
     <p>Now, seed can be a string. Like this:</p>
     <blockquote>

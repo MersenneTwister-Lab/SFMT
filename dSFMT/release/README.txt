@@ -1,5 +1,5 @@
  =================================================================
- dSFMT ver. 1.0.1
+ dSFMT ver. 1.1
  double precision SIMD oriented Fast Mersenne Twister(dSFMT)
  based on IEEE 754 floating point format.
 
@@ -17,7 +17,9 @@
 
  To see documents, see html/index.html.
 
- To make test program, see html/howto-compile.html
+ To make test program, see html/howto-compile.html.
+ If your CPU is BIG ENDIAN and your compiler is not gcc,
+ define BIG_ENDIAN preprocessor macro, please.
 
  If you want to redistribute and/or change source files, see LICENSE.txt.
 
