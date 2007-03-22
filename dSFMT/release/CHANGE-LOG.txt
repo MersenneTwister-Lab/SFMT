@@ -1,9 +1,10 @@
 ver 1.1
 -------
+add dSFMT-params132049.h
 fix bug in period_certification. It's a bug but result is the same for 
 all parameter files.
-add dSFMT-params132049.h
 change macro definition names and global variables. Thank you, Adam Piatyszek.
+remove L suffix from floating point constants. It's Saito's misunderstanding.
 fix bug of sfmt_idxof definition for BIG ENDIAN machine.
 
 ver 1.0.1

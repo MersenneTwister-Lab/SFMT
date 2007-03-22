@@ -62,13 +62,12 @@
   #define UINT64_C(v) (v ## ULL) 
 #endif
 
-#ifdef __GNUC__
 inline double genrand_close1_open2(void);
+#ifdef __GNUC__
 inline static double genrand_close_open(void) __attribute__((always_inline));
 inline static double genrand_open_close(void) __attribute__((always_inline));
 inline static double genrand_open_open(void) __attribute__((always_inline));
 #else
-inline double genrand_close1_open2(void);
 inline static double genrand_close_open(void);
 inline static double genrand_open_close(void);
 inline static double genrand_open_open(void);
@@ -91,7 +90,7 @@ void init_by_array(uint32_t init_key[], int key_length);
  * @return double precision floating point pseudorandom number
  */
 inline static double genrand_close_open(void) {
-    return genrand_close1_open2() - 1.0L;
+    return genrand_close1_open2() - 1.0;
 }
 
 /**
@@ -102,7 +101,7 @@ inline static double genrand_close_open(void) {
  * @return double precision floating point pseudorandom number
  */
 inline static double genrand_open_close(void) {
-    return 2.0L - genrand_close1_open2();
+    return 2.0 - genrand_close1_open2();
 }
 
 /**
@@ -120,7 +119,7 @@ inline static double genrand_open_open(void) {
 
     conv.d = genrand_close1_open2();
     conv.u |= 1;
-    return conv.d - 1.0L;
+    return conv.d - 1.0;
 }
 
 #endif /* DSFMT_H */

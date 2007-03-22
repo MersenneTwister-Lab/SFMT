@@ -117,6 +117,7 @@ inline static void lshift128(w128_t *out, const w128_t *in, int shift) {
     out->u[1] |= in->u[0] >> (64 - shift * 8);
 }
 
+#if !defined(HAVE_ALTIVEC) && !defined(HAVE_SSE2)
 /**
  * This function represents the recursion formula.
  * @param r output
@@ -141,6 +142,7 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
     r->u[0] |= SFMT_HIGH_CONST;
     r->u[1] |= SFMT_HIGH_CONST;
 }
+#endif
 
 #if !defined(HAVE_SSE2)
 /**
@@ -154,8 +156,8 @@ inline static void convert_co(w128_t array[], int size) {
     int i;
 
     for (i = 0; i < size; i++) {
-	array[i].d[0] = array[i].d[0] - 1.0L;
-	array[i].d[1] = array[i].d[1] - 1.0L;
+	array[i].d[0] = array[i].d[0] - 1.0;
+	array[i].d[1] = array[i].d[1] - 1.0;
     }
 }
 
@@ -170,8 +172,8 @@ inline static void convert_oc(w128_t array[], int size) {
     int i;
 
     for (i = 0; i < size; i++) {
-	array[i].d[0] = 2.0L - array[i].d[0];
-	array[i].d[1] = 2.0L - array[i].d[1];
+	array[i].d[0] = 2.0 - array[i].d[0];
+	array[i].d[1] = 2.0 - array[i].d[1];
     }
 }
 
@@ -188,13 +190,13 @@ inline static void convert_oo(w128_t array[], int size) {
     for (i = 0; i < size; i++) {
 	array[i].u[0] |= 1;
 	array[i].u[1] |= 1;
-	array[i].d[0] -= 1.0L;
-	array[i].d[1] -= 1.0L;
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
     }
 }
 #endif
 
-#if (!defined(HAVE_ALTIVEC)) && (!defined(HAVE_SSE2))
+#if !defined(HAVE_ALTIVEC) && !defined(HAVE_SSE2)
 /**
  * This function fills the internal state array with double precision
  * floating point pseudorandom numbers of the IEEE 754 format.
@@ -476,7 +478,7 @@ void init_gen_rand(uint32_t seed) {
     period_certification();
     sfmt_idx = SFMT_N64;
     is_sfmt_initialized = 1;
-#ifdef HAVE_SSE2
+#if defined(HAVE_SSE2)
     setup_const();
 #endif
 }
@@ -556,7 +558,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
     period_certification();
     sfmt_idx = SFMT_N64;
     is_sfmt_initialized = 1;
-#ifdef HAVE_SSE2
+#if defined(HAVE_SSE2)
     setup_const();
 #endif
 }

@@ -46,8 +46,8 @@ static void setup_const(void) {
 				  SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2);
     sse2_int_one = _mm_set_epi32(0, 1, 0, 1);
     sse2_high_const = _mm_set_epi32(SFMT_HIGH_CONST32, 0, SFMT_HIGH_CONST32, 0);
-    sse2_double_two = _mm_set_pd(2.0L, 2.0L);
-    sse2_double_m_one = _mm_set_pd(-1.0L, -1.0L);
+    sse2_double_two = _mm_set_pd(2.0, 2.0);
+    sse2_double_m_one = _mm_set_pd(-1.0, -1.0);
     first = 0;
 }
 

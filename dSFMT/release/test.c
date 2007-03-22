@@ -317,7 +317,7 @@ void test_seq_co(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;
@@ -389,7 +389,7 @@ void test_seq_oc(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;
@@ -461,7 +461,7 @@ void test_seq_oo(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;
@@ -533,7 +533,7 @@ void test_seq_12(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;
