@@ -316,7 +316,7 @@ void test_shortest(char *filename) {
 	printf("check minpoly OK!\n");
 	DivRem(tmp, rempoly, lcmpoly, poly);
 	if (deg(rempoly) != -1) {
-	    printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
+	    printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
 	}
 
     } else {

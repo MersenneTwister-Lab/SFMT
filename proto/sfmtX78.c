@@ -13,6 +13,12 @@
 #define N (MEXP / WORDSIZE + 1)
 #define MAXDEGREE (WORDSIZE * N)
 
+struct W128_T {
+    uint32_t a[4];
+};
+
+typedef struct W128_T w128_t;
+
 static uint32_t sfmt[N][4];
 static unsigned int idx;
 
@@ -25,12 +31,6 @@ static unsigned int MSK1 = 7;
 static unsigned int MSK2 = 7;
 static unsigned int MSK3 = 7;
 static unsigned int MSK4 = 7;
-//static unsigned int SL7 = 7;
-//static unsigned int SL8 = 7;
-//static unsigned int SR1 = 17;
-//static unsigned int SR2 = 9;
-//static unsigned int SR3 = 9;
-//static unsigned int SR4 = 9;
 
 static void gen_rand_all(void);
 
@@ -44,28 +44,16 @@ unsigned int get_rnd_mexp(void)
     return MEXP;
 }
 
-void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
-		 unsigned int p4, unsigned int p5, unsigned int p6,
-		 unsigned int p7, unsigned int p8, unsigned int p9,
-		 unsigned int p10, unsigned int p11, unsigned int p12,
-		 unsigned int p13) {
-    POS1 = p1 % (N-2) + 1;
-    SL1 = p2 % (32 - 1) + 1;
-    SL2 = (p13 % 4) * 2 + 1; 
-    //SL3 = p12 % (32 - 1) + 1;
-    //SR1 = p3 % (32 - 1) + 1;
-    SR1 = p12 % (32 - 1) + 1;
-    SR2 = (p3 % 4) * 2 + 1;
-    MSK1= p4 | p5 | p6;
-    MSK2= p6 | p7 | p8;
-    MSK3= p8 | p9 | p10;
-    MSK4= p10 | p11 | p12;
-    //SL7 = p8 % (32 - 1) + 1;
-    //SL8 = p9 % (32 - 1) + 1;
-    //SR1 = p10 % (32 - 1) + 1;
-    //SR2 = p11 % (32 - 1) + 1;
-    //SR3 = p12 % (32 - 1) + 1;
-    //SR4 = p13 % (32 - 1) + 1;
+void setup_param(uint32_t array[], int *idx) {
+    POS1 = array[(*idx)++] % (N-2) + 1;
+    SL1 = array[(*idx)++] % (32 - 1) + 1;
+    SL2 = (array[(*idx)++] % 4) * 2 + 1; 
+    SR1 = array[(*idx)++] % (32 - 1) + 1;
+    SR2 = (array[(*idx)++] % 4) * 2 + 1;
+    MSK1= array[(*idx)++] | array[(*idx)++] | array[(*idx)++];
+    MSK2= array[(*idx)++] | array[(*idx)++] | array[(*idx)++];
+    MSK3= array[(*idx)++] | array[(*idx)++] | array[(*idx)++];
+    MSK4= array[(*idx)++] | array[(*idx)++] | array[(*idx)++];
     memset(sfmt, 0, sizeof(sfmt));
 }
 
@@ -79,12 +67,6 @@ void print_param(FILE *fp) {
     fprintf(fp, "MSK2 = %08x\n", MSK2);
     fprintf(fp, "MSK3 = %08x\n", MSK3);
     fprintf(fp, "MSK4 = %08x\n", MSK4);
-    //fprintf(fp, "SL7 = %u\n", SL7);
-    //fprintf(fp, "SL8 = %u\n", SL8);
-    //fprintf(fp, "SR1 = %u\n", SR1);
-    //fprintf(fp, "SR2 = %u\n", SR2);
-    //fprintf(fp, "SR3 = %u\n", SR3);
-    //fprintf(fp, "SR4 = %u\n", SR4);
     fflush(fp);
 }
 
@@ -130,30 +112,30 @@ inline static void lshift128(uint32_t out[4], const uint32_t in[4],
     out[2] = (uint32_t)oh;
 }
 
-static inline void do_recursion(uint32_t a[4], uint32_t b[4],
+static inline void do_recursion(uint32_t r[4], uint32_t a[4], uint32_t b[4],
 				uint32_t c[4], uint32_t d[4]) {
     uint32_t x[4];
     uint32_t y[4];
 
     lshift128(x, a, SL2);
     rshift128(y, c, SR2);
-    a[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ y[0] ^ (d[0] << SL1);
-    a[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ y[1] ^ (d[1] << SL1);
-    a[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ y[2] ^ (d[2] << SL1);
-    a[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ y[3] ^ (d[3] << SL1);
+    r[0] = a[0] ^ x[0] ^ ((b[0] >> SR1) & MSK1) ^ y[0] ^ (d[0] << SL1);
+    r[1] = a[1] ^ x[1] ^ ((b[1] >> SR1) & MSK2) ^ y[1] ^ (d[1] << SL1);
+    r[2] = a[2] ^ x[2] ^ ((b[2] >> SR1) & MSK3) ^ y[2] ^ (d[2] << SL1);
+    r[3] = a[3] ^ x[3] ^ ((b[3] >> SR1) & MSK4) ^ y[3] ^ (d[3] << SL1);
 }
 
 static void gen_rand_all(void) {
     int i;
 
     for (i = 0; i < N; i++) {
-	do_recursion(sfmt[i], sfmt[(i + POS1) % N], sfmt[(i + N - 2) % N],
-		     sfmt[(i + N - 1) % N]);
+	do_recursion(sfmt[i], sfmt[i], sfmt[(i + POS1) % N],
+		     sfmt[(i + N - 2) % N], sfmt[(i + N - 1) % N]);
     }
 }
 
 /* for 128 bit check */
-uint32_t gen_rand(void)
+inline uint32_t gen_rand(void)
 {
     uint32_t r;
 
@@ -164,6 +146,24 @@ uint32_t gen_rand(void)
     r = sfmt[idx][0];
     idx++;
     return r;
+}
+
+void fill_array(uint32_t array[][4], int size) {
+    int i, j;
+
+    for (i = 0; idx < N && i < size; i++, idx++) {
+	for (j = 0; j < 4; j++) {
+	    array[i][j] = sfmt[idx][j];
+	}
+    }
+    while (i < size) {
+	gen_rand_all();
+	for (idx = 0; idx < N && i < size; i++, idx++) {
+	    for (j = 0; j < 4; j++) {
+		array[i][j] = sfmt[idx][j];
+	    }
+	}
+    }
 }
 
 /* for 128 bit check */

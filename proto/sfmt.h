@@ -5,11 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void setup_param(unsigned int p1, unsigned int p2, unsigned int p3, 
-		 unsigned int p4, unsigned int p5, unsigned int p6,
-		 unsigned int p7, unsigned int p8, unsigned int p9,
-		 unsigned int p10, unsigned int p11, unsigned int p12,
-		 unsigned int p13);
+void setup_param(uint32_t rndarray[], int *idx);
 unsigned int get_rnd_maxdegree(void);
 unsigned int get_rnd_mexp(void);
 void print_param(FILE *fp);
@@ -17,5 +13,5 @@ void print_param2(FILE *fp);
 
 void init_gen_rand(uint32_t seed);
 uint32_t gen_rand(void);
-
+void fill_array(uint32_t array[][4], int size);
 #endif

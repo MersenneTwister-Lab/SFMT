@@ -17,6 +17,24 @@ all:well_fastc_inline2 rand_fastc_inline2 rand48_fastc_inline2 \
 well_fastc_inline2: well19937c_fast.c test_time2_inline.c
 	${CC} -o $@ well19937c_fast.c
 
+well1024_inline2: well1024a.c test_time2_inline.c
+	${CC} -o $@ well1024a.c
+
+well1024_funcall: well1024a.c test_time2_funcall.o
+	${CC} -o $@ -DFUNCALL well1024a.c test_time2_funcall.o
+
+well1024_double: well1024a_double.c test_time2_double.o
+	${CC} -o $@ -DFUNCALL well1024a_double.c test_time2_double.o
+
+mt19937ar_inline2: mt19937ar_inline.c test_time2_inline.c
+	${CC} -o $@ mt19937ar_inline.c
+
+mt19937ar_funcall: mt19937ar_inline.c test_time2_funcall.o
+	${CC} -o $@ -DFUNCALL mt19937ar_inline.c test_time2_funcall.o
+
+mt19937ar_double: mt19937ar_double.c test_time2_double.o
+	${CC} -o $@ -DFUNCALL mt19937ar_double.c test_time2_double.o
+
 rand_fastc_inline2: rand.c test_time2_inline.c
 	${CC} -o $@ rand.c
 

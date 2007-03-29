@@ -202,8 +202,8 @@ param-searchX76-607: search.o sfmtX76.o mt19937ar.o util.o debug.o
 param-searchX77-607: search.o sfmtX77.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtX77.o mt19937ar.o util.o debug.o ${LINKOPT}
 
-param-searchX78-607: search.o sfmtX78.o mt19937ar.o util.o debug.o
-	${CPP} -o $@ search.o sfmtX78.o mt19937ar.o util.o debug.o ${LINKOPT}
+param-searchX78-607: search.o sfmtX78.o mt19937blk.o util.o debug.o
+	${CPP} -o $@ search.o sfmtX78.o mt19937blk.o util.o debug.o ${LINKOPT}
 
 param-searchX78-1279: search.o sfmtX78.o mt19937ar.o util.o debug.o
 	${CPP} -o $@ search.o sfmtX78.o mt19937ar.o util.o debug.o ${LINKOPT}
