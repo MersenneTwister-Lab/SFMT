@@ -1,0 +1,1113 @@
+\documentclass{svmult}
+\usepackage{amssymb}
+\usepackage{url}
+%\usepackage{amsmath}
+\usepackage[dvipdfm]{graphicx}
+%\usepackage{color}
+\usepackage[bottom]{footmisc}
+
+%\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{conjecture}[theorem]{Conjecture}
+%\newtheorem{corollary}[theorem]{Corollary}
+%\newtheorem{proposition}[theorem]{Proposition}
+%\newtheorem{lemma}[theorem]{Lemma}
+%\newdef{definition}[theorem]{Definition}
+%\newdef{remark}[theorem]{Remark}
+
+\def\F2{{\mathbb F}_2}
+\def\wt{{\rm wt}}
+\def\wo{{\rm wt}_o}
+\def\wf{{\rm wt}_f}
+\def\UL{{\rm ul}}
+\def\bx{{{\mathbf x}}}
+\def\by{{{\mathbf y}}}
+\def\bz{{{\mathbf z}}}
+\def\bw{{{\mathbf w}}}
+\def\bu{{{\mathbf u}}}
+
+\def\im{{\mathrm{Im}}}
+\def\ker{{\mathrm{Ker}}}
+\def\id{{\mathrm{Id}}}
+\def\tr{{\mathrm{tr}}}
+
+
+\begin{document}
+
+\title*{SIMD-oriented Fast Mersenne Twister:
+a 128-bit Pseudorandom Number Generator
+\thanks{This study is partially supported by JSPS/MEXT
+Grant-in-Aid for Scientific Research No.18654021, No. 16204002,
+and JSPS Core-to-Core Program No.18005.}}
+\titlerunning{SIMD-oriented Fast Mersenne Twister}
+            
+
+\author{Mutsuo Saito\inst{1}\and
+Makoto Matsumoto\inst{2}}
+
+\institute{
+Dept.\ of Math.\ Hiroshima University
+\texttt{saito@math.sci.hiroshima-u.ac.jp}
+\and 
+Dept.\ of Math.\ Hiroshima University
+\texttt{m-mat@math.sci.hiroshima-u.ac.jp}
+}
+\maketitle
+            
+\begin{abstract} 
+Mersenne Twister (MT)
+is a widely-used fast pseudorandom number generator (PRNG)
+with a long period of $2^{19937}-1$,
+designed 10 years ago based on 32-bit operations.
+In this decade, CPUs for personal computers
+have acquired new features, such as 
+Single Instruction Multiple Data (SIMD) operations
+(i.e., 128-bit operations) and multi-stage pipelines.
+Here we propose a 128-bit based 
+PRNG, named SIMD-oriented Fast Mersenne Twister
+(SFMT), which is analogous to MT but making full use
+of these features. Its recursion fits pipeline processing
+better than MT, and it is roughly twice as fast as 
+optimised MT using SIMD operations.
+Moreover, the dimension of equidistribution of SFMT
+is better than MT. 
+
+We also introduce 
+a block-generation function, 
+which fills an array of 32-bit integers in one call.
+It speeds up the generation by a factor of two. 
+A speed comparison with other modern generators, 
+such as multiplicative recursive generators,
+shows an advantage of SFMT. The implemented 
+C-codes are downloadable from 
+\url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/index.html}.
+%\keywords{
+%Mersenne Twister,
+%SFMT, 
+%SIMD, 
+%128-bit,
+%block generation
+%}
+\end{abstract}
+            
+%\category{G.3}{Mathematics of Computing}{PROBABILITY AND STATISTICS}[Random number generation]
+
+%\terms{Algorithms, Theory} 
+
+%\begin{bottomstuff}
+%Authors' addresses: 
+%M. Saito and M. Matsumoto: Department of Mathematics, Hiroshima University,
+%Kagamiyama 1-3-1, Higashi-Hiroshima, Hiroshima 739-8526, Japan;
+%email: \{saito, m-mat\}@math.sci.hiroshima-u.ac.jp;
+%\end{bottomstuff}
+
+
+\section{Introduction}
+Recently, the scale of simulations is getting larger,
+and faster pseudorandom number generators (PRNGs)
+are required. The power of CPUs for
+usual personal computers are now sufficiently strong
+for such purposes, and the necessity of efficient PRNGs 
+for CPUs on PCs is increasing.
+One such generator is Mersenne Twister (MT) \cite{MT},
+which is based on a linear recursion modulo 2 over 32-bit
+words. An implementation MT19937 has 
+the period of $2^{19937}-1$.
+%and 
+%can generate
+%roughly $10^8$ 32-bit pseudorandom integers per second.
+
+MT was designed 10 years ago,
+and the architectures of CPUs for Personal Computers,
+such as Pentium and PowerPC, have changed.
+They have
+Single Instruction Multiple Data (SIMD) operations,
+which may be regarded as operations 
+on 128-bit registers. Also, they have more registers
+and automatic parallelisms by multi-stage pipelining. 
+These are not reflected in the design of MT. 
+
+In this article, we propose an MT-like 
+pseudorandom number generator
+that makes full use of these new features: SFMT, 
+SIMD-oriented Mersenne Twister. 
+We implemented an SFMT with the period a multiple of $2^{19937}-1$, named
+SFMT19937,
+which has a better equidistribution property than MT. 
+SFMT is much faster than MT, even without using SIMD instructions. 
+
+There is an argument that the CPU time consumed for 
+function calls to PRNG routines occupies a large part of
+the random number generation.
+%, and consequently 
+%it is not so important to improve the speed of PRNG 
+%(cf. \cite{XORSHIFT}).
+This is not always the case: 
+one can avoid the function calls by (1) inline-expansion
+and/or (2) generation of pseudorandom numbers in an array
+at one call. Actually some demanding users re-coded MT to avoid the 
+function call; see the homepage of \cite{MT}. 
+In this article, we introduce a block-generation scheme which 
+is much faster than using function calls.
+
+\section{SIMD-oriented Fast Mersenne Twister}\label{sec:jump}
+
+We propose SIMD-oriented Fast Mersenne Twister (SFMT) 
+pseudorandom number generator. It is a
+Linear Feedbacked Shift Register (LFSR) generator based
+on a recursion over $\F2^{128}$.
+We identify
+the set of bit $\{0,1\}$
+with the two element field $\F2$. This means that
+every arithmetic operation is done modulo 2. 
+A $w$-bit integer is identified with 
+a horizontal vector in $\F2^{w}$, and 
+$+$ denotes the sum as vectors (i.e., 
+bit-wise exor), not as integers.
+We consider three cases: $w$ is 32, 64 or 128.
+
+\subsection{LFSR generators}
+A LFSR method is to generate
+a sequence $\bx_0, \bx_1, \bx_2, \ldots$
+of elements $\F2^{w}$ by a recursion
+\begin{equation}\label{eq:recursion}
+\bx_{i+N}:=g(\bx_i, \bx_{i+1}, \ldots, \bx_{i+N-1}),
+\end{equation}
+where $\bx_i \in \F2^{w}$ and 
+$g:(\F2^{w})^N \to \F2^{w}$ is an $\F2$-linear function
+(i.e., the multiplication of a $(wN \times w)$-matrix 
+from the right to a $wN$-dimensional vector)
+and use it as a pseudorandom $w$-bit integer sequence.
+In the implementation, this recursion is computed
+by using an array {\tt W[0..N-1]} of $N$ integers of $w$-bit size,
+by the simultaneous substitutions
+$$
+{\tt
+W[0] \leftarrow W[1],\ 
+W[1] \leftarrow W[2],\  \ldots,
+W[N-2] \leftarrow W[N-1],\  
+W[N-1] \leftarrow} g({\tt W[0]},\ldots,{\tt W[N-1]}). 
+$$
+The first $N-1$ substitutions shift the content of 
+the array, hence the name of LFSR. 
+Note that in the implementation we may use 
+an indexing technique to avoid
+computing these substitutions, see \cite[P.28 Algorithm A]{knuth:bible}.
+The array {\tt W[0..N-1]} is called the state array.
+Before starting the generation, we need to 
+set some values to the state array, 
+which is called the initialization. 
+
+Mersenne Twister (MT) \cite{MT}
+is an example with
+$$
+g(\bw_0,\ldots,\bw_{N-1})=(\bw_0|\bw_1)A + \bw_M,
+$$
+where $(\bw_0|\bw_1)$ denotes
+the concatenation of 
+%$32-r$ MSBs of $\bw_0$ and $r$ LSBs of $\bw_1$,
+$32-r$ Most Significant Bits (MSBs) of $\bw_0$ and $r$ Least Significant Bits (LSBs) of $\bw_1$,
+%and $A$ is a $(32\times 32)$-matrix 
+$A$ is a $(32\times 32)$-matrix 
+for which the multiplication $\bw A$ is computable 
+by a few bit-operations, and $M$ is an integer
+($1 < M < N$).
+Its period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
+To obtain a better equidistribution property, 
+MT transforms the sequence by
+a suitably chosen $(32\times 32)$ matrix $T$,
+namely, MT outputs
+$\bx_0T , \bx_1T, \bx_2T, \ldots$
+(called tempering).
+
+\subsection{New features of modern CPUs for personal computers}
+Modern CPUs for personal computers (e.g.\ Pentium and
+PowerPC) have new features such as 
+(1) fast integer multiplication instructions
+(2) fast floating point operations 
+(3) SIMD operations 
+(4) multi-stage pipelining.
+These were not common
+to standard PC CPUs, when MT was designed.
+
+An advantage of $\F2$-linear generators 
+over integer multiplication generators 
+(such as Linear Congruential Generators \cite{knuth:bible}
+or Multiple Recursive Generators \cite{MRG})
+was high-speed generation by avoiding multiplications.
+This advantage is now smaller, since 
+32-bit integer multiplication is now quite fast. 
+
+Among the new features,
+(3) and (4) fit $\F2$-linear generators. 
+Our idea is simple: to design
+a 128-bit integer PRNG, considering
+the benefit of such parallelism in the recursion.
+
+\subsection{The recursion of SFMT}
+We choose $g$ in the recursion (\ref{eq:recursion}) as
+\begin{eqnarray}\label{eq:rec-SFMT}
+g(\bw_0,\ldots,\bw_{N-1}) 
+%&=& g(\bw_0, \bw_M, \bw_{N-2}, \bw_{N-1}) \\
+&=& \bw_0A + \bw_MB + \bw_{N-2}C + \bw_{N-1}D,
+\end{eqnarray}
+% \[x_{n+i} = x_{n-1+i}A + x_{n-2+i}B+ x_{m+i}C + x_{i}D,\]
+where 
+$\bw_0, \bw_M, \ldots$ are $w(=128)$-bit integers 
+(= horizontal vectors in $\F2^{128}$),
+and $A, B, C, D$ are sparse $128 \times 128$ matrices
+over $\F2$ for which 
+$\bw A, \bw B, \bw C, \bw D$ can be computed by
+a few SIMD bit-operations.
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=0.7\linewidth]{sfmt-a.eps}
+%\includegraphics[width=0.7\linewidth]{sfmt-a2.eps}
+%\end{center}
+%\caption{The transition function of SIMD-oriented Fast MT.}
+%\end{figure}
+The choice of the suffixes $N-1$, $N-2$ is for  
+speed: in the implementation of $g$, 
+{\tt W[0]} and {\tt W[M]} are read from the array
+{\tt W}, while the copies of 
+{\tt W[N-2]} and {\tt W[N-1]}
+are kept in 
+two 128-bit registers in the CPU, 
+say {\tt r1} and {\tt r2}. Concretely speaking, we assign 
+${\tt r2} \leftarrow {\tt r1}$ and
+${\tt r1} \leftarrow \mbox{``the result of (\ref{eq:rec-SFMT})''}$
+at every generation, then {\tt r2} ({\tt r1}) keeps
+a copy of {\tt W[N-2]} ({\tt W[N-1]}, respectively). 
+The merit of doing this is to use the pipeline effectively. To fetch 
+{\tt W[0]} and {\tt W[M]} from memory takes some
+time. In the meantime, the
+CPU can compute $\bw_{N-2}C$ and $\bw_{N-1}D$,
+because copies of $\bw_{N-2}$ and $\bw_{N-1}$ are kept 
+in the registers. This selection was made through experiments
+on the speed of generation.
+
+By trial and error, 
+we searched for a set of parameters of SFMT,
+with the period being a multiple of $2^{19937}-1$
+and having good equidistribution properties.
+The degree of recursion $N$ is $\lceil 19937/128 \rceil=156$, 
+and the linear transformations $A,B,C,D$ are as follows.
+\begin{itemize}
+\item 
+$\bw A := (\bw \stackrel{128}{<<} 8) + \bw.$
+
+This notation means that $\bw$ is regarded
+as a single 128-bit integer, and 
+$\bw A$ is the result of the left-shift
+of $\bw$ by 8 bits. There is such a SIMD operation
+in both Pentium SSE2 and PowerPC AltiVec SIMD instruction 
+sets (SSE2 permits only a multiple of 8
+as the amount of shifting). 
+Note that the notation $+$ means the exclusive-or
+in this article.
+
+\item
+$\bw B := (\bw \stackrel{32}{>>} 11) \& (\mbox{\tt BFFFFFF6 BFFAFFFF DDFECB7F DFFFFFEF}).$
+
+This notation means that $\bw$ is considered to be 
+a quadruple of $32$-bit integers, and
+each $32$-bit integer is shifted to the right by 11 bits,
+(thus the eleven most significant bits are filled with 0s, 
+for each 32-bit integer).
+The C-like notation $\&$ means the bitwise AND
+with a constant 128-bit integer,
+denoted in the hexadecimal form.
+
+In the search,
+this constant is randomly generated as follows. 
+Each bit in the 128-bit integer is independently 
+randomly chosen, with the probability to choose 1 being $7/8$.
+This is because we prefer to have more 1's for a denser 
+feedback.
+
+\item 
+$\bw C := (\bw \stackrel{128}{>>} 8).$
+
+The notation 
+$(\bw \stackrel{128}{>>} 8)$ is the right shift of 
+an 128-bit integer
+by 8 bits, similar to the first.
+
+\item
+$\bw D := (\bw \stackrel{32}{<<} 18).$
+
+Similar to the second,
+$\bw$ is cut into four pieces of 32-bit integers,
+and each of these is shifted by 18 bits to the left.
+\end{itemize}
+All these instructions are available in 
+both Intel Pentium's SSE2 and PowerPC's AltiVec SIMD instruction sets.
+Figure~\ref{fig:SFMT-B2} shows a concrete description
+of SFMT19937 generator with period a multiple of $2^{19937}-1$.
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.7\linewidth]{sfmt-b2.eps}
+\end{center}
+\caption{A circuit-like description of SFMT19937.}
+\label{fig:SFMT-B2}
+\end{figure}
+
+\section{How to select the recursion and parameters.}
+We wrote a code to compute the period and
+the dimensions of equidistribution (DE,
+see \S\ref{sec:DE}). 
+%Then, we search
+Then, we searched
+for a recursion with good DE admitting a fast implementation.  
+
+\subsection{Computation of the Period}\label{sec:period}
+%\subsection{Reducible transition function}
+%LFSR by the recursion (\ref{eq:recursion})
+An LFSR that obeys the recursion (\ref{eq:recursion})
+may be considered as an automaton, 
+with the state space $S=(\F2^{w})^{N}$
+and the state transition function 
+$f: S \to S$ given by
+$(\bw_0,\ldots,\bw_{N-1})
+\mapsto (\bw_1,\ldots,\bw_{N-1}, g(\bw_0,\ldots,\bw_{N-1}))$.  
+As a $w$-bit integer generator, the output function is 
+$o: S \to \F2^{w},\  (\bw_0,\ldots,\bw_{N-1}) \mapsto \bw_0$.
+
+Let $\chi_f$ be the characteristic polynomial of $f:S \to S$.
+If $\chi_f$ is primitive, then the 
+period of the state transition takes the maximal value
+$2^{\dim(S)}-1$ \cite[\S3.2.2]{knuth:bible}. 
+However, to check the primitivity, we need
+the integer factorization of this number, which is often
+hard for $\dim(S)=nw>10000$. 
+On the other hand, the primarity test is much easier than 
+the factorization, so many huge primes of the form 
+$2^p-1$ have been found. 
+Such a prime is called a Mersenne prime, and $p$ is
+called the Mersenne exponent, which itself is a prime.
+
+%MT and WELL\cite{WELL} discard some fixed $r$-bits from the
+MT and WELL\cite{WELL} discard $r$ specific bits from the
+array $S$, so that $nw-r$ is a Mersenne exponent. 
+Then, the primitivity of $\chi_f$ is easily checked
+by the algorithm in \cite[\S3.2.2]{knuth:bible},
+avoiding the integer factorization.
+
+SFMT adopted
+another method to avoid the integer factorization,
+the reducible transition method (RTM), 
+which uses a reducible characteristic polynomial.
+This idea appeared in \cite{FUSHIMI90}
+\cite{BRENT}\cite{BRENT-PRIM}, and 
+applications in the present context are 
+discussed in detail in another article \cite{PMT}, 
+therefore we only briefly recall it. 
+
+Let $p$ be the Mersenne exponent, and $N:=\lceil p/w \rceil$.
+Then, we randomly choose parameters for the recursion of LFSR
+(\ref{eq:recursion}).
+By applying the Berlekamp-Massey Algorithm to 
+the output sequence, we obtain the 
+minimal polynomial of the transition function $f$.
+%we compute the minimal polynomial of the (bit) sequence
+%generated by the linear recursion. By taking the least
+%common multiple for several initial values, we have the 
+%minimal polynomial of the transition $f$. With high 
+%probability its degree coincides with $\dim(S)$, and if 
+%this occurs it is the characteristic polynomial $\chi_f$. 
+(Note that a direct computation of $\det(tI-f)$ is time-consuming
+ because $\dim(S)=19968$.)
+
+By using a sieve, we remove all 
+factors of small degree from $\chi_f$,
+until we know that it has no irreducible factor of degree $p$,
+or that it has a (possibly reducible) factor of degree $p$. 
+In the latter case, the factor is 
+passed to the primitivity test described 
+in \cite[\S3.2.2]{knuth:bible}.
+
+Suppose that we found a recursion with an irreducible factor of 
+desired degree $p$ in $\chi_f(t)$. Then, 
+we have a factorization
+$$
+\chi_f=\phi_p \phi_r,
+$$
+where $\phi_p$ is a primitive polynomial of degree $p$
+and $\phi_r$ is a polynomial of degree $r \leq wN-p$. These are coprime, 
+since we assume $p>r$.
+%By putting $V_p:=\ker \phi_p(f)$ 
+%and $V_r:=\ker \phi_r(f)$, 
+By putting $V_p:=\ker \left(\phi_p(f)\right)$ 
+and $V_r:=\ker \left(\phi_r(f)\right)$, here $\ker$ means the kernel, 
+we have a decomposition into $f$-invariant subspaces
+$$
+%S=V_p \oplus V_r,
+S=V_p \oplus V_r.
+$$
+For any element $s \in S$, we denote $s=s_p+s_r$ for the corresponding
+decomposition. 
+
+The period length of the state transition is the least common multiple
+of that started from $s_p$ and that started from $s_r$. Hence, 
+if $s_p \neq 0$, then the period is a nonzero multiple of $2^p-1$. 
+We checked the following. 
+\begin{proposition}
+The period of SFMT19937 as a 128-bit integer generator is 
+a nonzero multiple of $2^{19937}-1$, if the 32 MSBs of 
+$\bw_0$ are set to 
+the value {\tt 6d736d6d} in hexadecimal form.
+\end{proposition}
+This value of $\bw_0$ assures that $s_p\neq 0$,
+see \cite{PMT} for a way to find such a value.
+
+\begin{remark}
+The number of non-zero terms in $\chi_f(t)$ is 
+an index measuring the amount of bit-mixing. 
+In the case of SFMT19937, the number of nonzero 
+terms is 6711, which is much larger than 135 of MT, 
+but smaller than 8585 of WELL19937c \cite{WELL}. 
+\end{remark}
+
+\subsection{Computation of the dimension of equidistribution}
+\label{sec:DE}
+We briefly recall the definition of dimension of 
+equidistribution (cf. \cite{CLT}). 
+\begin{definition}\label{def:DE}
+A periodic sequence with period $P$
+$$\chi:=\bx_0, \bx_1, \ldots, \bx_{P-1}, \bx_P=\bx_0, \ldots$$
+of $v$-bit integers is said to be {\em $k$-dimensionally equidistributed}
+if any $kv$-bit pattern occurs equally often as a $k$-tuple
+$$
+(\bx_i, \bx_{i+1}, \ldots, \bx_{i+k-1})
+$$
+for a period $i=0,\ldots, P-1$.
+We allow an exception for 
+the all-zero pattern, which may occur once less often.
+(This last loosening of the condition is technically
+necessary, because the zero state does not occur
+in an $\F2$-linear generator). 
+The largest value of such $k$ is called the dimension 
+of equidistribution (DE).
+\end{definition}
+
+We want to generalise this definition slightly.
+We define the $k$-window set of the periodic sequence $\chi$
+as
+$$
+W_k(\chi):=
+\{(\bx_i, \bx_{i+1}, \ldots, \bx_{i+k-1}) | 
+i =0,1,\ldots, P-1\},
+$$
+which is considered as a {\em multi-set}, namely, 
+the multiplicity of each element is considered. 
+
+For a positive integer $m$ and a multi-set $T$,
+let us denote by $m \cdot T$ the multi-set 
+where the multiplicity of each element in $T$ is
+multiplied by $m$. Then, the above definition of
+equidistribution is equivalent to 
+$$
+W_k(\chi)=(m\cdot \F2^{vk}) \setminus \{{\mathbf 0}\},
+$$
+where $m$ is the multiplicity of the occurrences,
+and the operator $\setminus$ means that the multiplicity
+of ${\mathbf 0}$ is subtracted by one. 
+
+\begin{definition}
+In the above setting, if there exist a positive integer $m$ 
+and a multi-subset
+$D \subset (m\cdot \F2^{vk})$
+such that
+$$
+W_k(\chi)=(m\cdot \F2^{vk}) \setminus D,
+$$
+we say that $\chi$ is $k$-dimensionally equidistributed 
+with defect ratio $\#(D)/\#(m \cdot \F2^{vk})$, 
+where the cardinality is counted with multiplicity. 
+\end{definition}
+Thus, in Definition~\ref{def:DE}, the defect ratio up to $1/(P+1)$
+is allowed to claim the dimension of equidistribution.
+If $P=2^{19937}-1$, then $1/(P+1)=2^{-19937}$. 
+In the following, the dimension of equidistribution 
+allows the defect ratio up to $2^{-19937}$. 
+
+For a $w$-bit integer sequence, its {\em dimension of 
+equidistribution at $v$-bit accuracy} $k(v)$
+is defined as the DE of the $v$-bit sequence, obtained by extracting
+the $v$ MSBs from each of the $w$-bit integers.
+If the defect ratio is $1/(P+1)$, 
+then there is an upper bound 
+$$
+k(v) \leq \lfloor \log_2 (P+1) / v \rfloor.
+$$
+The gap between the realized $k(v)$ and the upper bound is
+called the dimension defect at $v$ of the sequence,
+and denoted by
+$$
+d(v):=\lfloor \log_2 (P+1) / v \rfloor -k(v).
+$$
+The summation of all the dimension defects at
+$1 \leq v \leq 32$ is called the total dimension defect, 
+denoted by $\Delta$.
+
+There is a difficulty in computing $k(v)$ when 
+a 128-bit integer generator is used as a 32-bit 
+(or 64-bit) integer generator.
+SFMT generates a sequence
+$\bx_0, \bx_1, \bx_2, \ldots$ of 128-bit integers. 
+Then, they are converted to a sequence of 32-bit integers
+$\bx_0[0], \bx_0[1], \bx_0[2], \bx_0[3], \bx_1[0], \bx_1[1],\ldots$,
+where 
+$\bx[0]$ is the 32 LSBs of $\bx$, 
+$\bx[1]$ is the 33rd--64th bits,
+$\bx[2]$ is the 65rd--96th bits,
+and $\bx[3]$ is the 32 MSBs. This is the so-called
+little-endian system (see \S\ref{sec:portability} for
+an implementation in a big-endian system). 
+
+Then, we need to modify the model automaton
+as follows.
+The state space is $S':=S \times \{0,1,2,3\}$,
+the state transition function $f':S' \to S'$ is
+$$
+f'(s,i):=
+\left\{
+\begin{array}{cl}
+(s, i+1) & (\mbox{ if $i<3$}), \\
+(f(s), 0) & (\mbox{ if $i=3$}) \\
+\end{array}
+\right.
+$$
+and the output function is 
+$$o': S' \to \F2^{32},\  ((\bw_0,\ldots,\bw_{N-1}),i) \mapsto \bw_0[i].$$
+
+We fix $1\leq v \leq w$, and let $o_k(s,i)$ be the $k$-tuple
+of the $v$ MSBs of the consecutive $k$-outputs from 
+the state $(s,i)$.
+\begin{proposition}
+Assume that $f$ is bijective.
+Let $k'=k'(v)$ denote the maximum $k$ 
+such that 
+\begin{equation}\label{eq:chi-k-i}
+o_k(-,i): V_p \subset S \to \F2^{kv}, \quad s \mapsto o_k(s,i)
+\end{equation}
+are surjective for all $i=0,1,2,3$. 
+%Take the initial state $s$ satisfying $s_p \neq 0$.
+Take an initial state $s$ satisfying $s_p \neq 0$.
+Then, the 32-bit output sequence is at least $k'(v)$-dimensionally
+equidistributed with $v$-bit accuracy with defect ratio
+$2^{-p}$.
+
+Moreover, if $4 < k'(v)+1$, then  
+for any initial state with $s=s_p \neq 0$
+(hence $s_r=0$), the dimension of equidistribution
+with defect ratio $2^{-p}$ is exactly $k'(v)$.
+\end{proposition}
+\begin{proof}
+Take $s \in S$ with $s_p \neq 0$. Then, the 
+orbit of $s$ by $f$ has the form of
+$(V_p - \{0\}) \times U \subset V_p \times V_r$,
+since $p>r$ and $2^p-1$ is a prime.
+%Since the first component of the product has
+%odd order, the orbit of $f'$ has the form of
+%$(V_p - \{0\}) \times U' \times \{0,1,2,3\} \in S$.
+The surjectivity of the linear mapping $o_{k'}(-,i)$
+implies that the image of 
+$$
+o_{k'}(-,i): V_p \times U \to \F2^{kv}
+$$
+is $m\cdot \F2^{kv}$ as a multi-set for some $m$.
+The defect comes from $0 \in V_p$, whose ratio
+in $V_p$ is $2^{-p}$. Then the first statement follows,
+since $W_{k'}(\chi)$ is the union of the images
+$o_{k'}(-,i)((V_p-\{0\})\times U)$ for $i=0,1,2,3$.
+
+For the latter half, we define
+$L_i$ as the multiset of the image of 
+$o_{k'+1}(-,i): V_p \to \F2^{(k'+1)v}$.
+Because of $s_r=0$, we have $U=\{0\}$, and
+the union of $(L_i-\{0\})$ $(i=0,1,2,3)$ as a multi-set is 
+$W_{k'+1}(\chi)$. If the sequence is $(k'+1)$-dimensionally
+equidistributed, then the multiplicity of
+each element in $W_{k'+1}(\chi)$ is at most
+$2^p\times 4/ 2^{(k'+1)v}$.
+
+On the other hand, the multiplicity of 
+an element in $L_i$ is equal to 
+the cardinality of the kernel of $o_{k'+1}(-,i)$.
+Let $d_i$ be its dimension. Then by the dimension theorem,
+we have $d_i \geq p-(k'+1)v$, and the equality
+holds if and only if $o_{k'+1}(-,i)$ is 
+surjective.
+Thus, if there is a nonzero element 
+$x \in \cap_{i=0}^3{L_i}$, then its multiplicity
+in $W_{k'+1}(\chi)$ is no less than 
+$4 \times 2^{p-(k'+1)v}$, and since
+one of $o_{k'+1}(-,i)$ is not surjective
+by the definition of $k'$, its multiplicity
+actually exceeds $4 \times 2^{p-(k'+1)v}$,
+which implies that the sequence is not
+$(k'+1)$-dimensionally equidistributed, and
+the proposition follows. Since the codimension 
+of $L_i$ is at most $v$, 
+that of $\cap_{i=0}^3{L_i}$ is at most $4v$.
+The assumed inequality on $k'$ implies the existence
+of nonzero element in the intersection.
+%
+%Since the codimension of 
+%each $L_i$ is at most $v$, the codimension of
+%$\cap_{i=0}^3{L_i}$ is at most $4v$. The inequality
+%in the assumption implies that there are at least 
+%two nonzero vectors $x,y \in \cap_{i=0}^3{L_i}$.
+%Now the inverse image of $x$ by $o_{k'+1}(-,i)$
+%has the same cardinality with its kernel,
+%hence $2^{p-\dim L_i}\geq 2^{p-(k'+1)v}$.
+%
+%If $W_{k'+1}(\chi)$ is $(k'+1)$-dimensionally
+%equidistributed, then the inverse image of
+%
+\end{proof}
+
+The dimension of equidistribution $k(v)$ depends on 
+the choice of the initial state $s$. The above 
+proposition implies that $k'(v)$ coincides 
+with $k(v)$ for the worst choice of $s$ under the condition 
+$s_p \neq 0$. Thus, we adopt the following definition.
+
+\begin{definition}\label{def:virtual}
+Let $k$ be the maximum such that
+(\ref{eq:chi-k-i}) is satisfied. We call this
+the dimension of equidistribution
+of $v$-bit accuracy, and denote it simply by $k(v)$.
+We have an upper bound $k(v) \leq \lfloor p/v \rfloor$.
+
+We define the dimension defect at $v$
+%for SFMT19937 used as 32-bit integer generators
+by
+$$
+d(v):=\lfloor p/v \rfloor - k(v) 
+\mbox{ and } \Delta:=\sum_{v=1}^w d(v).
+$$
+\end{definition}
+We may compute $k(v)$ by standard linear algebra.
+We used a more efficient algorithm based on 
+a weighted norm,
+%{\em weighted lattice method} to compute $k'(v)$,
+generalising \cite{CLT}. This will be written 
+somewhere else,
+because of lack of space.
+%rather complicated mathematics, we omit it here
+%(we plan another article for this). 
+
+%The algorithm gives a (rather tight) 
+%lower bound $k'(v)$ of $k(v)$ for each $v$, 
+%and $k'(v) \leq \lceil 19937/v \rceil$ holds
+%for SFMT19937.
+%Consequently, we redefine the dimension defect for SFMT19937 by
+%$$
+%d(v):=\lceil 19937/v \rceil - k'(v) 
+%\mbox{ and } \Delta:=\sum_{v=1}^w d(v).
+%$$
+%The meaning of $k'(v)$ and a justification for this 
+%definition will be explained in the planned article.
+
+\section{Comparison of  speed}\label{sec:comp-speed}
+We compared two algorithms: MT19937 and SFMT19937,
+with implementations using and without using SIMD instructions.
+
+We measured the speeds for four different CPUs:
+Pentium M 1.4GHz, Pentium IV 3GHz, 
+AMD Athlon 64 3800+, and PowerPC G4 1.33GHz.  
+In returning the random values, we used two different methods.
+One is sequential generation, where one 32-bit random 
+integer is returned for one call. 
+The other is block generation, where an array
+of random integers is generated for one call 
+(cf. \cite{knuth:bible}). 
+For detail, see \S\ref{sec:block} below. 
+
+We measured the consumed CPU time in second, 
+for $10^8$ generations of 32-bit integers. More precisely,
+in case of the block generation, we generate $10^5$
+of 32-bit random integers by one call, and it is iterated
+for $10^3$ times. 
+For sequential generation, the same $10^8$
+ 32-bit integers are generated, one per a call.
+%To avoid the function call, the code uses 
+%an inline declaration. 
+We used the inline declaration
+{\tt inline} to avoid the function call,
+and unsigned 32-bit, 64-bit integer types 
+{\tt uint32\_t}, {\tt uint64\_t} defined in 
+INTERNATIONAL STANDARD ISO/IEC 9899 : 1999(E) 
+Programming Language-C, Second Edition
+(which we shall refer to as C99 in the rest of this article).
+Implementations without SIMD are written in C99,
+whereas those with SIMD use
+some standard SIMD extension of C99 supported by 
+the compilers icl (Intel C compiler) and gcc.
+
+Table~\ref{tab:speed} summarises the speed comparisons.
+ The first four lines list the CPU time
+(in second) needed to generate $10^8$ 
+32-bit integers, for a Pentium-M CPU with the Intel C/C++
+compiler. The first line lists the seconds for the
+block-generation scheme. The second line shows the 
+ratio of CPU time to that of 
+SFMT(SIMD). Thus, SFMT coded in SIMD is 2.10 times
+faster than MT coded in SIMD, and 3.77 times faster
+than MT without SIMD. The third line lists the seconds
+for the sequential generation scheme. The fourth line
+lists the ratio, with the basis taken
+at SFMT(SIMD) block-generation (not sequential). 
+Thus, the block-generation of SFMT(SIMD) is 2.00 times
+faster than the sequential-generation of SFMT(SIMD).
+
+Roughly speaking, in the block generation, 
+SFMT(SIMD) is twice as fast as MT(SIMD),
+and four times faster than MT without using SIMD.
+Even in the sequential generation case,
+SFMT(SIMD) is still considerably faster than MT(SIMD).
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c||c|c|c|c|} \hline
+CPU/compiler & return & MT & MT(SIMD) & SFMT & SFMT(SIMD)  \\ \hline \hline
+Pentium-M & block & 1.122  & 0.627  & 0.689  & 0.298 \\ \cline{3-6}
+1.4GHz & (ratio) & 3.77  & 2.10  & 2.31  & 1.00 \\ \cline{2-6}
+Intel C/C++ & seq & 1.511  & 1.221  & 1.017  & 0.597 \\ \cline{3-6}
+ver. 9.0 & (ratio) & 5.07  & 4.10  & 3.41  & 2.00 \\ \hline
+Pentium IV & block & 0.633  & 0.391  & 0.412  & 0.217 \\ \cline{3-6}
+3GHz & (ratio) & 2.92  & 1.80  & 1.90  & 1.00 \\ \cline{2-6}
+Intel C/C++ & seq & 1.014  & 0.757  & 0.736  & 0.412 \\ \cline{3-6}
+ver. 9.0 & (ratio) & 4.67  & 3.49  & 3.39  & 1.90 \\ \hline
+Athlon 64 3800+ & block & 0.686  & 0.376  & 0.318  & 0.156 \\ \cline{3-6}
+2.4GHz & (ratio) & 4.40  & 2.41  & 2.04  & 1.00 \\ \cline{2-6}
+gcc & seq & 0.756  & 0.607  & 0.552  & 0.428 \\ \cline{3-6}
+ver. 4.0.2 & (ratio) & 4.85  & 3.89  & 3.54  & 2.74 \\ \hline
+PowerPC G4 & block & 1.089  & 0.490  & 0.914  & 0.235 \\ \cline{3-6}
+1.33GHz & (ratio) & 4.63  & 2.09  & 3.89  & 1.00 \\ \cline{2-6}
+gcc & seq & 1.794  & 1.358  & 1.645  & 0.701 \\ \cline{3-6}
+ver. 4.0.0 & (ratio) & 7.63  & 5.78  & 7.00  & 2.98 \\ \hline
+\end{tabular}
+\end{center}
+\caption{The CPU time (sec.) for $10^8$ generations of 32-bit integers,
+for four different CPUs and two different return-value methods. 
+The ratio to the SFMT coded in SIMD is listed, too.}\label{tab:speed}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c||c|c|c|c|c|c|}
+\hline
+CPU & return & mrg & rand48 & rand & random256g2 & well & xor3  \\ \hline \hline
+Pentium M & block & 3.277  & 1.417  & 0.453  & 0.230  & 1.970  & 0.296 \\ 
+\cline{2-8}
+ & seq & 3.255  & 1.417  & 0.527  & 0.610  & 2.266  & 1.018 \\ \hline
+Pentium IV & block & 2.295  & 1.285  & 0.416  & 0.121  & 0.919  & 0.328 \\ 
+\cline{2-8}
+ & seq & 2.395  & 1.304  & 0.413  & 0.392  & 1.033  & 0.702 \\ \hline
+Athlon & block & 1.781  & 0.770  & 0.249  & 0.208  & 0.753  & 0.294 \\ 
+\cline{2-8}
+ & seq & 1.798  & 0.591  & 0.250  & 0.277  & 0.874  & 0.496 \\ \hline
+PowerPC & block & 2.558  & 1.141  & 0.411  & 0.653  & 1.792  & 0.618 \\ 
+\cline{2-8}
+ & seq & 2.508  & 1.132  & 0.378  & 1.072  & 1.762  & 1.153 \\ \hline
+\end{tabular}
+\end{center}
+\caption{The CPU time (sec.) for $10^8$ generations of 32-bit integers,
+by six other PRNGs.}\label{tab:speed-other}
+\end{table}
+Table~\ref{tab:speed-other} lists the CPU time for generating
+$10^8$ 32-bit integers, for four PRNGs from the GNU Scientific Library
+and two recent generators. 
+They are re-coded with inline specification. 
+Generators examined were:
+a multiple recursive generator {\tt mrg} \cite{MRG}, 
+linear congruential generators {\tt rand48} and {\tt rand}, 
+a lagged fibonacci generator {\tt random256g2},
+a WELL generator {\tt well} (WELL19937c in \cite{WELL}),
+and a XORSHIFT generator {\tt xor3} 
+\cite{XORSHIFT} \cite{XORSHIFT-MAR}.
+The table shows that SFMT(SIMD) is faster than
+these PRNGs, except for the outdated
+linear congruential generator {\tt rand},
+the lagged-fibonacci
+generator {\tt random256g2} 
+(which is known to
+ have poor randomness, cf. \cite{SUM}),
+and {\tt xor3} with a Pentium-M.
+
+\section{Dimension of equidistribution}
+Table~\ref{tab:dd} lists the dimension defects $d(v)$
+of SFMT19937 (as a 32-bit integer generator) 
+and of MT19937, for $v=1,2,\ldots, 32$.
+SFMT has smaller values of the defect $d(v)$
+at 26 values of $v$. The converse holds for 6 values of
+$v$, but the difference is small.
+The total dimension defect $\Delta$ of SFMT19937
+as a 32-bit integer generator is $4188$, 
+which is smaller than the total dimension defect $6750$ of MT19937.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|rr||c|rr||c|rr||c|rr|} \hline
+$v$ & MT & SFMT & $v$ & MT & SFMT & $v$ & MT & SFMT & $v$ & MT & SFMT\\ \hline
+$d(1)$ & 0 & 0 & $d(9)$ & 346 & 1 & $d(17)$ & 549 & 543 & $d(25)$ & 174 & 173 \\
+$d(2)$ & 0 & *2 & $d(10)$ & 124 & 0 & $d(18)$ & 484 & 478 & $d(26)$ & 143 & 142
+\\
+$d(3)$ & 405 & 1 & $d(11)$ & 564 & 0 & $d(19)$ & 426 & 425 & $d(27)$ & 115 & 114
+\\
+$d(4)$ & 0 & *2 & $d(12)$ & 415 & 117 & $d(20)$ & 373 & 372 & $d(28)$ & 89 & 88
+\\
+$d(5)$ & 249 & 2 & $d(13)$ & 287 & 285 & $d(21)$ & 326 & 325 & $d(29)$ & 64 & 63
+\\
+$d(6)$ & 207 & 0 & $d(14)$ & 178 & 176 & $d(22)$ & 283 & 282 & $d(30)$ & 41 & 40
+\\
+$d(7)$ & 355 & 1 & $d(15)$ & 83 & *85 & $d(23)$ & 243 & 242 & $d(31)$ & 20 & 19 
+\\
+$d(8)$ & 0 & *1 & $d(16)$ & 0 & *2 & $d(24)$ & 207 & 206 & $d(32)$ & 0 & *1 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Dimension defects 
+$d(v)$ of MT19937 and SFMT19937
+as a 32-bit integer generator. 
+The mark * means that MT has a smaller defect than SFMT
+at that accuracy.
+}\label{tab:dd}
+\end{table}
+
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=0.8\linewidth,height=0.7\textheight,
+%keepaspectratio]{delta.eps}
+%\end{center}
+%\caption{The dimension defects $d(v)$ of MT (real line) and 
+%the dimension defects $d'(v)$ SFMT (dotted)
+%for $v=1,2,\ldots, 32$.}
+%\end{figure}
+
+We also computed the dimension defects of SFMT19937 as a 64-bit
+(128-bit) integer generator, and the total dimension 
+defect $\Delta$ is 14089 (28676, respectively). In some applications, 
+the distribution of LSBs is important. 
+To check them, we inverted the order of the bits (i.e. the $i$-th
+bit is exchanged with the $(w-i)$-th bit) in each integer, 
+and computed the total dimension defect. It is
+10328 (21337, 34577, respectively) as
+a 32-bit (64-bit, 128-bit, respectively) integer generator.
+Throughout the experiments, $d'(v)$ is very small for $v\leq 10$.
+We consider that these values are satisfactorily small, since
+they are comparable with MT
+for which no statistical deviation
+related to the dimension defect has been reported, 
+as far as we know.
+
+\section{Recovery from 0-excess states}
+%LFSR with a sparse feedback function $g$ has
+%the following phenomenon: 
+For an LFSR with a sparse feedback function $g$,
+we observe the following phenomenon: 
+if the bits in the state space 
+contain too many 0's and few 1's (called a 0-excess state), then
+%this tendency continues for considerable generations,
+this tendency continues for many steps,
+since only a small part is changed in the state array
+%at one generation, and the change is not well-reflected to 
+%the next generation because of the sparseness.
+at one step, and the change is not well-reflected to 
+the next setp because of the sparseness.
+
+We measure the recovery time from 0-excess states, 
+by the method introduced in \cite{WELL}, as follows.
+\begin{enumerate}
+\item Choose an initial state with only one bit being 1.
+\item Generate $k$ pseudorandom numbers, and discard them.
+\item Compute the ratio of 1's among the 
+next 32000 bits of outputs
+(i.e., in the next 1000 pseudorandom 32-bit integers).
+\item Let $\gamma_k$ be the average of the ratio over
+all such initial states.
+\end{enumerate}
+We draw graphs of these ratio $\gamma_k$ $(1 \leq k \leq 20000)$
+in Figure~\ref{fig:zero-recovery}
+for the following generators: (1) WELL19937c, 
+(2) PMT19937 \cite{PMT}, (3) SFMT19937, and (4) MT19937. 
+%For (1), (2), (3) and (3), the chosen 
+%initial states are those with only one bit being 1
+%and all the rest 0. For (2*), the 32 MSBs in the first 128-bit
+%integer in the state array is fixed to the value 
+%{\tt 6d736d6d} in the hexadecimal form, and the initial states
+%are those with only one bit being 1, except these 32 bits.
+%Setting these 32 bits to this value assures that SFMT19937
+%has the period being a nonzero multiple of $2^{19937}-1$,
+%see \S\ref{sec:period}.
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.7\linewidth]{sfmt-zero.eps}
+\end{center}
+\caption{$\gamma_k \ (k=0,\ldots,20000)$:
+Starting from extreme 0-excess states,
+discard the first $k$ outputs and then measure
+the ratio $\gamma_k$ of 1's in the next 1000 outputs. 
+In the order of the recovery speed: 
+(1) WELL19937c, 
+(2) PMT19937, (3) SFMT19937, and (3) MT19937.
+}\label{fig:zero-recovery}
+\end{figure}
+Because of its dense feedback, WELL19937c shows
+%the fastest recovery among the compared. 
+the fastest recovery among the compared generators. 
+SFMT is better than MT, since its recursion refers to 
+%the previously-computed words (i.e., {\tt W[N-1]} and {\tt W[N-2]}) 
+two most recently computed words 
+that acquire new 1s, while
+MT refers only to the words generated long before 
+(i.e., {\tt W[M]} and {\tt W[0]}). PMT19937 shows faster recovery 
+than SFMT19937, since PMT19937 has two feedback loops
+(hence the name of Pulmonary Mersenne Twister).
+
+The speed of recovery from 0-excess states 
+is a trade-off 
+with the speed of generation. 
+Such 0-excess states will not happen practically, 
+since the probability 
+that 19937 random bits have less than $19937\times 0.4$ of 1's 
+is about $5.7\times 10^{-177}$.
+The only plausible case is that
+a poor initialization scheme gives a 0-excess initial state. 
+In a typical simulation, the number of 
+initializations is far smaller than the number of generations,
+therefore we may spend more CPU time in the initialization
+than the generation. Once we avoid the 0-excess initial state
+by a well-designed initialization, then the recovery 
+speed does not matter, in a practical sense. 
+Consequently, the slower recovery of SFMT compared to WELL 
+is not an issue, under the assumption that
+a good initialization scheme is provided. 
+
+\section{Block-generation}\label{sec:block}
+In the block-generation scheme, 
+the user of the PRNG specifies an array
+of $w$-bit integers of the length $L$, 
+where $w=32$, 64 or 128 and $L$ is specified
+by the user.
+In the case of SFMT19937,
+$wL$ should be a multiple of $128$
+and no less than $N \times 128$,
+since the array needs to accommodate the state space
+(note that $N=156$).
+By calling the block generation function 
+with the pointer to this array, $w$, and $L$, 
+the routine fills up the array with
+pseudorandom integers, as follows. SFMT19937 keeps the state
+space $S$ in an internal array of 128-bit integers of length 156.
+We concatenate this state array with the user-specified array, 
+using the indexing technique.
+Then, the routine generates 128-bit integers in the user-specified 
+array by recursion (\ref{eq:rec-SFMT}), as described
+in Figure~\ref{fig:B1}, until it fills up the array.
+The last 156 128-bit integers
+are copied back to the internal array
+of SFMT19937. 
+This makes the generation much faster than sequential generation
+(i.e., one generation per one call) as shown in Table~\ref{tab:speed}.
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.7\linewidth,height=0.4\textheight,
+keepaspectratio]{fill_array.eps}
+\end{center}
+\caption{Block-generation scheme}
+\label{fig:B1}
+\end{figure}
+
+\section{Concluding remarks}
+%We proposed SFMT pseudorandom number generator, 
+We proposed the SFMT pseudorandom number generator, 
+which is a very fast generator with satisfactorily
+high dimensional equidistribution property. 
+
+\subsection{Trade-off between speed and quality}
+It is difficult to measure the generation speed of a PRNG in a fair way,
+since it depends heavily on the circumstance. 
+The 
+WELL \cite{WELL} generators have the best possible dimensions of 
+equidistribution (i.e. $\Delta=0$)
+for various periods ($2^{1024}-1$ to $2^{19937}-1$).
+%If we use the function call to PRNG
+If we use the function call to the PRNG
+for each generation, then a large part of the CPU time
+is consumed for handling the function call, and in the 
+experiments in \cite{WELL} or \cite{XORSHIFT}, WELL 
+is not much slower than MT. On the other hand, if we avoid
+the function call, WELL is much slower than MT as seen
+in Table~\ref{tab:speed}. 
+
+Since $\Delta=0$, WELL has a better quality than MT or SFMT
+in a theoretical sense. 
+However, one may argue whether this difference is 
+observable or not. In the case of an $\F2$-linear generator,
+the dimension of equidistribution $k(v)$ of $v$-bit accuracy
+means that
+there is no constant linear relation among the 
+$kv$ bits, but there exists a linear relation among
+the $(k+1)v$ bits, where $kv$ bits 
+($(k+1)v$ bits) are taken from
+all the consecutive $k$ integers 
+($k+1$ integers, respectively)
+by extracting the $v$ MSBs from each.
+However, the existence of a linear relation does not necessarily
+mean the existence of some observable bias.
+According to \cite{TESTWEIGHT}, it requires $10^{28}$
+samples to detect an $\F2$-linear relation with 
+15 (or more) terms among 521 bits, by a standard
+statistical test. If the number of 
+bits is increased, 
+the necessary sample size is increased rapidly. Thus, it seems
+that $k(v)$ of SFMT19937 is sufficiently large, far beyond
+the level of the observable bias. 
+On the other hand, the speed of the generator is 
+observable.
+Thus, SFMT focuses more on the speed, for applications
+that require fast generations. 
+
+\subsection{Trade-off between speed and portability}\label{sec:portability}
+There is a trade-off between the speed and portability.
+%We prepare (1) a standard C code of SFMT, which uses 
+We prepared (1) a standard C code of SFMT, which uses 
+functions specified in C99 only, (2) an optimized C code for
+Intel Pentium SSE2, and 
+(3) an optimized C code for PowerPC AltiVec. The optimized codes require
+%icl (Intel C Compiler) or gcc compiler with suitable options.
+the icl (Intel C Compiler) or gcc compiler with suitable options.
+We had put and will keep the newest version of the codes 
+in the homepage \cite{SFMT}.
+
+There is a problem of the endian when 128-bit integers 
+are converted into 32-bit integers. When a 128-bit integer
+is stored as an array of 32-bit integers with length 4, in a little
+endian system such as Pentium, the 32 LSBs of the 128-bit
+integer come first.
+On the other hand, in a big endian system such as PowerPC,
+the 32 MSBs come first. 
+The explanation above is based on the former.
+To assure the exactly same outputs for both endian systems
+as 32-bit integer generators, in the SIMD implementation 
+for PowerPC, 
+the recursion (\ref{eq:rec-SFMT}) is considered as 
+a recursion on quadruples of 32-bit integers, rather than
+128-bit integers, so that the content of the state array 
+coincides both for little and big endian systems,
+as an array of 32-bit integers (not as 128-bit integers).
+Then, shift operations on 128-bit integers
+in PowerPC differs from those of Pentium. 
+Fortunately, 
+PowerPC supports arbitrary permutations of 
+16 blocks of 8-bit integers in a 128-bit register,
+which emulates the Pentium's shift by a multiple of 8.
+
+\bibliographystyle{plain}
+\bibliography{kuramoto}
+%\begin{received}
+%\end{received}
+\end{document}
