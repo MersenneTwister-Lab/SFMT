@@ -415,9 +415,10 @@ shortest-baseX76-607: chk-shortest.o shortbase128.o sfmtX76-st.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX76-st.o util.o \
 		${LINKOPT}
 
-shortest-baseX78-607: chk-shortest.o shortbase128.o sfmtX78-st.o util.o
+shortest-baseX78-607: chk-shortest.o shortbase128.o sfmtX78-st.o util.o \
+		mt19937blk.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX78-st.o util.o \
-		${LINKOPT}
+		mt19937blk.o ${LINKOPT}
 
 shortest-baseX79-607: chk-shortest.o shortbase128.o sfmtX79-st.o util.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtX79-st.o util.o \

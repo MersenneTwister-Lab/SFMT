@@ -302,6 +302,24 @@ uint32_t gen_rand128sp(sfmt_t *sfmt, uint32_t array[4], uint32_t mode)
     return array[0];
 }
 
+void gen_rand128spar(sfmt_t *sfmt, uint32_t array[][4], int size) {
+    int i, j;
+
+    for (j = 0; j < size; j++) {
+	i = sfmt->idx / 4;
+	array[j][0] = sfmt->sfmt[i][0];
+	array[j][1] = sfmt->sfmt[i][1];
+	array[j][2] = sfmt->sfmt[i][2];
+	array[j][3] = sfmt->sfmt[i][3];
+
+	next_state(sfmt);
+	sfmt->idx += 4;
+	if (sfmt->idx >= N * 4) {
+	    sfmt->idx = 0;
+	}
+    }
+}
+
 void init_gen_rand(sfmt_t *sfmt, uint32_t seed)
 {
     int i;

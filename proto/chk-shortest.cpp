@@ -12,6 +12,7 @@
 
 extern "C" {
 #include "sfmt-st.h"
+#include "mt19937blk.h"
 }
 
 NTL_CLIENT;
@@ -86,6 +87,7 @@ void option(int argc, char * argv[]) {
     }
 }
 
+#if 0
 void fill_state_random(sfmt_t *sfmt, FILE *frandom) {
     int i, j;
     int w;
@@ -106,6 +108,55 @@ void fill_state_random(sfmt_t *sfmt, FILE *frandom) {
 	}
     }
 }
+#endif
+
+void fill_rnd(sfmt_t *sfmt) {
+    const int a_max = 100000;
+    static int idx = a_max;
+    static uint32_t array[a_max];
+    int i, j;
+
+    if (idx + N * 4 >= a_max) {
+	mt_fill(array, a_max);
+	idx = 0;
+    }
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 4; j++) {
+	    sfmt->sfmt[i][j] = array[idx++];
+	}
+    }
+}
+
+int fill_state_random(sfmt_t *sfmt, FILE *frandom) {
+    static int count = 0;
+    int i, j;
+    int w1, w2;
+    unsigned int pos;
+
+    if (count > 5000) {
+	//return fill_state_base(sfmt);
+	return 0;
+    }
+    fill_rnd(sfmt);
+    w1 = getw(frandom);
+    w2 = getw(frandom);
+    if (feof(frandom) || ferror(frandom)) {
+	if (errno != 0) {
+	    printf("test_shortest:%s\n", strerror(errno));
+	} else {
+	    printf("test_shortest:/dev/urandom reached to EOF!\n");
+	}
+	fclose(frandom);
+	exit(1);
+    }
+    pos = (unsigned int)w2;
+    j = pos % 2;
+    i = pos % (N + 1);
+    sfmt->sfmt[i][j] = w1;
+    count++;
+    return 1;
+}
+
 
 void generating_polynomial128_hi(sfmt_t *sfmt, vec_GF2& vec,
 				 unsigned int bitpos, 
