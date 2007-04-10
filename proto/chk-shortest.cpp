@@ -337,11 +337,10 @@ void test_shortest(char *filename) {
     sfmt_t sfmt_save;
     vec_GF2 vec;
     int shortest;
-    uint32_t i;
+    int i;
     int dist_sum;
     int count;
     int old;
-    int lcmcount;
 
     printf("filename:%s\n", filename);
     fp = fopen(filename, "r");
@@ -351,6 +350,7 @@ void test_shortest(char *filename) {
 	fclose(fp);
 	exit(1);
     }
+    mt_init(1234);
     read_random_param(fp);
     init_gen_rand(&sfmt, 123);
     sfmt_save = sfmt;
@@ -388,30 +388,27 @@ void test_shortest(char *filename) {
 #endif
     }
 #if 1 // 0状態を作るにはこれは不要？
-    lcmcount = 0;
-    while (deg(lcmpoly) < (long)maxdegree) {
-	if (lcmcount > 5000) {
-	    printf("failure\n");
-	    return;
+    //lcmcount = 0;
+    //while (deg(lcmpoly) < (long)maxdegree) {
+    for (i = 0; i < maxdegree; i++) {
+	if (fill_state_random(&sfmt, frandom) == 0) {
+	    break;
+	};
+	//for (int j = 0; j < 128; j++) {
+	generating_polynomial128(&sfmt, vec, i % 128, maxdegree);
+	if (IsZero(vec)) {
+	    break;
 	}
-	errno = 0;
-	fill_state_random(&sfmt, frandom);
-	for (int j = 0; j < 128; j++) {
-	    generating_polynomial128(&sfmt, vec, j, maxdegree);
-	    if (IsZero(vec)) {
-		break;
-	    }
-	    berlekampMassey(minpoly, maxdegree, vec);
-	    LCM(tmp, lcmpoly, minpoly);
-	    if (deg(tmp) > (long)maxdegree) {
-		break;
-	    }
-	    lcmpoly = tmp;
-	    lcmcount++;
-	    if (deg(lcmpoly) >= (long)maxdegree) {
-		break;
-	    }
+	berlekampMassey(minpoly, maxdegree, vec);
+	LCM(tmp, lcmpoly, minpoly);
+	if (deg(tmp) > (long)maxdegree) {
+	    break;
 	}
+	lcmpoly = tmp;
+	if (deg(lcmpoly) >= (long)maxdegree) {
+	    break;
+	}
+	//}
     }
     if (deg(lcmpoly) != maxdegree) {
 	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
