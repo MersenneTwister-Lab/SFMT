@@ -142,7 +142,7 @@ INLINE double gen_rand(void)
     r &= LOW_MASK;
     r |= HIGH_CONST;
     dp = (double *)&r;
-    *dp += 2.0L;
+    *dp += 2.0;
     return *dp;
 }
 
@@ -156,7 +156,7 @@ INLINE void fill_array(double array[], int size)
     low_mask = _mm_set_epi32(LOW_MASK32_1, LOW_MASK32_2,
 				  LOW_MASK32_1, LOW_MASK32_2);
     high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
-    double_two = _mm_set_pd(2.0L, 2.0L);
+    double_two = _mm_set_pd(2.0, 2.0);
     //assert(size >= N * 4);
     //assert(size % 4 == 0);
     //assert((int)array % 16 == 0);

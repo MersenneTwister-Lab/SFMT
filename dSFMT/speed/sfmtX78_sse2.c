@@ -17,6 +17,20 @@
 
 //#define MAX_BLOCKS 10
 
+union W64_T {
+    uint64_t u;
+    double d;
+};
+typedef union W64_T w64_t;
+
+union W128_T {
+    __m128i si;
+    __m128d sd;
+    double d[2];
+    uint64_t u[2];
+};
+typedef union W128_T w128_t;
+
 INLINE static void gen_rand_array(__m128i array[], int size);
 INLINE static void gen_rand_all(void);
 
@@ -34,6 +48,90 @@ static uint64_t *sfmtp = (uint64_t *)sfmt;
 #define MSK2 0xffdff7fbU
 #define MSK3 0xcbfff7feU
 #define MSK4 0xedfefffdU
+#define LOW_MASK  0x000FFFFFFFFFFFFFULL
+#define HIGH_CONST 0x3FF0000000000000ULL
+#define LOW_MASK32_1 0x000fffffU
+#define LOW_MASK32_2 0xffffffffU
+#define HIGH_CONST32 0x3ff00000U
+
+void fill_array_open_close(double array[], int size);
+void fill_array_close_open(double array[], int size);
+void fill_array_open_open(double array[], int size);
+void fill_array_close1_open2(double array[], int size);
+INLINE double genrand_close1_open2(void);
+
+#if defined(__GNUC__) && (!defined(DEBUG))
+#define ALWAYSINLINE __attribute__((always_inline))
+#else
+#define ALWAYSINLINE
+#endif
+INLINE static void convert_12(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+
+static __m128i sse2_low_mask;
+static __m128i sse2_high_const;
+static __m128i sse2_high_const_one;
+static __m128d sse2_double_two;
+static __m128d sse2_double_m_one;
+
+static void setup_const(void) {
+    static int first = true;
+    if (!first) {
+	return;
+    }
+    sse2_low_mask = _mm_set_epi32(LOW_MASK32_1, LOW_MASK32_2,
+				  LOW_MASK32_1, LOW_MASK32_2);
+    sse2_high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
+    sse2_high_const_one = _mm_set_epi32(HIGH_CONST32, 1, HIGH_CONST32, 1);
+    sse2_double_two = _mm_set_pd(2.0, 2.0);
+    sse2_double_m_one = _mm_set_pd(-1.0, -1.0);
+    first = false;
+}
+
+INLINE static void convert_12(w128_t array[], int size) {
+    int i;
+    w128_t r;
+
+    for (i = 0; i < size; i++) {
+	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
+	array[i].si = _mm_or_si128(r.si, sse2_high_const);
+    }
+}
+
+INLINE static void convert_co(w128_t array[], int size) {
+    int i;
+    w128_t r;
+
+    for (i = 0; i < size; i++) {
+	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
+	r.si = _mm_or_si128(r.si, sse2_high_const);
+	array[i].sd = _mm_add_pd(r.sd, sse2_double_m_one);
+    }
+}
+
+INLINE static void convert_oc(w128_t array[], int size) {
+    int i;
+    w128_t r;
+
+    for (i = 0; i < size; i++) {
+	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
+	r.si = _mm_or_si128(r.si, sse2_high_const);
+	array[i].sd = _mm_sub_pd(sse2_double_two, r.sd);
+    }
+}
+
+INLINE static void convert_oo(w128_t array[], int size) {
+    int i;
+    w128_t r;
+
+    for (i = 0; i < size; i++) {
+	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
+	r.si = _mm_or_si128(r.si, sse2_high_const_one);
+	array[i].sd = _mm_add_pd(r.sd, sse2_double_m_one);
+    }
+}
 
 INLINE unsigned int get_rnd_maxdegree(void)
 {
@@ -126,54 +224,86 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
     }
 }
 
-#define LOW_MASK  0x000FFFFFFFFFFFFFULL
-#define HIGH_CONST 0xBFF0000000000000ULL
-#define LOW_MASK32_1 0x000fffffU
-#define LOW_MASK32_2 0xffffffffU
-#define HIGH_CONST32 0xbff00000U
-
 INLINE double gen_rand(void)
 {
-    uint64_t r;
-    double *dp;
+    w64_t r;
 
     if (idx >= N * 2) {
 	gen_rand_all();
 	idx = 0;
     }
-    r = sfmtp[idx++];
-    r &= LOW_MASK;
-    r |= HIGH_CONST;
-    dp = (double *)&r;
-    *dp += 2.0L;
-    return *dp;
+    r.u = sfmtp[idx++];
+    r.u &= LOW_MASK;
+    r.u |= HIGH_CONST;
+    return r.d;
 }
 
-INLINE void fill_array(double array[], int size)
+INLINE double genrand_close1_open2(void)
 {
-    int i;
-    __m128i low_mask, high_const;
-    __m128d double_two, *dp;
-    __m128i r, *ap;
+    w64_t r;
 
-    low_mask = _mm_set_epi32(LOW_MASK32_1, LOW_MASK32_2,
-				  LOW_MASK32_1, LOW_MASK32_2);
-    high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
-    double_two = _mm_set_pd(2.0L, 2.0L);
-    //assert(size >= N * 4);
-    //assert(size % 4 == 0);
-    //assert((int)array % 16 == 0);
+    if (idx >= N * 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r.u = sfmtp[idx++];
+    r.u &= LOW_MASK;
+    r.u |= HIGH_CONST;
+    return r.d;
+}
+
+INLINE double genrand_open_open(void)
+{
+    w64_t r;
+
+    if (idx >= N * 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r.u = sfmtp[idx++];
+    r.u &= LOW_MASK;
+    r.u |= HIGH_CONST | 1;
+    return r.d - 1.0;
+}
+
+INLINE void fill_array_close1_open2(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+    assert((int)array % 16 == 0);
 
     gen_rand_array((__m128i *)array, size / 2);
-    ap = (__m128i *)array;
-    for (i = 0; i < size / 2; i++) {
-	r = _mm_and_si128(ap[i], low_mask);
-	ap[i] = _mm_or_si128(r, high_const);
-    }
-    dp = (__m128d *)array;
-    for (i = 0; i < size / 2; i++) {
-	dp[i] = _mm_add_pd(dp[i], double_two);
-    }
+    convert_12((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_close_open(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+    assert((int)array % 16 == 0);
+
+    gen_rand_array((__m128i *)array, size / 2);
+    convert_co((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_open_close(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+    assert((int)array % 16 == 0);
+
+    gen_rand_array((__m128i *)array, size / 2);
+    convert_oc((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_open_open(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+    assert((int)array % 16 == 0);
+
+    gen_rand_array((__m128i *)array, size / 2);
+    convert_oo((w128_t *)array, size / 2);
 }
 
 INLINE void init_gen_rand(uint64_t seed)
@@ -185,7 +315,8 @@ INLINE void init_gen_rand(uint64_t seed)
 	sfmtp[i] = 1812433253UL * (sfmtp[i - 1] ^ (sfmtp[i - 1] >> 30)) + i;
     }
     idx = N * 4;
+    setup_const();
 }
 
-#include "test_time.c"
+#include "test_time3.c"
 

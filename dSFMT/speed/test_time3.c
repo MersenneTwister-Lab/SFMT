@@ -191,7 +191,7 @@ void test_co(void) {
 	    min = clo;
 	}
     }
-    printf("BLOCK CO AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    printf("BLOCK [0, 1) AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
 }
 
 void test_oc(void) {
@@ -215,7 +215,7 @@ void test_oc(void) {
 	    min = clo;
 	}
     }
-    printf("BLOCK OC AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    printf("BLOCK (0, 1] AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
 }
 
 void test_oo(void) {
@@ -239,7 +239,7 @@ void test_oo(void) {
 	    min = clo;
 	}
     }
-    printf("BLOCK OO AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    printf("BLOCK (0, 1) AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
 }
 
 void test_12(void) {
@@ -263,7 +263,7 @@ void test_12(void) {
 	    min = clo;
 	}
     }
-    printf("BLOCK 12 AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    printf("BLOCK [1, 2) AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
 }
 
 void test_seq_co(void) {
@@ -292,7 +292,7 @@ void test_seq_co(void) {
 	}
     }
     total = r;
-    printf("SEQ CO 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ [0, 1) 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -313,7 +313,7 @@ void test_seq_co(void) {
     for (k = 0; k < NUM_RANDS; k++) {
 	total += array[k];
     }
-    printf("SEQ CO 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ [0, 1) 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -321,7 +321,7 @@ void test_seq_co(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;
@@ -364,7 +364,7 @@ void test_seq_oc(void) {
 	}
     }
     total = r;
-    printf("SEQ OC 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ (0, 1] 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -385,7 +385,7 @@ void test_seq_oc(void) {
     for (k = 0; k < NUM_RANDS; k++) {
 	total += array[k];
     }
-    printf("SEQ OC 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ (0, 1] 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -393,7 +393,7 @@ void test_seq_oc(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;
@@ -436,7 +436,7 @@ void test_seq_oo(void) {
 	}
     }
     total = r;
-    printf("SEQ OO 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ (0, 1) 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -457,7 +457,7 @@ void test_seq_oo(void) {
     for (k = 0; k < NUM_RANDS; k++) {
 	total += array[k];
     }
-    printf("SEQ OO 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ (0, 1) 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -465,7 +465,7 @@ void test_seq_oo(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;
@@ -508,7 +508,7 @@ void test_seq_12(void) {
 	}
     }
     total = r;
-    printf("SEQ OO 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ [1, 2) 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -529,7 +529,7 @@ void test_seq_12(void) {
     for (k = 0; k < NUM_RANDS; k++) {
 	total += array[k];
     }
-    printf("SEQ OO 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("SEQ [1, 2) 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     sum = 0;
@@ -537,7 +537,7 @@ void test_seq_12(void) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;

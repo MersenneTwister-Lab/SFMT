@@ -24,6 +24,12 @@ union W128_T {
 };
 typedef union W128_T w128_t;
 
+union W64_T {
+    double d;
+    uint64_t u;
+};
+typedef union W64_T w64_t;
+
 static w128_t sfmt[N + 1];
 static double *psfmt = &sfmt[0].d[0];
 static int idx;
@@ -31,44 +37,46 @@ static int idx;
 static void gen_rand_array(w128_t array[], int size);
 INLINE static void gen_rand_all(void);
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
+#if defined(__GNUC__)
+#define ALWAYSINLINE __attribute__((always_inline)) 
+#else
+#define ALWAYSINLINE
 #endif
-    static void convert_co(w128_t array[], int size) {
+INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+						vector unsigned int b,
+						vector unsigned int reg,
+						vector unsigned int lung)
+    ALWAYSINLINE;
+INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+
+INLINE static void convert_co(w128_t array[], int size) {
     int i;
 
     for (i = 0; i < size; i++) {
-	array[i].d[0] -= 1.0L;
-	array[i].d[1] -= 1.0L;
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
     }
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    static void convert_oc(w128_t array[], int size) {
+INLINE static void convert_oc(w128_t array[], int size) {
     int i;
 
     for (i = 0; i < size; i++) {
-	array[i].d[0] = 2.0L - array[i].d[0];
-	array[i].d[1] = 2.0L - array[i].d[1];
+	array[i].d[0] = 2.0 - array[i].d[0];
+	array[i].d[1] = 2.0 - array[i].d[1];
     }
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    static void convert_oo(w128_t array[], int size) {
+INLINE static void convert_oo(w128_t array[], int size) {
     int i;
     const vector unsigned int alti_int_one = (vector unsigned int)(0,1,0,1);
 
     for (i = 0; i < size; i++) {
 	array[i].s = vec_or(array[i].s, alti_int_one);
-	array[i].d[0] -= 1.0L;
-	array[i].d[1] -= 1.0L;
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
     }
 }
 
@@ -79,14 +87,10 @@ __attribute__((always_inline))
  * @param reg may keep in register. changed.
  * @param lung may keep in register. changed.
  */
-INLINE static
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    vector unsigned int vec_recursion(vector unsigned int a,
-				      vector unsigned int b,
-				      vector unsigned int reg,
-				      vector unsigned int lung) {
+INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+						vector unsigned int b,
+						vector unsigned int reg,
+						vector unsigned int lung) {
     vector unsigned int r, s, t, u, v, w, x, y, z;
     const vector unsigned char sl1 = (vector unsigned char)(ALTI_SL1);
     const vector unsigned char sl1_perm = SL1_PERM;
@@ -117,11 +121,7 @@ __attribute__((always_inline))
     return r;
 }
 
-INLINE static
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    void gen_rand_all(void) {
+INLINE static void gen_rand_all(void) {
     int i;
     vector unsigned int r, lung;
 
@@ -176,61 +176,7 @@ static void gen_rand_array(w128_t array[], int size)
     sfmt[N].s = lung;
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_close_open(void)
-{
-    double r;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    r = psfmt[idx++];
-    return r - 1.0L;
-}
-
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_open_close(void) {
-    double r;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    r = psfmt[idx++];
-    return 2.0L - r;
-}
-
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_open_open(void) {
-    union {
-	uint64_t u;
-	double d;
-    } conv;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    conv.d = psfmt[idx++];
-    conv.u |= 1;
-    return conv.d - 1.0L;
-}
-
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_close1_open2(void) {
+INLINE double genrand_close1_open2(void) {
     double r;
 
     if (idx >= N * 2) {
@@ -239,6 +185,14 @@ __attribute__((always_inline))
     }
     r = psfmt[idx++];
     return r;
+}
+
+INLINE double genrand_open_open(void) {
+    w64_t r;
+
+    r.d = genrand_close1_open2();
+    r.u |= 1;
+    return r.d - 1.0;
 }
 
 void fill_array_open_close(double array[], int size)

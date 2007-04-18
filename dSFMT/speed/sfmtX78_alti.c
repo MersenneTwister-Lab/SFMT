@@ -17,9 +17,21 @@
 
 static vector unsigned int sfmt[N + 1];
 static int idx;
-static int idx64;
 static uint32_t *sfmt32 = (uint32_t *)sfmt;
 static uint64_t *sfmt64 = (uint64_t *)sfmt;
+
+union W64_T {
+    uint64_t u;
+    double d;
+};
+typedef union W64_T w64_t;
+
+union W128_T {
+    vector unsigned int v;
+    double d[2];
+    uint64_t u[2];
+};
+typedef union W128_T w128_t;
 
 #define POS1 4
 #define SL1 20
@@ -42,6 +54,77 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int mask,
 						vector unsigned char perm_sl,
 						vector unsigned char perm_sr);
+
+#if defined(__GNUC__) && (!defined(DEBUG))
+#define ALWAYSINLINE __attribute__((always_inline))
+#else
+#define ALWAYSINLINE
+#endif
+INLINE static void convert_12(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+
+INLINE static void convert_12(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const = (vector unsigned int)
+	(0x3ff00000, 0, 0x3ff00000, 0);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const);
+    }
+}
+
+INLINE static void convert_co(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const = (vector unsigned int)
+	(0x3ff00000, 0, 0x3ff00000, 0);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const);
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
+    }
+}
+INLINE static void convert_oc(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const = (vector unsigned int)
+	(0x3ff00000, 0, 0x3ff00000, 0);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const);
+	array[i].d[0] = 2.0 - array[i].d[0];
+	array[i].d[1] = 2.0 - array[i].d[1];
+    }
+}
+
+INLINE static void convert_oo(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const_one = (vector unsigned int)
+	(0x3ff00000, 1, 0x3ff00000, 1);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const_one);
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
+    }
+}
 
 INLINE static __attribute__((always_inline))
     vector unsigned int vec_recursion(vector unsigned int a,
@@ -165,29 +248,40 @@ INLINE uint32_t genrand_int32(void)
     return r;
 }
 
-INLINE void fill_array(double array[], int size)
+INLINE void fill_array_close1_open2(double array[], int size)
 {
-    int i, j;
-    vector unsigned int low_mask = (vector unsigned int)
-	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
-    vector unsigned int high_const = (vector unsigned int)
-	(0xbff00000, 0, 0xbff00000, 0);
-    vector unsigned int *ap;
-    vector unsigned int r;
-
     assert(size >= N * 2);
     assert(size % 2 == 0);
 
     gen_rand_array((vector unsigned int *)array, size / 2);
-    ap = (vector unsigned int *)array;
-    for (i = 0, j = 0; i < size / 2; i++) {
-	r = ap[i];
-	r = vec_and(r, low_mask);
-	r = vec_or(r, high_const);
-	ap[i] = r;
-	array[j++] += 2.0L;
-	array[j++] += 2.0L;
-    }
+    convert_12((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_open_close(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+
+    gen_rand_array((vector unsigned int *)array, size / 2);
+    convert_oc((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_close_open(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+
+    gen_rand_array((vector unsigned int *)array, size / 2);
+    convert_co((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_open_open(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+
+    gen_rand_array((vector unsigned int *)array, size / 2);
+    convert_oo((w128_t *)array, size / 2);
 }
 
 INLINE void init_gen_rand(uint64_t seed)
@@ -200,7 +294,6 @@ INLINE void init_gen_rand(uint64_t seed)
 	    * (sfmt32[i - 1] ^ (sfmt32[i - 1] >> 30)) + i;
     }
     idx = N * 4;
-    idx64 = N * 2;
 }
 
 INLINE void init_genrand(uint32_t seed) {
@@ -208,24 +301,49 @@ INLINE void init_genrand(uint32_t seed) {
 }
 
 /* generates a random number on [0,1]-real-interval */
+#define LOW_MASK  0x000FFFFFFFFFFFFFULL
+#define HIGH_CONST 0x3FF0000000000000ULL
 INLINE  __attribute__((always_inline))
     double gen_rand(void)
 {
-#define LOW_MASK  0x000FFFFFFFFFFFFFULL
-#define HIGH_CONST 0xBFF0000000000000ULL
-    uint64_t r;
-    double *dp = (double *)&r;
+    w64_t r;
 
-    if (idx64 >= N * 2) {
+    if (idx >= N * 2) {
 	gen_rand_all();
 	idx = 0;
-	idx64 = 0;
     }
-    r = sfmt64[idx64++];
-    r &= LOW_MASK;
-    r |= HIGH_CONST;
-    *dp += 2.0L;
-    return *dp;
+    r.u = sfmt64[idx++];
+    r.u &= LOW_MASK;
+    r.u |= HIGH_CONST;
+    return r.d;
+}
+
+INLINE double genrand_close1_open2(void)
+{
+    w64_t r;
+
+    if (idx >= N * 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r.u = sfmt64[idx++];
+    r.u &= LOW_MASK;
+    r.u |= HIGH_CONST;
+    return r.d;
+}
+
+INLINE double genrand_open_open(void)
+{
+    w64_t r;
+
+    if (idx >= N * 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r.u = sfmt64[idx++];
+    r.u &= LOW_MASK;
+    r.u |= (HIGH_CONST | 1);
+    return r.d;
 }
 
 /* JURGEN A DOORNIK */
@@ -240,4 +358,4 @@ double genrand_res53(void)
     unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6; 
     return(a*67108864.0+b)*(1.0/9007199254740992.0); 
 } 
-#include "test_time.c"
+#include "test_time3.c"

@@ -23,6 +23,12 @@ union W128_T {
 };
 typedef union W128_T w128_t;
 
+union W64_T {
+    double d;
+    uint64_t u;
+};
+typedef union W64_T w64_t;
+
 static w128_t sfmt[N + 1];
 static double *psfmt = (double *)&(sfmt[0].d[0]);
 static int idx;
@@ -36,21 +42,27 @@ INLINE double genrand_close_open(void);
 INLINE double genrand_open_open(void);
 INLINE double genrand_close1_open2(void);
 
-INLINE static
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
+#if defined(__GNUC__)
+#define ALWAYSINLINE __attribute__((always_inline)) 
+#else
+#define ALWAYSINLINE
 #endif
-void lshift128(w128_t *out, const w128_t *in, int shift) {
+INLINE static void lshift128(w128_t *out, const w128_t *in, int shift)
+    ALWAYSINLINE;
+INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
+				w128_t *lung) ALWAYSINLINE;
+INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+
+INLINE static void lshift128(w128_t *out, const w128_t *in, int shift) {
     out->a[0] = in->a[0] << (shift * 8);
     out->a[1] = in->a[1] << (shift * 8);
     out->a[1] |= in->a[0] >> (64 - shift * 8);
 }
 
-INLINE static
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c, w128_t *lung){
+INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
+				w128_t *lung){
     w128_t x;
 
     lshift128(&x, a, SL2);
@@ -64,52 +76,36 @@ __attribute__((always_inline))
     lung->a[1] ^= r->a[1];
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    static void convert_co(w128_t array[], int size) {
+INLINE static void convert_co(w128_t array[], int size) {
     int i;
 
     for (i = 0; i < size; i++) {
-	array[i].d[0] = array[i].d[0] - 1.0L;
-	array[i].d[1] = array[i].d[1] - 1.0L;
+	array[i].d[0] = array[i].d[0] - 1.0;
+	array[i].d[1] = array[i].d[1] - 1.0;
     }
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    static void convert_oc(w128_t array[], int size) {
+INLINE static void convert_oc(w128_t array[], int size) {
     int i;
 
     for (i = 0; i < size; i++) {
-	array[i].d[0] = 2.0L - array[i].d[0];
-	array[i].d[1] = 2.0L - array[i].d[1];
+	array[i].d[0] = 2.0 - array[i].d[0];
+	array[i].d[1] = 2.0 - array[i].d[1];
     }
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    static void convert_oo(w128_t array[], int size) {
+INLINE static void convert_oo(w128_t array[], int size) {
     int i;
 
     for (i = 0; i < size; i++) {
 	array[i].a[0] |= 1;
 	array[i].a[1] |= 1;
-	array[i].d[0] -= 1.0L;
-	array[i].d[1] -= 1.0L;
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
     }
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    static void gen_rand_all(void) {
+INLINE static void gen_rand_all(void) {
     int i;
     w128_t lung;
 
@@ -125,11 +121,7 @@ __attribute__((always_inline))
     sfmt[N] = lung;
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    static void gen_rand_array(w128_t array[], int size) {
+INLINE static void gen_rand_array(w128_t array[], int size) {
     int i, j;
     w128_t lung;
 
@@ -158,61 +150,7 @@ __attribute__((always_inline))
     sfmt[N] = lung;
 }
 
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_close_open(void)
-{
-    double r;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    r = psfmt[idx++];
-    return r - 1.0L;
-}
-
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_open_close(void) {
-    double r;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    r = psfmt[idx++];
-    return 2.0L - r;
-}
-
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_open_open(void) {
-    union {
-	uint64_t u;
-	double d;
-    } conv;
-
-    if (idx >= N * 2) {
-	gen_rand_all();
-	idx = 0;
-    }
-    conv.d = psfmt[idx++];
-    conv.u |= 1;
-    return conv.d - 1.0L;
-}
-
-INLINE
-#if defined(__GNUC__) && (!defined(DEBUG))
-__attribute__((always_inline)) 
-#endif
-    double genrand_close1_open2(void) {
+INLINE double genrand_close1_open2(void) {
     double r;
 
     if (idx >= N * 2) {
@@ -221,6 +159,14 @@ __attribute__((always_inline))
     }
     r = psfmt[idx++];
     return r;
+}
+
+INLINE double genrand_open_open(void) {
+    w64_t r;
+
+    r.d = genrand_close1_open2();
+    r.u |= 1;
+    return r.d - 1.0;
 }
 
 void fill_array_open_close(double array[], int size)

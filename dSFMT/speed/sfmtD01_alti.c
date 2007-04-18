@@ -21,8 +21,8 @@ __attribute__((always_inline))
     void convert(vector unsigned int *x) {
     double *d = (double *)x;
     
-    d[0] += 2.0L;
-    d[1] += 2.0L;
+    d[0] += 2.0;
+    d[1] += 2.0;
 }
 
 /**
@@ -170,7 +170,7 @@ __attribute__((always_inline))
 	idx = 0;
     }
     r = dsfmt[idx++];
-    r += 2.0L;
+    r += 2.0;
     return r;
 }
 

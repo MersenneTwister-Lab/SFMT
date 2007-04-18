@@ -183,8 +183,8 @@ INLINE void fill_array(double array[], int size)
 	r = vec_and(r, low_mask);
 	r = vec_or(r, high_const);
 	ap[i] = r;
-	array[j++] += 2.0L;
-	array[j++] += 2.0L;
+	array[j++] += 2.0;
+	array[j++] += 2.0;
     }
 }
 
@@ -222,7 +222,7 @@ INLINE  __attribute__((always_inline))
     r = sfmt64[idx64++];
     r &= LOW_MASK;
     r |= HIGH_CONST;
-    *dp += 2.0L;
+    *dp += 2.0;
     return *dp;
 }
 

@@ -13,11 +13,98 @@
 #define LOWER_MASK 0x7fffffffUL	/* least significant r bits */
 
 /* the array for the state vector  */
-static unsigned int mt[N + 4] __attribute__ ((aligned (16)));
+static uint32_t mt[N + 4] __attribute__ ((aligned (16)));
 static int idx = N + 1;		/* idx==N+1 means mt[N] is not initialized */
+static uint64_t *mt64 = (uint64_t *)mt;
+
+union W64_T {
+    uint64_t u;
+    double d;
+};
+typedef union W64_T w64_t;
+
+union W128_T {
+    vector unsigned int v;
+    double d[2];
+    uint64_t u[2];
+};
+typedef union W128_T w128_t;
+
+INLINE uint32_t gen_rand_int32(void);
 
 INLINE static void gen_rand_array(uint32_t array[], int size);
 INLINE static void gen_rand_all(void);
+
+#if defined(__GNUC__) && (!defined(DEBUG))
+#define ALWAYSINLINE __attribute__((always_inline))
+#else
+#define ALWAYSINLINE
+#endif
+INLINE static void convert_12(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
+INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+
+INLINE static void convert_12(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const = (vector unsigned int)
+	(0x3ff00000, 0, 0x3ff00000, 0);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const);
+    }
+}
+
+INLINE static void convert_co(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const = (vector unsigned int)
+	(0x3ff00000, 0, 0x3ff00000, 0);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const);
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
+    }
+}
+INLINE static void convert_oc(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const = (vector unsigned int)
+	(0x3ff00000, 0, 0x3ff00000, 0);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const);
+	array[i].d[0] = 2.0 - array[i].d[0];
+	array[i].d[1] = 2.0 - array[i].d[1];
+    }
+}
+
+INLINE static void convert_oo(w128_t array[], int size) {
+    int i;
+    vector unsigned int low_mask = (vector unsigned int)
+	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
+    vector unsigned int high_const_one = (vector unsigned int)
+	(0x3ff00000, 1, 0x3ff00000, 1);
+    vector unsigned int r;
+
+    for (i = 0; i < size; i++) {
+	r = vec_and(array[i].v, low_mask);
+	array[i].v = vec_or(r, high_const_one);
+	array[i].d[0] -= 1.0;
+	array[i].d[1] -= 1.0;
+    }
+}
 
 INLINE unsigned int get_rnd_maxdegree(void)
 {
@@ -34,6 +121,7 @@ INLINE unsigned int get_onetime_rnds(void)
     return N;
 }
 
+#if 0
 INLINE void print_param(FILE *fp) {
     ;
 }
@@ -48,7 +136,7 @@ INLINE void print_state(FILE *fp) {
 	}
     }
 }
-
+#endif
 /* initializes mt[N] with a seed */
 INLINE void init_gen_rand(uint64_t t)
 {
@@ -278,56 +366,90 @@ INLINE __attribute__((always_inline))
 }
 
 #define LOW_MASK  0x000FFFFFFFFFFFFFULL
-#define HIGH_CONST 0xBFF0000000000000ULL
+#define HIGH_CONST 0x3FF0000000000000ULL
 #define LOW_MASK32_1 0x000fffffU
 #define LOW_MASK32_2 0xffffffffU
-#define HIGH_CONST32 0xbff00000U
+#define HIGH_CONST32 0x3ff00000U
 
 /* generates a random number on [0,1]-real-interval */
 INLINE  __attribute__((always_inline))
     double gen_rand(void)
 {
-    uint64_t r;
-    double *dp;
+    w64_t r;
 
-    if (idx >= N) {
+    if (idx >= N / 2) {
 	gen_rand_all();
 	idx = 0;
     }
-    r = mt[idx] | ((uint64_t)mt[idx+1] << 32);
-    idx += 2;
-    r &= LOW_MASK;
-    r |= HIGH_CONST;
-    dp = (double *)&r;
-    *dp += 2.0L;
-    return *dp;
+    r.u = (mt64[idx] & LOW_MASK) | HIGH_CONST;
+    idx++;
+    return r.d;
 }
 
-INLINE __attribute__((always_inline)) 
-    void fill_array(double array[], int size)
+INLINE double genrand_close1_open2(void)
 {
-    int i, j;
-    vector unsigned int low_mask = (vector unsigned int)
-	(0x000fffff, 0xffffffff, 0x000fffff, 0xffffffff);
-    vector unsigned int high_const = (vector unsigned int)
-	(0xbff00000, 0, 0xbff00000, 0);
-    vector unsigned int *ap;
-    vector unsigned int r;
+    w64_t r;
 
+    if (idx >= N / 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r.u = mt64[idx++];
+    r.u &= LOW_MASK;
+    r.u |= HIGH_CONST;
+    return r.d;
+}
+
+INLINE double genrand_open_open(void)
+{
+    w64_t r;
+
+    if (idx >= N / 2) {
+	gen_rand_all();
+	idx = 0;
+    }
+    r.u = mt64[idx++];
+    r.u &= LOW_MASK;
+    r.u |= (HIGH_CONST | 1);
+    return r.d;
+}
+
+INLINE void fill_array_close1_open2(double array[], int size)
+{
     assert(size >= N * 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size * 2);
-    ap = (vector unsigned int *)array;
-    for (i = 0, j = 0; i < size / 2; i++) {
-	r = ap[i];
-	r = vec_and(r, low_mask);
-	r = vec_or(r, high_const);
-	ap[i] = r;
-	array[j++] += 2.0L;
-	array[j++] += 2.0L;
-    }
+    gen_rand_array((uint32_t *)array, size / 2);
+    convert_12((w128_t *)array, size / 2);
 }
 
-#include "test_time.c"
+INLINE void fill_array_open_close(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+
+    gen_rand_array((uint32_t *)array, size / 2);
+    convert_oc((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_close_open(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+
+    gen_rand_array((uint32_t *)array, size / 2);
+    convert_co((w128_t *)array, size / 2);
+}
+
+INLINE void fill_array_open_open(double array[], int size)
+{
+    assert(size >= N * 2);
+    assert(size % 2 == 0);
+
+    gen_rand_array((uint32_t *)array, size / 2);
+    convert_oo((w128_t *)array, size / 2);
+}
+
+
+#include "test_time3.c"
 

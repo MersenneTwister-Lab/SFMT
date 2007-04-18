@@ -56,8 +56,8 @@ __attribute__((always_inline))
 }
 
 INLINE static void convert(w128_t *x) {
-    x->d[0] += 2.0L;
-    x->d[1] += 2.0L;
+    x->d[0] += 2.0;
+    x->d[1] += 2.0;
 }
 
 INLINE static void gen_rand_all(void) {
@@ -123,7 +123,7 @@ __attribute__((always_inline))
 	idx = 0;
     }
     r = psfmt[idx++];
-    r += 2.0L;
+    r += 2.0;
     return r;
 }
 

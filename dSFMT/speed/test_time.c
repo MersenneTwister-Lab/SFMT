@@ -8,10 +8,12 @@
 #define TIC_MAG 1
 #define TIC_COUNT 2000
 
-#ifdef __ppc__
+#if defined(__ALTIVEC__)
 vector unsigned int dummy[NUM_RANDS / 2 + 1];
-#else
+#elif defined(__SSE2__)
 __m128i dummy[NUM_RANDS / 2 + 1];
+#else
+double dummy[NUM_RANDS + 2];
 #endif
 int main(int argc, char *argv[]) {
     uint32_t i, j, k;
@@ -112,7 +114,7 @@ int main(int argc, char *argv[]) {
 	clo = clock();
 	for (j = 0; j < TIC_COUNT; j++) {
 	    for (k = 0; k < NUM_RANDS; k++) {
-		array[k] = 1.0L;
+		array[k] = 1.0;
 	    }
 	}
 	clo = clock() - clo;

@@ -1,5 +1,5 @@
-#ifndef __C99_H__
-#define __C99_H__
+#ifndef C99_H
+#define C99_H
 
 #if ! defined(__ppc__)
   #include <emmintrin.h>

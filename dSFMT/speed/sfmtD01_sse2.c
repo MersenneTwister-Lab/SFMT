@@ -28,13 +28,13 @@ static void setup_const(void) {
     sse2_low_mask = _mm_set_epi32(LOW_MASK32_1, LOW_MASK32_2,
 				  LOW_MASK32_1, LOW_MASK32_2);
     sse2_high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
-    sse2_double_two = _mm_set_pd(2.0L, 2.0L);
+    sse2_double_two = _mm_set_pd(2.0, 2.0);
     first = false;
 #if defined(DEBUG)
  {
      uint32_t *x;
      double *y;
-     double one = 1.0L;
+     double one = 1.0;
      x = (uint32_t *)&sse2_param_mask;
      printf("sse2_param_mask = %08x%08x, %08x%08x\n", x[1],x[0], x[3],x[2]);
      x = (uint32_t *)&sse2_low_mask;
@@ -204,7 +204,7 @@ __attribute__((always_inline))
 	idx = 0;
     }
     r = dsfmt[idx++];
-    r += 2.0L;
+    r += 2.0;
     return r;
 }
 
