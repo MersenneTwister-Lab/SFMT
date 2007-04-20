@@ -1,0 +1,6 @@
+2007-03-25 libdsfmt-1.1.0:
+==========================
+
+Initial release of libdsfmt library package using GNU autoconf, automake and
+libtool. Based on original dSFMT-1.1 sources.
+

@@ -1,0 +1,36 @@
+libdsfmt-1.1.0 based on the official release of dSMFT-1.1
+ 
+Copyright (C) 2007  Adam Piatyszek <ediap@users.sourceforge.net>
+
+The (modified) BSD License is applied to this software, see LICENSE.txt
+
+============================================================================
+
+This software provides a GNU like library package that includes the official
+dSMFT-1.1 double precision SIMD oriented Fast Mersenne Twister random number
+generator. 
+
+The library can be used only on systems which support IEEE754 floating point
+arithmetic.
+
+The generic installation procedure is described in the INSTALL file.
+However, to obtain a maximum performance and gain from SSE2 or AltiVec CPU
+extensions you should set CFLAGS environment variable to some CPU-specific
+optimisation options of your compiler and use `--enable-sse2' or
+`--enable-altivec' configure switches. For instance, configuration of the
+library for Pentium-M architecture using GCC 4.x.x compiler can be done as
+follows:
+
+  % export CFLAGS="-O3 -march=pentium-m -fomit-frame-pointer" 
+  % ./configure --enable-sse2
+
+The target generator can be configured to use various periods of the
+generated sequence. The period of the sequence is defined as 2^MEXP-1, where
+MEXP can be set to: 607, 1279, 2281, 4253, 11213, 19937, 44497, 86243 or
+132049. The default setting is 19937.
+To change the default period of the generator sequence `--with-mexp=VALUE'
+option should be used, e.g.:
+
+ % ./configure --enable-sse2 --with-mexp=607 \
+     CFLAGS="-O3 -march=pentium-m -fomit-frame-pointer"
+

@@ -1,0 +1,15 @@
+2007-03-25  Adam Piatyszek  <ediap@users.sourceforge.net>
+
+	* libdsfmt-1.1.0 release (based on dSFMT-1.1)
+
+	* Makefile.am: Added missing dSFMT.132049.out.txt file
+
+2007-03-23  Adam Piatyszek  <ediap@users.sourceforge.net>
+
+	* configure.ac, Makefile.am, html/Makefile.am, dSFMT.c,
+	dSFMT-params.h: Support for GNU autoconf, automake and libtool
+	based library added 
+	
+	* AUTHORS, ChangeLog, INSTALL, NEWS, README: Files required by GNU
+	automake added
+
