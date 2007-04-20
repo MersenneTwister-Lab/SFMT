@@ -5,6 +5,10 @@
 #include "random.h"
 #include "speed.h"
 
+#if defined(__BIG_ENDIAN__) && defined(__amd64)
+#undef __BIG_ENDIAN__
+#endif
+
 /* Period parameters */
 #define N 624
 #define M 397
@@ -119,16 +123,11 @@ INLINE static void convert_oc(w128_t array[], int size) {
 }
 #else
 INLINE static void convert_oc(w128_t array[], int size) {
-    uint32_t r;
     int i;
 
     for (i = 0; i < size; i++) {
-	r = (array[i].a[1] & LOW_MASK32_1) | HIGH_CONST32;
-	array[i].a[1] = array[i].a[0];
-	array[i].a[0] = r;
-	r = (array[i].a[3] & LOW_MASK32_1) | HIGH_CONST32;
-	array[i].a[3] = array[i].a[2];
-	array[i].a[2] = r;
+	array[i].u[0] = (array[i].u[0] & LOW_MASK) | HIGH_CONST;
+	array[i].u[1] = (array[i].u[1] & LOW_MASK) | HIGH_CONST;
 	array[i].d[0] = 2.0 - array[i].d[0];
 	array[i].d[1] = 2.0 - array[i].d[1];
     }
@@ -154,8 +153,8 @@ INLINE static void convert_oo(w128_t array[], int size) {
 INLINE static void convert_oo(w128_t array[], int size) {
     int i;
     for (i = 0; i < size; i++) {
-	array[i].u[0] = (array[i].u[0] & LOW_MASK) | HIGH_CONST | 1;
-	array[i].u[1] = (array[i].u[1] & LOW_MASK) | HIGH_CONST | 1;
+	array[i].u[0] = (array[i].u[0] & LOW_MASK) | (HIGH_CONST | 1);
+	array[i].u[1] = (array[i].u[1] & LOW_MASK) | (HIGH_CONST | 1);
 	array[i].d[0] -= 1.0;
 	array[i].d[1] -= 1.0;
     }
@@ -357,7 +356,7 @@ INLINE double genrand_open_open(void)
 {
     w64_t r;
 
-    if (idx >= N * 2) {
+    if (idx >= N / 2) {
 	gen_rand_all();
 	idx = 0;
     }

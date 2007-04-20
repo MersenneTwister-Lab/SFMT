@@ -33,8 +33,9 @@ union W128_T {
 typedef union W128_T w128_t;
 
 union W64_T {
-    uint64_t u;
     double d;
+    uint64_t u;
+    uint32_t a[2];
 };
 typedef union W64_T w64_t;
 static w64_t *dmt = (w64_t *)&mt[0];
@@ -52,16 +53,24 @@ INLINE double genrand_close1_open2(void);
 #else
 #define ALWAYSINLINE
 #endif
-INLINE static void convert_12(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+INLINE static uint32_t temper(uint32_t y) ALWAYSINLINE;
 
 static __m128i sse2_low_mask;
 static __m128i sse2_high_const;
-static __m128i sse2_high_const_one;
+static __m128i sse2_int_one;
 static __m128d sse2_double_two;
 static __m128d sse2_double_m_one;
+
+INLINE static uint32_t temper(uint32_t y) {
+	y ^= (y >> 11);
+	y ^= (y << 7) & 0x9d2c5680UL;
+	y ^= (y << 15) & 0xefc60000UL;
+	y ^= (y >> 18);
+	return y;
+}
 
 static void setup_const(void) {
     static int first = true;
@@ -122,19 +131,17 @@ INLINE static void temper_mask(uint32_t array[], int size)
 
 INLINE static void convert_co(w128_t array[], int size) {
     int i;
-    w128_t r;
 
     for (i = 0; i < size; i++) {
-	array[i].sd = _mm_add_pd(r.sd, sse2_double_m_one);
+	array[i].sd = _mm_add_pd(array[i].sd, sse2_double_m_one);
     }
 }
 
 INLINE static void convert_oc(w128_t array[], int size) {
     int i;
-    w128_t r;
 
     for (i = 0; i < size; i++) {
-	array[i].sd = _mm_sub_pd(sse2_double_two, r.sd);
+	array[i].sd = _mm_sub_pd(sse2_double_two, array[i].sd);
     }
 }
 
@@ -143,7 +150,7 @@ INLINE static void convert_oo(w128_t array[], int size) {
     w128_t r;
 
     for (i = 0; i < size; i++) {
-	r.si = _mm_or_si128(r.si, sse2_int_one);
+	r.si = _mm_or_si128(array[i].si, sse2_int_one);
 	array[i].sd = _mm_add_pd(r.sd, sse2_double_m_one);
     }
 }
@@ -302,8 +309,10 @@ INLINE double gen_rand(void)
 	gen_rand_all();
 	idx = 0;
     }
-    r.u = (dmt[idx].u  & LOW_MASK) | HIGH_CONST;
-    idx++;
+    r.u = dmt[idx++].u;
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
+    r.u = (r.u & LOW_MASK) | HIGH_CONST;
     return r.d;
 }
 
@@ -316,9 +325,10 @@ INLINE double genrand_close1_open2(void)
 	gen_rand_all();
 	idx = 0;
     }
-    r = dmt[idx++];
-    r.u &= LOW_MASK;
-    r.u |= HIGH_CONST;
+    r.u = dmt[idx++].u;
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
+    r.u = (r.u & LOW_MASK) | HIGH_CONST;
     return r.d;
 }
 
@@ -330,9 +340,10 @@ INLINE double genrand_open_open(void)
 	gen_rand_all();
 	idx = 0;
     }
-    r = dmt[idx++];
-    r.u &= LOW_MASK;
-    r.u |= HIGH_CONST | 1;
+    r.u = dmt[idx++].u;
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
+    r.u = (r.u & LOW_MASK) | (HIGH_CONST | 1);
     return r.d - 1.0;
 }
 

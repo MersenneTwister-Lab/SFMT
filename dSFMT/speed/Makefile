@@ -1,5 +1,5 @@
 #for GNU make
-DDEBUG = -O0 -g -DDEBUG
+#DDEBUG = -O0 -g -DDEBUG
 CC = gcc
 DMEXP = -DMEXP=19937
 OPT_PPC = -faltivec -maltivec -arch ppc 
@@ -30,7 +30,7 @@ intel:
 	${MAKE} CC=icl CCFLAGS="${CCFLAGS_INTEL}" ${STD_TARGET} ${SSE2_TARGET}
 
 alti:
-	${MAKE} CCFLAGS="${CCFLAGS} ${OPT_PPC} -DBIG_ENDIAN" ${STD_TARGET} \
+	${MAKE} CCFLAGS="${CCFLAGS} ${OPT_PPC} ${STD_TARGET} \
 	${ALTI_TARGET}
 
 tar.gz: ${SRC}

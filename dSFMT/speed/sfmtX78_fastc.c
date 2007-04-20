@@ -138,16 +138,11 @@ INLINE static void convert_oc(w128_t array[], int size) {
 }
 #else
 INLINE static void convert_oc(w128_t array[], int size) {
-    uint32_t r;
     int i;
 
     for (i = 0; i < size; i++) {
-	r = (array[i].a[1] & LOW_MASK32_1) | HIGH_CONST32;
-	array[i].a[1] = array[i].a[0] | 1;
-	array[i].a[0] = r;
-	r = (array[i].a[3] & LOW_MASK32_1) | HIGH_CONST32;
-	array[i].a[3] = array[i].a[2] | 1;
-	array[i].a[2] = r;
+	array[i].u[0] = (array[i].u[0] & LOW_MASK) | HIGH_CONST;
+	array[i].u[1] = (array[i].u[1] & LOW_MASK) | HIGH_CONST;
 	array[i].d[0] = 2.0 - array[i].d[0];
 	array[i].d[1] = 2.0 - array[i].d[1];
     }

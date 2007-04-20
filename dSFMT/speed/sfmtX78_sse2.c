@@ -224,18 +224,15 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
     }
 }
 
-INLINE double gen_rand(void)
+INLINE uint32_t gen_rand(void)
 {
     w64_t r;
 
-    if (idx >= N * 2) {
+    if (idx >= N * 4) {
 	gen_rand_all();
 	idx = 0;
     }
-    r.u = sfmtp[idx++];
-    r.u &= LOW_MASK;
-    r.u |= HIGH_CONST;
-    return r.d;
+    return sfmt[idx++];
 }
 
 INLINE double genrand_close1_open2(void)
@@ -264,6 +261,15 @@ INLINE double genrand_open_open(void)
     r.u &= LOW_MASK;
     r.u |= HIGH_CONST | 1;
     return r.d - 1.0;
+}
+
+INLINE void fill_array(uint32_t array[], int size)
+{
+    assert(size >= N * 4);
+    assert(size % 4 == 0);
+    assert((int)array % 16 == 0);
+
+    gen_rand_array((__m128i *)array, size / 4);
 }
 
 INLINE void fill_array_close1_open2(double array[], int size)
