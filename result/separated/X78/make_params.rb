@@ -7,9 +7,9 @@ $param_name = ['POS1','SL1','SL2','SR1','SR2','MSK1','MSK2','MSK3','MSK4',
 $tbl32 = [12,13,14,15,8,9,10,11,4,5,6,7,0,1,2,3]
 $tbl64 = [8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7]
 
-def sl_perm(sl, tbl)
+def sl_perm(sl, tbl, l, r)
   sl = sl.to_i
-  str = '('
+  str = l
   pos = 12
   (0..15).each{
     |i|
@@ -27,7 +27,7 @@ def sl_perm(sl, tbl)
   }
   str = str.gsub(/x/, pos.to_s)
   str.chop!
-  str << ')'
+  str << r
 end
 
 def get_last(line)
@@ -69,14 +69,26 @@ ARGV.each{
       printf("#define %s\t%s\n", key, params[key])
     end
   }
-  printf("#define ALTI_SL2_PERM \\\n(vector unsigned char)%s\n",
-         sl_perm(params['SL2'], $tbl32))
-  printf("#define ALTI_SL2_PERM64 \\\n(vector unsigned char)%s\n",
-         sl_perm(params['SL2'], $tbl64))
-  printf("#define ALTI_SR2_PERM \\\n(vector unsigned char)%s\n",
-         sl_perm("-"+params['SR2'], $tbl32))
-  printf("#define ALTI_SR2_PERM64 \\\n(vector unsigned char)%s\n",
-         sl_perm("-"+params['SR2'], $tbl64))
+  printf("\n\n/* PARAMETERS FOR ALTIVEC */\n")
+  printf("#if defined(__APPLE__)\t/* For OSX */\n")
+  printf("    #define ALTI_SL2_PERM \\\n\t(vector unsigned char)%s\n",
+         sl_perm(params['SL2'], $tbl32, '(',')'))
+  printf("    #define ALTI_SL2_PERM64 \\\n\t(vector unsigned char)%s\n",
+         sl_perm(params['SL2'], $tbl64, '(',')'))
+  printf("    #define ALTI_SR2_PERM \\\n\t(vector unsigned char)%s\n",
+         sl_perm("-"+params['SR2'], $tbl32, '(',')'))
+  printf("    #define ALTI_SR2_PERM64 \\\n\t(vector unsigned char)%s\n",
+         sl_perm("-"+params['SR2'], $tbl64, '(',')'))
+  printf("#else\t/* For OTHER OSs(Linux?) */\n")
+  printf("    #define ALTI_SL2_PERM\t%s\n",
+         sl_perm(params['SL2'], $tbl32, '{','}'))
+  printf("    #define ALTI_SL2_PERM64\t%s\n",
+         sl_perm(params['SL2'], $tbl64, '{','}'))
+  printf("    #define ALTI_SR2_PERM\t%s\n",
+         sl_perm("-"+params['SR2'], $tbl32, '{','}'))
+  printf("    #define ALTI_SR2_PERM64\t%s\n",
+         sl_perm("-"+params['SR2'], $tbl64, '{','}'))
+  printf("#endif\t/* For OSX */\n")
   printf("#define IDSTR\t\"SFMT-%s:%s-%s-%s-%s-%s:%s-%s-%s-%s\"\n",
          mexp, params['POS1'], params['SL1'],
          params['SL2'], params['SR1'], params['SR2'],
