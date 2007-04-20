@@ -1,5 +1,5 @@
 #for GNU make
-#DDEBUG = -O0 -g -DDEBUG
+DDEBUG = -O0 -g -DDEBUG
 CC = gcc
 DMEXP = -DMEXP=19937
 OPT_PPC = -faltivec -maltivec -arch ppc 
@@ -82,10 +82,10 @@ mt19937ar_fastc: mt19937ar.c test_time2.c
 	${CC} ${CCFLAGS} -o $@ mt19937ar.c
 
 mt_msk_fastc: mt_msk_fastc.c test_time3.c
-	${CC} ${CCFLAGS} -DBIG_ENDIAN -o $@ mt_msk_fastc.c
+	${CC} ${CCFLAGS} -o $@ mt_msk_fastc.c
 
-mt64_msk_fastc: mt19937-64.c test_time3.c
-	${CC} ${CCFLAGS} -DBIG_ENDIAN -o $@ mt19937-64.c
+mt64_msk_fastc: mt19937-64.c test_time.c
+	${CC} ${CCFLAGS} -o $@ mt19937-64.c
 
 .c.o:
 	${CC} ${CCFLAGS} -c $<

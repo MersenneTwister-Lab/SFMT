@@ -68,6 +68,18 @@ gen-ref44497: dSFMT-ref-st.c gen-ref.c
 genD11-44497: sfmtD11-st.c genD11.c
 	${CC} -o $@ sfmtD11-st.c genD11.c
 
+gen-ref86243: dSFMT-ref-st.c gen-ref.c
+	${CC} -o $@ dSFMT-ref-st.c gen-ref.c
+
+genD11-86243: sfmtD11-st.c genD11.c
+	${CC} -o $@ sfmtD11-st.c genD11.c
+
+gen-ref132049: dSFMT-ref-st.c gen-ref.c
+	${CC} -o $@ dSFMT-ref-st.c gen-ref.c
+
+genD11-132049: sfmtD11-st.c genD11.c
+	${CC} -o $@ sfmtD11-st.c genD11.c
+
 test-ref-parity607:test-ref-parity.o dsfmt-ref-st.o util.o dsfmt-ref-st.h
 	 ${CPP} -o $@ test-ref-parity.o dsfmt-ref-st.o util.o ${LINKOPT}
 
@@ -87,6 +99,12 @@ test-ref-parity19937:test-ref-parity.o dsfmt-ref-st.o util.o dsfmt-ref-st.h
 	 ${CPP} -o $@ test-ref-parity.o dsfmt-ref-st.o util.o ${LINKOPT}
 
 test-ref-parity44497:test-ref-parity.o dsfmt-ref-st.o util.o dsfmt-ref-st.h
+	 ${CPP} -o $@ test-ref-parity.o dsfmt-ref-st.o util.o ${LINKOPT}
+
+test-ref-parity86243:test-ref-parity.o dsfmt-ref-st.o util.o dsfmt-ref-st.h
+	 ${CPP} -o $@ test-ref-parity.o dsfmt-ref-st.o util.o ${LINKOPT}
+
+test-ref-parity132049:test-ref-parity.o dsfmt-ref-st.o util.o dsfmt-ref-st.h
 	 ${CPP} -o $@ test-ref-parity.o dsfmt-ref-st.o util.o ${LINKOPT}
 
 test-d11-parity607:test-d11-parity.o sfmtD11-st.o util.o

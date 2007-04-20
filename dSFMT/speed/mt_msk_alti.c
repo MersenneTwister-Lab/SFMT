@@ -18,8 +18,9 @@ static int idx = N + 1;		/* idx==N+1 means mt[N] is not initialized */
 static uint64_t *mt64 = (uint64_t *)mt;
 
 union W64_T {
-    uint64_t u;
     double d;
+    uint64_t u;
+    uint32_t a[2];
 };
 typedef union W64_T w64_t;
 
@@ -44,6 +45,7 @@ INLINE static void convert_12(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+INLINE static uint32_t temper(uint32_t x) ALWAYSINLINE;
 
 INLINE static void convert_12(w128_t array[], int size) {
     int i;
@@ -155,6 +157,16 @@ INLINE void init_gen_rand(uint64_t t)
     }
 }
 
+INLINE __attribute__((always_inline)) 
+    uint32_t temper(uint32_t y) {
+    y ^= (y >> 11);
+    y ^= (y << 7) & 0x9d2c5680UL;
+    y ^= (y << 15) & 0xefc60000UL;
+    y ^= (y >> 18);
+
+    return y;
+}
+
 INLINE static __attribute__((always_inline))
     vector unsigned int vec_recursion(vector unsigned int a,
 				      vector unsigned int b,
@@ -236,7 +248,7 @@ INLINE static __attribute__((always_inline))
 }
 
 INLINE static __attribute__((always_inline)) 
-    vector unsigned int temper(vector unsigned int *a,
+    vector unsigned int vec_temper(vector unsigned int *a,
 			       vector unsigned int s11,
 			       vector unsigned int s7,
 			       vector unsigned int s15,
@@ -321,7 +333,7 @@ INLINE static void gen_rand_array(uint32_t array[], int size)
     i += 4;
     for (; i < size; i += 4) {
 	// tempering
-	r = temper((vector unsigned int *)&array[i - N],
+	r = vec_temper((vector unsigned int *)&array[i - N],
 		   s11, s7, s15, s18, and1, and2);
 	vec_st(r, 0, &array[i - N]);
 	// end of tempering
@@ -338,7 +350,7 @@ INLINE static void gen_rand_array(uint32_t array[], int size)
     }
     memcpy(mt, &array[size - N], sizeof(mt));
     for (; i < size + N; i += 4) {
-	r = temper((vector unsigned int *)&array[i - N],
+	r = vec_temper((vector unsigned int *)&array[i - N],
 		   s11, s7, s15, s18, and1, and2);
 	vec_st(r, 0, &array[i - N]);
     }
@@ -356,13 +368,7 @@ INLINE __attribute__((always_inline))
 
     y = mt[idx++];
 
-    /* Tempering */
-    y ^= (y >> 11);
-    y ^= (y << 7) & 0x9d2c5680UL;
-    y ^= (y << 15) & 0xefc60000UL;
-    y ^= (y >> 18);
-
-    return y;
+    return temper(y);
 }
 
 #define LOW_MASK  0x000FFFFFFFFFFFFFULL
@@ -381,8 +387,10 @@ INLINE  __attribute__((always_inline))
 	gen_rand_all();
 	idx = 0;
     }
-    r.u = (mt64[idx] & LOW_MASK) | HIGH_CONST;
-    idx++;
+    r.u = mt64[idx++];
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
+    r.u = (r.u & LOW_MASK) | HIGH_CONST;
     return r.d;
 }
 
@@ -395,8 +403,9 @@ INLINE double genrand_close1_open2(void)
 	idx = 0;
     }
     r.u = mt64[idx++];
-    r.u &= LOW_MASK;
-    r.u |= HIGH_CONST;
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
+    r.u = (r.u & LOW_MASK) | HIGH_CONST;
     return r.d;
 }
 
@@ -409,9 +418,10 @@ INLINE double genrand_open_open(void)
 	idx = 0;
     }
     r.u = mt64[idx++];
-    r.u &= LOW_MASK;
-    r.u |= (HIGH_CONST | 1);
-    return r.d;
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
+    r.u = (r.u & LOW_MASK) | (HIGH_CONST | 1);
+    return r.d - 1.0;
 }
 
 INLINE void fill_array_close1_open2(double array[], int size)
@@ -419,7 +429,7 @@ INLINE void fill_array_close1_open2(double array[], int size)
     assert(size >= N * 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_12((w128_t *)array, size / 2);
 }
 
@@ -428,7 +438,7 @@ INLINE void fill_array_open_close(double array[], int size)
     assert(size >= N * 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_oc((w128_t *)array, size / 2);
 }
 
@@ -437,7 +447,7 @@ INLINE void fill_array_close_open(double array[], int size)
     assert(size >= N * 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_co((w128_t *)array, size / 2);
 }
 
@@ -446,7 +456,7 @@ INLINE void fill_array_open_open(double array[], int size)
     assert(size >= N * 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_oo((w128_t *)array, size / 2);
 }
 

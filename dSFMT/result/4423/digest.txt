@@ -1,0 +1,10 @@
+sh.resD11n.4423.magi02.070227.11.txt	12	15	5	3	24	ffd5dfe9fff7fff7	fff7ffb7eff7ffdf	2007	917	
+sh.resD11n.4423.magi02.070227.14.txt	3	15	5	5	16	fefdfecdaf7fffff	8bb7df7ff6ffdffe	2093	1004	
+sh.resD11n.4423.magi02.070227.19.txt	36	43	3	7	16	7ffffffffbffffe9	bffeffffdf5bfffe	2101	1056	
+sh.resD11n.4423.magi02.070227.24.txt	19	11	3	7	8	7fffebfb9ddfeff7	ffffff7ff7bfffbf	2137	1095	
+sh.resD11n.4423.magi02.070227.25.txt	10	12	3	7	8	fdfbdffdedfefffc	fffdf7fffb7efddf	2123	1107	
+sh.resD11n.4423.magi02.070227.26.txt	17	34	1	5	16	eff67fffffffffbd	fdf7e9ffeffb7f7e	2131	1084	
+sh.resD11n.4423.magi02.070227.61.txt	31	27	1	6	24	eeffebeffffffff7	cfef7feee3fffbfe	2091	917	
+sh.resD11n.4423.magi02.070227.62.txt	5	31	1	5	16	fbff7fffffffffff	dabfdb9fffffb77f	2081	887	
+sh.resD11n.4423.magi02.070227.68.txt	30	25	1	6	16	ffbbc9efff7fffff	effb9b7ff7efddff	2075	1066	
+sh.resD11n.4423.magi02.070227.74.txt	18	36	1	3	16	cffdf7f7ffffdfff	bfb7bf6fedfffffe	2043	1134	

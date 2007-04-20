@@ -49,7 +49,7 @@ INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_12(w128_t array[], int size) {
     uint32_t r;
     int i;
@@ -72,7 +72,7 @@ INLINE static void convert_12(w128_t array[], int size) {
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_co(w128_t array[], int size) {
     uint32_t r;
     int i;
@@ -101,7 +101,7 @@ INLINE static void convert_co(w128_t array[], int size) {
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_oc(w128_t array[], int size) {
     uint32_t r;
     int i;
@@ -135,7 +135,7 @@ INLINE static void convert_oc(w128_t array[], int size) {
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_oo(w128_t array[], int size) {
     uint32_t r;
     int i;
@@ -285,14 +285,14 @@ INLINE double gen_rand(void)
 	gen_rand_all();
 	idx = 0;
     }
-    r.u = mt[idx];
+    r.u = temper(mt[idx]);
     idx++;
     r.u &= LOW_MASK;
     r.u |= HIGH_CONST;
     return r.d;
 }
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE double genrand_close1_open2(void)
 {
     w64_t r;
@@ -303,6 +303,8 @@ INLINE double genrand_close1_open2(void)
 	idx = 0;
     }
     r.u = mt64[idx++];
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
     t = (r.a[1] & LOW_MASK32_1) | HIGH_CONST32;
     r.a[1] = r.a[0];
     r.a[0] = t;
@@ -321,13 +323,15 @@ INLINE double genrand_close1_open2(void)
 	idx = 0;
     }
     r.u = mt64[idx++];
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
     r.u &= LOW_MASK;
     r.u |= HIGH_CONST;
     return r.d;
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE double genrand_open_open(void)
 {
     w64_t r;
@@ -338,6 +342,8 @@ INLINE double genrand_open_open(void)
 	idx = 0;
     }
     r.u = mt64[idx++];
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
     t = (r.a[1] & LOW_MASK32_1) | HIGH_CONST32;
     r.a[1] = r.a[0] | 1;
     r.a[0] = t;
@@ -355,7 +361,9 @@ INLINE double genrand_open_open(void)
 	gen_rand_all();
 	idx = 0;
     }
-    r = dsfmt[idx++];
+    r.u = mt64[idx++];
+    r.a[0] = temper(r.a[0]);
+    r.a[1] = temper(r.a[1]);
     r.u &= LOW_MASK;
     r.u |= (HIGH_CONST | 1);
     return r.d - 1.0;
@@ -367,7 +375,7 @@ INLINE void fill_array_close1_open2(double array[], int size)
     assert(size >= N / 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_12((w128_t *)array, size / 2);
 }
 
@@ -376,7 +384,7 @@ INLINE void fill_array_open_close(double array[], int size)
     assert(size >= N / 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_oc((w128_t *)array, size / 2);
 }
 
@@ -385,7 +393,7 @@ INLINE void fill_array_close_open(double array[], int size)
     assert(size >= N / 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_co((w128_t *)array, size / 2);
 }
 
@@ -394,7 +402,7 @@ INLINE void fill_array_open_open(double array[], int size)
     assert(size >= N / 2);
     assert(size % 2 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
     convert_oo((w128_t *)array, size / 2);
 }
 

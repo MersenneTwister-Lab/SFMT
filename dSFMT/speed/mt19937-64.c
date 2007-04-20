@@ -156,6 +156,7 @@ inline void fill_array(double in_array[], int size)
     uint64_t *array = (uint64_t *)in_array;
     static uint64_t mag01[2]={0, MATRIX_A};
 
+    mt[NN] = mt[0];
     for (i=0;i<NN-MM;i++) {
 	x = (mt[i]&UM) | (mt[i+1]&LM);
 	array[i] = mt[i+MM] ^ (x>>1) ^ mag01[(int)(x&1)];
@@ -164,7 +165,7 @@ inline void fill_array(double in_array[], int size)
 	x = (mt[i]&UM)|(mt[i+1]&LM);
 	array[i] = array[i+(MM-NN)] ^ (x>>1) ^ mag01[(int)(x & 1)];
     }
-    x = (mt[NN-1]&UM)|(mt[0]&LM);
+    x = (mt[NN-1]&UM)|(array[0]&LM);
     array[NN-1] = array[MM-1] ^ (x>>1) ^ mag01[(int)(x & 1)];
     i++;
     for (; i < size - NN; i++) {

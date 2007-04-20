@@ -72,7 +72,7 @@ int get_min_array_size(void);
   internal state, index counter and flag 
   --------------------------------------*/
 /** a period certification vector which certificate the period of 2^{MEXP}-1. */
-static uint64_t pcv[2] = {PCV1, PCV2};
+static uint64_t pcv[2] = {SFMT_PCV1, SFMT_PCV2};
 
 void set_high_const(void) {
     HIGH_CONST = UINT64_C(0x3FF0000000000000);
@@ -94,13 +94,13 @@ unsigned int get_rnd_mexp(void)
 }
 
 void print_param(FILE *fp) {
-    fprintf(fp, "POS1 = %u\n", POS1);
-    fprintf(fp, "SL1 = %u\n", SL1);
-    fprintf(fp, "SL2 = %u\n", SL2);
-    fprintf(fp, "SR1 = %u\n", SR1);
-    fprintf(fp, "SR2 = %u\n", SR2);
-    fprintf(fp, "MSK1 = %016"PRIx64"\n", MSK1);
-    fprintf(fp, "MSK2 = %016"PRIx64"\n", MSK2);
+    fprintf(fp, "POS1 = %u\n", SFMT_POS1);
+    fprintf(fp, "SL1 = %u\n", SFMT_SL1);
+    fprintf(fp, "SL2 = %u\n", SFMT_SL2);
+    fprintf(fp, "SR1 = %u\n", SFMT_SR1);
+    fprintf(fp, "SR2 = %u\n", SFMT_SR2);
+    fprintf(fp, "MSK1 = %016"PRIx64"\n", SFMT_MSK1);
+    fprintf(fp, "MSK2 = %016"PRIx64"\n", SFMT_MSK2);
     fflush(fp);
 }
 
@@ -138,11 +138,11 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
     w128_t x;
     uint64_t r0, r1;
 
-    lshift128(&x, a, SL2);
-    r0 = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SR1) & MSK1) ^ (c->u[0] << SL1)
-	^ (c->u[0] >> SR2) ^ lung->u[1];
-    r1 = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SR1) & MSK2) ^ (c->u[1] << SL1)
-	^ (c->u[1] >> SR2) ^ lung->u[0];
+    lshift128(&x, a, SFMT_SL2);
+    r0 = a->u[0] ^ x.u[0] ^ ((b->u[0] >> SFMT_SR1) & SFMT_MSK1) 
+	^ (c->u[0] << SFMT_SL1) ^ (c->u[0] >> SFMT_SR2) ^ lung->u[1];
+    r1 = a->u[1] ^ x.u[1] ^ ((b->u[1] >> SFMT_SR1) & SFMT_MSK2)
+	^ (c->u[1] << SFMT_SL1) ^ (c->u[1] >> SFMT_SR2) ^ lung->u[0];
     r0 = r0 & LOW_MASK;
     r1 = r1 & LOW_MASK;
     r->u[0] = r0 | HIGH_CONST;
@@ -160,15 +160,16 @@ inline static void gen_rand_all(dsfmt_t *dsfmt) {
     w128_t lung;
 
     lung = dsfmt->sfmt[N];
-    do_recursion(&dsfmt->sfmt[0], &dsfmt->sfmt[0], &dsfmt->sfmt[POS1],
+    do_recursion(&dsfmt->sfmt[0], &dsfmt->sfmt[0], &dsfmt->sfmt[SFMT_POS1],
 		 &dsfmt->sfmt[N -1], &lung);
-    for (i = 1; i < N - POS1; i++) {
-	do_recursion(&dsfmt->sfmt[i], &dsfmt->sfmt[i], &dsfmt->sfmt[i + POS1],
-		     &dsfmt->sfmt[i - 1], &lung);
+    for (i = 1; i < N - SFMT_POS1; i++) {
+	do_recursion(&dsfmt->sfmt[i], &dsfmt->sfmt[i],
+		     &dsfmt->sfmt[i + SFMT_POS1], &dsfmt->sfmt[i - 1], &lung);
     }
     for (; i < N; i++) {
 	do_recursion(&dsfmt->sfmt[i], &dsfmt->sfmt[i],
-		     &dsfmt->sfmt[i + POS1 - N], &dsfmt->sfmt[i - 1], &lung);
+		     &dsfmt->sfmt[i + SFMT_POS1 - N], &dsfmt->sfmt[i - 1],
+		     &lung);
     }
     dsfmt->sfmt[N] = lung;
 }
@@ -188,9 +189,11 @@ void initial_mask(dsfmt_t *dsfmt) {
 }
 
 void get_fixed(uint64_t fix[2]) {
-    fix[0] = (((HIGH_CONST >> SR1) & MSK2) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
-    fix[1] = (((HIGH_CONST >> SR1) & MSK1) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
-    fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SL2));
+    fix[0] = (((HIGH_CONST >> SFMT_SR1) & SFMT_MSK2) 
+	      ^ (HIGH_CONST >> SFMT_SR2)) | HIGH_CONST;
+    fix[1] = (((HIGH_CONST >> SFMT_SR1) & SFMT_MSK1) 
+	      ^ (HIGH_CONST >> SFMT_SR2)) | HIGH_CONST;
+    fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SFMT_SL2));
  }
 
 /**
@@ -203,9 +206,11 @@ int period_certification(dsfmt_t *dsfmt) {
     uint64_t work;
     uint64_t fix[2];
 
-    fix[0] = (((HIGH_CONST >> SR1) & MSK2) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
-    fix[1] = (((HIGH_CONST >> SR1) & MSK1) ^ (HIGH_CONST >> SR2)) | HIGH_CONST;
-    fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SL2));
+    fix[0] = (((HIGH_CONST >> SFMT_SR1) & SFMT_MSK2) 
+	      ^ (HIGH_CONST >> SFMT_SR2)) | HIGH_CONST;
+    fix[1] = (((HIGH_CONST >> SFMT_SR1) & SFMT_MSK1) 
+	      ^ (HIGH_CONST >> SFMT_SR2)) | HIGH_CONST;
+    fix[0] = fix[0] ^ (HIGH_CONST >> (64 - 8 * SFMT_SL2));
     //printf("fix lung %016"PRIx64"\n", fix[0]);
     //printf("fix lung %016"PRIx64"\n", fix[1]);
     //printf("old lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
@@ -228,7 +233,7 @@ int period_certification(dsfmt_t *dsfmt) {
     /* check NG, and modification */
     for (i = 0; i < 2; i++) {
 	work = 1;
-	for (j = 0; j < 52 - SR1; j++) {
+	for (j = 0; j < 52; j++) {
 	    if ((work & pcv[i]) != 0) {
 		dsfmt->sfmt[N].u[i] ^= work;
 		//printf("mod lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
@@ -249,7 +254,7 @@ int period_certification(dsfmt_t *dsfmt) {
  * @return id string.
  */
 char *get_idstring(void) {
-    return IDSTR;
+    return SFMT_IDSTR;
 }
 
 /**
@@ -326,7 +331,8 @@ static void next_state(dsfmt_t *dsfmt) {
 	dsfmt->idx = 0;
     }
     i = dsfmt->idx / 2;
-    do_recursion(&dsfmt->sfmt[i], &dsfmt->sfmt[i], &dsfmt->sfmt[(i + POS1) % N],
+    do_recursion(&dsfmt->sfmt[i], &dsfmt->sfmt[i],
+		 &dsfmt->sfmt[(i + SFMT_POS1) % N],
 		 &dsfmt->sfmt[(i + N - 1) % N], &dsfmt->sfmt[N]);
 }
 

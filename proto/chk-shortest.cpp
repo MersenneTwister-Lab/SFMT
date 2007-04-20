@@ -129,15 +129,16 @@ void fill_rnd(sfmt_t *sfmt) {
 
 int fill_state_random(sfmt_t *sfmt, FILE *frandom) {
     static int count = 0;
-    int i, j;
-    int w1, w2;
-    unsigned int pos;
+    //int i, j;
+    //int w1, w2;
+    //unsigned int pos;
 
-    if (count > 5000) {
+    if ((count > 5000) && (count > maxdegree)) {
 	//return fill_state_base(sfmt);
 	return 0;
     }
     fill_rnd(sfmt);
+#if 0
     w1 = getw(frandom);
     w2 = getw(frandom);
     if (feof(frandom) || ferror(frandom)) {
@@ -153,6 +154,7 @@ int fill_state_random(sfmt_t *sfmt, FILE *frandom) {
     j = pos % 2;
     i = pos % (N + 1);
     sfmt->sfmt[i][j] = w1;
+#endif
     count++;
     return 1;
 }
@@ -350,7 +352,7 @@ void test_shortest(char *filename) {
 	fclose(fp);
 	exit(1);
     }
-    mt_init(1234);
+    mt_init((uint32_t)time(NULL));
     read_random_param(fp);
     init_gen_rand(&sfmt, 123);
     sfmt_save = sfmt;
@@ -397,13 +399,10 @@ void test_shortest(char *filename) {
 	//for (int j = 0; j < 128; j++) {
 	generating_polynomial128(&sfmt, vec, i % 128, maxdegree);
 	if (IsZero(vec)) {
-	    break;
+	    continue;
 	}
 	berlekampMassey(minpoly, maxdegree, vec);
 	LCM(tmp, lcmpoly, minpoly);
-	if (deg(tmp) > (long)maxdegree) {
-	    break;
-	}
 	lcmpoly = tmp;
 	if (deg(lcmpoly) >= (long)maxdegree) {
 	    break;
@@ -412,7 +411,9 @@ void test_shortest(char *filename) {
     }
     if (deg(lcmpoly) != maxdegree) {
 	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
-	exit(1);
+	if (deg(lcmpoly) > maxdegree) {
+	    exit(1);
+	}
     }
 #endif
 #if 0
@@ -499,6 +500,9 @@ void test_shortest(char *filename) {
 	    fflush(stdout);
 	}
 	printf("32bit D.D:%7d, DUP:%5d\n", dist_sum, count);
+    }
+    if (deg(lcmpoly) < maxdegree) {
+	printf("WARNING! deg(lcmpoly) = %d\n", (int)deg(lcmpoly));
     }
 }
 

@@ -57,6 +57,8 @@ ARGV.each{
   |f|
   mexp = f.sub(/parity.resX78./,"").sub(/.magi.*txt/,"")
   params = get_params(f)
+  printf("#ifndef SFMT_PARAMS%s_H\n", mexp);
+  printf("#define SFMT_PARAMS%s_H\n\n", mexp);
   $param_name.each {
     |key|
     if key.include? 'MSK'
@@ -80,4 +82,5 @@ ARGV.each{
          params['SL2'], params['SR1'], params['SR2'],
          params['MSK1'], params['MSK2'], params['MSK3'],
          params['MSK4'])
+  printf("\n#endif /* SFMT_PARAMS%s_H */\n", mexp);
 }

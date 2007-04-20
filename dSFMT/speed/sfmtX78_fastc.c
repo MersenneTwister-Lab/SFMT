@@ -9,6 +9,10 @@
 #include "random.h"
 #include "speed.h"
 
+#if defined(__BIG_ENDIAN__) && defined(__amd64)
+#undef __BIG_ENDIAN__
+#endif
+
 #ifndef MEXP
 #define MEXP 19937
 #endif
@@ -64,7 +68,7 @@ INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_12(w128_t array[], int size) {
     uint32_t r;
     int i;
@@ -87,7 +91,7 @@ INLINE static void convert_12(w128_t array[], int size) {
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_co(w128_t array[], int size) {
     uint32_t r;
     int i;
@@ -116,7 +120,7 @@ INLINE static void convert_co(w128_t array[], int size) {
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_oc(w128_t array[], int size) {
     uint32_t r;
     int i;
@@ -150,12 +154,17 @@ INLINE static void convert_oc(w128_t array[], int size) {
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE static void convert_oo(w128_t array[], int size) {
     int i;
+    uint32_t r;
     for (i = 0; i < size; i++) {
-	r = vec_and(array[i].v, low_mask);
-	array[i].v = vec_or(r, high_const_one);
+	r = (array[i].a[1] & LOW_MASK32_1) | HIGH_CONST32;
+	array[i].a[1] = array[i].a[0] | 1;
+	array[i].a[0] = r;
+	r = (array[i].a[3] & LOW_MASK32_1) | HIGH_CONST32;
+	array[i].a[3] = array[i].a[2] | 1;
+	array[i].a[2] = r;
 	array[i].d[0] -= 1.0;
 	array[i].d[1] -= 1.0;
     }
@@ -176,13 +185,13 @@ INLINE static
 #if defined(__GNUC__)
 __attribute__((always_inline)) 
 #endif
-#if defined(LITTLE_ENDIAN)
+#if !defined(__BIG_ENDIAN__)
 void lshift128(w128_t *out, const w128_t *in, int shift) {
-    out->b[0] = in->b[0];
-    out->b[1] = in->b[1];
-    out->b[0] = out->b[0] << (shift * 8);
-    out->b[1] = out->b[1] << (shift * 8);
-    out->b[1] |= in->b[0] >> (64 - shift * 8);
+    out->u[0] = in->u[0];
+    out->u[1] = in->u[1];
+    out->u[0] = out->u[0] << (shift * 8);
+    out->u[1] = out->u[1] << (shift * 8);
+    out->u[1] |= in->u[0] >> (64 - shift * 8);
 }
 #else
 void lshift128(w128_t *out, const w128_t *in, int shift) {
@@ -352,7 +361,7 @@ INLINE double gen_rand(void)
     return r.d;
 }
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE double genrand_close1_open2(void)
 {
     w64_t r;
@@ -364,7 +373,7 @@ INLINE double genrand_close1_open2(void)
     }
     r = dsfmt[idx++];
     t = (r.a[1] & LOW_MASK32_1) | HIGH_CONST32;
-    r.a[1] = r[i].a[0];
+    r.a[1] = r.a[0];
     r.a[0] = t;
     t = (r.a[3] & LOW_MASK32_1) | HIGH_CONST32;
     r.a[3] = r.a[2];
@@ -387,10 +396,11 @@ INLINE double genrand_close1_open2(void)
 }
 #endif
 
-#if defined(BIG_ENDIAN)
+#if defined(__BIG_ENDIAN__)
 INLINE double genrand_open_open(void)
 {
     w64_t r;
+    uint32_t t;
 
     if (idx >= N * 2) {
 	gen_rand_all();

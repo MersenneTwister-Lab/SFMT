@@ -71,19 +71,52 @@ static void setup_const(void) {
     sse2_low_mask = _mm_set_epi32(LOW_MASK32_1, LOW_MASK32_2,
 				  LOW_MASK32_1, LOW_MASK32_2);
     sse2_high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
-    sse2_high_const_one = _mm_set_epi32(HIGH_CONST32, 1, HIGH_CONST32, 1);
+    sse2_int_one = _mm_set_epi32(0, 1, 0, 1);
     sse2_double_two = _mm_set_pd(2.0, 2.0);
     sse2_double_m_one = _mm_set_pd(-1.0, -1.0);
     first = false;
 }
 
-INLINE static void convert_12(w128_t array[], int size) {
+// tempering
+INLINE static void temper_mask(uint32_t array[], int size)
+{
+    __m128i a0, a1, b0, b1, and1, and2;
     int i;
-    w128_t r;
 
-    for (i = 0; i < size; i++) {
-	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
-	array[i].si = _mm_or_si128(r.si, sse2_high_const);
+    and1 = _mm_set_epi32(0x9d2c5680U, 0x9d2c5680U, 
+			 0x9d2c5680U, 0x9d2c5680U);
+    and2 = _mm_set_epi32(0xefc60000U, 0xefc60000U, 
+			 0xefc60000U, 0xefc60000U);
+
+    for (i = 0; i < size; i += 8) {
+	a0 = _mm_load_si128((__m128i *)&array[i]);
+	b0 = _mm_load_si128((__m128i *)&array[i + 4]);
+	a1 = _mm_srli_epi32(a0, 11);
+	b1 = _mm_srli_epi32(b0, 11);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	a1 = _mm_slli_epi32(a0, 7);
+	b1 = _mm_slli_epi32(b0, 7);
+	a1 = _mm_and_si128(a1, and1);
+	b1 = _mm_and_si128(b1, and1);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	a1 = _mm_slli_epi32(a0, 15);
+	b1 = _mm_slli_epi32(b0, 15);
+	a1 = _mm_and_si128(a1, and2);
+	b1 = _mm_and_si128(b1, and2);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	a1 = _mm_srli_epi32(a0, 18);
+	b1 = _mm_srli_epi32(b0, 18);
+	a0 = _mm_xor_si128(a0, a1);
+	b0 = _mm_xor_si128(b0, b1);
+	a0 = _mm_and_si128(a0, sse2_low_mask);
+	b0 = _mm_and_si128(b0, sse2_low_mask);
+	a0 = _mm_or_si128(a0, sse2_high_const);
+	b0 = _mm_or_si128(b0, sse2_high_const);
+	_mm_store_si128((__m128i *)&array[i], a0);
+	_mm_store_si128((__m128i *)&array[i + 4], b0);
     }
 }
 
@@ -92,8 +125,6 @@ INLINE static void convert_co(w128_t array[], int size) {
     w128_t r;
 
     for (i = 0; i < size; i++) {
-	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
-	r.si = _mm_or_si128(r.si, sse2_high_const);
 	array[i].sd = _mm_add_pd(r.sd, sse2_double_m_one);
     }
 }
@@ -103,8 +134,6 @@ INLINE static void convert_oc(w128_t array[], int size) {
     w128_t r;
 
     for (i = 0; i < size; i++) {
-	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
-	r.si = _mm_or_si128(r.si, sse2_high_const);
 	array[i].sd = _mm_sub_pd(sse2_double_two, r.sd);
     }
 }
@@ -114,8 +143,7 @@ INLINE static void convert_oo(w128_t array[], int size) {
     w128_t r;
 
     for (i = 0; i < size; i++) {
-	r.si = _mm_and_si128(array[i].si, sse2_low_mask);
-	r.si = _mm_or_si128(r.si, sse2_high_const_one);
+	r.si = _mm_or_si128(r.si, sse2_int_one);
 	array[i].sd = _mm_add_pd(r.sd, sse2_double_m_one);
     }
 }
@@ -265,45 +293,6 @@ INLINE static void gen_rand_array(uint32_t array[], int size)
     //memcpy(mt, &array[N * (blocks - 1)], sizeof(mt));
  }
 
-// tempering
-INLINE static void tempering(uint32_t array[], int size)
-{
-    __m128i a0, a1, b0, b1, and1, and2;
-    int i;
-
-    and1 = _mm_set_epi32(0x9d2c5680U, 0x9d2c5680U, 
-			 0x9d2c5680U, 0x9d2c5680U);
-    and2 = _mm_set_epi32(0xefc60000U, 0xefc60000U, 
-			 0xefc60000U, 0xefc60000U);
-
-    for (i = 0; i < size; i += 8) {
-	a0 = _mm_load_si128((__m128i *)&array[i]);
-	b0 = _mm_load_si128((__m128i *)&array[i + 4]);
-	a1 = _mm_srli_epi32(a0, 11);
-	b1 = _mm_srli_epi32(b0, 11);
-	a0 = _mm_xor_si128(a0, a1);
-	b0 = _mm_xor_si128(b0, b1);
-	a1 = _mm_slli_epi32(a0, 7);
-	b1 = _mm_slli_epi32(b0, 7);
-	a1 = _mm_and_si128(a1, and1);
-	b1 = _mm_and_si128(b1, and1);
-	a0 = _mm_xor_si128(a0, a1);
-	b0 = _mm_xor_si128(b0, b1);
-	a1 = _mm_slli_epi32(a0, 15);
-	b1 = _mm_slli_epi32(b0, 15);
-	a1 = _mm_and_si128(a1, and2);
-	b1 = _mm_and_si128(b1, and2);
-	a0 = _mm_xor_si128(a0, a1);
-	b0 = _mm_xor_si128(b0, b1);
-	a1 = _mm_srli_epi32(a0, 18);
-	b1 = _mm_srli_epi32(b0, 18);
-	a0 = _mm_xor_si128(a0, a1);
-	b0 = _mm_xor_si128(b0, b1);
-	_mm_store_si128((__m128i *)&array[i], a0);
-	_mm_store_si128((__m128i *)&array[i + 4], b0);
-    }
-}
-
 
 INLINE double gen_rand(void)
 {
@@ -353,8 +342,8 @@ INLINE void fill_array_close1_open2(double array[], int size)
     assert(size % 2 == 0);
     assert((int)array % 16 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
-    convert_12((w128_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
+    temper_mask((uint32_t *)array, size * 2);
 }
 
 INLINE void fill_array_close_open(double array[], int size)
@@ -363,7 +352,8 @@ INLINE void fill_array_close_open(double array[], int size)
     assert(size % 2 == 0);
     assert((int)array % 16 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
+    temper_mask((uint32_t *)array, size * 2);
     convert_co((w128_t *)array, size / 2);
 }
 
@@ -373,7 +363,8 @@ INLINE void fill_array_open_close(double array[], int size)
     assert(size % 2 == 0);
     assert((int)array % 16 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
+    temper_mask((uint32_t *)array, size * 2);
     convert_oc((w128_t *)array, size / 2);
 }
 
@@ -383,7 +374,8 @@ INLINE void fill_array_open_open(double array[], int size)
     assert(size % 2 == 0);
     assert((int)array % 16 == 0);
 
-    gen_rand_array((uint32_t *)array, size / 2);
+    gen_rand_array((uint32_t *)array, size * 2);
+    temper_mask((uint32_t *)array, size * 2);
     convert_oo((w128_t *)array, size / 2);
 }
 

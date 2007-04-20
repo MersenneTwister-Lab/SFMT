@@ -16,11 +16,11 @@ INLINE unsigned int get_rnd_maxdegree(void);
 INLINE unsigned int get_rnd_mexp(void);
 INLINE unsigned int get_onetime_rnds(void);
 
-INLINE static double genrand_open_close(void) {
+INLINE static double genrand_close_open(void) {
     return genrand_close1_open2() - 1.0;
 }
 
-INLINE static double genrand_close_open(void) {
+INLINE static double genrand_open_close(void) {
     return 2.0 - genrand_close1_open2();
 }
 #endif
