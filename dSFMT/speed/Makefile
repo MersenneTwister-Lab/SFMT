@@ -11,13 +11,13 @@ CCFLAGS = -Wall -O9 -Wmissing-prototypes -Winline $(OPT) -DNDEBUG $(DDEBUG) \
 $(DMEXP) $(DPG)
 
 STD_TARGET = sfmtD11_fastc sfmtX78_fastc sfmtX78_msk_fastc \
-	mt_msk_fastc mt19937ar_fastc mt64_msk_fastc
-ALTI_TARGET = sfmtD11_alti sfmtX78_alti mt_msk_alti
-SSE2_TARGET = sfmtD11_sse2 sfmtX78_sse2 mt_msk_sse2 
+	sfmtX78_org_fastc mt_msk_fastc mt19937ar_fastc mt64_msk_fastc
+ALTI_TARGET = sfmtD11_alti sfmtX78_alti sfmtX78_org_alti mt_msk_alti
+SSE2_TARGET = sfmtD11_sse2 sfmtX78_sse2 sfmtX78_org_sse2 mt_msk_sse2 
 SRC = sfmtD11_fastc.c sfmtD11_alti.c sfmtD11_sse2.c \
 sfmtX78_fastc.c sfmtX78_alti.c sfmtX78_sse2.c \
 mt19937ar.c mt_msk_fastc.c mt19937-64.c mt_msk_alti.c mt_msk_sse2.c \
-test_time.c test_time2.c test_time3.c \
+test_time.c test_time2.c test_time3.c test_time4.c \
 random.h c99.h mt19937ar.h speed.h paramsD11.h paramsD11-alti.h \
 mt64.h do.sh Makefile
 
@@ -30,7 +30,7 @@ intel:
 	${MAKE} CC=icl CCFLAGS="${CCFLAGS_INTEL}" ${STD_TARGET} ${SSE2_TARGET}
 
 alti:
-	${MAKE} CCFLAGS="${CCFLAGS} ${OPT_PPC} ${STD_TARGET} \
+	${MAKE} CCFLAGS="${CCFLAGS} ${OPT_PPC}" ${STD_TARGET} \
 	${ALTI_TARGET}
 
 tar.gz: ${SRC}
@@ -42,6 +42,9 @@ sfmtD11_alti: sfmtD11_alti.c test_time3.c  paramsD11.h
 
 sfmtX78_alti: sfmtX78_alti.c test_time3.c
 	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ sfmtX78_alti.c
+
+sfmtX78_org_alti: sfmtX78_alti.c test_time4.c
+	${CC} -faltivec -maltivec ${CCFLAGS} -DORIGINAL -o $@ sfmtX78_alti.c
 
 mt_msk_alti: mt_msk_alti.c test_time3.c
 	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ mt_msk_alti.c
@@ -58,6 +61,9 @@ sfmtP37_sse2: sfmtP37_sse2.c test_time.c
 
 sfmtX78_sse2: sfmtX78_sse2.c test_time3.c
 	${CC} ${CCFLAGS} -o $@ sfmtX78_sse2.c
+
+sfmtX78_org_sse2: sfmtX78_sse2.c test_time4.c
+	${CC} ${CCFLAGS} -DORIGINAL -o $@ sfmtX78_sse2.c
 
 mt_msk_sse2: mt_msk_sse2.c test_time3.c
 	${CC} ${CCFLAGS} -o $@ mt_msk_sse2.c
@@ -77,6 +83,9 @@ sfmtX78_fastc: sfmtX78_fastc.c test_time2.c
 
 sfmtX78_msk_fastc: sfmtX78_fastc.c test_time3.c
 	${CC} ${CCFLAGS} -DBLOCK -o $@ sfmtX78_fastc.c
+
+sfmtX78_org_fastc: sfmtX78_fastc.c test_time4.c
+	${CC} ${CCFLAGS} -DORIGINAL -o $@ sfmtX78_fastc.c
 
 mt19937ar_fastc: mt19937ar.c test_time2.c
 	${CC} ${CCFLAGS} -o $@ mt19937ar.c

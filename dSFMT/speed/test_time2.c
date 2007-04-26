@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
 	}
     }
     printf("consumed time for generating %u randoms.\n", NUM_RANDS * TIC_COUNT);
-    printf("REAL1 MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    printf("REAL1 MIN:%4"PRIu64"ms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("      AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     r = 0;
@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("REAL2 MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("REAL2 MIN:%4"PRIu64"ms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("      AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     r = 0;
@@ -77,8 +77,8 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("REAL53 MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("       AVE:%4lldms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("REAL53 MIN:%4"PRIu64"ms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("       AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     min = LONG_MAX;
     r = 0;
@@ -95,8 +95,8 @@ int main(int argc, char *argv[]) {
 	    min = clo;
 	}
     }
-    printf("ADD   MIN:%4lldms.\n", (min * 1000) / CLOCKS_PER_SEC);
-    printf("      AVE:%4lldms.\n", (sum * 100)  / CLOCKS_PER_SEC);
+    printf("ADD   MIN:%4"PRIu64"ms.\n", (min * 1000) / CLOCKS_PER_SEC);
+    printf("      AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
     printf("total = %lf\n", total);
     return 0;
 }

@@ -1,0 +1,29 @@
+consumed time for generating 100000000 randoms.
+BLOCK [0, 1) AVE:1137ms.
+BLOCK (0, 1] AVE:1134ms.
+BLOCK (0, 1) AVE:2154ms.
+BLOCK [1, 2) AVE:1001ms.
+SEQ [0, 1) 1 AVE:1424ms.
+total = 500013146.390899
+SEQ [0, 1) 2 AVE:1343ms.
+total = 25021.698943
+ADD   AVE: 134ms.
+total = 50000.000000
+SEQ (0, 1] 1 AVE:1472ms.
+total = 499982081.739277
+SEQ (0, 1] 2 AVE:1327ms.
+total = 24997.696497
+ADD   AVE: 132ms.
+total = 50000.000000
+SEQ (0, 1) 1 AVE:3469ms.
+total = 500008643.750767
+SEQ (0, 1) 2 AVE:3375ms.
+total = 24973.412155
+ADD   AVE: 132ms.
+total = 50000.000000
+SEQ [1, 2) 1 AVE:1257ms.
+total = 1499993195.288439
+SEQ [1, 2) 2 AVE:1301ms.
+total = 74960.367307
+ADD   AVE: 132ms.
+total = 50000.000000

@@ -37,6 +37,7 @@ INLINE static void gen_rand_all(void);
 static __m128i sfmt[N + 1];
 static int idx;
 static uint64_t *sfmtp = (uint64_t *)sfmt;
+static uint32_t *sfmtp32 = (uint32_t *)sfmt;
 #define SHUFF 0x39
 
 #define POS1 4
@@ -69,6 +70,8 @@ INLINE static void convert_12(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
+INLINE uint32_t genrand_int32(void) ALWAYSINLINE;
+INLINE void fill_array_int32(uint32_t array[], int size) ALWAYSINLINE;
 
 static __m128i sse2_low_mask;
 static __m128i sse2_high_const;
@@ -224,15 +227,13 @@ INLINE static void gen_rand_array(__m128i array[], int size) {
     }
 }
 
-INLINE uint32_t gen_rand(void)
+INLINE uint32_t genrand_int32(void)
 {
-    w64_t r;
-
     if (idx >= N * 4) {
 	gen_rand_all();
 	idx = 0;
     }
-    return sfmt[idx++];
+    return sfmtp32[idx++];
 }
 
 INLINE double genrand_close1_open2(void)
@@ -263,7 +264,7 @@ INLINE double genrand_open_open(void)
     return r.d - 1.0;
 }
 
-INLINE void fill_array(uint32_t array[], int size)
+INLINE void fill_array_int32(uint32_t array[], int size)
 {
     assert(size >= N * 4);
     assert(size % 4 == 0);
@@ -324,5 +325,8 @@ INLINE void init_gen_rand(uint64_t seed)
     setup_const();
 }
 
+#if defined(ORIGINAL)
+#include "test_time4.c"
+#else
 #include "test_time3.c"
-
+#endif

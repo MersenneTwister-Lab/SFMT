@@ -248,6 +248,14 @@ INLINE uint32_t genrand_int32(void)
     return r;
 }
 
+INLINE void fill_array_int32(uint32_t array[], int size)
+{
+    assert(size >= N * 4);
+    assert(size % 4 == 0);
+
+    gen_rand_array((vector unsigned int *)array, size / 4);
+}
+
 INLINE void fill_array_close1_open2(double array[], int size)
 {
     assert(size >= N * 2);
@@ -357,5 +365,10 @@ double genrand_res53(void)
 { 
     unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6; 
     return(a*67108864.0+b)*(1.0/9007199254740992.0); 
-} 
+}
+
+#if defined(ORIGINAL)
+#include "test_time4.c"
+#else
 #include "test_time3.c"
+#endif

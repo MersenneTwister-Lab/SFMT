@@ -10,6 +10,7 @@
 #include "speed.h"
 
 #if defined(__BIG_ENDIAN__) && defined(__amd64)
+#warn "__BIG_ENDIAN__ is defined in amd64, then undef it."
 #undef __BIG_ENDIAN__
 #endif
 
@@ -496,8 +497,10 @@ INLINE double genrand_res53()
     //return genrand_int64() * (1.0/18446744073709551616.0L);
     return genrand_int64() * (1.0/18446744073709551616.0);
 }
-#ifdef BLOCK
+#if defined(BLOCK)
 #include "test_time3.c"
+#elif defined(ORIGINAL)
+#include "test_time4.c"
 #else
 #include "test_time2.c"
 #endif

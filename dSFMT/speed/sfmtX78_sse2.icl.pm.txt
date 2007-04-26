@@ -1,0 +1,8 @@
+consumed time for generating 100000000 randoms.
+BLOCK AVE: 833ms.
+SEQ 1 AVE:1831ms.
+total = 1500007156.850275
+SEQ 2 AVE:1718ms.
+total = 75086.674016
+ADD   AVE: 136ms.
+total = 50000.000000
