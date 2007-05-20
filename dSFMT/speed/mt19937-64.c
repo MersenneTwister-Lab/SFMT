@@ -53,10 +53,10 @@
    email: m-mat @ math.sci.hiroshima-u.ac.jp (remove spaces)
 */
 
-#include <inttypes.h>
+/* #include <inttypes.h> */
 #include <stdio.h>
-#include "mt64.h"
 #include "random.h"
+#include "mt64.h"
 
 #define NN 312
 #define MM 156

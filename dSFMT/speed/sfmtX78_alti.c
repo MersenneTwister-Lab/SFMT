@@ -351,7 +351,7 @@ INLINE double genrand_open_open(void)
     r.u = sfmt64[idx++];
     r.u &= LOW_MASK;
     r.u |= (HIGH_CONST | 1);
-    return r.d;
+    return r.d - 1.0;
 }
 
 /* JURGEN A DOORNIK */

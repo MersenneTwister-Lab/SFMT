@@ -1342,28 +1342,28 @@ consumed time for generating 100000000 randoms.
 BLOCK [0, 1) AVE: 765ms.
 BLOCK (0, 1] AVE: 760ms.
 BLOCK (0, 1) AVE: 783ms.
-BLOCK [1, 2) AVE: 536ms.
-SEQ [0, 1) 1 AVE:1067ms.
+BLOCK [1, 2) AVE: 537ms.
+SEQ [0, 1) 1 AVE:1066ms.
 total = 500013146.390899
-SEQ [0, 1) 2 AVE: 895ms.
+SEQ [0, 1) 2 AVE: 970ms.
 total = 25021.698943
 ADD   AVE: 188ms.
 total = 50000.000000
-SEQ (0, 1] 1 AVE:1051ms.
+SEQ (0, 1] 1 AVE:1050ms.
 total = 499982081.739277
-SEQ (0, 1] 2 AVE: 895ms.
+SEQ (0, 1] 2 AVE: 970ms.
 total = 24997.696497
 ADD   AVE: 188ms.
 total = 50000.000000
-SEQ (0, 1) 1 AVE:1057ms.
+SEQ (0, 1) 1 AVE:1069ms.
 total = 500008643.750767
-SEQ (0, 1) 2 AVE: 879ms.
+SEQ (0, 1) 2 AVE: 910ms.
 total = 24973.412155
-ADD   AVE: 138ms.
+ADD   AVE: 137ms.
 total = 50000.000000
-SEQ [1, 2) 1 AVE: 999ms.
+SEQ [1, 2) 1 AVE:1004ms.
 total = 1499993195.288439
-SEQ [1, 2) 2 AVE: 851ms.
+SEQ [1, 2) 2 AVE: 915ms.
 total = 74960.367307
 ADD   AVE: 188ms.
 total = 50000.000000

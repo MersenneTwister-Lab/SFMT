@@ -159,7 +159,7 @@ void test_d64(void) {
     uint64_t sum;
     uint64_t min;
     uint32_t *array = (uint32_t *)dummy;
-    double array2[NUM_RANDS/2];
+    double array2[NUM_RANDS];
 
     init_gen_rand(1234);
     min = LONG_MAX;

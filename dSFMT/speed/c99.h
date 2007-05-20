@@ -16,6 +16,7 @@
 
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
+typedef long long int int64_t;
 #define UINT64_MAX ULLONG_MAX
 #define PRIu32 "u"
 #define PRIx32 "x"
@@ -28,4 +29,7 @@ typedef unsigned int bool;
 
 #endif /* end of GNU C */
 
+#ifndef UINT64_C
+#define UINT64_C(v) (v ## ULL)
+#endif
 #endif
