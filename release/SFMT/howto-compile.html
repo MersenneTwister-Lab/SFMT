@@ -90,7 +90,7 @@ diff -w foo.txt SFMT.19937.out.txt</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DSSE2=1 -DMEXP=19937 -o test-sse2-M19937 test.c</pre>
+      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DHAVE_SSE2=1 -DMEXP=19937 -o test-sse2-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
@@ -105,11 +105,11 @@ diff -w foo.txt SFMT.19937.out.txt</pre>
       do this, type
     </p>
     <blockquote>
-      <pre>make alti</pre>
+      <pre>make osx-alti</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DALTIVEC=1 -DMEXP=19937 -o test-alti-M19937 test.c</pre>
+      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DHAVE_ALTIVEC=1 -DMEXP=19937 -o test-alti-M19937 test.c</pre>
     </blockquote>
     <p>If everything works well,</p>
     <blockquote>
@@ -132,10 +132,10 @@ diff -w foo.txt SFMT.19937.out.txt</pre>
       <pre>make sse2-check</pre>
     </blockquote>
     <p>
-      To check test program optimized for AltiVec, type
+      To check test program optimized for OSX AltiVec, type
     </p>
     <blockquote>
-      <pre>make alti-check</pre>
+      <pre>make osx-alti-check</pre>
     </blockquote>
     <p>
       These commands may take some time.
@@ -187,12 +187,12 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DSSE2 -DMEXP=607 -o sample1 SFMT.c sample1.c</pre>
+      <pre>gcc -msse2 -DHAVE_SSE2 -DMEXP=607 -o sample1 SFMT.c sample1.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DALTIVEC -DMEXP=607 -o sample1 SFMT.c sample1.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DMEXP=607 -o sample1 SFMT.c sample1.c</pre>
     </blockquote>
 
     <h4>2-2. Use block call and static link.</h4>
@@ -227,7 +227,8 @@ int main(int argc, char* argv[]) {
     if (size &lt; R_SIZE) {
 	size = R_SIZE;
     }
-#if defined(__APPLE__)
+#if defined(__APPLE__) || \
+    (defined(__FreeBSD__) &amp;&amp; __FreeBSD__ >= 3 &amp;&amp; __FreeBSD__ <= 6)
     printf("malloc used\n");
     array = malloc(sizeof(double) * size);
     if (array == NULL) {
@@ -281,16 +282,16 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, type</p>
     <blockquote>
-      <pre>gcc -msse2 -DSSE2 -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
+      <pre>gcc -msse2 -DHAVE_SSE2 -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DALTIVEC -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -faltivec -DALTIVEC -DONLY64 -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DONLY64 -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
     </blockquote>
     <p>The effect of the option -DONLY64 is:
       When -DONLY64 option is used, the executive file can generate 
@@ -341,16 +342,16 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, then type</p>
     <blockquote>
-      <pre>gcc -msse2 -DSSE2 -DMEXP=1279 -o sample3 sample3.c</pre>
+      <pre>gcc -msse2 -DHAVE_SSE2 -DMEXP=1279 -o sample3 sample3.c</pre>
     </blockquote>
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DALTIVEC -DMEXP=1279 -o sample3 sample3.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DMEXP=1279 -o sample3 sample3.c</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -faltivec -DALTIVEC -DONLY64 -DMEXP=1279 -o sample3 sample3.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DONLY64 -DMEXP=1279 -o sample3 sample3.c</pre>
     </blockquote>
 
     <h4>2-4. Initialize SFMT using init_by_array function.</h4>

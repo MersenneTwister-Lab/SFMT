@@ -16,14 +16,8 @@
 #ifndef SFMT_SSE2_H
 #define SFMT_SSE2_H
 
-#ifdef __GNUC__
 inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
-				   __m128i d, __m128i mask)
-    __attribute__((always_inline));
-#else
-inline static __m128i mm_recursion(__m128i *a, __m128i *b,
-				   __m128i c, __m128i d, __m128i mask);
-#endif
+				   __m128i d, __m128i mask) ALWAYSINLINE;
 
 /**
  * This function represents the recursion formula.
@@ -55,7 +49,7 @@ inline static __m128i mm_recursion(__m128i *a, __m128i *b,
  * This function fills the internal state array with pseudorandom
  * integers.
  */
-inline void gen_rand_all(void) {
+inline static void gen_rand_all(void) {
     int i;
     __m128i r, r1, r2, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);
@@ -83,7 +77,7 @@ inline void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-inline static void gen_rand_array(w128_t array[], int size) {
+inline static void gen_rand_array(w128_t *array, int size) {
     int i, j;
     __m128i r, r1, r2, mask;
     mask = _mm_set_epi32(MSK4, MSK3, MSK2, MSK1);

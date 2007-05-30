@@ -20,7 +20,8 @@ int main(int argc, char* argv[]) {
     if (size < R_SIZE) {
 	size = R_SIZE;
     }
-#if defined(__APPLE__)
+#if defined(__APPLE__) || \
+    (defined(__FreeBSD__) && __FreeBSD__ >= 3 && __FreeBSD__ <= 6)
     printf("malloc used\n");
     array = malloc(sizeof(double) * size);
     if (array == NULL) {

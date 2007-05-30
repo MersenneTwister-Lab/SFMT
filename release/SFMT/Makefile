@@ -28,26 +28,28 @@ OPTI = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG \
 STD = -std=c99
 CC = gcc
 CCFLAGS = $(OPTI) $(WARN) $(STD)
-ALTIFLAGS = -faltivec -maltivec -DHAVE_ALTIVEC
+ALTIFLAGS = -mabi=altivec -maltivec -DHAVE_ALTIVEC
+OSXALTIFLAGS = -faltivec -maltivec -DHAVE_ALTIVEC
 SSE2FLAGS = -msse2 -DHAVE_SSE2
 STD_TARGET = test-std-M19937
 BIG_TARGET = test-big64-M19937
 ALL_STD_TARGET = test-std-M607 test-std-M1279 test-std-M2281 test-std-M4253 \
-test-std-M11213 test-std-M19937 test-std-M44497 test-std-M86243 test-std-M132049
+test-std-M11213 test-std-M19937 test-std-M44497 test-std-M86243 \
+test-std-M132049 test-std-M216091
 ALL_BIG_TARGET = test-big64-M607 test-big64-M1279 test-big64-M2281 \
 test-big64-M4253 test-big64-M11213 test-big64-M19937 test-big64-M44497 \
-test-big64-M86243 test-big64-M132049
+test-big64-M86243 test-big64-M132049 test-big64-M216091
 ALTI_TARGET = test-alti-M19937
 ALL_ALTI_TARGET = test-alti-M607 test-alti-M1279 test-alti-M2281 \
 test-alti-M4253 test-alti-M11213 test-alti-M19937 test-alti-M44497 \
-test-alti-M86243 test-alti-M132049
+test-alti-M86243 test-alti-M132049 test-alti-M216091
 ALL_ALTIBIG_TARGET = test-alti64-M607 test-alti64-M1279 test-alti64-M2281 \
 test-alti64-M4253 test-alti64-M11213 test-alti64-M19937 test-alti64-M44497 \
-test-alti64-M86243 test-alti64-M132049
+test-alti64-M86243 test-alti64-M132049 test-alti64-M216091
 SSE2_TARGET = test-sse2-M19937
 ALL_SSE2_TARGET = test-sse2-M607 test-sse2-M1279 test-sse2-M2281 \
 test-sse2-M4253 test-sse2-M11213 test-sse2-M19937 test-sse2-M44497 \
-test-sse2-M86243 test-sse2-M132049
+test-sse2-M86243 test-sse2-M132049 test-sse2-M216091
 # ==========================================================
 # comment out or EDIT following lines to get max performance
 # ==========================================================
@@ -81,6 +83,9 @@ sse2:${SSE2_TARGET}
 
 alti:${ALTI_TARGET}
 
+osx-alti:
+	make "ALTIFLAGS=${OSXALTIFLAGS}" alti
+
 big:${BIG_TARGET}
 
 std-check: ${ALL_STD_TARGET}
@@ -91,6 +96,9 @@ sse2-check: ${ALL_SSE2_TARGET}
 
 alti-check: ${ALL_ALTI_TARGET}
 	./check.sh 32 test-alti
+
+osx-alti-check:
+	make "ALTIFLAGS=${OSXALTIFLAGS}" alti-check
 
 big-check: ${ALL_BIG_TARGET} ${ALL_STD_TARGET}
 	./check.sh 64 test-big64
@@ -189,6 +197,17 @@ test-sse2-M132049: test.c SFMT.c SFMT.h SFMT-sse2.h \
 	SFMT-params132049.h
 	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=132049 -o $@ test.c
 
+test-std-M216091: test.c SFMT.c SFMT.h SFMT-params216091.h
+	${CC} ${CCFLAGS} -DMEXP=216091 -o $@ test.c
+
+test-alti-M216091: test.c SFMT.c SFMT.h SFMT-alti.h \
+	SFMT-params216091.h
+	${CC} ${CCFLAGS} ${ALTIFLAGS} -DMEXP=216091 -o $@ test.c
+
+test-sse2-M216091: test.c SFMT.c SFMT.h SFMT-sse2.h \
+	SFMT-params216091.h
+	${CC} ${CCFLAGS} ${SSE2FLAGS} -DMEXP=216091 -o $@ test.c
+
 test-big64-M607: test.c SFMT.c SFMT.h SFMT-params607.h
 	${CC} ${CCFLAGS} -DONLY64 -DMEXP=607 -o $@ test.c
 
@@ -251,6 +270,13 @@ test-big64-M132049: test.c SFMT.c SFMT.h SFMT-params132049.h
 test-alti64-M132049: test.c SFMT.c SFMT.h SFMT-alti.h \
 		  SFMT-params132049.h
 	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=132049 -o $@ test.c
+
+test-big64-M216091: test.c SFMT.c SFMT.h SFMT-params216091.h
+	${CC} ${CCFLAGS} -DONLY64 -DMEXP=216091 -o $@ test.c
+
+test-alti64-M216091: test.c SFMT.c SFMT.h SFMT-alti.h \
+		  SFMT-params216091.h
+	${CC} ${CCFLAGS} ${ALTIFLAGS} -DONLY64 -DMEXP=216091 -o $@ test.c
 
 clean:
 	rm -f *.o *~
