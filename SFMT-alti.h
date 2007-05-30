@@ -17,18 +17,11 @@
 #ifndef SFMT_ALTI_H
 #define SFMT_ALTI_H
 
-#ifdef __GNUC__
 inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int b,
 						vector unsigned int c,
 						vector unsigned int d)
-    __attribute__((always_inline));
-#else
-inline static vector unsigned int vec_recursion(vector unsigned int a,
-						vector unsigned int b,
-						vector unsigned int c,
-						vector unsigned int d);
-#endif
+    ALWAYSINLINE;
 
 /**
  * This function represents the recursion formula in AltiVec and BIG ENDIAN.
@@ -43,16 +36,14 @@ inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int c,
 						vector unsigned int d) {
 
-    const vector unsigned int sl1 = (vector unsigned int)(SL1, SL1, SL1, SL1);
-    const vector unsigned int sr1 = (vector unsigned int)(SR1, SR1, SR1, SR1);
+    const vector unsigned int sl1 = ALTI_SL1;
+    const vector unsigned int sr1 = ALTI_SR1;
 #ifdef ONLY64
-    const vector unsigned int mask = (vector unsigned int)
-    (MSK2, MSK1, MSK4, MSK3);
+    const vector unsigned int mask = ALTI_MSK64;
     const vector unsigned char perm_sl = ALTI_SL2_PERM64;
     const vector unsigned char perm_sr = ALTI_SR2_PERM64;
 #else
-    const vector unsigned int mask = (vector unsigned int)
-    (MSK1, MSK2, MSK3, MSK4);
+    const vector unsigned int mask = ALTI_MSK;
     const vector unsigned char perm_sl = ALTI_SL2_PERM;
     const vector unsigned char perm_sr = ALTI_SR2_PERM;
 #endif
@@ -101,7 +92,7 @@ inline static void gen_rand_all(void) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.  
  * @param size number of 128-bit pesudorandom numbers to be generated.
  */
-inline static void gen_rand_array(w128_t array[], int size) {
+inline static void gen_rand_array(w128_t *array, int size) {
     int i, j;
     vector unsigned int r, r1, r2;
 
@@ -146,7 +137,7 @@ inline static void gen_rand_array(w128_t array[], int size) {
  * @param array an 128-bit array to be swaped.
  * @param size size of 128-bit array.
  */
-inline static void swap(w128_t array[], int size) {
+inline static void swap(w128_t *array, int size) {
     int i;
     const vector unsigned char perm = (vector unsigned char)
 	(4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11);

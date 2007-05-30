@@ -12,9 +12,9 @@
  *   integer seed.
  * - void init_by_array() initializes the generator with an array of
  *   32-bit integers as the seeds.
- * - INLINE uint32_t gen_rand32() generates and returns a pseudorandom
+ * - uint32_t gen_rand32() generates and returns a pseudorandom
  *   32-bit unsigned integer.
- * - INLINE uint32_t gen_rand64() generates and returns a pseudorandom
+ * - uint32_t gen_rand64() generates and returns a pseudorandom
  *   64-bit unsigned integer.
  * - void fill_array32() fills the user-specified array with 32-bit
  *   pseudorandom integers.

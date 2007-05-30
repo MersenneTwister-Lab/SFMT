@@ -82,6 +82,8 @@
   #include "SFMT-params86243.h"
 #elif MEXP == 132049
   #include "SFMT-params132049.h"
+#elif MEXP == 216091
+  #include "SFMT-params216091.h"
 #else
 #ifdef __GNUC__
   #error "MEXP is not valid."

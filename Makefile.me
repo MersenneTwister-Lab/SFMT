@@ -14,6 +14,7 @@ FILES = SFMT.h \
 	SFMT-params44497.h \
 	SFMT-params86243.h \
 	SFMT-params132049.h \
+	SFMT-params216091.h \
 	SFMT.607.out.txt \
 	SFMT.1279.out.txt \
 	SFMT.2281.out.txt \
@@ -23,6 +24,7 @@ FILES = SFMT.h \
 	SFMT.44497.out.txt \
 	SFMT.86243.out.txt \
 	SFMT.132049.out.txt \
+	SFMT.216091.out.txt \
 	FILES.txt \
 	LICENSE.txt \
 	Makefile \
@@ -31,7 +33,8 @@ FILES = SFMT.h \
 	CHANGE-LOG.txt \
 	README.txt \
 	html
-VERSION = 1.2.1
+
+VERSION = 1.3
 DIR = SFMT-src-${VERSION}
 
 doc:
@@ -42,15 +45,20 @@ doc:
 .PHONY : tar.gz
 tar.gz: $(FILES)
 	mkdir ${DIR}
+	mkdir ${DIR}/params
 	cp -r ${FILES} ${DIR}
+	cp params/*.csv params/*.txt params/*.awk ${DIR}/params
 	tar czvf ${DIR}.tar.gz ${DIR}/*
 	rm -rf ${DIR}
 
 .PHONY : zip
 zip: $(FILES)
 	mkdir ${DIR}
+	mkdir ${DIR}/params
+	rm -f ${DIR}.zip
 	cp -r ${FILES} ${DIR}
-	zip ${DIR}.zip ${DIR}/* ${DIR}/html/*
+	cp params/*.csv params/*.txt params/*.awk ${DIR}/params
+	zip -r ${DIR}.zip ${DIR}/*
 	rm -rf ${DIR}
 
 clean:
