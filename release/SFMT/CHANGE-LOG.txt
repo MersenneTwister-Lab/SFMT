@@ -1,10 +1,15 @@
 ver 1.3
 -------
-change == in check.sh to =
+bug fixed: -DONLY64 without -DBIG_ENIAN64 had been generating
+wrong sequence.
+bug fixed: There is no documentation about BIG_ENDIAN64.
+add automatic endian check by __BIG_ENDIAN__ predefined macro.
+bug fixed: change == in check.sh to =
 add SFMT-params216091.h
-change AltiVec parameter format for systems which are not osx.
+add AltiVec parameter format for systems which are not osx.
+change Makefile for systems which are not osx and support AltiVec.
 change sample2 of howto-compile for Free BSD.
-change source files for BORLANDC and Visual Stadio.
+change source files for BORLANDC and Visual Studio.
 change period certification code more smart.
 add params directory.
 
