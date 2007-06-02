@@ -106,6 +106,9 @@ big-check: ${ALL_BIG_TARGET} ${ALL_STD_TARGET}
 altibig-check: ${ALL_ALTIBIG_TARGET} ${ALL_STD_TARGET}
 	./check.sh 64 test-alti64
 
+osx-altibig-check:
+	make "ALTIFLAGS=${OSXALTIFLAGS}" altibig-check
+
 test-std-M607: test.c SFMT.c SFMT.h SFMT-params607.h
 	${CC} ${CCFLAGS} -DMEXP=607 -o $@ test.c
 

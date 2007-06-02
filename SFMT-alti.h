@@ -130,6 +130,12 @@ inline static void gen_rand_array(w128_t *array, int size) {
 }
 
 #ifndef ONLY64
+#if defined(__APPLE__)
+#define ALTI_SWAP (vector unsigned char) \
+	(4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11)
+#else
+#define ALTI_SWAP {4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11}
+#endif
 /**
  * This function swaps high and low 32-bit of 64-bit integers in user
  * specified array.
@@ -139,8 +145,7 @@ inline static void gen_rand_array(w128_t *array, int size) {
  */
 inline static void swap(w128_t *array, int size) {
     int i;
-    const vector unsigned char perm = (vector unsigned char)
-	(4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11);
+    const vector unsigned char perm = ALTI_SWAP;
 
     for (i = 0; i < size; i++) {
 	array[i].s = vec_perm(array[i].s, (vector unsigned int)perm, perm);

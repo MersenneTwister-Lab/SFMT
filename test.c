@@ -16,10 +16,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if defined(__ppc__) && !defined(BIG_ENDIAN64)
-  #define BIG_ENDIAN64
-#endif
-
 #include "SFMT.c"
 
 #define BLOCK_SIZE 100000

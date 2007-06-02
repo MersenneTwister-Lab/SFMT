@@ -15,11 +15,25 @@
 #include "SFMT.h"
 #include "SFMT-params.h"
 
+#if defined(__BIG_ENDIAN__) && !defined(__amd64) && !defined(BIG_ENDIAN64)
+#define BIG_ENDIAN64 1
+#endif
+#if defined(HAVE_ALTIVEC) && !defined(BIG_ENDIAN64)
+#define BIG_ENDIAN64 1
+#endif
+#if defined(ONLY64) && !defined(BIG_ENDIAN64)
+  #if defined(__GNUC__)
+    #error "-DONLY64 must be specified with -DBIG_ENDIAN64"
+  #endif
+#undef ONLY64
+#endif
 /*------------------------------------------------------
   128-bit SIMD data type for Altivec, SSE2 or standard C
   ------------------------------------------------------*/
 #if defined(HAVE_ALTIVEC)
-
+  #if !defined(__APPLE__)
+    #include <altivec.h>
+  #endif
 /** 128-bit data structure */
 union W128_T {
     vector unsigned int s;

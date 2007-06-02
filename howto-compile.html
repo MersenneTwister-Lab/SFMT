@@ -116,6 +116,8 @@ diff -w foo.txt SFMT.19937.out.txt</pre>
       <pre>./test-alti-M19937 -s</pre>
     </blockquote>
     <p>shows much shorter time than <strong>test-std-M19937 -s</strong>.</p>
+    <p>If you are using a CPU which supports AltiVec under Linux, use 
+      <strong>alti</strong> instead of <strong>osx-alti</strong>.</p>
 
     <h4>1-4. Compile and check output automatically.</h4>
     <p>
@@ -124,6 +126,12 @@ diff -w foo.txt SFMT.19937.out.txt</pre>
     </p>
     <blockquote>
       <pre>make std-check</pre>
+    </blockquote>
+    <p>
+      To check test program optimized for 64bit output of big endian CPU, type
+    </p>
+    <blockquote>
+      <pre>make big-check</pre>
     </blockquote>
     <p>
       To check test program optimized for SSE2, type
@@ -136,6 +144,12 @@ diff -w foo.txt SFMT.19937.out.txt</pre>
     </p>
     <blockquote>
       <pre>make osx-alti-check</pre>
+    </blockquote>
+    <p>
+      To check test program optimized for OSX AltiVec and 64bit output, type
+    </p>
+    <blockquote>
+      <pre>make osx-altibig-check</pre>
     </blockquote>
     <p>
       These commands may take some time.
@@ -184,6 +198,11 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>gcc -DMEXP=607 -o sample1 SFMT.c sample1.c</pre>
     </blockquote>
+    <p>If your CPU is BIG ENDIAN you need to type</p>
+    <blockquote>
+      <pre>gcc -DMEXP=607 -DBIG_ENDIAN64 -o sample1 SFMT.c sample1.c</pre>
+    </blockquote>
+    <p>because genrand_res53() uses gen_rand64().</p>
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, type</p>
     <blockquote>
@@ -192,7 +211,7 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DHAVE_ALTIVEC -DMEXP=607 -o sample1 SFMT.c sample1.c</pre>
+      <pre>gcc -faltivec -DBIG_ENDIAN64 -DHAVE_ALTIVEC -DMEXP=607 -o sample1 SFMT.c sample1.c</pre>
     </blockquote>
 
     <h4>2-2. Use block call and static link.</h4>
@@ -228,7 +247,7 @@ int main(int argc, char* argv[]) {
 	size = R_SIZE;
     }
 #if defined(__APPLE__) || \
-    (defined(__FreeBSD__) &amp;&amp; __FreeBSD__ >= 3 &amp;&amp; __FreeBSD__ <= 6)
+    (defined(__FreeBSD__) &amp;&amp; __FreeBSD__ &gt;= 3 &amp;&amp; __FreeBSD__ &lt;= 6)
     printf("malloc used\n");
     array = malloc(sizeof(double) * size);
     if (array == NULL) {
@@ -279,6 +298,10 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>gcc -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
     </blockquote>
+    <p>or </p>
+    <blockquote>
+      <pre>gcc -DMEXP=2281 -DBIG_ENDIAN64 -o sample2 SFMT.c sample2.c</pre>
+    </blockquote>
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, type</p>
     <blockquote>
@@ -287,11 +310,11 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DHAVE_ALTIVEC -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DMEXP=2281 -DBIG_ENDIAN64 -o sample2 SFMT.c sample2.c</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -faltivec -DHAVE_ALTIVEC -DONLY64 -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DBIG_ENDIAN64 -DONLY64 -DMEXP=2281 -o sample2 SFMT.c sample2.c</pre>
     </blockquote>
     <p>The effect of the option -DONLY64 is:
       When -DONLY64 option is used, the executive file can generate 
@@ -339,6 +362,10 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>gcc -DMEXP=1279 -o sample3 sample3.c</pre>
     </blockquote>
+    <p> or </p>
+    <blockquote>
+      <pre>gcc -DMEXP=1279 -DBIG_ENDIAN64 -o sample3 sample3.c</pre>
+    </blockquote>
     <p>If your CPU supports SSE2 and you want to use optimized SFMT for
       SSE2, then type</p>
     <blockquote>
@@ -347,11 +374,11 @@ int main(int argc, char* argv[]) {
     <p>If your CPU supports AltiVec and you want to use optimized SFMT
       for AltiVec, type</p>
     <blockquote>
-      <pre>gcc -faltivec -DHAVE_ALTIVEC -DMEXP=1279 -o sample3 sample3.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DBIG_ENDIAN64 -DMEXP=1279 -o sample3 sample3.c</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
-      <pre>gcc -faltivec -DHAVE_ALTIVEC -DONLY64 -DMEXP=1279 -o sample3 sample3.c</pre>
+      <pre>gcc -faltivec -DHAVE_ALTIVEC -DBIG_ENDIAN64 -DONLY64 -DMEXP=1279 -o sample3 sample3.c</pre>
     </blockquote>
 
     <h4>2-4. Initialize SFMT using init_by_array function.</h4>
@@ -369,7 +396,7 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>
 #include &lt;stdio.h&gt;
-#include &lt;strings.h&gt;
+#include &lt;string.h&gt;
 #include "SFMT.h"
 
 int main(int argc, char* argv[]) {
@@ -407,9 +434,54 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>gcc -DMEXP=19937 -o sample4 SFMT.c sample4.c</pre>
     </blockquote>
+    <p>or</p>
+    <blockquote>
+      <pre>gcc -DMEXP=19937 -DBIG_ENDIAN64 -o sample4 SFMT.c sample4.c</pre>
+    </blockquote>
     <p>Now, seed can be a string. Like this:</p>
     <blockquote>
       <pre>./sample4 your-full-name</pre>
     </blockquote>
+    <h3>Appendix: C preprocessor definitions</h3>
+    <p>
+      Here is a list of C preprocessor definitions that users can 
+      specify to control code generation. These macros must be set
+      just after -D compiler option.
+    </p>
+    <dl>
+      <dt>MEXP</dt>
+      <dd>This macro is required. This macro means Mersenne exponent
+	and the period of generated code will be 2<sup>MEXP</sup>-1.
+	MEXP must be one of 607, 1279, 2281, 4253, 11213, 19937,
+	44497, 86243, 132049, 216091.
+      </dd>
+      <dt>HAVE_SSE2</dt>
+      <dd>This is optional. If this macro is specified, optimized code
+      for SSE2 will be generated.</dd>
+      <dt>HAVE_ALTIVEC</dt>
+      <dd>This is optional. If this macro is specified, optimized code
+      for AltiVec will be generated. This macro automatically turns on
+      BIG_ENDIAN64 macro.</dd>
+      <dt>BIG_ENDIAN64</dt>
+      <dd>This macro is required when your CPU is BIG ENDIAN and you
+      use 64-bit output. If __BIG_ENDIAN__ macro is defined, this macro
+      is automatically turned on. GCC defines __BIG_ENDIAN__ macro on 
+      BIG ENDIAN CPUs.</dd>
+      <dt>ONLY64</dt>
+      <dd>This macro is optional. If this macro is specified,
+      optimized code for 64-bit output for BIG ENDIAN CPUs will be
+      generated and code for 32-bit output won't be
+      generated. BIG_ENDIAN64 macro must be specified with this macro
+      by user or automatically.</dd>
+    </dl>
+    <table border="1" align="center">
+      <tr><td></td><td>32-bit output</td><td>LITTLE ENDIAN 64-bit output</td>
+	<td>BIG ENDIAN 64-bit output</td></tr>
+      <tr><td>required</td><td>MEXP</td><td>MEXP</td><td>MEXP, 
+	  <strong>BIG_ENDIAN64</strong></td></tr>
+      <tr><td>optional</td><td>HAVE_SSE2,
+      HAVE_ALTIVEC</td><td>HAVE_SSE2</td><td>HAVE_ALTIVEC, ONLY64</td>
+      </tr>
+    </table>
   </body>
 </html>
