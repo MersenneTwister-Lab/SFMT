@@ -50,6 +50,10 @@ param-searchDY4-607: search.o sfmtDY4-st.o mt19937blk.o util.o dsfmt-util.o
 	${CPP} -o $@ search.o sfmtDY4-st.o mt19937blk.o util.o dsfmt-util.o \
 		${LINKOPT}
 
+param-searchDZ1-607: searchL2.o sfmtDZ1-st.o mt19937blk.o util.o dsfmtL2-util.o 
+	${CPP} -o $@ searchL2.o sfmtDZ1-st.o mt19937blk.o util.o \
+		dsfmtL2-util.o ${LINKOPT}
+
 param-searchD11-1279: search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o 
 	${CPP} -o $@ search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o \
 		${LINKOPT}
@@ -57,6 +61,26 @@ param-searchD11-1279: search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o
 shortest-baseD11-607: chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
 			dsfmt-util.o mt19937blk.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
+			dsfmt-util.o mt19937blk.o ${LINKOPT}
+
+shortest-baseDY1-607: chk-shortest.o shortbase128.o sfmtDY1-st.o util.o \
+			dsfmt-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtDY1-st.o util.o \
+			dsfmt-util.o mt19937blk.o ${LINKOPT}
+
+shortest-baseDY2-607: chk-shortest.o shortbase128.o sfmtDY2-st.o util.o \
+			dsfmt-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtDY2-st.o util.o \
+			dsfmt-util.o mt19937blk.o ${LINKOPT}
+
+shortest-baseDY3-607: chk-shortest.o shortbase128.o sfmtDY3-st.o util.o \
+			dsfmt-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtDY3-st.o util.o \
+			dsfmt-util.o mt19937blk.o ${LINKOPT}
+
+shortest-baseDY4-607: chk-shortest.o shortbase128.o sfmtDY4-st.o util.o \
+			dsfmt-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtDY4-st.o util.o \
 			dsfmt-util.o mt19937blk.o ${LINKOPT}
 
 searchD11-parity607: search-parity-vector.o sfmtD11-st.o util.o

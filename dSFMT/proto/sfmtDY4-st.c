@@ -14,7 +14,6 @@
 static unsigned int SL1 = 11;
 static unsigned int SL2 = 11;
 static unsigned int SR1 = 7;
-static unsigned int SR2 = 7;
 static uint64_t MSK1 = 7;
 static uint64_t MSK2 = 7;
 
@@ -247,8 +246,6 @@ void read_random_param(FILE *f) {
     SL2 = get_uint(line, 10);
     fgets(line, 256, f);
     SR1 = get_uint(line, 10);
-    fgets(line, 256, f);
-    SR2 = get_uint(line, 10);
     fgets(line, 256, f);
     MSK1 = get_uint64(line, 16);
     fgets(line, 256, f);

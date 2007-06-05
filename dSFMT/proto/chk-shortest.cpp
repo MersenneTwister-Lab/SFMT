@@ -288,6 +288,14 @@ void test_shortest(char *filename) {
     vec.SetLength(2 * maxdegree);
     generating_polynomial104(&sfmt, vec, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
+#if 1
+    DivRem(tmp, rempoly, lcmpoly, poly);
+    if (deg(rempoly) != -1) {
+	printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
+    } else {
+	printf("divide OK\n");
+    }
+#endif
 #if 0
     if (check_minpoly128(&sfmt, lcmpoly, 0)) {
 	printf("check minpoly OK!\n");

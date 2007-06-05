@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
-#include "dsfmt-st.h"
+#include "dsfmtL2-st.h"
 
 #define LOW_MASK  ((uint64_t)0x000FFFFFFFFFFFFFULL)
 //#define HIGH_CONST ((uint64_t)0xBFF0000000000000ULL)
@@ -19,6 +19,9 @@ static uint64_t MSK2 = 7;
 
 static unsigned int get_uint(char *line, int radix);
 static uint64_t get_uint64(char *line, int radix);
+inline static void do_recursion(uint64_t a[2], uint64_t b[2],
+				uint64_t l1[2], uint64_t l2[2])
+    __attribute__((always_inline));
 
 unsigned int get_rnd_maxdegree(void)
 {
@@ -31,7 +34,6 @@ unsigned int get_rnd_mexp(void)
 }
 
 void setup_param(uint32_t array[], int *index) {
-    //SL1 = (array[(*index)++] % 6 + 1) * 8; /* 128 bit */
     SL1 = array[(*index)++] % 51 + 1; 
     SL2 = array[(*index)++] % 51 + 1; 
     SR1 = array[(*index)++] % 51 + 1;
@@ -60,36 +62,21 @@ void print_param(FILE *fp) {
     fflush(fp);
 }
 
-inline static void rshift128(uint64_t out[2], const uint64_t in[2],
-			     int shift) {
-    out[1] = in[1] >> shift;
-    out[0] = in[0] >> shift;
-    out[0] |= in[1] << (64 - shift);
-}
-
-inline static void lshift128(uint64_t out[2], const uint64_t in[2],
-			     int shift) {
-    out[1] = in[1] << shift;
-    out[0] = in[0] << shift;
-    out[1] |= in[0] >> (64 - shift);
-}
-
 inline static void do_recursion(uint64_t a[2], uint64_t b[2],
-				uint64_t lung[2]) {
+				uint64_t l1[2], uint64_t l2[2]) {
     uint64_t r0, r1;
 
-    r0 = a[1] ^ (a[0] << SL1)
-	^ ((b[0] >> SR1) & MSK1)
-	^ (lung[0] << SL2) ^ lung[0];
-    r1 = a[0] ^ (a[1] << SL1)
-	^ ((b[1] >> SR1) & MSK2)
-	^ (lung[1] << SL2) ^ lung[1];
-    r0 = r0 & LOW_MASK;
-    r1 = r1 & LOW_MASK; 
-    lung[0] ^= r0;
-    lung[1] ^= r1;
-    a[0] = r0 | HIGH_CONST;
-    a[1] = r1 | HIGH_CONST;
+    l2[0] = l2[0] ^ l1[0];
+    l2[1] = l2[1] ^ l1[1];
+    l2[0] = l2[0] << SL2;
+    l2[1] = l2[1] << SL2;
+
+    r0 = a[1] ^ (a[0] << SL1) ^ ((b[0] >> SR1) & MSK1) ^ l2[0] ^ l1[0];
+    r1 = a[0] ^ (a[1] << SL1) ^ ((b[1] >> SR1) & MSK2) ^ l2[1] ^ l1[1];
+    l1[0] ^= r0;
+    l1[1] ^= r1;
+    a[0] = (r0 & LOW_MASK) | HIGH_CONST;
+    a[1] = (r1 & LOW_MASK) | HIGH_CONST;
 }
 
 /*
@@ -103,7 +90,7 @@ inline static void next_state(dsfmt_t *dsfmt) {
     }
     i = dsfmt->idx / 2;
     do_recursion(dsfmt->status[i], dsfmt->status[(i + N - 1) % N],
-		 dsfmt->status[N]);
+		 dsfmt->status[N], dsfmt->status[N + 1]);
 }
 
 /* これは初期状態を出力する */
@@ -113,7 +100,7 @@ uint64_t gen_rand104sp(dsfmt_t *dsfmt, uint64_t array[2], int mode)
 
     i = dsfmt->idx / 2;
     p = dsfmt->idx + 2;
-    if (p >= N * 2) {
+    if (p >= (N - 1) * 2) {
 	p = 0;
     }
     p = p / 2;
@@ -130,7 +117,7 @@ uint64_t gen_rand104sp(dsfmt_t *dsfmt, uint64_t array[2], int mode)
 
     next_state(dsfmt);
     dsfmt->idx += 2;
-    if (dsfmt->idx >= N * 2) {
+    if (dsfmt->idx >= (N - 1) * 2) {
 	dsfmt->idx = 0;
     }
     return array[0];
@@ -147,7 +134,7 @@ void gen_rand104spar(dsfmt_t *dsfmt, uint64_t array[][2], int size) {
 
 	next_state(dsfmt);
 	dsfmt->idx += 2;
-	if (dsfmt->idx >= N * 2) {
+	if (dsfmt->idx >= (N - 1) * 2) {
 	    dsfmt->idx = 0;
 	}
     }
@@ -160,10 +147,14 @@ void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed)
 
     psfmt = dsfmt->status[0];
     psfmt[0] = (seed & LOW_MASK) | HIGH_CONST;
-    for (i = 1; i <= N * 2; i++) {
+    for (i = 1; i < N * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
 	psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
+    }
+    for (i = N * 2; i < (N + 2) * 2; i++) {
+	psfmt[i] = 6364136223846793005ULL 
+	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
     }
     dsfmt->idx = 0;
 }
@@ -181,6 +172,8 @@ void add_rnd(dsfmt_t *dist, dsfmt_t *src) {
     }
     dist->status[N][0] ^= src->status[N][0];
     dist->status[N][1] ^= src->status[N][1];
+    dist->status[N + 1][0] ^= src->status[N + 1][0];
+    dist->status[N + 1][1] ^= src->status[N + 1][1];
 }
 
 void get_lung(dsfmt_t *dsfmt, uint64_t lung[2]) {
