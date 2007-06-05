@@ -130,7 +130,7 @@ void test_d32(void) {
     uint64_t sum;
     uint64_t min;
     uint32_t *array = (uint32_t *)dummy;
-    double array2[NUM_RANDS];
+    double array2[NUM_RANDS], dsum = 0;
 
     init_gen_rand(1234);
     min = LONG_MAX;
@@ -149,8 +149,12 @@ void test_d32(void) {
 	    min = clo;
 	}
     }
+    for (i = 0; i < NUM_RANDS; i++) {
+	dsum += array2[i];
+    }
     printf("32bit BLOCK [0, 1) AVE:%4"PRIu64"ms.\n",
 	   (sum * 100) / CLOCKS_PER_SEC);
+    printf("sum = %f\n", dsum);
 }
 
 void test_d64(void) {
@@ -159,7 +163,7 @@ void test_d64(void) {
     uint64_t sum;
     uint64_t min;
     uint32_t *array = (uint32_t *)dummy;
-    double array2[NUM_RANDS];
+    double array2[NUM_RANDS], dsum = 0;
 
     init_gen_rand(1234);
     min = LONG_MAX;
@@ -179,8 +183,12 @@ void test_d64(void) {
 	    min = clo;
 	}
     }
+    for (i = 0; i < NUM_RANDS; i++) {
+	dsum += array2[i];
+    }
     printf("64bit BLOCK [0, 1) AVE:%4"PRIu64"ms.\n",
 	   (sum * 100) / CLOCKS_PER_SEC);
+    printf("sum = %f\n", dsum);
 }
 
 void test_seq_d32(void) {

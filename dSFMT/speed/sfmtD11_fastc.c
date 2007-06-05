@@ -70,10 +70,12 @@ INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 	^ (c->a[0] << SL1) ^ lung->a[1];
     r->a[1] = a->a[1] ^ x.a[1] ^ ((b->a[1] >> SR1) & MSK2) ^ (c->a[1] >> SR2)
 	^ (c->a[1] << SL1) ^ lung->a[0];
-    r->a[0] = (r->a[0] & LOW_MASK) | HIGH_CONST;
-    r->a[1] = (r->a[1] & LOW_MASK) | HIGH_CONST;
+    r->a[0] = r->a[0] & LOW_MASK;
+    r->a[1] = r->a[1] & LOW_MASK;
     lung->a[0] ^= r->a[0];
     lung->a[1] ^= r->a[1];
+    r->a[0] = r->a[0] | HIGH_CONST;
+    r->a[1] = r->a[1] | HIGH_CONST;
 }
 
 INLINE static void convert_co(w128_t array[], int size) {

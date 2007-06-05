@@ -101,7 +101,6 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
     const vector unsigned char sr2_perm = SR2_PERM;
     const vector unsigned char perm = ALTI_PERM;
     const vector unsigned int low_mask = ALTI_LOW_MSK;
-    const vector unsigned int high_const = ALTI_HIGH_CONST;
 
     x = vec_perm(a, (vector unsigned int)sl2_perm, sl2_perm);
     y = vec_srl(b, sr1);
@@ -117,25 +116,28 @@ INLINE static vector unsigned int vec_recursion(vector unsigned int a,
     r = vec_xor(s, t);
     r = vec_xor(r, u);
     r = vec_and(r, low_mask);
-    r = vec_or(r, high_const);
+    /* r = vec_or(r, high_const); */
     return r;
 }
 
 INLINE static void gen_rand_all(void) {
     int i;
     vector unsigned int r, lung;
+    const vector unsigned int high_const = ALTI_HIGH_CONST;
 
     lung = sfmt[N].s;
     r = sfmt[N - 1].s;
     for (i = 0; i < N - POS1; i++) {
 	r = vec_recursion(sfmt[i].s, sfmt[i + POS1].s, r, lung);
-	sfmt[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	sfmt[i].s = r;
     }
     for (; i < N; i++) {
 	r = vec_recursion(sfmt[i].s, sfmt[i + POS1 - N].s, r, lung);
-	sfmt[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	sfmt[i].s = r;
     }
     sfmt[N].s = lung;
 }
@@ -144,33 +146,38 @@ static void gen_rand_array(w128_t array[], int size)
 {
     int i, j;
     vector unsigned int r, lung;
+    const vector unsigned int high_const = ALTI_HIGH_CONST;
 
     /* read from sfmt */
     lung = sfmt[N].s;
     r = sfmt[N - 1].s;
     for (i = 0; i < N - POS1; i++) {
 	r = vec_recursion(sfmt[i].s, sfmt[i + POS1].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
     }
     for (; i < N; i++) {
 	r = vec_recursion(sfmt[i].s, array[i + POS1 - N].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
     }
     /* main loop */
     for (; i < size - N; i++) {
 	r = vec_recursion(array[i - N].s, array[i + POS1 - N].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
     }
     for (j = 0; j < 2 * N - size; j++) {
 	sfmt[j].s = array[j + size - N].s;
     }
     for (; i < size; i++) {
 	r = vec_recursion(array[i - N].s, array[i + POS1 - N].s, r, lung);
-	array[i].s = r;
 	lung = vec_xor(lung, r);
+	r = vec_or(r, high_const);
+	array[i].s = r;
 	sfmt[j++].s = r;
     }
     sfmt[N].s = lung;

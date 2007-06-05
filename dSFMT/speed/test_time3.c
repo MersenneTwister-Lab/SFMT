@@ -176,6 +176,7 @@ void test_co(void) {
     uint64_t sum;
     uint64_t min;
     double *array = (double *)dummy;
+    double dsum = 0;
 
     init_gen_rand(1234);
     min = LONG_MAX;
@@ -192,6 +193,10 @@ void test_co(void) {
 	}
     }
     printf("BLOCK [0, 1) AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    for (i = 0; i < NUM_RANDS; i++) {
+	dsum += array[i];
+    }
+    printf("dsum = %f\n", dsum);
 }
 
 void test_oc(void) {
@@ -200,6 +205,7 @@ void test_oc(void) {
     uint64_t sum;
     uint64_t min;
     double *array = (double *)dummy;
+    double dsum = 0;
 
     init_gen_rand(1234);
     min = LONG_MAX;
@@ -216,6 +222,10 @@ void test_oc(void) {
 	}
     }
     printf("BLOCK (0, 1] AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    for (i = 0; i < NUM_RANDS; i++) {
+	dsum += array[i];
+    }
+    printf("dsum = %f\n", dsum);
 }
 
 void test_oo(void) {
@@ -224,6 +234,7 @@ void test_oo(void) {
     uint64_t sum;
     uint64_t min;
     double *array = (double *)dummy;
+    double dsum = 0;
 
     init_gen_rand(1234);
     min = LONG_MAX;
@@ -240,6 +251,10 @@ void test_oo(void) {
 	}
     }
     printf("BLOCK (0, 1) AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    for (i = 0; i < NUM_RANDS; i++) {
+	dsum += array[i];
+    }
+    printf("dsum = %f\n", dsum);
 }
 
 void test_12(void) {
@@ -248,6 +263,7 @@ void test_12(void) {
     uint64_t sum;
     uint64_t min;
     double *array = (double *)dummy;
+    double dsum = 0;
 
     init_gen_rand(1234);
     min = LONG_MAX;
@@ -264,6 +280,10 @@ void test_12(void) {
 	}
     }
     printf("BLOCK [1, 2) AVE:%4"PRIu64"ms.\n",  (sum * 100) / CLOCKS_PER_SEC);
+    for (i = 0; i < NUM_RANDS; i++) {
+	dsum += array[i];
+    }
+    printf("dsum = %f\n", dsum);
 }
 
 void test_seq_co(void) {
