@@ -1,3 +1,9 @@
+ver 1.1.1
+-------
+BUG in dSFMT-sse2.h is fixed.
+This bug didn't change the result.
+Change test.c
+
 ver 1.1
 -------
 add dSFMT-params132049.h

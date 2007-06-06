@@ -9,11 +9,8 @@
 #define TIC_MAG 1
 #define TIC_COUNT 2000
 
-#ifdef __ppc__
 w128_t dummy[NUM_RANDS / 2 + 1];
-#else
-w128_t dummy[NUM_RANDS / 2 + 1];
-#endif
+
 #ifdef __GNUC__
 void check_co(void) __attribute__((noinline));
 void check_oc(void) __attribute__((noinline));
@@ -48,24 +45,43 @@ void check_co(void) {
 	uint64_t u;
 	double d;
     };
+    w128_t little[SFMT_N+1];
     union W64_T *array = (union W64_T *)dummy;
+    union W64_T *plittle = (union W64_T *)little;
     union W64_T r;
+    int lsize = SFMT_N * 2 + 2;
 
     printf("generated randoms [0,1)\n");
     init_gen_rand(1234);
+    fill_array_close_open(&plittle[0].d, lsize);
     fill_array_close_open(&array[0].d, 5000);
     init_gen_rand(1234);
+    for (i = 0; i < lsize; i++) {
+	r.d = genrand_close_open();
+	if (r.d != plittle[i].d) {
+	    printf("\n[0,1) mismatch i = %d: r = %1.20lf(%016"PRIx64"), "
+		   "plittle = %1.20lf(%016"PRIx64")\n", i, r.d, r.u,
+		   plittle[i].d, plittle[i].u);
+	    exit(1);
+	}
+	if (i < 1000) {
+	    printf("%1.20lf ", plittle[i].d);
+	    if (i % 3 == 2) {
+		printf("\n");
+	    }
+	}
+    }
     for (i = 0; i < 5000; i++) {
 	r.d = genrand_close_open();
 	if (r.d != array[i].d) {
 	    printf("\n[0,1) mismatch i = %d: r = %1.20lf(%016"PRIx64"), "
-		   "array = %1.20lf(%016"PRIx64")\n", i, r.d, r.u,
+		   "array = %1.20lf(%016"PRIx64")\n", i + lsize, r.d, r.u,
 		   array[i].d, array[i].u);
 	    exit(1);
 	}
-	if (i < 1000) {
+	if (i + lsize < 1000) {
 	    printf("%1.20lf ", array[i].d);
-	    if (i % 3 == 2) {
+	    if ((i + lsize) % 3 == 2) {
 		printf("\n");
 	    }
 	}
@@ -141,24 +157,43 @@ void check_12(void) {
 	uint64_t u;
 	double d;
     };
+    w128_t little[SFMT_N+1];
     union W64_T *array = (union W64_T *)dummy;
+    union W64_T *plittle = (union W64_T *)little;
     union W64_T r;
+    int lsize = SFMT_N * 2 + 2;
 
     printf("generated randoms [1, 2)\n");
     init_gen_rand(1234);
+    fill_array_close1_open2(&plittle[0].d, lsize);
     fill_array_close1_open2(&array[0].d, 5000);
     init_gen_rand(1234);
+    for (i = 0; i < lsize; i++) {
+	r.d = genrand_close1_open2();
+	if (r.d != plittle[i].d) {
+	    printf("\n[1, 2) mismatch i = %d: r = %1.20lf(%016"PRIx64"), "
+		   "plittle = %1.20lf(%016"PRIx64")\n", i, r.d, r.u,
+		   plittle[i].d, plittle[i].u);
+	    exit(1);
+	}
+	if (i < 1000) {
+	    printf("%1.20lf ", plittle[i].d);
+	    if (i % 3 == 2) {
+		printf("\n");
+	    }
+	}
+    }
     for (i = 0; i < 5000; i++) {
 	r.d = genrand_close1_open2();
 	if (r.d != array[i].d) {
 	    printf("\n[1, 2) mismatch i = %d: r = %1.20lf(%016"PRIx64"), "
-		   "array = %1.20lf(%016"PRIx64")\n", i, r.d, r.u,
+		   "array = %1.20lf(%016"PRIx64")\n", i + lsize, r.d, r.u,
 		   array[i].d, array[i].u);
 	    exit(1);
 	}
-	if (i < 1000) {
+	if (i + lsize < 1000) {
 	    printf("%1.20lf ", array[i].d);
-	    if (i % 3 == 2) {
+	    if ((i + lsize) % 3 == 2) {
 		printf("\n");
 	    }
 	}
