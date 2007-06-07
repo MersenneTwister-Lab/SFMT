@@ -5,8 +5,8 @@
 INLINE void init_gen_rand(uint64_t seed);
 INLINE double gen_rand(void);
 INLINE double genrand_close1_open2(void);
-INLINE double genrand_open_close(void);
-INLINE double genrand_close_open(void);
+INLINE static double genrand_open_close(void);
+INLINE static double genrand_close_open(void);
 INLINE double genrand_open_open(void);
 INLINE void fill_array_open_close(double array[], int size);
 INLINE void fill_array_close_open(double array[], int size);

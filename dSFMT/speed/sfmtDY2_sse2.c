@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <emmintrin.h>
 #include "random.h"
-#include "paramsDY1.h"
+#include "paramsDY2.h"
 
 union W128_T {
     __m128i si;
@@ -71,11 +71,11 @@ INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
 INLINE static __m128i mm_recursion(__m128i *a, __m128i b, __m128i u) {
-    __m128i x, y;
+    __m128i x, y, z;
     
     x = _mm_load_si128(a);
     y = _mm_shuffle_epi32(x, SSE2_SHUFF);
-    x = _mm_slli_si128(x, (SL1 / 8));
+    x = _mm_slli_epi64(x, SL1);
     x = _mm_xor_si128(x, y);
 
     y = _mm_srli_epi64(b, SR1);

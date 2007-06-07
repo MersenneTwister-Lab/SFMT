@@ -59,6 +59,9 @@ sfmtD11_sse2: sfmtD11_sse2.c test_time3.c  paramsD11.h
 sfmtDY1_sse2: sfmtDY1_sse2.c test_time3.c  paramsDY1.h
 	${CC} ${CCFLAGS} -o $@ sfmtDY1_sse2.c
 
+sfmtDYZ_sse2: sfmtDZ1_sse2.c test_time3.c  paramsDZ1.h
+	${CC} ${CCFLAGS} -o $@ sfmtDZ1_sse2.c
+
 sfmtP37_sse2: sfmtP37_sse2.c test_time.c
 	${CC} ${CCFLAGS} -o $@ sfmtP37_sse2.c
 

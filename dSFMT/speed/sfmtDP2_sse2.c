@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <emmintrin.h>
 #include "random.h"
-#include "paramsDY1.h"
+#include "paramsDY2.h"
 
 union W128_T {
     __m128i si;
@@ -39,7 +39,6 @@ static int idx;
 
 static __m128i sse2_param_mask;
 static __m128i sse2_low_mask;
-static __m128i sse2_high_const;
 static __m128i sse2_int_one;
 static __m128d sse2_double_two;
 static __m128d sse2_double_m_one;
@@ -53,7 +52,6 @@ static void setup_const(void) {
     sse2_low_mask = _mm_set_epi32(LOW_MASK32_1, LOW_MASK32_2,
 				  LOW_MASK32_1, LOW_MASK32_2);
     sse2_int_one = _mm_set_epi32(0, 1, 0, 1);
-    sse2_high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
     sse2_double_two = _mm_set_pd(2.0, 2.0);
     sse2_double_m_one = _mm_set_pd(-1.0, -1.0);
     first = false;
@@ -70,25 +68,27 @@ INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
-INLINE static __m128i mm_recursion(__m128i *a, __m128i b, __m128i u) {
+INLINE static __m128i recur_body(__m128i *a, __m128i r, __m128i u) {
     __m128i x, y;
     
     x = _mm_load_si128(a);
     y = _mm_shuffle_epi32(x, SSE2_SHUFF);
-    x = _mm_slli_si128(x, (SL1 / 8));
-    x = _mm_xor_si128(x, y);
+    x = _mm_slli_epi64(x, SL1);
+    x = _mm_xor_si128(x, u);
 
-    y = _mm_srli_epi64(b, SR1);
-    y = _mm_and_si128(y, sse2_param_mask);
-    x = _mm_xor_si128(x, b);
+    r = _mm_srli_epi64(r, SR1);
+    r = _mm_and_si128(r, sse2_param_mask);
+    r = _mm_xor_si128(r, x);
 
-    y = _mm_slli_epi64(u, SL2);
-    x = _mm_xor_si128(x, y);
-    y = _mm_srli_epi64(u, SR2);
-    x = _mm_xor_si128(x, y);
+    r = _mm_and_si128(r, sse2_low_mask);
+    r = _mm_xor_si128(r, y);
+    return r;
+}
 
-    x = _mm_and_si128(x, sse2_low_mask);
-    return x;
+INLINE static __m128i recur_lung(__m128i r, __m128i u) {
+    r = _mm_xor_si128(r, u);
+    r = _mm_slli_epi64(r, SL2);
+    return u;
 }
 
 INLINE static void convert_oc(w128_t array[], int size) {
@@ -117,36 +117,36 @@ INLINE static void convert_oo(w128_t array[], int size) {
 
 INLINE static void gen_rand_all(void) {
     int i;
-    __m128i r, lung;
+    __m128i r, u, t;
 
-    lung = _mm_load_si128(&sfmt[N].si);
+    u = _mm_load_si128(&sfmt[N].si);
     r = _mm_load_si128(&sfmt[N - 1].si);
     for (i = 0; i < N; i++) {
-	r = mm_recursion(&sfmt[i].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
+	t = recur_lung(r, u);
+	r = recur_body(&sfmt[i].si, r, u);
+	u = _mm_xor_si128(u, t);
 	_mm_store_si128(&sfmt[i].si, r);
     }
-    _mm_store_si128(&sfmt[N].si, lung);
+    _mm_store_si128(&sfmt[N].si, u);
 }
 
 INLINE static void gen_rand_array(w128_t array[], int size) {
     int i, j;
-    __m128i r, lung;
+    __m128i r, u, t;
 
-    lung = _mm_load_si128(&sfmt[N].si);
+    u = _mm_load_si128(&sfmt[N].si);
     r = _mm_load_si128(&sfmt[N - 1].si);
     for (i = 0; i < N; i++) {
-	r = mm_recursion(&sfmt[i].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
+	t = recur_lung(r, u);
+	r = recur_body(&sfmt[i].si, r, u);
+	u = _mm_xor_si128(u, t);
 	_mm_store_si128(&array[i].si, r);
     }
     /* main loop */
     for (; i < size - N; i++) {
-	r = mm_recursion(&array[i - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
+	t = recur_lung(r, u);
+	r = recur_body(&array[i - N].si, r, u);
+	u = _mm_xor_si128(u, t);
 	_mm_store_si128(&array[i].si, r);
     }
     for (j = 0; j < 2 * N - size; j++) {
@@ -154,13 +154,13 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
 	_mm_store_si128(&sfmt[j].si, r);
     }    
     for (; i < size; i++, j++) {
-	r = mm_recursion(&array[i - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
+	t = recur_lung(r, u);
+	r = recur_body(&array[i - N].si, r, u);
+	u = _mm_xor_si128(u, r);
 	_mm_store_si128(&array[i].si, r);
 	_mm_store_si128(&sfmt[j].si, r);
     }
-    _mm_store_si128(&sfmt[N].si, lung);
+    _mm_store_si128(&sfmt[N].si, u);
 }
 
 INLINE double genrand_close1_open2(void) {
