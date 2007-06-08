@@ -46,32 +46,40 @@ param-searchDY3-607: search.o sfmtDY3-st.o mt19937blk.o util.o dsfmt-util.o
 	${CPP} -o $@ search.o sfmtDY3-st.o mt19937blk.o util.o dsfmt-util.o \
 		${LINKOPT}
 
-param-searchDY4-607: search.o sfmtDY4-st.o mt19937blk.o util.o dsfmt-util.o 
-	${CPP} -o $@ search.o sfmtDY4-st.o mt19937blk.o util.o dsfmt-util.o \
+param-searchDY4-607: searchL.o sfmtDY4-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDY4-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDY5-607: searchL.o sfmtDY5-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDY5-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDY6-607: searchL.o sfmtDY6-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDY6-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDY7-607: searchL.o sfmtDY7-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDY7-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
 param-searchDZ1-607: searchL2.o sfmtDZ1-st.o mt19937blk.o util.o dsfmtL2-util.o 
 	${CPP} -o $@ searchL2.o sfmtDZ1-st.o mt19937blk.o util.o \
 		dsfmtL2-util.o ${LINKOPT}
 
-param-searchDP1-607: search.o sfmtDP1-st.o mt19937blk.o util.o dsfmt-util.o 
-	${CPP} -o $@ search.o sfmtDP1-st.o mt19937blk.o util.o dsfmt-util.o \
+param-searchDP1-607: searchL.o sfmtDP1-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP1-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
-param-searchDP2-607: search.o sfmtDP2-st.o mt19937blk.o util.o dsfmt-util.o 
-	${CPP} -o $@ search.o sfmtDP2-st.o mt19937blk.o util.o dsfmt-util.o \
+param-searchDP2-607: searchL.o sfmtDP2-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP2-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
-param-searchDP3-607: search.o sfmtDP3-st.o mt19937blk.o util.o dsfmt-util.o 
-	${CPP} -o $@ search.o sfmtDP3-st.o mt19937blk.o util.o dsfmt-util.o \
+param-searchDP3-607: searchL.o sfmtDP3-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP3-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
-param-searchDP4-607: search.o sfmtDP4-st.o mt19937blk.o util.o dsfmt-util.o 
-	${CPP} -o $@ search.o sfmtDP4-st.o mt19937blk.o util.o dsfmt-util.o \
-		${LINKOPT}
-
-param-searchDP5-607: search.o sfmtDP5-st.o mt19937blk.o util.o dsfmt-util.o 
-	${CPP} -o $@ search.o sfmtDP5-st.o mt19937blk.o util.o dsfmt-util.o \
+param-searchDP6-607: searchL.o sfmtDP6-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP6-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
 param-searchD11-1279: search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o 

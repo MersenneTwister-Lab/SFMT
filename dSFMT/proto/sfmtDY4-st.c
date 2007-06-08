@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
-#include "dsfmt-st.h"
+#include "dsfmtL-st.h"
 
-#define LOW_MASK  ((uint64_t)0x000FFFFFFFFFFFFFULL)
-//#define HIGH_CONST ((uint64_t)0xBFF0000000000000ULL)
-#define HIGH_CONST ((uint64_t)0x0000000000000ULL)
+static uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
+//static uint64_t HIGH_CONST = 0x3FF0000000000000ULL;
+static uint64_t HIGH_CONST = 0x0000000000000000ULL;
 
 static unsigned int SL1 = 11;
 static unsigned int SL2 = 11;
@@ -252,3 +252,32 @@ void read_random_param(FILE *f) {
     MSK2 = get_uint64(line, 16);
 }
 
+#if defined(MAIN)
+int main(void) {
+    int i;
+    dsfmt_t dsfmt;
+    union {
+	uint64_t u;
+	double d;
+    } un;
+
+    LOW_MASK =   0x000FFFFFFFFFFFFFULL;
+    HIGH_CONST = 0x3ff0000000000000ULL;
+    init_gen_rand(&dsfmt, 1234);
+    printf("generated randoms [1, 2)\n");
+    for (i = 0; i < 1000; i++) {
+	if (i % 2 == 0) {
+	    next_state(&dsfmt);
+	}
+	un.u = dsfmt.status[dsfmt.idx / 2][dsfmt.idx % 2];
+	dsfmt.idx++;
+	printf("%1.20lf ", un.d);
+	//printf("%016"PRIx64" ", un.u);
+	if (i % 3 == 2) {
+	    printf("\n");
+	}
+    }
+    printf("\n");
+    return 0;
+}
+#endif

@@ -5,17 +5,16 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
-#include "dsfmt-st.h"
+#include "dsfmtL-st.h"
 
-#define LOW_MASK  ((uint64_t)0x000FFFFFFFFFFFFFULL)
-//#define HIGH_CONST ((uint64_t)0xBFF0000000000000ULL)
-#define HIGH_CONST ((uint64_t)0x0000000000000ULL)
+static uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
+static uint64_t HIGH_CONST = 0x0000000000000ULL;
 
-static unsigned int SL1 = 11;
-static unsigned int SL2 = 11;
-static unsigned int SR1 = 7;
-static uint64_t MSK1 = 7;
-static uint64_t MSK2 = 7;
+static unsigned int SL1 = 31;
+static unsigned int SL2 = 1;
+static unsigned int SR1 = 13;
+static uint64_t MSK1 = 0xedfffffbfffbffbdULL;
+static uint64_t MSK2 = 0xaefeffd36dfdffdfULL;
 
 static unsigned int get_uint(char *line, int radix);
 static uint64_t get_uint64(char *line, int radix);
@@ -33,7 +32,7 @@ unsigned int get_rnd_mexp(void)
 void setup_param(uint32_t array[], int *index) {
     //SL1 = (array[(*index)++] % 6 + 1) * 8; /* 128 bit */
     SL1 = array[(*index)++] % 51 + 1; 
-    SL2 = array[(*index)++] % 31 + 1; 
+    SL2 = array[(*index)++] % 51 + 1; 
     SR1 = array[(*index)++] % 51 + 1;
     MSK1 = array[(*index)++];
     MSK1 |= array[(*index)++];
@@ -60,33 +59,36 @@ void print_param(FILE *fp) {
     fflush(fp);
 }
 
-inline static void recur_body(uint64_t x[2], uint64_t a[2], uint64_t r[2],
-			    uint64_t lung[2]) {
+inline static void rshift128(uint64_t out[2], const uint64_t in[2],
+			     int shift) {
+    out[1] = in[1] >> shift;
+    out[0] = in[0] >> shift;
+    out[0] |= in[1] << (64 - shift);
+}
+
+inline static void lshift128(uint64_t out[2], const uint64_t in[2],
+			     int shift) {
+    out[1] = in[1] << shift;
+    out[0] = in[0] << shift;
+    out[1] |= in[0] >> (64 - shift);
+}
+
+inline static void do_recursion(uint64_t a[2], uint64_t b[2],
+				uint64_t lung[2]) {
     uint64_t r0, r1;
 
-    r0 = (a[0] << SL1) ^ (r[0] & MSK1) ^ (lung[0] >> SR1) ^ lung[0];
-    r1 = (a[1] << SL1) ^ (r[1] & MSK2) ^ (lung[1] >> SR1) ^ lung[1];
-    r0 &= LOW_MASK;
-    r0 &= LOW_MASK;
-    x[0] = r0 ^ a[1];
-    x[1] = r1 ^ a[0];
-}
-
-inline static void recur_lung(uint64_t x[2], uint64_t r[2], uint64_t lung[2]) {
-    x[0] = (r[0] << SL2);
-    x[1] = (r[1] << SL2);
-}
-
-inline static void do_recursion(uint64_t a[2], uint64_t r[2],
-				uint64_t lung[2]) {
-    uint64_t t[2];
-
-    recur_lung(t, r, lung);
-    recur_body(r, a, r, lung);
-    lung[0] ^= t[0];
-    lung[1] ^= t[1];
-    a[0] = r[0];
-    a[1] = r[1];
+    r0 = a[1] ^ (a[0] << SL1);
+    r1 = a[0] ^ (a[1] << SL1);
+    lung[0] ^= r0;
+    lung[1] ^= r1;
+    r0 ^= (lung[0] >> SR1) ^ lung[0];
+    r1 ^= (lung[1] >> SR1) ^ lung[1];
+    r0 = r0 & LOW_MASK;
+    r1 = r1 & LOW_MASK; 
+    //a[0] = r0 ^ HIGH_CONST;
+    //a[1] = r1 ^ HIGH_CONST;
+    a[0] = r0 ^ (b[0] & (MSK1 | HIGH_CONST));
+    a[1] = r1 ^ (b[1] & (MSK2 | HIGH_CONST));
 }
 
 /*
@@ -252,3 +254,32 @@ void read_random_param(FILE *f) {
     MSK2 = get_uint64(line, 16);
 }
 
+#if defined(MAIN)
+int main(void) {
+    int i;
+    dsfmt_t dsfmt;
+    union {
+	uint64_t u;
+	double d;
+    } un;
+
+    LOW_MASK =   0x000FFFFFFFFFFFFFULL;
+    HIGH_CONST = 0x3ff0000000000000ULL;
+    init_gen_rand(&dsfmt, 1234);
+    printf("generated randoms [1, 2)\n");
+    for (i = 0; i < 1000; i++) {
+	if (i % 2 == 0) {
+	    next_state(&dsfmt);
+	}
+	un.u = dsfmt.status[dsfmt.idx / 2][dsfmt.idx % 2];
+	dsfmt.idx++;
+	printf("%1.20lf ", un.d);
+	//printf("%016"PRIx64" ", un.u);
+	if (i % 3 == 2) {
+	    printf("\n");
+	}
+    }
+    printf("\n");
+    return 0;
+}
+#endif
