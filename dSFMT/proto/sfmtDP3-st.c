@@ -7,11 +7,10 @@
 #include <errno.h>
 #include "dsfmtL-st.h"
 
-static uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
-static uint64_t HIGH_CONST = 0x0000000000000ULL;
+static uint64_t LOW_MASK   = 0x000FFFFFFFFFFFFFULL;
+static uint64_t HIGH_CONST = 0x0000000000000000ULL;
 
 static unsigned int SL1 = 31;
-static unsigned int SL2 = 1;
 static unsigned int SR1 = 13;
 static uint64_t MSK1 = 0xedfffffbfffbffbdULL;
 static uint64_t MSK2 = 0xaefeffd36dfdffdfULL;
@@ -32,7 +31,6 @@ unsigned int get_rnd_mexp(void)
 void setup_param(uint32_t array[], int *index) {
     //SL1 = (array[(*index)++] % 6 + 1) * 8; /* 128 bit */
     SL1 = array[(*index)++] % 51 + 1; 
-    SL2 = array[(*index)++] % 51 + 1; 
     SR1 = array[(*index)++] % 51 + 1;
     MSK1 = array[(*index)++];
     MSK1 |= array[(*index)++];
@@ -41,6 +39,7 @@ void setup_param(uint32_t array[], int *index) {
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
+    MSK1 |= 0xFFF0000000000000ULL;
     MSK2 = array[(*index)++];
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
@@ -48,29 +47,15 @@ void setup_param(uint32_t array[], int *index) {
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
+    MSK2 |= 0xFFF0000000000000ULL;
 }
 
 void print_param(FILE *fp) {
     fprintf(fp, "SL1 = %u\n", SL1);
-    fprintf(fp, "SL2 = %u\n", SL2);
     fprintf(fp, "SR1 = %u\n", SR1);
     fprintf(fp, "MSK1 = %016"PRIx64"\n", MSK1);
     fprintf(fp, "MSK2 = %016"PRIx64"\n", MSK2);
     fflush(fp);
-}
-
-inline static void rshift128(uint64_t out[2], const uint64_t in[2],
-			     int shift) {
-    out[1] = in[1] >> shift;
-    out[0] = in[0] >> shift;
-    out[0] |= in[1] << (64 - shift);
-}
-
-inline static void lshift128(uint64_t out[2], const uint64_t in[2],
-			     int shift) {
-    out[1] = in[1] << shift;
-    out[0] = in[0] << shift;
-    out[1] |= in[0] >> (64 - shift);
 }
 
 inline static void do_recursion(uint64_t a[2], uint64_t b[2],
@@ -85,10 +70,8 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2],
     r1 ^= (lung[1] >> SR1) ^ lung[1];
     r0 = r0 & LOW_MASK;
     r1 = r1 & LOW_MASK; 
-    //a[0] = r0 ^ HIGH_CONST;
-    //a[1] = r1 ^ HIGH_CONST;
-    a[0] = r0 ^ (b[0] & (MSK1 | HIGH_CONST));
-    a[1] = r1 ^ (b[1] & (MSK2 | HIGH_CONST));
+    a[0] = r0 ^ (b[0] & MSK1);
+    a[1] = r1 ^ (b[1] & MSK2);
 }
 
 /*
@@ -159,11 +142,13 @@ void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed)
 
     psfmt = dsfmt->status[0];
     psfmt[0] = (seed & LOW_MASK) | HIGH_CONST;
-    for (i = 1; i <= N * 2; i++) {
+    for (i = 1; i < N * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
 	psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
     }
+    psfmt[i] = 6364136223846793005ULL 
+	* (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
     dsfmt->idx = 0;
 }
 
@@ -244,8 +229,6 @@ void read_random_param(FILE *f) {
     fgets(line, 256, f);
     fgets(line, 256, f);
     SL1 = get_uint(line, 10);
-    fgets(line, 256, f);
-    SL2 = get_uint(line, 10);
     fgets(line, 256, f);
     SR1 = get_uint(line, 10);
     fgets(line, 256, f);
