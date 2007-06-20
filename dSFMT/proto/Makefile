@@ -82,8 +82,48 @@ param-searchDP4-607: searchL.o sfmtDP4-st.o mt19937blk.o util.o dsfmtL-util.o
 	${CPP} -o $@ searchL.o sfmtDP4-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
+param-searchDP5-607: searchL.o sfmtDP5-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP5-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
 param-searchDP6-607: searchL.o sfmtDP6-st.o mt19937blk.o util.o dsfmtL-util.o 
 	${CPP} -o $@ searchL.o sfmtDP6-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDP7-607: searchL.o sfmtDP7-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP7-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDP8-607: searchL.o sfmtDP8-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP8-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDP9-607: searchL.o sfmtDP9-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDP9-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPa-607: searchL.o sfmtDPa-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPa-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPb-607: searchL.o sfmtDPb-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPb-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPc-607: searchL.o sfmtDPc-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPc-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPd-607: searchL.o sfmtDPd-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPd-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPe-607: searchL.o sfmtDPe-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPe-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDQ1-607: searchL.o sfmtDQ1-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDQ1-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
 param-searchD11-1279: search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o 

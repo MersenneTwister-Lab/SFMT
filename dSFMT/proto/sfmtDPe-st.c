@@ -31,9 +31,9 @@ unsigned int get_rnd_mexp(void)
 
 void setup_param(uint32_t array[], int *index) {
     //SL1 = (array[(*index)++] % 6 + 1) * 8; /* 128 bit */
-    SL1 = array[(*index)++] % 51 + 1; 
-    SL2 = array[(*index)++] % 51 + 1; 
-    SR1 = array[(*index)++] % 51 + 1;
+    SL1 = array[(*index)++] % (51 - 12) + 12; 
+    SL2 = array[(*index)++] % (51 - 12) + 12; 
+    SR1 = array[(*index)++] % (51 - 12) + 12;
     MSK1 = array[(*index)++];
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
@@ -63,18 +63,18 @@ void print_param(FILE *fp) {
 
 inline static void do_recursion(uint64_t a[2], uint64_t b[2],
 				uint64_t lung[2]) {
-    uint64_t r0, r1;
+    uint64_t s0, s1, t0, t1;
 
-    r0 = a[1];
-    r1 = a[0];
-    r0 ^= (b[0] << SL1) ^ ((b[0] >> SR1) & MSK1);
-    r1 ^= (b[1] << SL1) ^ ((b[1] >> SR1) & MSK2);
-    lung[0] ^= r0 ^ (lung[0] << SL2);
-    lung[1] ^= r1 ^ (lung[1] << SL2);
-    r0 = lung[0] >> 12;
-    r1 = lung[1] >> 12;
-    a[0] = r0 ^ a[0];
-    a[1] = r1 ^ a[1];
+    s0 = (b[0] & MSK1) << SL1; 
+    s1 = (b[1] & MSK2) << SL1; 
+    t0 = lung[0] ^ a[0];
+    t1 = lung[1] ^ a[1];
+    t0 = t0 ^ (t0 << SL2);
+    t1 = t1 ^ (t1 << SL2);
+    lung[0] = s1 ^ t1; 
+    lung[1] = s0 ^ t0;
+    a[0] = a[0] ^ (lung[0] >> 12);
+    a[1] = a[1] ^ (lung[1] >> 12);
 }
 
 /*

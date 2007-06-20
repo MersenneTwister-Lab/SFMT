@@ -10,6 +10,7 @@
 static uint64_t LOW_MASK   = 0x000FFFFFFFFFFFFFULL;
 static uint64_t HIGH_CONST = 0x0000000000000000ULL;
 
+static unsigned int POS1 = 1;
 static unsigned int SL1 = 31;
 static unsigned int SL2 = 31;
 static unsigned int SR1 = 13;
@@ -30,7 +31,7 @@ unsigned int get_rnd_mexp(void)
 }
 
 void setup_param(uint32_t array[], int *index) {
-    //SL1 = (array[(*index)++] % 6 + 1) * 8; /* 128 bit */
+    POS1 = array[(*index)++] % (N - 1) + 1;
     SL1 = array[(*index)++] % 51 + 1; 
     SL2 = array[(*index)++] % 51 + 1; 
     SR1 = array[(*index)++] % 51 + 1;
@@ -41,7 +42,7 @@ void setup_param(uint32_t array[], int *index) {
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
-    //MSK1 |= 0xFFF0000000000000ULL;
+    MSK1 |= 0xFFF0000000000000ULL;
     MSK2 = array[(*index)++];
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
@@ -49,10 +50,11 @@ void setup_param(uint32_t array[], int *index) {
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
-    //MSK2 |= 0xFFF0000000000000ULL;
+    MSK2 |= 0xFFF0000000000000ULL;
 }
 
 void print_param(FILE *fp) {
+    fprintf(fp, "POS1 = %u\n", POS1);
     fprintf(fp, "SL1 = %u\n", SL1);
     fprintf(fp, "SL2 = %u\n", SL2);
     fprintf(fp, "SR1 = %u\n", SR1);
@@ -65,12 +67,14 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2],
 				uint64_t lung[2]) {
     uint64_t r0, r1;
 
-    r0 = a[1];
-    r1 = a[0];
-    r0 ^= (b[0] << SL1) ^ ((b[0] >> SR1) & MSK1);
-    r1 ^= (b[1] << SL1) ^ ((b[1] >> SR1) & MSK2);
-    lung[0] ^= r0 ^ (lung[0] << SL2);
-    lung[1] ^= r1 ^ (lung[1] << SL2);
+    r0 = a[1] ^ (a[1] << SL1);
+    r1 = a[0] ^ (a[0] << SL1);
+    r0 ^= (b[0] & MSK1);
+    r1 ^= (b[1] & MSK2);
+    r0 ^= (lung[0] << SL2) ^ lung[0];
+    r1 ^= (lung[1] << SL2) ^ lung[1];
+    lung[0] = r0;
+    lung[1] = r1;
     r0 = lung[0] >> 12;
     r1 = lung[1] >> 12;
     a[0] = r0 ^ a[0];
@@ -87,7 +91,7 @@ inline static void next_state(dsfmt_t *dsfmt) {
 	dsfmt->idx = 0;
     }
     i = dsfmt->idx / 2;
-    do_recursion(dsfmt->status[i], dsfmt->status[(i + N - 1) % N],
+    do_recursion(dsfmt->status[i], dsfmt->status[(i + POS1) % N],
 		 dsfmt->status[N]);
 }
 
@@ -150,10 +154,8 @@ void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed)
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
 	psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
     }
-    for (;i <= N * 2; i++) {
-	psfmt[i] = 6364136223846793005ULL 
-	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
-    }
+    psfmt[i] = 6364136223846793005ULL 
+	* (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
     dsfmt->idx = 0;
 }
 
@@ -232,6 +234,8 @@ void read_random_param(FILE *f) {
 
     fgets(line, 256, f);
     fgets(line, 256, f);
+    fgets(line, 256, f);
+    POS1 = get_uint(line, 10);
     fgets(line, 256, f);
     SL1 = get_uint(line, 10);
     fgets(line, 256, f);

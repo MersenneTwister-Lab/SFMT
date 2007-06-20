@@ -65,10 +65,10 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2],
 				uint64_t lung[2]) {
     uint64_t r0, r1;
 
-    r0 = a[1];
-    r1 = a[0];
-    r0 ^= (b[0] << SL1) ^ ((b[0] >> SR1) & MSK1);
-    r1 ^= (b[1] << SL1) ^ ((b[1] >> SR1) & MSK2);
+    r0 = a[0];
+    r1 = a[1];
+    r0 ^= (b[0] << SL1) ^ (b[1] & MSK1);
+    r1 ^= (b[1] << SL1) ^ (b[0] & MSK2);
     lung[0] ^= r0 ^ (lung[0] << SL2);
     lung[1] ^= r1 ^ (lung[1] << SL2);
     r0 = lung[0] >> 12;
