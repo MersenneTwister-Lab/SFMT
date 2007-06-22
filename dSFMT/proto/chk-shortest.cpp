@@ -111,10 +111,13 @@ void fill_rnd(dsfmt_t *sfmt) {
 	mt_fill(array, a_max);
 	idx = 0;
     }
-    for (i = 0; i < N + 1; i++) {
+    for (i = 0; i < N; i++) {
 	for (j = 0; j < 2; j++) {
 	    sfmt->status[i][j] = array[idx++] & 0x000FFFFFFFFFFFFFULL;
 	}
+    }
+    for (j = 0; j < 2; j++) {
+	sfmt->status[i][j] = array[idx++];
     }
 }
 

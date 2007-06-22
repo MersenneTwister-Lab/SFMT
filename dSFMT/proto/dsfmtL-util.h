@@ -1,5 +1,5 @@
-#ifndef DSFMTL_ST_H
-#define DSFMTL_ST_H
+#ifndef DSFMTL_UTIL_H
+#define DSFMTL_UTIL_H
 
 extern "C" {
   #include "dsfmtL-st.h"

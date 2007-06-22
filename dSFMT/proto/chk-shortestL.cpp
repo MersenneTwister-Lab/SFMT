@@ -105,16 +105,26 @@ void fill_rnd(dsfmt_t *sfmt) {
     const int a_max = 100000;
     static int idx = a_max;
     static uint32_t array[a_max];
+    uint64_t u;
     int i, j;
 
-    if (idx + (N + 1) * 2 >= a_max) {
+    if (idx + (N + 1) * 4 >= a_max) {
 	mt_fill(array, a_max);
 	idx = 0;
     }
-    for (i = 0; i < N + 1; i++) {
+    for (i = 0; i < N; i++) {
 	for (j = 0; j < 2; j++) {
-	    sfmt->status[i][j] = array[idx++] & 0x000FFFFFFFFFFFFFULL;
+	    u = array[idx++];
+	    u = u << 32;
+	    u = (u | array[idx++]) & 0x000FFFFFFFFFFFFFULL;
+	    sfmt->status[i][j] = u;
 	}
+    }
+    for (j = 0; j < 2; j++) {
+	u = array[idx++];
+	u = u << 32;
+	u = u | array[idx++];
+	sfmt->status[i][j] = u;
     }
 }
 

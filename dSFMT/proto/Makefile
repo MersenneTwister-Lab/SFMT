@@ -122,6 +122,22 @@ param-searchDPe-607: searchL.o sfmtDPe-st.o mt19937blk.o util.o dsfmtL-util.o
 	${CPP} -o $@ searchL.o sfmtDPe-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
 
+param-searchDPf-607: searchL.o sfmtDPf-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPf-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPg-607: searchL.o sfmtDPg-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPg-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPh-607: searchL.o sfmtDPh-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPh-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
+param-searchDPf-521: searchL.o sfmtDPf-st.o mt19937blk.o util.o dsfmtL-util.o 
+	${CPP} -o $@ searchL.o sfmtDPf-st.o mt19937blk.o util.o dsfmtL-util.o \
+		${LINKOPT}
+
 param-searchDQ1-607: searchL.o sfmtDQ1-st.o mt19937blk.o util.o dsfmtL-util.o 
 	${CPP} -o $@ searchL.o sfmtDQ1-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
@@ -173,6 +189,16 @@ shortest-baseDP3-607: chk-shortestL.o shortbase128.o sfmtDP3-st.o util.o \
 shortest-baseDP4-607: chk-shortestL.o shortbase128.o sfmtDP4-st.o util.o \
 			dsfmtL-util.o mt19937blk.o
 	${CPP} -o $@ chk-shortestL.o shortbase128.o sfmtDP4-st.o util.o \
+			dsfmtL-util.o mt19937blk.o ${LINKOPT}
+
+shortest-baseDPf-607: chk-shortestL.o shortbase128.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortestL.o shortbase128.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o ${LINKOPT}
+
+shortest-baseDPg-607: chk-shortestL.o shortbase128.o sfmtDPg-st.o util.o \
+			dsfmtL-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortestL.o shortbase128.o sfmtDPg-st.o util.o \
 			dsfmtL-util.o mt19937blk.o ${LINKOPT}
 
 searchD11-parity607: search-parity-vector.o sfmtD11-st.o util.o
