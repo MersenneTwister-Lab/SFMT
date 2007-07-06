@@ -1,0 +1,111 @@
+\newcommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{SHP{\etalchar{+}}06}
+
+\bibitem[BZ03]{BRENT}
+R.P. Brent and P.~Zimmermann.
+\newblock Random number generators with period divisible by a {Mersenne} prime.
+\newblock In {\em Computational Science and its Applications - ICCSA 2003},
+  volume 2667, pages 1--10, 2003.
+
+\bibitem[BZ04]{BRENT-PRIM}
+R.P. Brent and P.~Zimmermann.
+\newblock Algorithms for finding almost irreducible and almost primitive
+  trinomials.
+\newblock {\em Fields Inst. Commun.}, 41:91--102, 2004.
+
+\bibitem[CLT93]{CLT}
+R.~Couture, P.~L'Ecuyer, and S.~Tezuka.
+\newblock On the distribution of k-dimensional vectors for simple and combined
+  {Tausworthe} sequences.
+\newblock {\em Math. Comp.}, 60(202):749--761, 1993.
+
+\bibitem[Fus90]{FUSHIMI90}
+M.~Fushimi.
+\newblock Random number generation with the recursion $x_t = x_{t-3p}\oplus
+  x_{t-3q}$.
+\newblock {\em Journal of Computational and Applied Mathematics}, 31:105--118,
+  1990.
+
+\bibitem[Knu97]{knuth:bible}
+D.~E. Knuth.
+\newblock {\em The Art of Computer Programming. Vol.2. Seminumerical
+  Algorithms}.
+\newblock Addison-Wesley, Reading, Mass., 3rd edition, 1997.
+
+\bibitem[L'E93]{MRG}
+P.~L'Ecuyer.
+\newblock A search for good multiple recursive random number genarators.
+\newblock {\em ACM Transactions on Modeling and Computer Simulation},
+  3(2):87--98, April 1993.
+
+\bibitem[L'E96]{COMBTAUS}
+P.~L'Ecuyer.
+\newblock Maximally equidistributed combined tausworthe generators.
+\newblock {\em Math. Comp.}, 65(213):203--213, 1996.
+
+\bibitem[L'E99]{COMBLFSR}
+P.~L'Ecuyer.
+\newblock Tables of maximally equidistributed combined lfsr generators.
+\newblock {\em Math. Comp.}, 68(225):261--269, 1999.
+
+\bibitem[LS06]{TESTU01}
+P.~L'Ecuyer and R.~Simard.
+\newblock {TestU01}: {A} {C} library for empirical testing of random number
+  generators.
+\newblock {\em ACM Transactions on Mathematical Software}, 2006.
+\newblock to appear.
+
+\bibitem[Mar03]{XORSHIFT-MAR}
+G.~Marsaglia.
+\newblock Xorshift {RNGs}.
+\newblock {\em Journal of Statistical Software}, 8(14):1--6, 2003.
+
+\bibitem[MN98]{MT}
+M.~Matsumoto and T.~Nishimura.
+\newblock Mersenne twister: A 623-dimensionally equidistributed uniform
+  pseudorandom number generator.
+\newblock {\em ACM Trans. on Modeling and Computer Simulation}, 8(1):3--30,
+  January 1998.
+\newblock \url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html}.
+
+\bibitem[MN02]{TESTWEIGHT}
+M.~Matsumoto and T.~Nishimura.
+\newblock A nonempirical test on the weight of pseudorandom number generators.
+\newblock In {\em Monte Carlo and Quasi-Monte Carlo methods 2000}, pages
+  381--395. Springer-Verlag, 2002.
+
+\bibitem[MN03]{SUM}
+M.~Matsumoto and T.~Nishimura.
+\newblock Sum-discrepancy test on pseudorandom number generators.
+\newblock {\em Mathematics and Computers in Simulation}, 62(3-6):431--442,
+  2003.
+
+\bibitem[PL05]{XORSHIFT}
+F.~Panneton and P.~L'Ecuyer.
+\newblock On the {Xorshift} random number generators.
+\newblock {\em ACM Transactions on Modeling and Computer Simulation},
+  15(4):346--361, 2005.
+
+\bibitem[PLM06]{WELL}
+F.~Panneton, P.~L'Ecuyer, and M.~Matsumoto.
+\newblock Improved long-period generators based on linear reccurences modulo 2.
+\newblock {\em ACM Transactions on Mathematical Software}, 32(1):1--16, 2006.
+
+\bibitem[SHP{\etalchar{+}}06]{PMT}
+M.~Saito, H.~Haramoto, F.~Panneton, T.~Nishimura, and M.~Matsumoto.
+\newblock Pulmonary {LFSR}: pseudorandom number generators with multiple
+  feedbacks and reducible transitions.
+\newblock 2006.
+\newblock submitted.
+
+\bibitem[SM]{SFMT}
+M.~Saito and M.~Matsumoto.
+\newblock {SFMT Homepage}.
+\newblock
+  \url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/index.html}.
+
+\bibitem[wik]{wiki:endian}
+{Endianness} from {Wikipedia}, the free encyclopedia.
+\newblock \url{http://en.wikipedia.org/wiki/Endianness}.
+
+\end{thebibliography}

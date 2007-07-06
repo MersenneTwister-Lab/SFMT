@@ -347,7 +347,7 @@ Figure~\ref{fig:SFMT-B2} shows a concrete description
 of SFMT19937 generator with period a multiple of $2^{19937}-1$.
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.6\linewidth]{sfmt-b2.eps}
+\includegraphics[width=0.5\linewidth]{sfmt-b2.eps}
 \end{center}
 \caption{A circuit-like description of SFMT19937.}
 \label{fig:SFMT-B2}
@@ -411,7 +411,8 @@ This makes the generation much faster than sequential generation
 (i.e., one generation per one call) as shown in Table~\ref{tab:speed}.
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.7\linewidth,height=0.36\textheight,
+%\includegraphics[width=0.7\linewidth,height=0.36\textheight,
+\includegraphics[height=0.3\textheight,
 keepaspectratio]{fill_array.eps}
 \end{center}
 \caption{Block-generation scheme}
@@ -1145,8 +1146,9 @@ the icl (Intel C Compiler) or gcc compiler with suitable options.
 We had put and will keep the newest version of the codes 
 in the homepage \cite{SFMT}.
 
-\bibliographystyle{plain}
-\bibliography{kuramoto}
+%\bibliographystyle{alpha}
+%\bibliography{kuramoto}
+\input{Saito-rev.bbl}
 %\begin{received}
 %\end{received}
 \end{document}
