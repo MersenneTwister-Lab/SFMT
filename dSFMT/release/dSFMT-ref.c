@@ -212,6 +212,26 @@ static void period_certification() {
     }
 }
 
+/**
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
+ */
+static uint32_t ini_func1(uint32_t x) {
+    return (x ^ (x >> 27)) * (uint32_t)1664525UL;
+}
+
+/**
+ * This function represents a function used in the initialization
+ * by init_by_array
+ * @param x 32-bit integer
+ * @return 32-bit integer
+ */
+static uint32_t ini_func2(uint32_t x) {
+    return (x ^ (x >> 27)) * (uint32_t)1566083941UL;
+}
+
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/
@@ -275,22 +295,113 @@ void init_gen_rand(uint32_t seed) {
     is_sfmt_initialized = 1;
 }
 
+/**
+ * This function initializes the internal state array,
+ * with an array of 32-bit integers used as the seeds
+ * @param init_key the array of 32-bit integers, used as a seed.
+ * @param key_length the length of init_key.
+ */
+void init_by_array(uint32_t init_key[], int key_length) {
+    int i, j, count;
+    uint32_t r;
+    uint32_t *psfmt32;
+    int lag;
+    int mid;
+    int size = (SFMT_N + 1) * 4;	/* pulmonary */
+
+
+    if (size >= 623) {
+	lag = 11;
+    } else if (size >= 68) {
+	lag = 7;
+    } else if (size >= 39) {
+	lag = 5;
+    } else {
+	lag = 3;
+    }
+    mid = (size - lag) / 2;
+
+    psfmt32 = &sfmt[0].u32[0];
+    memset(sfmt, 0x8b, sizeof(sfmt));
+    if (key_length + 1 > size) {
+	count = key_length + 1;
+    } else {
+	count = size;
+    }
+    r = ini_func1(psfmt32[sfmt_idxof(0)] ^ psfmt32[sfmt_idxof(mid % size)] 
+		  ^ psfmt32[sfmt_idxof((size - 1) % size)]);
+    psfmt32[sfmt_idxof(mid % size)] += r;
+    r += key_length;
+    psfmt32[sfmt_idxof((mid + lag) % size)] += r;
+    psfmt32[sfmt_idxof(0)] = r;
+    i = 1;
+    count--;
+    for (i = 1, j = 0; (j < count) && (j < key_length); j++) {
+	r = ini_func1(psfmt32[sfmt_idxof(i)] 
+		      ^ psfmt32[sfmt_idxof((i + mid) % size)] 
+		      ^ psfmt32[sfmt_idxof((i + size - 1) % size)]);
+	psfmt32[sfmt_idxof((i + mid) % size)] += r;
+	r += init_key[j] + i;
+	psfmt32[sfmt_idxof((i + mid + lag) % size)] += r;
+	psfmt32[sfmt_idxof(i)] = r;
+	i = (i + 1) % size;
+    }
+    for (; j < count; j++) {
+	r = ini_func1(psfmt32[sfmt_idxof(i)] 
+		      ^ psfmt32[sfmt_idxof((i + mid) % size)] 
+		      ^ psfmt32[sfmt_idxof((i + size - 1) % size)]);
+	psfmt32[sfmt_idxof((i + mid) % size)] += r;
+	r += i;
+	psfmt32[sfmt_idxof((i + mid + lag) % size)] += r;
+	psfmt32[sfmt_idxof(i)] = r;
+	i = (i + 1) % size;
+    }
+    for (j = 0; j < size; j++) {
+	r = ini_func2(psfmt32[sfmt_idxof(i)] 
+		      + psfmt32[sfmt_idxof((i + mid) % size)] 
+		      + psfmt32[sfmt_idxof((i + size - 1) % size)]);
+	psfmt32[sfmt_idxof((i + mid) % size)] ^= r;
+	r -= i;
+	psfmt32[sfmt_idxof((i + mid + lag) % size)] ^= r;
+	psfmt32[sfmt_idxof(i)] = r;
+	i = (i + 1) % size;
+    }
+    initial_mask();
+    period_certification();
+    sfmt_idx = SFMT_N64;
+    is_sfmt_initialized = 1;
+}
+
 #ifdef MAIN
-int main(void) {
+int main(int argc, char *argv[]) {
     int i;
     double d;
+    uint32_t ar[4] = {1, 2, 3, 4};
 
-    printf("%s\n", get_idstring());
-    printf("generated randoms [1, 2)\n");
-    init_gen_rand(1234);
-    for (i = 0; i < 1000; i++) {
-	d = genrand_close1_open2();
-	printf("%1.20lf ", d);
-	if (i % 3 == 2) {
-	    printf("\n");
+    if (argc <= 1) {
+	printf("%s\n", get_idstring());
+	printf("generated randoms [1, 2)\n");
+	init_gen_rand(1234);
+	for (i = 0; i < 1000; i++) {
+	    d = genrand_close1_open2();
+	    printf("%1.15f ", d);
+	    if (i % 4 == 3) {
+		printf("\n");
+	    }
+	}
+    } else {			/* option -ar */
+	printf("%s\n", get_idstring());
+	printf("init_by_array\n");
+	printf("generated randoms [1, 2)\n");
+	init_by_array(ar, 4);
+	for (i = 0; i < 1000; i++) {
+	    d = genrand_close1_open2();
+	    printf("%1.15f ", d);
+	    if (i % 4 == 3) {
+		printf("\n");
+	    }
 	}
     }
-    printf("\n");
     return 0;
 }
 #endif
