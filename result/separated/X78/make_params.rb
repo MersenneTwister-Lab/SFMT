@@ -71,6 +71,12 @@ ARGV.each{
   }
   printf("\n\n/* PARAMETERS FOR ALTIVEC */\n")
   printf("#if defined(__APPLE__)\t/* For OSX */\n")
+  printf("    #define ALTI_SL1\t(vector unsigned int)(SL1, SL1, SL1, SL1)\n")
+  printf("    #define ALTI_SR1\t(vector unsigned int)(SR1, SR1, SR1, SR1)\n")
+  printf("    #define ALTI_MSK\t")
+  printf("(vector unsigned int)(MSK1, MSK2, MSK3, MSK4)\n")
+  printf("    #define ALTI_MSK64 \\\n")
+  printf("\t(vector unsigned int)(MSK2, MSK1, MSK4, MSK3)\n")
   printf("    #define ALTI_SL2_PERM \\\n\t(vector unsigned char)%s\n",
          sl_perm(params['SL2'], $tbl32, '(',')'))
   printf("    #define ALTI_SL2_PERM64 \\\n\t(vector unsigned char)%s\n",
@@ -80,6 +86,10 @@ ARGV.each{
   printf("    #define ALTI_SR2_PERM64 \\\n\t(vector unsigned char)%s\n",
          sl_perm("-"+params['SR2'], $tbl64, '(',')'))
   printf("#else\t/* For OTHER OSs(Linux?) */\n")
+  printf("    #define ALTI_SL1\t{SL1, SL1, SL1, SL1}\n")
+  printf("    #define ALTI_SR1\t{SR1, SR1, SR1, SR1}\n")
+  printf("    #define ALTI_MSK\t{MSK1, MSK2, MSK3, MSK4}\n")
+  printf("    #define ALTI_MSK64\t{MSK2, MSK1, MSK4, MSK3}\n")
   printf("    #define ALTI_SL2_PERM\t%s\n",
          sl_perm(params['SL2'], $tbl32, '{','}'))
   printf("    #define ALTI_SL2_PERM64\t%s\n",
