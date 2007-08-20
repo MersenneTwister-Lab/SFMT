@@ -16,7 +16,7 @@
 #ifndef SFMT_SSE2_H
 #define SFMT_SSE2_H
 
-inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
+PRE_ALWAYS static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
 				   __m128i d, __m128i mask) ALWAYSINLINE;
 
 /**
@@ -28,7 +28,7 @@ inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
  * @param mask 128-bit mask
  * @return output
  */
-inline static __m128i mm_recursion(__m128i *a, __m128i *b, 
+PRE_ALWAYS static __m128i mm_recursion(__m128i *a, __m128i *b, 
 				   __m128i c, __m128i d, __m128i mask) {
     __m128i v, x, y, z;
     

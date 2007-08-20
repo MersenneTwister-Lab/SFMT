@@ -1,3 +1,14 @@
+ver 1.3.2
+-------
+bug fix to_res53_mix and genrand_res53_mix.
+
+ver 1.3.1
+-------
+gcc compile option changed form -O9 to -O3.
+add functions genrand_res53_mix and to_res53_mix.
+bug fix about definition of ALWAYS_INLINE.
+add new definition PRE_ALWAYS for MSC.
+
 ver 1.3
 -------
 bug fixed: -DONLY64 without -DBIG_ENIAN64 had been generating
