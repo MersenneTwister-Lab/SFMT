@@ -58,6 +58,18 @@
 
 #if defined(__GNUC__)
 #define ALWAYSINLINE __attribute__((always_inline))
+#else
+#define ALWAYSINLINE
+#endif
+
+#if defined(_MSC_VER)
+  #if _MSC_VER >= 1200
+    #define PRE_ALWAYS __forceinline
+  #else
+    #define PRE_ALWAYS inline
+  #endif
+#else
+  #define PRE_ALWAYS inline
 #endif
 
 uint32_t gen_rand32(void);
@@ -117,9 +129,29 @@ inline static double to_res53(uint64_t v)
     return v * (1.0/18446744073709551616.0L);
 }
 
-/** generates a random number on [0,1) with 53-bit resolution*/
+/** generates a random number on [0,1) with 53-bit resolution from two
+ * 32 bit integers */
+inline static double to_res53_mix(uint32_t x, uint32_t y) 
+{ 
+    return to_res53(x | ((uint64_t)y << 32));
+}
+
+/** generates a random number on [0,1) with 53-bit resolution
+ */
 inline static double genrand_res53(void) 
 { 
     return to_res53(gen_rand64());
+} 
+
+/** generates a random number on [0,1) with 53-bit resolution
+    using 32bit integer.
+ */
+inline static double genrand_res53_mix(void) 
+{ 
+    uint32_t x, y;
+
+    x = gen_rand32();
+    y = gen_rand32();
+    return to_res53_mix(x, y);
 } 
 #endif
