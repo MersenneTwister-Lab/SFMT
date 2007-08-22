@@ -64,9 +64,6 @@ static int sfmt_idx;
 /** a flag: it is 0 if and only if the internal state is not yet
  * initialized. */
 static int is_sfmt_initialized = 0;
-/** a period certification vector which certificate the period of
- * 2^{SFMT_MEXP}-1. */
-static uint64_t sfmt_pcv[2] = {SFMT_PCV1, SFMT_PCV2};
 
 /*----------------
   STATIC FUNCTIONS
@@ -292,8 +289,9 @@ void initial_mask(void) {
  * This function certificate the period of 2^{SFMT_MEXP}-1.
  */
 static void period_certification() {
-    int inner = 0;
     int i, j;
+    uint64_t pcv[2] = {SFMT_PCV1, SFMT_PCV2};
+    uint64_t inner;
     uint64_t new_lung[2];
     uint64_t work;
     uint64_t fix[2];
@@ -305,13 +303,12 @@ static void period_certification() {
     fix[0] = fix[0] ^ (SFMT_HIGH_CONST >> (64 - 8 * SFMT_SL2));
     new_lung[0] = sfmt[SFMT_N].u[0] ^ fix[0];
     new_lung[1] = sfmt[SFMT_N].u[1] ^ fix[1];
-    for (i = 0; i < 2; i++) {
-	work = new_lung[i] & sfmt_pcv[i];
-	for (j = 0; j < 52; j++) {
-	    inner ^= work & 1;
-	    work = work >> 1;
-	}
+    inner = new_lung[0] & pcv[0];
+    inner ^= new_lung[1] & pcv[1];
+    for (i = 32; i > 0; i >>= 1) {
+        inner ^= inner >> i;
     }
+    inner &= 1;
     /* check OK */
     if (inner == 1) {
 	return;
@@ -320,7 +317,7 @@ static void period_certification() {
     for (i = 0; i < 2; i++) {
 	work = 1;
 	for (j = 0; j < 52; j++) {
-	    if ((work & sfmt_pcv[i]) != 0) {
+	    if ((work & pcv[i]) != 0) {
 		sfmt[SFMT_N].u[i] ^= work;
 		return;
 	    }
@@ -337,7 +334,7 @@ static void period_certification() {
  * the Mersenne exponent, and all parameters of this generator.
  * @return id string.
  */
-char *get_idstring(void) {
+const char *get_idstring(void) {
     return SFMT_IDSTR;
 }
 

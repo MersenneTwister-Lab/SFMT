@@ -1,7 +1,14 @@
-ver 1.1.2
+ver 1.2
 -------
 The precision specifier of printf was too large in test.c
 CAUTION! *.out.txt is changed.
+add dSFMT-params216091.h
+gcc compile option changed form -O9 to -O3.
+add AltiVec parameter format for systems which are not OSX.
+change Makefile for systems which are not OSX and support AltiVec.
+change sample2 of howto-compile for Free BSD.
+change period certification code more smart.
+change source files for BORLANDC and Visual Studio.
 
 ver 1.1.1
 -------

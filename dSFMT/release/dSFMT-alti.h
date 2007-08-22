@@ -25,11 +25,11 @@ inline static vector unsigned int vec_recursion(vector unsigned int a,
 						vector unsigned int reg,
 						vector unsigned int lung) {
     vector unsigned int r, s, t, u, v, w, x, y, z;
-    const vector unsigned char sl1 = (vector unsigned char)(ALTI_SL1);
+    const vector unsigned char sl1 = ALTI_SL1;
     const vector unsigned char sl1_perm = ALTI_SL1_PERM;
     const vector unsigned int sl1_msk = ALTI_SL1_MSK;
     const vector unsigned char sl2_perm = ALTI_SL2_PERM;
-    const vector unsigned char sr1 = (vector unsigned char)(ALTI_SR1);
+    const vector unsigned char sr1 = ALTI_SR1;
     const vector unsigned int sr1_msk = ALTI_SR1_MSK;
     const vector unsigned char sr2_perm = ALTI_SR2_PERM;
     const vector unsigned char perm = ALTI_PERM;

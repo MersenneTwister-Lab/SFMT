@@ -81,12 +81,11 @@ void check_co(void) {
 	}
 	if (i + lsize < 1000) {
 	    printf("%1.15f ", array[i].d);
-	    if ((i + lsize) % 3 == 2) {
+	    if ((i + lsize) % 4 == 3) {
 		printf("\n");
 	    }
 	}
     }
-    printf("\n");
 }
 
 void check_oc(void) {
@@ -117,7 +116,6 @@ void check_oc(void) {
 	    }
 	}
     }
-    printf("\n");
 }
 
 void check_oo(void) {
@@ -148,7 +146,6 @@ void check_oo(void) {
 	    }
 	}
     }
-    printf("\n");
 }
 
 void check_12(void) {
@@ -193,12 +190,11 @@ void check_12(void) {
 	}
 	if (i + lsize < 1000) {
 	    printf("%1.15f ", array[i].d);
-	    if ((i + lsize) % 3 == 2) {
+	    if ((i + lsize) % 4 == 3) {
 		printf("\n");
 	    }
 	}
     }
-    printf("\n");
 }
 
 void test_co(void) {
@@ -324,7 +320,7 @@ void test_seq_co(void) {
     }
     total = r;
     printf("SEQ [0, 1) 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -345,7 +341,7 @@ void test_seq_co(void) {
 	total += array[k];
     }
     printf("SEQ [0, 1) 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -366,7 +362,7 @@ void test_seq_co(void) {
 	total += array[k];
     }
     printf("ADD   AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
 }
 
 void test_seq_oc(void) {
@@ -396,7 +392,7 @@ void test_seq_oc(void) {
     }
     total = r;
     printf("SEQ (0, 1] 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -417,7 +413,7 @@ void test_seq_oc(void) {
 	total += array[k];
     }
     printf("SEQ (0, 1] 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -438,7 +434,7 @@ void test_seq_oc(void) {
 	total += array[k];
     }
     printf("ADD   AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
 }
 
 void test_seq_oo(void) {
@@ -468,7 +464,7 @@ void test_seq_oo(void) {
     }
     total = r;
     printf("SEQ (0, 1) 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -489,7 +485,7 @@ void test_seq_oo(void) {
 	total += array[k];
     }
     printf("SEQ (0, 1) 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -510,7 +506,7 @@ void test_seq_oo(void) {
 	total += array[k];
     }
     printf("ADD   AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
 }
 
 void test_seq_12(void) {
@@ -540,7 +536,7 @@ void test_seq_12(void) {
     }
     total = r;
     printf("SEQ [1, 2) 1 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -561,7 +557,7 @@ void test_seq_12(void) {
 	total += array[k];
     }
     printf("SEQ [1, 2) 2 AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
     min = LONG_MAX;
     sum = 0;
     for (i = 0; i < 10; i++) {
@@ -582,7 +578,7 @@ void test_seq_12(void) {
 	total += array[k];
     }
     printf("ADD   AVE:%4"PRIu64"ms.\n", (sum * 100)  / CLOCKS_PER_SEC);
-    printf("total = %lf\n", total);
+    printf("total = %f\n", total);
 }
 
 int main(int argc, char *argv[]) {

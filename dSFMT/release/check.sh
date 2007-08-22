@@ -1,7 +1,7 @@
 #!/bin/sh
 prefix=$1
 tmp=tmp.$$
-exps="607 1279 2281 4423 11213 19937 44497 86243 132049"
+exps="607 1279 2281 4423 11213 19937 44497 86243 132049 216091"
 for mexp in $exps; do
     compare=dSFMT.${mexp}.out.txt
     command=${prefix}-M${mexp}

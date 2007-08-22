@@ -112,7 +112,7 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
       do this, type
     </p>
     <blockquote>
-      <pre>make alti</pre>
+      <pre>make osx-alti</pre>
     </blockquote>
     <p>or type</p>
     <blockquote>
@@ -139,10 +139,10 @@ diff -w foo.txt dSFMT.19937.out.txt</pre>
       <pre>make sse2-check</pre>
     </blockquote>
     <p>
-      To check test program optimized for AltiVec, type
+      To check test program optimized for OSX PowerPC AltiVec, type
     </p>
     <blockquote>
-      <pre>make alti-check</pre>
+      <pre>make osx-alti-check</pre>
     </blockquote>
     <p>
       These commands may take some time.
@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) {
 	}
     }
     pi = (double)cnt / NUM * 4;
-    printf("%lf\n", pi);
+    printf("%f\n", pi);
     return 0;
 }
       </pre>
@@ -196,8 +196,8 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>gcc -msse2 -DSFMT_MEXP=607 -DHAVE_SSE2 -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
-    <p>If your CPU supports AltiVec and you want to use optimized dSFMT
-      for AltiVec, type</p>
+    <p>If your Computer is Apple PowerPC G4 or G5 and you want to use 
+      optimized dSFMT for AltiVec, type</p>
     <blockquote>
       <pre>gcc -faltivec -DSFMT_MEXP=607 -DHAVE_ALTIVEC -o sample1 dSFMT.c sample1.c</pre>
     </blockquote>
@@ -234,7 +234,8 @@ int main(int argc, char* argv[]) {
     if (size &lt; R_SIZE) {
 	size = R_SIZE;
     }
-#if defined(__APPLE__)
+#if defined(__APPLE__) || \
+    (defined(__FreeBSD__) &amp;&amp; __FreeBSD__ &gt;= 3 &amp;&amp; __FreeBSD__ &lt;= 6)
     printf("malloc used\n");
     array = malloc(sizeof(double) * size);
     if (array == NULL) {
@@ -275,7 +276,7 @@ int main(int argc, char* argv[]) {
     }
     free(array);
     pi = (double)cnt / NUM * 4;
-    printf("%lf\n", pi);
+    printf("%f\n", pi);
     return 0;
 }
       </pre>
@@ -290,8 +291,8 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>gcc -msse2 -DSFMT_MEXP=2281 -DHAVE_SSE2 -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
-    <p>If your CPU supports AltiVec and you want to use optimized SFMT
-      for AltiVec, type</p>
+    <p>If your computer is Apple PowerPC G4 or G5 and you want to use 
+      optimized dSFMT for AltiVec, type</p>
     <blockquote>
       <pre>gcc -faltivec -DSFMT_MEXP=2281 -DHAVE_ALTIVEC -o sample2 dSFMT.c sample2.c</pre>
     </blockquote>
@@ -328,7 +329,7 @@ int main(int argc, char* argv[]) {
 	}
     }
     pi = (double)cnt / NUM * 4;
-    printf("%lf\n", pi);
+    printf("%f\n", pi);
     return 0;
 }
       </pre>
@@ -342,8 +343,8 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>gcc -msse2 -DSFMT_MEXP=19937 -DHAVE_SSE2 -o sample3 sample3.c</pre>
     </blockquote>
-    <p>If your CPU supports AltiVec and you want to use optimized SFMT
-      for AltiVec, type</p>
+    <p>If your computer is Apple PowerPC G4 or G5, and you want to use 
+      optimized dSFMT for AltiVec, type</p>
     <blockquote>
       <pre>gcc -faltivec -DSFMT_MEXP=19937 -DHAVE_ALTIVEC -o sample3 sample3.c</pre>
     </blockquote>
@@ -367,7 +368,7 @@ int main(int argc, char* argv[]) {
     <blockquote>
       <pre>
 #include &lt;stdio.h&gt;
-#include &lt;strings.h&gt;
+#include &lt;string.h&gt;
 #include "dSFMT.h"
 
 int main(int argc, char* argv[]) {
@@ -396,7 +397,7 @@ int main(int argc, char* argv[]) {
 	}
     }
     pi = (double)cnt / NUM * 4;
-    printf("%lf\n", pi);
+    printf("%f\n", pi);
     return 0;
 }
       </pre>

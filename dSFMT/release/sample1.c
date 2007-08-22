@@ -22,6 +22,6 @@ int main(int argc, char* argv[]) {
 	}
     }
     pi = (double)cnt / NUM * 4;
-    printf("%lf\n", pi);
+    printf("%l\n", pi);
     return 0;
 }

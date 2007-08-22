@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #include "dSFMT.h"
 
 int main(int argc, char* argv[]) {
@@ -28,6 +28,6 @@ int main(int argc, char* argv[]) {
 	}
     }
     pi = (double)cnt / NUM * 4;
-    printf("%lf\n", pi);
+    printf("%f\n", pi);
     return 0;
 }

@@ -35,10 +35,10 @@
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
   #include <inttypes.h>
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) || defined(__BORLANDC__)
   typedef unsigned int uint32_t;
   typedef unsigned long long uint64_t;
-  #define inline
+  #define inline __inline
 #else
   #include <inttypes.h>
   #if defined(__GNUC__)
@@ -49,7 +49,7 @@
 #endif
 
 #ifndef PRIu64
-  #if defined(_MSC_VER)
+  #if defined(_MSC_VER) || defined(__BORLANDC__)
     #define PRIu64 "I64u"
     #define PRIx64 "I64x"
   #else
@@ -63,10 +63,14 @@
 #endif
 
 inline double genrand_close1_open2(void);
-#ifdef __GNUC__
+#if defined(__GNUC__)
 inline static double genrand_close_open(void) __attribute__((always_inline));
 inline static double genrand_open_close(void) __attribute__((always_inline));
 inline static double genrand_open_open(void) __attribute__((always_inline));
+#elif defined(_MSC_VER) && _MSC_VER >= 1200
+__forceinline static double genrand_close_open(void);
+__forceinline static double genrand_open_close(void);
+__forceinline static double genrand_open_open(void);
 #else
 inline static double genrand_close_open(void);
 inline static double genrand_open_close(void);
@@ -77,7 +81,7 @@ void fill_array_open_close(double array[], int size);
 void fill_array_close_open(double array[], int size);
 void fill_array_open_open(double array[], int size);
 void fill_array_close1_open2(double array[], int size);
-char *get_idstring(void);
+const char *get_idstring(void);
 int get_min_array_size(void);
 void init_gen_rand(uint32_t seed);
 void init_by_array(uint32_t init_key[], int key_length);

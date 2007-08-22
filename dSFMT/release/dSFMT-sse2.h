@@ -25,9 +25,12 @@ static __m128d sse2_double_m_one;
 
 static void setup_const(void);
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c, __m128i d)
     __attribute__((always_inline));
+#elif defined(_MSC_VER) && _MSC_VER >= 1200
+__forceinline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
+				   __m128i d);
 #else
 inline static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
 				   __m128i d);
