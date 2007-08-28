@@ -1,3 +1,7 @@
+ver 1.2.1
+-------
+add #include <altivec.h> to dSFMT.c
+
 ver 1.2
 -------
 The precision specifier of printf was too large in test.c

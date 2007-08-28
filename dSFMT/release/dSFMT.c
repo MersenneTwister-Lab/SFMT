@@ -19,6 +19,9 @@
   128-bit SIMD like data type for standard C
   ------------------------------------------*/
 #if defined(HAVE_ALTIVEC)
+  #if !defined(__APPLE__)
+    #include <altivec.h>
+  #endif
 /** 128-bit data structure */
 union W128_T {
     vector unsigned int s;
