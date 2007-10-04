@@ -167,8 +167,8 @@ ARGV.each{
   printf("    #define ALTI_PERM \\\n")
   printf("\t{8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7}\n")
   printf("    #define ALTI_LOW_MSK \\\n")
-  printf("\t{SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2, SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2}\n")
-
+  printf("\t{SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2, \\\n")
+  printf("\t\tSFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2}\n")
   printf("    #define ALTI_HIGH_CONST \\\n")
   printf("\t{SFMT_HIGH_CONST32, 0, SFMT_HIGH_CONST32, 0}\n")
   printf("#endif\n");
