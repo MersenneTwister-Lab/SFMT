@@ -210,6 +210,9 @@ void calc_factor(GF2X& qpoly, GF2X& lcm, int diff) {
 	if (deg(cha) == maxdegree) {
 	    printf("weight = %ld\n", weight(cha));
 	    printBinary(stdout, cha);
+	    if (deg(cha) > deg(lcm)) {
+		printf("weight is larger than lcm\n");
+	    }
 	} else {
 	    printf("can't get maxdegree\n");
 	    printf("degree is %ld of %d\n", deg(cha), maxdegree);
