@@ -44,6 +44,11 @@
  * - inline static double genrand_res53_mix() generates a random
  *   number on [0,1) with 53-bit resolution using 32bit generation.
  *
+ *   Each SFMT.xxx.out.txt file contains 1000 outputs of gen_rand32()
+ *   initialized by init_genrand(1234), and 1000 outputs of
+ *   gen_rand32() initialized by init_by_array with an array of
+ *   {0x1234, 0x5678, 0x9abc, 0xdef0}.
+ *	
  *   see <a href="howto-compile.html">How to compile</a> to compile
  *   your program with SFMT optimized for SIMD.
  * 
@@ -52,7 +57,7 @@
  *
  * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
  *
- * @date 2007-08-12
+ * @date 2007-10-3
  *
  * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
