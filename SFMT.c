@@ -205,6 +205,7 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
  * @param c a 128-bit part of the internal state array
  * @param d a 128-bit part of the internal state array
  */
+#if (!defined(HAVE_ALTIVEC)) && (!defined(HAVE_SSE2))
 #ifdef ONLY64
 inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
 				w128_t *d) {
@@ -239,6 +240,7 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
     r->u[3] = a->u[3] ^ x.u[3] ^ ((b->u[3] >> SR1) & MSK4) ^ y.u[3] 
 	^ (d->u[3] << SL1);
 }
+#endif
 #endif
 
 #if (!defined(HAVE_ALTIVEC)) && (!defined(HAVE_SSE2))

@@ -1,3 +1,7 @@
+ver 1.3.3
+-------
+change condition compile of do_recursion in SFMT.c
+
 ver 1.3.2
 -------
 bug fix to_res53_mix and genrand_res53_mix.
