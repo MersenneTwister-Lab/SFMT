@@ -146,6 +146,10 @@ param-searchD11-1279: search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o
 	${CPP} -o $@ search.o sfmtD11-st.o mt19937blk.o util.o dsfmt-util.o \
 		${LINKOPT}
 
+param-searchDN1-607: searchN.o sfmtDN1-st.o mt19937blk.o util.o dsfmtN-util.o 
+	${CPP} -o $@ searchN.o sfmtDN1-st.o mt19937blk.o util.o dsfmtN-util.o \
+		${LINKOPT}
+
 shortest-baseD11-607: chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
 			dsfmt-util.o mt19937blk.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
