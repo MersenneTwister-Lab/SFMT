@@ -40,6 +40,9 @@ tar.gz: ${SRC}
 sfmtD11_alti: sfmtD11_alti.c test_time3.c  paramsD11.h
 	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ sfmtD11_alti.c
 
+sfmtDPf_alti: sfmtDPf_alti.c test_time3.c  paramsDPf.h
+	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ sfmtDPf_alti.c
+
 sfmtX78_alti: sfmtX78_alti.c test_time3.c
 	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ sfmtX78_alti.c
 
@@ -80,6 +83,12 @@ sfmtD01_fastc: sfmtD01_fastc.c test_time.c paramsD01.h
 
 sfmtD11_fastc: sfmtD11_fastc.c test_time3.c paramsD11.h
 	${CC} ${CCFLAGS} -o $@ sfmtD11_fastc.c
+
+sfmtDPf_fastc: sfmtDPf_fastc.c test_time3.c paramsDPf.h
+	${CC} ${CCFLAGS} -o $@ sfmtDPf_fastc.c
+
+sfmtDN2_fastc: sfmtDN2_fastc.c test_time3.c paramsDN2.h
+	${CC} ${CCFLAGS} -o $@ sfmtDN2_fastc.c
 
 sfmtP37_fastc: sfmtP37_fastc.c test_time2.c
 	${CC} ${CCFLAGS} -o $@ sfmtP37_fastc.c

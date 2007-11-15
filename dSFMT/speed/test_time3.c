@@ -583,10 +583,11 @@ int main(int argc, char *argv[]) {
     }
     printf("consumed time for generating %u randoms.\n", NUM_RANDS * TIC_COUNT);
     test_co();
+    test_seq_co();
+    return 0;
     test_oc();
     test_oo();
     test_12();
-    test_seq_co();
     test_seq_oc();
     test_seq_oo();
     test_seq_12();
