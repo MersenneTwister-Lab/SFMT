@@ -150,6 +150,10 @@ param-searchDN1-607: searchN.o sfmtDN1-st.o mt19937blk.o util.o dsfmtN-util.o
 	${CPP} -o $@ searchN.o sfmtDN1-st.o mt19937blk.o util.o dsfmtN-util.o \
 		${LINKOPT}
 
+param-searchDN2-607: searchN.o sfmtDN2-st.o mt19937blk.o util.o dsfmtN-util.o 
+	${CPP} -o $@ searchN.o sfmtDN2-st.o mt19937blk.o util.o dsfmtN-util.o \
+		${LINKOPT}
+
 shortest-baseD11-607: chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
 			dsfmt-util.o mt19937blk.o
 	${CPP} -o $@ chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
@@ -208,6 +212,11 @@ shortest-baseDPg-607: chk-shortestL.o shortbase128.o sfmtDPg-st.o util.o \
 shortest-baseDN1-607: chk-shortestN.o shortbase128N.o sfmtDN1-st.o util.o \
 			dsfmtN-util.o mt19937blk.o
 	${CPP} -o $@ chk-shortestN.o shortbase128N.o sfmtDN1-st.o util.o \
+			dsfmtN-util.o mt19937blk.o ${LINKOPT}
+
+shortest-baseDN2-607: chk-shortestN.o shortbase128N.o sfmtDN2-st.o util.o \
+			dsfmtN-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortestN.o shortbase128N.o sfmtDN2-st.o util.o \
 			dsfmtN-util.o mt19937blk.o ${LINKOPT}
 
 searchD11-parity607: search-parity-vector.o sfmtD11-st.o util.o

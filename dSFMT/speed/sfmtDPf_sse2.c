@@ -74,7 +74,9 @@ static void setup_const(void) {
 INLINE static __m128i mm_recursion(__m128i *a, __m128i c, __m128i *d) 
     ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
+#if 0
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
+#endif
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
 INLINE static __m128i mm_recursion(__m128i *a, __m128i b, __m128i *u) {
@@ -106,6 +108,7 @@ INLINE static void convert_oc(w128_t array[], int size) {
     }
 }
 
+#if 0
 INLINE static void convert_co(w128_t array[], int size) {
     int i;
 
@@ -113,6 +116,7 @@ INLINE static void convert_co(w128_t array[], int size) {
 	array[i].sd = _mm_add_pd(array[i].sd, sse2_double_m_one);
     }
 }
+#endif
 
 INLINE static void convert_oo(w128_t array[], int size) {
     int i;
@@ -135,7 +139,7 @@ INLINE static void gen_rand_all(void) {
     _mm_store_si128(&sfmt[N].si, lung);
 }
 
-INLINE static void gen_rand_array(w128_t array[], int size) {
+INLINE static void gen_rand_array12(w128_t array[], int size) {
     int i, j;
     __m128i r, lung;
 
@@ -158,6 +162,38 @@ INLINE static void gen_rand_array(w128_t array[], int size) {
 	r = mm_recursion(&array[i - N].si, r, &lung);
 	_mm_store_si128(&array[i].si, r);
 	_mm_store_si128(&sfmt[j].si, r);
+    }
+    _mm_store_si128(&sfmt[N].si, lung);
+}
+
+INLINE static void gen_rand_arrayco(w128_t array[], int size) {
+    int i, j;
+    __m128i r, lung;
+
+    lung = _mm_load_si128(&sfmt[N].si);
+    r = _mm_load_si128(&sfmt[N - 1].si);
+    for (i = 0; i < N; i++) {
+	r = mm_recursion(&sfmt[i].si, r, &lung);
+	_mm_store_si128(&array[i].si, r);
+    }
+    /* main loop */
+    for (; i < size - N; i++) {
+	r = mm_recursion(&array[i - N].si, r, &lung);
+	_mm_store_si128(&array[i].si, r);
+	array[i - N].sd = _mm_add_pd(array[i - N].sd, sse2_double_m_one);
+    }
+    for (j = 0; j < 2 * N - size; j++) {
+	r = _mm_load_si128(&array[j + size - N].si);
+	_mm_store_si128(&sfmt[j].si, r);
+    }    
+    for (; i < size; i++, j++) {
+	r = mm_recursion(&array[i - N].si, r, &lung);
+	_mm_store_si128(&array[i].si, r);
+	_mm_store_si128(&sfmt[j].si, r);
+	array[i - N].sd = _mm_add_pd(array[i - N].sd, sse2_double_m_one);
+    }
+    for (i = size - N; i < size; i++) {
+	array[i].sd = _mm_add_pd(array[i].sd, sse2_double_m_one);
     }
     _mm_store_si128(&sfmt[N].si, lung);
 }
@@ -185,7 +221,7 @@ void fill_array_open_close(double array[], int size)
 {
     assert(size % 2 == 0);
     assert(size >= 2 * N * 2);
-    gen_rand_array((w128_t *)array, size / 2);
+    gen_rand_array12((w128_t *)array, size / 2);
     convert_oc((w128_t *)array, size / 2);
 }
 
@@ -193,15 +229,14 @@ void fill_array_close_open(double array[], int size)
 {
     assert(size % 2 == 0);
     assert(size >= 2 * N * 2);
-    gen_rand_array((w128_t *)array, size / 2);
-    convert_co((w128_t *)array, size / 2);
+    gen_rand_arrayco((w128_t *)array, size / 2);
 }
 
 void fill_array_open_open(double array[], int size)
 {
     assert(size % 2 == 0);
     assert(size >= 2 * N * 2);
-    gen_rand_array((w128_t *)array, size / 2);
+    gen_rand_array12((w128_t *)array, size / 2);
     convert_oo((w128_t *)array, size / 2);
 }
 
@@ -209,7 +244,7 @@ void fill_array_close1_open2(double array[], int size)
 {
     assert(size % 2 == 0);
     assert(size >= 2 * N * 2);
-    gen_rand_array((w128_t *)array, size / 2);
+    gen_rand_array12((w128_t *)array, size / 2);
 }
 
 void init_gen_rand(uint64_t seed)

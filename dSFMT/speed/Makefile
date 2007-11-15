@@ -11,7 +11,8 @@ CCFLAGS = -Wall -O9 -Wmissing-prototypes -Winline $(OPT) -DNDEBUG $(DDEBUG) \
 $(DMEXP) $(DPG)
 
 STD_TARGET = sfmtD11_fastc sfmtX78_fastc sfmtX78_msk_fastc \
-	sfmtX78_org_fastc mt_msk_fastc mt19937ar_fastc mt64_msk_fastc
+	sfmtX78_org_fastc mt_msk_fastc mt19937ar_fastc mt64_msk_fastc \
+	sfmtDN2_fastca
 ALTI_TARGET = sfmtD11_alti sfmtX78_alti sfmtX78_org_alti mt_msk_alti
 SSE2_TARGET = sfmtD11_sse2 sfmtX78_sse2 sfmtX78_org_sse2 mt_msk_sse2 
 SRC = sfmtD11_fastc.c sfmtD11_alti.c sfmtD11_sse2.c \
@@ -89,6 +90,9 @@ sfmtDPf_fastc: sfmtDPf_fastc.c test_time3.c paramsDPf.h
 
 sfmtDN2_fastc: sfmtDN2_fastc.c test_time3.c paramsDN2.h
 	${CC} ${CCFLAGS} -o $@ sfmtDN2_fastc.c
+
+sfmtDN2_fastca: sfmtDN2_fastca.c test_time3.c paramsDN2.h
+	${CC} ${CCFLAGS} -o $@ sfmtDN2_fastca.c
 
 sfmtP37_fastc: sfmtP37_fastc.c test_time2.c
 	${CC} ${CCFLAGS} -o $@ sfmtP37_fastc.c

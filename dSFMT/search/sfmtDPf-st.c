@@ -39,6 +39,13 @@ unsigned int get_rnd_mexp(void)
     return MEXP;
 }
 
+void get_params(int *sl1, int *sl2, uint64_t *msk1, uint64_t *msk2) {
+    *sl1 = SL1;
+    *sl2 = SL2;
+    *msk1 = MSK1;
+    *msk2 = MSK2;
+}
+
 void setup_param(uint32_t array[], int *index) {
     //SL1 = (array[(*index)++] % 6 + 1) * 8; /* 128 bit */
     SL1 = array[(*index)++] % (51 - FIXSIZE) + FIXSIZE; 

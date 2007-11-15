@@ -28,7 +28,6 @@ static int maxdegree;
 static FILE *frandom;
 static GF2X cha;
 
-static bool use_base = false;
 static char* filename = NULL;
 
 void option(int argc, char * argv[]) {
@@ -36,7 +35,7 @@ void option(int argc, char * argv[]) {
     bool error = false;
     char *pgm = argv[0];
     for (;;) {
-	c = getopt(argc, argv, "hb");
+	c = getopt(argc, argv, "h");
 	if (error) {
 	    break;
 	}
@@ -47,9 +46,6 @@ void option(int argc, char * argv[]) {
 	    break;
 	}
 	switch (c) {
-	case 'b':
-	    use_base = true;
-	    break;
 	case 'h':
 	default:
 	    error = true;
@@ -57,7 +53,7 @@ void option(int argc, char * argv[]) {
 	}
     }
     if (error || filename == NULL) {
-	printf("%s [-b] filename\n", pgm);
+	printf("%s filename\n", pgm);
 	    exit(0);
     }
 }
@@ -121,17 +117,7 @@ void fill_rnd(dsfmt_t *sfmt) {
 }
 
 int fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
-    static int count = 0;
-
-    if (count > 5000 && count > MEXP * 2) {
-	if (use_base) {
-	    return fill_state_base(sfmt);
-	}
-	return 0;
-    }
-    fill_rnd(sfmt);
-    count++;
-    return 1;
+    return fill_state_base(sfmt);
 }
 
 void update(GF2X& min) {

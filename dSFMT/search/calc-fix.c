@@ -30,8 +30,16 @@ int main(int argc, char* argv[]) {
     }
     SL1 = (int)strtol(argv[1], NULL, 10);
     SL2 = (int)strtol(argv[2], NULL, 10);
-    MSK1 = (uint64_t)strtoll(argv[3], NULL, 16);
-    MSK2 = (uint64_t)strtoll(argv[4], NULL, 16);
+    if (strlen(argv[3]) == 16) {
+	MSK1 = (uint64_t)strtoll(argv[3]+1, NULL, 16);
+    } else {
+	MSK1 = (uint64_t)strtoll(argv[3], NULL, 16);
+    }
+    if (strlen(argv[4]) == 16) {
+	MSK2 = (uint64_t)strtoll(argv[4]+1, NULL, 16);
+    } else {
+	MSK2 = (uint64_t)strtoll(argv[4], NULL, 16);
+    }
 
     ok = false;
     for (i = 1; i < 4096; i++) {

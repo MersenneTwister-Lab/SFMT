@@ -42,15 +42,75 @@ get-weightDPf-1279: get-weightL.o sfmtDPf-st.o util.o \
 	${CPP} -o $@ get-weightL.o sfmtDPf-st.o util.o \
 			dsfmtL-util.o mt19937blk.o ${LINKOPT}
 
-searchDPf-parity521: search-parity-vector.o sfmtD11-st.o util.o
-	${CPP} -o $@ search-parity-vector.o sfmtD11-st.o util.o \
-		${LINKOPT}
+get-weightDPf-2203: get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o
+	${CPP} -o $@ get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o ${LINKOPT}
+
+get-weightDPf-4253: get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o
+	${CPP} -o $@ get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o ${LINKOPT}
+
+get-weightDPf-11213: get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o
+	${CPP} -o $@ get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o ${LINKOPT}
+
+get-weightDPf-19937: get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o
+	${CPP} -o $@ get-weightL.o sfmtDPf-st.o util.o \
+			dsfmtL-util.o mt19937blk.o ${LINKOPT}
+
+searchDPf-parity521: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
+
+searchDPf-parity1279: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
+
+searchDPf-parity2203: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
+
+searchDPf-parity4253: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
+
+searchDPf-parity11213: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
+
+searchDPf-parity19937: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
+
+searchDPf-parity44497: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
+
+searchDPf-parity86243: search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o
+	${CPP} -o $@ search-parity-vector.o sfmtDPf-st.o util.o \
+		calc-fix2.o ${LINKOPT}
 
 testDPf-parity521:test-parity.o dSFMT-ref-st.o util.o dSFMT-ref-st.h
 	 ${CPP} -o $@ test-parity.o dSFMT-ref-st.o util.o ${LINKOPT}
 
 calc-fix-mat: calc-fix-mat.o
 	${CPP} -o $@ calc-fix-mat.o ${LINKOPT}
+
+calc-fix2: calc-fix2.c
+	${CC} -c -DMAIN calc-fix2.c
+	${CPP} -o $@ calc-fix2.o ${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<

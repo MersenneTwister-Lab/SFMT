@@ -124,36 +124,12 @@ void fill_rnd(dsfmt_t *sfmt) {
 
 int fill_state_random(dsfmt_t *sfmt, FILE *frandom) {
     static int count = 0;
-    int i, j;
-    int w1, w2, w3;
-    unsigned int pos;
-    uint64_t num;
 
     if (count > 5000) {
 	//return fill_state_base(sfmt);
 	return 0;
     }
     fill_rnd(sfmt);
-#if 0
-    w1 = getw(frandom);
-    w2 = getw(frandom);
-    w3 = getw(frandom);
-    if (feof(frandom) || ferror(frandom)) {
-	if (errno != 0) {
-	    printf("test_shortest:%s\n", strerror(errno));
-	} else {
-	    printf("test_shortest:/dev/urandom reached to EOF!\n");
-	}
-	fclose(frandom);
-	exit(1);
-    }
-    num = ((uint64_t)w1 << 20) | (uint64_t)w2;
-    num &= 0x000FFFFFFFFFFFFFULL;
-    pos = (unsigned int)w3;
-    j = pos % 2;
-    i = pos % (N + 1);
-    sfmt->status[i][j] = num;
-#endif
     count++;
     return 1;
 }
@@ -297,7 +273,7 @@ void test_shortest(char *filename) {
 #if 1
     DivRem(tmp, rempoly, lcmpoly, poly);
     if (deg(rempoly) != -1) {
-	printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
+	printf("rem != 0 deg rempoly = %ld:\n", deg(rempoly));
     } else {
 	printf("divide OK\n");
     }

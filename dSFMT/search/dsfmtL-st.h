@@ -24,6 +24,7 @@ typedef struct DSFMT_T dsfmt_t;
 void setup_param(uint32_t array[], int *index);
 unsigned int get_rnd_maxdegree(void);
 unsigned int get_rnd_mexp(void);
+void get_params(int *sl1, int *sl2, uint64_t *msk1, uint64_t *msk2);
 void print_param(FILE *fp);
 
 void init_gen_rand(dsfmt_t *dsfmt, uint64_t seed);

@@ -14,6 +14,7 @@ static unsigned int POS1 = 1;
 static unsigned int SL1 = 31;
 static unsigned int SL2 = 31;
 static unsigned int SR1 = 12;
+static unsigned int SR2 = 12;
 static uint64_t MSK1 = 0xedfffffbfffbffbdULL & 0x000FFFFFFFFFFFFFULL;
 static uint64_t MSK2 = 0xaefeffd36dfdffdfULL & 0x000FFFFFFFFFFFFFULL;
 static uint64_t MSK3 = 0xedfffffbfffbffbdULL & 0x000FFFFFFFFFFFFFULL;
@@ -34,8 +35,9 @@ unsigned int get_rnd_mexp(void)
 
 void setup_param(uint32_t array[], int *index) {
     POS1 = array[(*index)++] % (N - 2) + 1;
-    SL1 = array[(*index)++] % (64 - 1) + 1; 
-    SL2 = array[(*index)++] % (64 - 1) + 1; 
+    SL1 = array[(*index)++] % (52 - 1) + 1; 
+    SL2 = array[(*index)++] % (52 - 1) + 1;
+    SR2 = array[(*index)++] % (52 - 13) + 12;
     MSK1 = array[(*index)++];
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
@@ -79,6 +81,7 @@ void print_param(FILE *fp) {
     fprintf(fp, "SL1 = %u\n", SL1);
     fprintf(fp, "SL2 = %u\n", SL2);
     fprintf(fp, "SR1 = %u\n", SR1);
+    fprintf(fp, "SR2 = %u\n", SR2);
     fprintf(fp, "MSK1 = %016"PRIx64"\n", MSK1);
     fprintf(fp, "MSK2 = %016"PRIx64"\n", MSK2);
     fprintf(fp, "MSK3 = %016"PRIx64"\n", MSK3);
@@ -90,9 +93,9 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2], uint64_t c[2]) {
     uint64_t a0, a1;
 
     a0 = a[1] ^ (a[0] >> SR1) ^ ((b[0] ^ (b[0] << SL1)) & MSK1)
-	^ ((c[0] ^ (c[0] << SL2)) & MSK3);
+	^ (c[0] >> SR2) ^ ((c[0] << SL2) & MSK3);
     a1 = a[0] ^ (a[1] >> SR1) ^ ((b[1] ^ (b[1] << SL1)) & MSK2)
-	^ ((c[1] ^ (c[1] << SL2)) & MSK4);
+	^ (c[1] >> SR2) ^ ((c[1] << SL2) & MSK4);
     a[0] = a0;
     a[1] = a1;
 }
@@ -254,6 +257,8 @@ void read_random_param(FILE *f) {
     SL2 = get_uint(line, 10);
     fgets(line, 256, f);
     SR1 = get_uint(line, 10);
+    fgets(line, 256, f);
+    SR2 = get_uint(line, 10);
     fgets(line, 256, f);
     MSK1 = get_uint64(line, 16);
     fgets(line, 256, f);

@@ -59,14 +59,14 @@ void check_co(void) {
     for (i = 0; i < 5000; i++) {
 	r.d = genrand_close_open();
 	if (r.d != array[i].d) {
-	    printf("\n[0,1) mismatch i = %d: r = %1.20lf(%032"PRIx64"), "
-		   "array = %1.20lf(%032"PRIx64")\n", i, r.d, r.u,
+	    printf("\n[0,1) mismatch i = %d: r = %1.15f(%032"PRIx64"), "
+		   "array = %1.15f(%032"PRIx64")\n", i, r.d, r.u,
 		   array[i].d, array[i].u);
 	    exit(1);
 	}
 	if (i < 1000) {
-	    printf("%1.20lf ", array[i].d);
-	    if (i % 3 == 2) {
+	    printf("%1.15f ", array[i].d);
+	    if (i % 4 == 3) {
 		printf("\n");
 	    }
 	}
@@ -91,14 +91,14 @@ void check_oc(void) {
     for (i = 0; i < 5000; i++) {
 	r.d = genrand_open_close();
 	if (r.d != array[i].d) {
-	    printf("\n(0,1] mismatch i = %d: r = %1.20lf(%032"PRIx64"), "
-		   "array = %1.20lf(%032"PRIx64")\n", i, r.d, r.u,
+	    printf("\n(0,1] mismatch i = %d: r = %1.15f(%032"PRIx64"), "
+		   "array = %1.15f(%032"PRIx64")\n", i, r.d, r.u,
 		   array[i].d, array[i].u);
 	    exit(1);
 	}
 	if (i < 1000) {
-	    printf("%1.20lf ", array[i].d);
-	    if (i % 3 == 2) {
+	    printf("%1.15f ", array[i].d);
+	    if (i % 4 == 3) {
 		printf("\n");
 	    }
 	}
@@ -123,14 +123,14 @@ void check_oo(void) {
     for (i = 0; i < 5000; i++) {
 	r.d = genrand_open_open();
 	if (r.d != array[i].d) {
-	    printf("\n(0,1) mismatch i = %d: r = %1.20lf(%032"PRIx64"), "
-		   "array = %1.20lf(%032"PRIx64")\n", i, r.d, r.u,
+	    printf("\n(0,1) mismatch i = %d: r = %1.15f(%032"PRIx64"), "
+		   "array = %1.15f(%032"PRIx64")\n", i, r.d, r.u,
 		   array[i].d, array[i].u);
 	    exit(1);
 	}
 	if (i < 1000) {
-	    printf("%1.20lf ", array[i].d);
-	    if (i % 3 == 2) {
+	    printf("%1.15f ", array[i].d);
+	    if (i % 4 == 3) {
 		printf("\n");
 	    }
 	}
@@ -155,14 +155,14 @@ void check_12(void) {
     for (i = 0; i < 5000; i++) {
 	r.d = genrand_close1_open2();
 	if (r.d != array[i].d) {
-	    printf("\n[1, 2) mismatch i = %d: r = %1.20lf(%032"PRIx64"), "
-		   "array = %1.20lf(%032"PRIx64")\n", i, r.d, r.u,
+	    printf("\n[1, 2) mismatch i = %d: r = %1.15f(%032"PRIx64"), "
+		   "array = %1.15f(%032"PRIx64")\n", i, r.d, r.u,
 		   array[i].d, array[i].u);
 	    exit(1);
 	}
 	if (i < 1000) {
-	    printf("%1.20lf ", array[i].d);
-	    if (i % 3 == 2) {
+	    printf("%1.15f ", array[i].d);
+	    if (i % 4 == 3) {
 		printf("\n");
 	    }
 	}
