@@ -60,6 +60,9 @@ sfmtD01_sse2: sfmtD01_sse2.c test_time.c  paramsD01.h
 sfmtD11_sse2: sfmtD11_sse2.c test_time3.c  paramsD11.h
 	${CC} ${CCFLAGS} -o $@ sfmtD11_sse2.c
 
+sfmtDPz1_sse2: sfmtDPz1_sse2.c test_time3.c  paramsDPz1.h
+	${CC} ${CCFLAGS} -o $@ sfmtDPz1_sse2.c
+
 sfmtDY1_sse2: sfmtDY1_sse2.c test_time3.c  paramsDY1.h
 	${CC} ${CCFLAGS} -o $@ sfmtDY1_sse2.c
 
@@ -89,6 +92,9 @@ sfmtDPf_fastc: sfmtDPf_fastc.c test_time3.c paramsDPf.h
 	${CC} ${CCFLAGS} -o $@ sfmtDPf_fastc.c
 
 sfmtDN2_fastc: sfmtDN2_fastc.c test_time3.c paramsDN2.h
+	${CC} ${CCFLAGS} -o $@ sfmtDN2_fastc.c
+
+sfmtDPz1_fastc: sfmtDPz1_fastc.c test_time3.c paramsDPz1.h
 	${CC} ${CCFLAGS} -o $@ sfmtDN2_fastc.c
 
 sfmtDN2_fastca: sfmtDN2_fastca.c test_time3.c paramsDN2.h

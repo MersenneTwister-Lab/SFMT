@@ -7,15 +7,15 @@
 #include <stdio.h>
 #include <assert.h>
 #include "random.h"
-#include "paramsD11.h"
+#include "paramsDPz1.h"
 
 #ifndef MEXP
 #define MEXP 19937
 #endif
 
-#define WORDSIZE 104
-#define N (MEXP / WORDSIZE)
-#define MAXDEGREE (WORDSIZE * (N + 1))
+#define WORDSIZE 128
+#define N ((MEXP - 128) / WORDSIZE + 1)
+#define MAXDEGREE (WORDSIZE * N + 128)
 
 union W128_T {
     uint64_t a[2];
@@ -47,37 +47,35 @@ INLINE double genrand_close1_open2(void);
 #else
 #define ALWAYSINLINE
 #endif
-INLINE static void lshift128(w128_t *out, const w128_t *in, int shift)
+INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *lung)
     ALWAYSINLINE;
-INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
-				w128_t *lung) ALWAYSINLINE;
 #if 0
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 #endif
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
-INLINE static void lshift128(w128_t *out, const w128_t *in, int shift) {
-    out->a[0] = in->a[0] << (shift * 8);
-    out->a[1] = in->a[1] << (shift * 8);
-    out->a[1] |= in->a[0] >> (64 - shift * 8);
+#if (defined(__BIG_ENDIAN__) || defined(BIG_ENDIAN)) && !defined(__amd64)
+inline static int idxof(int i) {
+    return i ^ 1;
 }
+#else
+inline static int idxof(int i) {
+    return i;
+}
+#endif
 
-INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
-				w128_t *lung){
-    w128_t x;
+INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *lung) {
+    uint64_t mat1[2] = {0, SFMT_MSK1};
+    uint64_t mat2[2] = {0, SFMT_MSK2};
+    uint64_t t0, t1;
 
-    lshift128(&x, a, SL2);
-    r->a[0] = a->a[0] ^ x.a[0] ^ ((b->a[0] >> SR1) & MSK1) ^ (c->a[0] >> SR2)
-	^ (c->a[0] << SL1) ^ lung->a[1];
-    r->a[1] = a->a[1] ^ x.a[1] ^ ((b->a[1] >> SR1) & MSK2) ^ (c->a[1] >> SR2)
-	^ (c->a[1] << SL1) ^ lung->a[0];
-    r->a[0] = r->a[0] & LOW_MASK;
-    r->a[1] = r->a[1] & LOW_MASK;
-    lung->a[0] ^= r->a[0];
-    lung->a[1] ^= r->a[1];
-    r->a[0] = r->a[0] | HIGH_CONST;
-    r->a[1] = r->a[1] | HIGH_CONST;
+    t0 = a->a[0];
+    t1 = a->a[1];
+    r->a[0] = lung->a[1] ^ (t0 >> 1) ^ mat1[t0 & 1];
+    r->a[1] = lung->a[0] ^ (t1 >> 1) ^ mat2[t1 & 1];
+    lung->a[0] = (lung->a[0] << 8) ^ lung->a[0] ^ t0;
+    lung->a[1] = (lung->a[1] << 8) ^ lung->a[1] ^ t1;
 }
 
 #if 0
@@ -90,6 +88,26 @@ INLINE static void convert_co(w128_t array[], int size) {
     }
 }
 #endif
+INLINE static void filter(w128_t *a) {
+    a->a[0] ^= (a->a[0] >> 29) & 0x5555555555555555ULL;
+    a->a[1] ^= (a->a[1] >> 29) & 0x5555555555555555ULL;
+    a->a[0] ^= (a->a[0] << 17) & 0x71D67FFFEDA60000ULL;
+    a->a[1] ^= (a->a[1] << 17) & 0x71D67FFFEDA60000ULL;
+    a->a[0] ^= (a->a[0] << 37) & 0xFFF7EEE000000000ULL;
+    a->a[1] ^= (a->a[1] << 37) & 0xFFF7EEE000000000ULL;
+    a->a[0] ^= (a->a[0] >> 43);
+    a->a[1] ^= (a->a[1] >> 43);
+    a->a[0] &= LOW_MASK;
+    a->a[1] &= LOW_MASK;
+    a->a[0] |= HIGH_CONST;
+    a->a[1] |= HIGH_CONST;
+}
+
+INLINE static void filter_co(w128_t *a) {
+    filter(a);
+    a->d[0] = a->d[0] - 1.0;
+    a->d[1] = a->d[1] - 1.0;
+}
 
 INLINE static void convert_oc(w128_t array[], int size) {
     int i;
@@ -116,13 +134,8 @@ INLINE static void gen_rand_all(void) {
     w128_t lung;
 
     lung = sfmt[N];
-    do_recursion(&sfmt[0], &sfmt[0], &sfmt[POS1], &sfmt[N -1], &lung);
-    for (i = 1; i < N - POS1; i++) {
-	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1], &sfmt[i - 1], &lung);
-    }
-    for (; i < N; i++) {
-	do_recursion(&sfmt[i], &sfmt[i], &sfmt[i + POS1 - N], &sfmt[i - 1],
-		     &lung);
+    for (i = 0; i < N; i++) {
+	do_recursion(&sfmt[i], &sfmt[i], &lung);
     }
     sfmt[N] = lung;
 }
@@ -132,26 +145,23 @@ INLINE static void gen_rand_array12(w128_t array[], int size) {
     w128_t lung;
 
     lung = sfmt[N];
-    do_recursion(&array[0], &sfmt[0], &sfmt[POS1], &sfmt[N - 1], &lung);
-    for (i = 1; i < N - POS1; i++) {
-	do_recursion(&array[i], &sfmt[i], &sfmt[i + POS1], &array[i - 1],
-		     &lung);
-    }
-    for (; i < N; i++) {
-	do_recursion(&array[i], &sfmt[i], &array[i + POS1 - N],
-		     &array[i - 1], &lung);
+    for (i = 0; i < N; i++) {
+	do_recursion(&array[i], &sfmt[i], &lung);
     }
     for (; i < size - N; i++) {
-	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
-		     &array[i - 1], &lung);
+	do_recursion(&array[i], &array[i - N], &lung);
+	filter(array[i - N]);
     }
     for (j = 0; j < 2 * N - size; j++) {
 	sfmt[j] = array[j + size - N];
     }
     for (; i < size; i++, j++) {
-	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
-		     &array[i - 1], &lung);
+	do_recursion(&array[i], &array[i - N], &lung);
 	sfmt[j] = array[i];
+	filter(array[i - N]);
+    }
+    for (i = size - N; i < size; i++) {
+	filter(array[i]);
     }
     sfmt[N] = lung;
 }
@@ -161,34 +171,23 @@ INLINE static void gen_rand_arrayco(w128_t array[], int size) {
     w128_t lung;
 
     lung = sfmt[N];
-    do_recursion(&array[0], &sfmt[0], &sfmt[POS1], &sfmt[N - 1], &lung);
-    for (i = 1; i < N - POS1; i++) {
-	do_recursion(&array[i], &sfmt[i], &sfmt[i + POS1], &array[i - 1],
-		     &lung);
-    }
-    for (; i < N; i++) {
-	do_recursion(&array[i], &sfmt[i], &array[i + POS1 - N],
-		     &array[i - 1], &lung);
+    for (i = 0; i < N; i++) {
+	do_recursion(&array[i], &sfmt[i], &lung);
     }
     for (; i < size - N; i++) {
-	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
-		     &array[i - 1], &lung);
-	array[i - N].d[0] = array[i - N].d[0] - 1.0;
-	array[i - N].d[1] = array[i - N].d[1] - 1.0;
+	do_recursion(&array[i], &array[i - N], &lung);
+	filter_co(array[i - N]);
     }
     for (j = 0; j < 2 * N - size; j++) {
 	sfmt[j] = array[j + size - N];
     }
     for (; i < size; i++, j++) {
-	do_recursion(&array[i], &array[i - N], &array[i + POS1 - N],
-		     &array[i - 1], &lung);
+	do_recursion(&array[i], &array[i - N], &array[i - 1], &lung);
 	sfmt[j] = array[i];
-	array[i - N].d[0] = array[i - N].d[0] - 1.0;
-	array[i - N].d[1] = array[i - N].d[1] - 1.0;
+	filter_co(array[i - N]);
     }
     for (i = size - N; i < size; i++) {
-	array[i].d[0] = array[i].d[0] - 1.0;
-	array[i].d[1] = array[i].d[1] - 1.0;
+	filter_co(array[i]);
     }
     sfmt[N] = lung;
 }
@@ -200,7 +199,7 @@ INLINE double genrand_close1_open2(void) {
 	gen_rand_all();
 	idx = 0;
     }
-    r = psfmt[idx++];
+    r = filter52(psfmt[idx++]);
     return r;
 }
 
@@ -248,10 +247,14 @@ void init_gen_rand(uint64_t seed)
     uint64_t *psfmt;
 
     psfmt = (uint64_t *)&sfmt[0];
-    psfmt[0] = (seed & LOW_MASK) | HIGH_CONST;
-    for (i = 1; i < (N + 1) * 2; i++) {
-        psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 30)) + i;
-        psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
+    psfmt[0] = seed;
+    for (i = 1; i < N * 2; i++) {
+	psfmt[i] = 6364136223846793005ULL 
+	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
+    }
+    for (;i < (N + 1) * 2; i++) {
+	psfmt[i] = 6364136223846793005ULL 
+	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
     }
     idx = N * 2;
 }

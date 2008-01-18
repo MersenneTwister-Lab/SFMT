@@ -16,7 +16,6 @@ static uint64_t MSK2 = 0xaefeffd36dfdffdfULL;
 
 static unsigned int get_uint(char *line, int radix);
 static uint64_t get_uint64(char *line, int radix);
-static uint64_t filter(uint64_t n);
 
 unsigned int get_rnd_maxdegree(void)
 {
@@ -64,16 +63,6 @@ inline static void do_recursion(uint64_t a[2], uint64_t lung[2]) {
     lung[1] = (lung[1] << 8) ^ lung[1] ^ t1;
 }
 
-inline static uint64_t filter(uint64_t x) {
-    x ^= (x >> 29) & 0x5555555555555555ULL;
-    x ^= (x << 17) & 0x71D67FFFEDA60000ULL;
-    x ^= (x << 37) & 0xFFF7EEE000000000ULL;
-    x ^= (x >> 43);
-    x &= LOW_MASK;
-    x |= HIGH_CONST;
-    return x;
-}
-
 /*
  * これは直接呼び出さないでgenrandを呼び出している。
  */
@@ -100,13 +89,13 @@ uint64_t gen_rand104sp(dsfmt_t *dsfmt, uint64_t array[2], int mode)
     p = p / 2;
     switch (mode) {
     case 0:
-	array[0] = filter(dsfmt->status[i][0]);
-	array[1] = filter(dsfmt->status[i][1]);
+	array[0] = dsfmt->status[i][0] & LOW_MASK;
+	array[1] = dsfmt->status[i][1] & LOW_MASK;
 	break;
     case 1:
     default:
-	array[0] = filter(dsfmt->status[i][1]);
-	array[1] = filter(dsfmt->status[p][0]);
+	array[0] = dsfmt->status[i][1] & LOW_MASK;
+	array[1] = dsfmt->status[p][0] & LOW_MASK;
     }
 
     next_state(dsfmt);
@@ -123,8 +112,8 @@ void gen_rand104spar(dsfmt_t *dsfmt, uint64_t array[][2], int size) {
 
     for (j = 0; j < size; j++) {
 	i = dsfmt->idx / 2;
-	array[j][0] = filter(dsfmt->status[i][0]);
-	array[j][1] = filter(dsfmt->status[i][1]);
+	array[j][0] = dsfmt->status[i][0] & LOW_MASK;
+	array[j][1] = dsfmt->status[i][1] & LOW_MASK;
 
 	next_state(dsfmt);
 	dsfmt->idx += 2;

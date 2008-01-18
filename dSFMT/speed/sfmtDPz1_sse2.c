@@ -5,7 +5,15 @@
 #include <assert.h>
 #include <emmintrin.h>
 #include "random.h"
-#include "paramsD11.h"
+#include "paramsDPz1.h"
+
+#ifndef MEXP
+#define MEXP 19937
+#endif
+
+#define WORDSIZE 128
+#define N ((MEXP - 128) / WORDSIZE + 1)
+#define MAXDEGREE (WORDSIZE * N + 128)
 
 union W128_T {
     __m128i si;
@@ -38,8 +46,10 @@ static double *psfmt = &sfmt[0].d[0];
 static int idx;
 
 static __m128i sse2_param_mask;
+static __m128i sse2_temp_mask1;
+static __m128i sse2_temp_mask2;
+static __m128i sse2_temp_mask3;
 static __m128i sse2_low_mask;
-static __m128i sse2_high_const;
 static __m128i sse2_int_one;
 static __m128d sse2_double_two;
 static __m128d sse2_double_m_one;
@@ -49,11 +59,17 @@ static void setup_const(void) {
     if (!first) {
 	return;
     }
-    sse2_param_mask = _mm_set_epi32(MSK32_3, MSK32_4, MSK32_1, MSK32_2);
-    sse2_low_mask = _mm_set_epi32(LOW_MASK32_1, LOW_MASK32_2,
-				  LOW_MASK32_1, LOW_MASK32_2);
+    sse2_param_mask = _mm_set_epi32(SFMT_MSK32_3, SFMT_MSK32_4, SFMT_MSK32_1,
+				    SFMT_MSK32_2);
+    sse2_low_mask = _mm_set_epi32(SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2,
+				  SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2);
+    sse2_temp_mask1 = _mm_set_epi32(SFMT_TEMP_MSK1_2, SMFT_TEMP_MSK1_2,
+				    SFMT_TEMP_MSK1_1, SFMT_TEMP_MSK1_2);
+    sse2_temp_mask2 = _mm_set_epi32(SFMT_TEMP_MSK2_1, SMFT_TEMP_MSK2_2,
+				    SFMT_TEMP_MSK2_1, SFMT_TEMP_MSK2_2);
+    sse2_temp_mask3 = _mm_set_epi32(SFMT_TEMP_MSK3_1, SMFT_TEMP_MSK3_2,
+				    SFMT_TEMP_MSK3_1, SFMT_TEMP_MSK3_2);
     sse2_int_one = _mm_set_epi32(0, 1, 0, 1);
-    sse2_high_const = _mm_set_epi32(HIGH_CONST32, 0, HIGH_CONST32, 0);
     sse2_double_two = _mm_set_pd(2.0, 2.0);
     sse2_double_m_one = _mm_set_pd(-1.0, -1.0);
     first = false;
@@ -64,33 +80,60 @@ static void setup_const(void) {
 #else
 #define ALWAYSINLINE
 #endif
-INLINE static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
-				   __m128i d) ALWAYSINLINE;
+INLINE static __m128i mm_recursion(__m128i *a, __m128i c, __m128i *d) 
+    ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 #if 0
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 #endif
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
-INLINE static __m128i mm_recursion(__m128i *a, __m128i *b, __m128i c,
-				   __m128i d) {
-    __m128i v, w, x, y, z;
+INLINE static __m128i mm_recursion(__m128i *a, __m128i *u) {
+    __m128i r, v, w, x, y, z;
     
-    z = _mm_load_si128(a);
-    y = _mm_srli_epi64(*b, SR1);
-    y = _mm_and_si128(y, sse2_param_mask);
-    w = _mm_slli_epi64(c, SL1);
-    x = _mm_srli_epi64(c, SR2);
-    v = _mm_shuffle_epi32(d, SSE2_SHUFF);
-    w = _mm_xor_si128(w, x);
-    v = _mm_xor_si128(v, z);
-    z = _mm_slli_si128(z, SL2);
-    w = _mm_xor_si128(w, y);
-    v = _mm_xor_si128(v, z);
-    v = _mm_xor_si128(v, w);
-    v = _mm_and_si128(v, sse2_low_mask);
-    /* v = _mm_or_si128(v, sse2_high_const); */
-    return v;
+    x = _mm_load_si128(a);
+    y = _mm_shuffle_epi32(*u, SSE2_SHUFF);
+    z = _mm_srli_epi64(x, 1);
+    r = _mm_and_si128(x, sse2_int_one);
+    r = _mm_cmpeq_epi64(r, sse2_int_one);
+    r = _mm_and_epi128(r, sse2_param_mask);
+    y = _mm_xor_si128(y, x);
+    r = _mm_xor_si128(r, y);
+
+    w = _mm_slli_epi64(*u, 8);
+    x = _mm_xor_si128(x, *u);
+    x = _mm_xor_si128(x, w);
+    *u = x;
+    return r;
+}
+
+INLINE static void mm_filter(__m128i *a) {
+    __m128i x, y;
+
+    x = *a;
+    y = _mm_srli_epi64(x, SFMT_SR3);
+    y = _mm_and_si128(y, sse2_temp_msk1);
+    x = _mm_xor_si128(x, y);
+
+    y = _mm_slli_epi64(x, SFMT_SL3);
+    y = _mm_and_si128(y, sse2_temp_msk2);
+    x = _mm_xor_si128(x, y);
+
+    y = _mm_slli_epi64(x, SFMT_SL4);
+    y = _mm_and_si128(y, sse2_temp_msk3);
+    x = _mm_xor_si128(x, y);
+
+    y = _mm_slli_epi64(x, SFMT_SL5);
+    x = _mm_xor_si128(x, y);
+
+    x = _mm_and_si128(x, sse2_low_mask);
+    x = _mm_or_si128(x, sse2_high_const);
+    *a = x;
+}
+
+INLINE static void mm_filter_co(w128_t *a) {
+    mm_filter(a->si);
+    a->sd = _mm_add_pd(a->sd, sse2_double_m_one);
 }
 
 INLINE static void convert_oc(w128_t array[], int size) {
@@ -121,106 +164,67 @@ INLINE static void convert_oo(w128_t array[], int size) {
 
 INLINE static void gen_rand_all(void) {
     int i;
-    __m128i r, lung;
+    __m128i lung;
 
-    lung = _mm_load_si128(&sfmt[N].si);
-    r = _mm_load_si128(&sfmt[N - 1].si);
-    for (i = 0; i < N - POS1; i++) {
-	r = mm_recursion(&sfmt[i].si, &sfmt[i + POS1].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&sfmt[i].si, r);
+    lung = sfmt[N].si;
+    for (i = 0; i < N; i++) {
+	sfmt[i].si = mm_recursion(&sfmt[i].si, &lung);
     }
-    for (; i < N; i++) {
-	r = mm_recursion(&sfmt[i].si, &sfmt[i + POS1 - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&sfmt[i].si, r);
-    }
-    _mm_store_si128(&sfmt[N].si, lung);
+    sfmt[N].si = lung;
 }
 
 INLINE static void gen_rand_array12(w128_t array[], int size) {
     int i, j;
-    __m128i r, lung;
+    __m128i lung;
 
-    lung = _mm_load_si128(&sfmt[N].si);
-    r = _mm_load_si128(&sfmt[N - 1].si);
-    for (i = 0; i < N - POS1; i++) {
-	r = mm_recursion(&sfmt[i].si, &sfmt[i + POS1].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
-    }
-    for (; i < N; i++) {
-	r = mm_recursion(&sfmt[i].si, &array[i + POS1 - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
+    lung = sfmt[N].si;
+    for (i = 0; i < N; i++) {
+	array[i].si = mm_recursion(&sfmt[i].si, &lung);
     }
     /* main loop */
     for (; i < size - N; i++) {
-	r = mm_recursion(&array[i - N].si, &array[i + POS1 - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
+	array[i].si = mm_recursion(&array[i - N].si, &lung);
+	mm_filter(array[i - N].si);
     }
     for (j = 0; j < 2 * N - size; j++) {
-	r = _mm_load_si128(&array[j + size - N].si);
-	_mm_store_si128(&sfmt[j].si, r);
+	sfmt[j].si = array[j + size - N].si;
     }    
     for (; i < size; i++, j++) {
-	r = mm_recursion(&array[i - N].si, &array[i + POS1 - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
-	_mm_store_si128(&sfmt[j].si, r);
+	array[i].si = mm_recursion(&array[i - N].si, r, &lung);
+	sfmt[j].si = array[i].si;
+	mm_filter(&array[i - N].si);
     }
-    _mm_store_si128(&sfmt[N].si, lung);
+    for (i = size - N; i < size; i++) {
+	mm_filter(&array[i].si);
+    }
+    sfmt[N].si = lung;
 }
 
 INLINE static void gen_rand_arrayco(w128_t array[], int size) {
     int i, j;
-    __m128i r, lung;
+    __m128i lung;
 
-    lung = _mm_load_si128(&sfmt[N].si);
-    r = _mm_load_si128(&sfmt[N - 1].si);
-    for (i = 0; i < N - POS1; i++) {
-	r = mm_recursion(&sfmt[i].si, &sfmt[i + POS1].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
-    }
-    for (; i < N; i++) {
-	r = mm_recursion(&sfmt[i].si, &array[i + POS1 - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
+    lung = sfmt[N].si;
+    for (i = 0; i < N; i++) {
+	array[i].si = mm_recursion(&sfmt[i].si, &lung);
     }
     /* main loop */
     for (; i < size - N; i++) {
-	r = mm_recursion(&array[i - N].si, &array[i + POS1 - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
-	array[i - N].sd = _mm_add_pd(array[i - N].sd, sse2_double_m_one);
+	array[i].si = mm_recursion(&array[i - N].si, &lung);
+	mm_filter_co(array[i - N]);
     }
     for (j = 0; j < 2 * N - size; j++) {
-	r = _mm_load_si128(&array[j + size - N].si);
-	_mm_store_si128(&sfmt[j].si, r);
+	sfmt[j].si = array[j + size - N].si;
     }    
     for (; i < size; i++, j++) {
-	r = mm_recursion(&array[i - N].si, &array[i + POS1 - N].si, r, lung);
-	lung = _mm_xor_si128(lung, r);
-	r = _mm_or_si128(r, sse2_high_const);
-	_mm_store_si128(&array[i].si, r);
-	_mm_store_si128(&sfmt[j].si, r);
-	array[i - N].sd = _mm_add_pd(array[i - N].sd, sse2_double_m_one);
+	array[i].si = mm_recursion(&array[i - N].si, r, &lung);
+	sfmt[j].si = array[i].si;
+	mm_filter_co(&array[i - N]);
     }
     for (i = size - N; i < size; i++) {
-	array[i].sd = _mm_add_pd(array[i].sd, sse2_double_m_one);
+	mm_filter_co(&array[i]);
     }
-    _mm_store_si128(&sfmt[N].si, lung);
+    sfmt[N].si = lung;
 }
 
 INLINE double genrand_close1_open2(void) {
@@ -278,10 +282,15 @@ void init_gen_rand(uint64_t seed)
     uint64_t *psfmt;
 
     psfmt = (uint64_t *)&sfmt[0];
-    psfmt[0] = (seed & LOW_MASK) | HIGH_CONST;
-    for (i = 1; i < (N + 1) * 2; i++) {
-        psfmt[i] = 1812433253UL * (psfmt[i - 1] ^ (psfmt[i - 1] >> 30)) + i;
-        psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
+    psfmt[0] = (seed & SFMT_LOW_MASK) | SFMT_HIGH_CONST;
+    for (i = 1; i < N * 2; i++) {
+	psfmt[i] = 6364136223846793005ULL 
+	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
+	psfmt[i] = (psfmt[i] & SFMT_LOW_MASK) | SFMT_HIGH_CONST;
+    }
+    for (;i < (N + 1) * 2; i++) {
+	psfmt[i] = 6364136223846793005ULL 
+	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
     }
     idx = N * 2;
     setup_const();

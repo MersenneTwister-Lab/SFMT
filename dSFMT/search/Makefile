@@ -2,6 +2,7 @@
 
 #DMEXP = -DMEXP=521
 %521:MEXP=521
+%607:MEXP=607
 %1279:MEXP=1279
 %2203:MEXP=2203
 #%2281:MEXP=2281
@@ -26,6 +27,11 @@ LINKOPT = -lntl -lgmp
 param-searchDPf-521: searchL.o sfmtDPf-st.o mt19937blk.o util.o dsfmtL-util.o 
 	${CPP} -o $@ searchL.o sfmtDPf-st.o mt19937blk.o util.o dsfmtL-util.o \
 		${LINKOPT}
+
+param-searchDPz1-607: searchNL.o sfmtDPz1-st.o mt19937blk.o util.o \
+		dsfmtNL-util.o 
+	${CPP} -o $@ searchNL.o sfmtDPz1-st.o mt19937blk.o util.o \
+		dsfmtNL-util.o ${LINKOPT}
 
 shortest-baseDPf-521: chk-shortestL.o shortbase128.o sfmtDPf-st.o util.o \
 			dsfmtL-util.o mt19937blk.o

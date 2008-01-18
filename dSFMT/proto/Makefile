@@ -229,6 +229,11 @@ shortest-baseDN2-607: chk-shortestN.o shortbase128N.o sfmtDN2-st.o util.o \
 	${CPP} -o $@ chk-shortestN.o shortbase128N.o sfmtDN2-st.o util.o \
 			dsfmtN-util.o mt19937blk.o ${LINKOPT}
 
+shortest-baseDPz1-607: chk-shortestNL.o shortbase128NL.o sfmtDPz1-st.o util.o \
+			dsfmtNL-util.o mt19937blk.o
+	${CPP} -o $@ chk-shortestNL.o shortbase128NL.o sfmtDPz1-st.o util.o \
+			dsfmtNL-util.o mt19937blk.o ${LINKOPT}
+
 searchD11-parity607: search-parity-vector.o sfmtD11-st.o util.o
 	${CPP} -o $@ search-parity-vector.o sfmtD11-st.o util.o \
 		${LINKOPT}
