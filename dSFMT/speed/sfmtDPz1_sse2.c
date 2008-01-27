@@ -50,6 +50,7 @@ static __m128i sse2_temp_mask1;
 static __m128i sse2_temp_mask2;
 static __m128i sse2_temp_mask3;
 static __m128i sse2_low_mask;
+static __m128i sse2_high_const;
 static __m128i sse2_int_one;
 static __m128d sse2_double_two;
 static __m128d sse2_double_m_one;
@@ -63,11 +64,13 @@ static void setup_const(void) {
 				    SFMT_MSK32_2);
     sse2_low_mask = _mm_set_epi32(SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2,
 				  SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2);
-    sse2_temp_mask1 = _mm_set_epi32(SFMT_TEMP_MSK1_2, SMFT_TEMP_MSK1_2,
+    sse2_high_const = _mm_set_epi32(SFMT_HIGH_CONST32, 0,
+				    SFMT_HIGH_CONST32, 0);
+    sse2_temp_mask1 = _mm_set_epi32(SFMT_TEMP_MSK1_1, SFMT_TEMP_MSK1_2,
 				    SFMT_TEMP_MSK1_1, SFMT_TEMP_MSK1_2);
-    sse2_temp_mask2 = _mm_set_epi32(SFMT_TEMP_MSK2_1, SMFT_TEMP_MSK2_2,
+    sse2_temp_mask2 = _mm_set_epi32(SFMT_TEMP_MSK2_1, SFMT_TEMP_MSK2_2,
 				    SFMT_TEMP_MSK2_1, SFMT_TEMP_MSK2_2);
-    sse2_temp_mask3 = _mm_set_epi32(SFMT_TEMP_MSK3_1, SMFT_TEMP_MSK3_2,
+    sse2_temp_mask3 = _mm_set_epi32(SFMT_TEMP_MSK3_1, SFMT_TEMP_MSK3_2,
 				    SFMT_TEMP_MSK3_1, SFMT_TEMP_MSK3_2);
     sse2_int_one = _mm_set_epi32(0, 1, 0, 1);
     sse2_double_two = _mm_set_pd(2.0, 2.0);
@@ -80,8 +83,7 @@ static void setup_const(void) {
 #else
 #define ALWAYSINLINE
 #endif
-INLINE static __m128i mm_recursion(__m128i *a, __m128i c, __m128i *d) 
-    ALWAYSINLINE;
+INLINE static __m128i mm_recursion(__m128i *a, __m128i *d) ALWAYSINLINE;
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 #if 0
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
@@ -89,14 +91,14 @@ INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
 INLINE static __m128i mm_recursion(__m128i *a, __m128i *u) {
-    __m128i r, v, w, x, y, z;
+    __m128i r, w, x, y, z;
     
     x = _mm_load_si128(a);
     y = _mm_shuffle_epi32(*u, SSE2_SHUFF);
     z = _mm_srli_epi64(x, 1);
     r = _mm_and_si128(x, sse2_int_one);
-    r = _mm_cmpeq_epi64(r, sse2_int_one);
-    r = _mm_and_epi128(r, sse2_param_mask);
+    r = _mm_cmpeq_epi32(r, sse2_int_one);
+    r = _mm_and_si128(r, sse2_param_mask);
     y = _mm_xor_si128(y, x);
     r = _mm_xor_si128(r, y);
 
@@ -112,15 +114,15 @@ INLINE static void mm_filter(__m128i *a) {
 
     x = *a;
     y = _mm_srli_epi64(x, SFMT_SR3);
-    y = _mm_and_si128(y, sse2_temp_msk1);
+    y = _mm_and_si128(y, sse2_temp_mask1);
     x = _mm_xor_si128(x, y);
 
     y = _mm_slli_epi64(x, SFMT_SL3);
-    y = _mm_and_si128(y, sse2_temp_msk2);
+    y = _mm_and_si128(y, sse2_temp_mask2);
     x = _mm_xor_si128(x, y);
 
     y = _mm_slli_epi64(x, SFMT_SL4);
-    y = _mm_and_si128(y, sse2_temp_msk3);
+    y = _mm_and_si128(y, sse2_temp_mask3);
     x = _mm_xor_si128(x, y);
 
     y = _mm_slli_epi64(x, SFMT_SL5);
@@ -132,7 +134,7 @@ INLINE static void mm_filter(__m128i *a) {
 }
 
 INLINE static void mm_filter_co(w128_t *a) {
-    mm_filter(a->si);
+    a->si = mm_filter(a->si);
     a->sd = _mm_add_pd(a->sd, sse2_double_m_one);
 }
 

@@ -33,6 +33,11 @@ param-searchDPz1-607: searchNL.o sfmtDPz1-st.o mt19937blk.o util.o \
 	${CPP} -o $@ searchNL.o sfmtDPz1-st.o mt19937blk.o util.o \
 		dsfmtNL-util.o ${LINKOPT}
 
+param-searchDPz2-607: searchNL.o sfmtDPz2-st.o mt19937blk.o util.o \
+		dsfmtNL-util.o 
+	${CPP} -o $@ searchNL.o sfmtDPz2-st.o mt19937blk.o util.o \
+		dsfmtNL-util.o ${LINKOPT}
+
 shortest-baseDPf-521: chk-shortestL.o shortbase128.o sfmtDPf-st.o util.o \
 			dsfmtL-util.o mt19937blk.o
 	${CPP} -o $@ chk-shortestL.o shortbase128.o sfmtDPf-st.o util.o \
