@@ -18,6 +18,7 @@ public:
     void get_lung(uint64_t lung[2]);
     void add(DSFMT& src);
     DSFMT(uint64_t seed);
+    DSFMT(DSFMT& src);
     ~DSFMT();
 
 private:

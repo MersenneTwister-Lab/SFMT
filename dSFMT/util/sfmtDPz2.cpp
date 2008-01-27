@@ -58,17 +58,6 @@ DSFMT::DSFMT(uint64_t seed) {
     init_gen_rand(seed);
 }
 
-DSFMT::DSFMT(DSFMT& src) {
-    int i;
-
-    status = new uint64_t[N + 1][2];
-    for (i = 0; i < N + 1; i++) {
-	status[i][0] = src.status[i][0];
-	status[i][1] = src.status[i][1];
-    }
-    idx = src.idx;
-}
-
 DSFMT::~DSFMT() {
     delete status;
 }

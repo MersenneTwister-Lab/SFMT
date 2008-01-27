@@ -19,15 +19,17 @@
 
 DMEXP = -DMEXP=${MEXP}
 
-CC = gcc -Wall -O9 -Wmissing-prototypes $(DDEBUG) $(DMEXP) $(DPG)
-CPP = g++ -Wall -O9 $(DDEBUG) $(DMEXP) $(DPG)
+CC = gcc -Wall -O9 -Wmissing-prototypes -I/opt/local/include \
+	$(DDEBUG) $(DMEXP) $(DPG)
+CPP = g++ -Wall -O9 -I/opt/local/include $(DDEBUG) $(DMEXP) $(DPG)
 
-LINKOPT = -lntl -lgmp
+LINKOPT = -ldsfmt -lntl -lgmp
 
-param-searchDPz1-607: searchNL.o sfmtDPz1-st.o mt19937blk.o util.o \
-		dsfmtNL-util.o 
-	${CPP} -o $@ searchNL.o sfmtDPz1-st.o mt19937blk.o util.o \
-		dsfmtNL-util.o ${LINKOPT}
+param-searchDPz2-607: sfmtDPz2.o libdsfmt.a
+	${CPP} -o $@ sfmtDPz2.o ${LINKOPT}
+
+libdsfmt.a: search.o mt19937blk.o util.o dsfmt-util.o 
+	ar -rsv libdsfmt.a search.o mt19937blk.o util.o dsfmt-util.o 
 
 .cpp.o:
 	${CPP} -c $<

@@ -17,10 +17,19 @@
 #define N ((MEXP - 128) / WORDSIZE + 1)
 #define MAXDEGREE (WORDSIZE * N + 128)
 
+#ifdef SSE2
+union W128_T {
+    __m128i si;
+    __m128d sd;
+    uint64_t a[2];
+    double d[2];
+};
+#else
 union W128_T {
     uint64_t a[2];
     double d[2];
 };
+#endif
 typedef union W128_T w128_t;
 
 union W64_T {
@@ -30,7 +39,6 @@ union W64_T {
 typedef union W64_T w64_t;
 
 static w128_t sfmt[N + 1];
-static double *psfmt = (double *)&(sfmt[0].d[0]);
 static int idx;
 
 void fill_array_open_close(double array[], int size);
@@ -65,6 +73,52 @@ inline static int idxof(int i) {
 }
 #endif
 
+#ifdef SSE2
+static void setup_const(void) {
+    static int first = true;
+    if (!first) {
+	return;
+    }
+    sse2_param_mask = _mm_set_epi32(SFMT_MSK32_3, SFMT_MSK32_4, SFMT_MSK32_1,
+				    SFMT_MSK32_2);
+    sse2_low_mask = _mm_set_epi32(SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2,
+				  SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2);
+    sse2_high_const = _mm_set_epi32(SFMT_HIGH_CONST32, 0,
+				    SFMT_HIGH_CONST32, 0);
+    sse2_temp_mask1 = _mm_set_epi32(SFMT_TEMP_MSK1_1, SFMT_TEMP_MSK1_2,
+				    SFMT_TEMP_MSK1_1, SFMT_TEMP_MSK1_2);
+    sse2_temp_mask2 = _mm_set_epi32(SFMT_TEMP_MSK2_1, SFMT_TEMP_MSK2_2,
+				    SFMT_TEMP_MSK2_1, SFMT_TEMP_MSK2_2);
+    sse2_temp_mask3 = _mm_set_epi32(SFMT_TEMP_MSK3_1, SFMT_TEMP_MSK3_2,
+				    SFMT_TEMP_MSK3_1, SFMT_TEMP_MSK3_2);
+    sse2_int_one = _mm_set_epi32(0, 1, 0, 1);
+    sse2_double_two = _mm_set_pd(2.0, 2.0);
+    sse2_double_m_one = _mm_set_pd(-1.0, -1.0);
+    first = false;
+}
+#endif
+
+#ifdef SSE2
+INLINE static void mm_recursion(w128_t *r, w128_t *a, w128_t *u) {
+    __m128i v, w, x, y, z;
+    
+    x = _mm_load_si128(a->si);
+    y = _mm_shuffle_epi32(u->si, SSE2_SHUFF);
+    z = _mm_srli_epi64(x, 1);
+    v = _mm_and_si128(x, sse2_int_one);
+    v = _mm_cmpeq_epi32(v, sse2_int_one);
+    v = _mm_and_si128(v, sse2_param_mask);
+    y = _mm_xor_si128(y, x);
+    v = _mm_xor_si128(v, y);
+    r->si = v;
+
+    w = _mm_slli_epi64(u->si, 8);
+    x = _mm_xor_si128(x, u->si);
+    x = _mm_xor_si128(x, w);
+    u->si = x;
+    return r;
+}
+#else
 INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *lung) {
     uint64_t t0, t1;
 
@@ -75,6 +129,7 @@ INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *lung) {
     lung->a[0] = (lung->a[0] << 8) ^ lung->a[0] ^ t0;
     lung->a[1] = (lung->a[1] << 8) ^ lung->a[1] ^ t1;
 }
+#endif
 
 #if 0
 INLINE static void convert_co(w128_t array[], int size) {
@@ -86,6 +141,31 @@ INLINE static void convert_co(w128_t array[], int size) {
     }
 }
 #endif
+#ifdef SSE2 
+INLINE static void filter(w128_t *a) {
+    __m128i x, y;
+
+    x = a->si;
+    y = _mm_srli_epi64(x, SFMT_SR3);
+    y = _mm_and_si128(y, sse2_temp_mask1);
+    x = _mm_xor_si128(x, y);
+
+    y = _mm_slli_epi64(x, SFMT_SL3);
+    y = _mm_and_si128(y, sse2_temp_mask2);
+    x = _mm_xor_si128(x, y);
+
+    y = _mm_slli_epi64(x, SFMT_SL4);
+    y = _mm_and_si128(y, sse2_temp_mask3);
+    x = _mm_xor_si128(x, y);
+
+    y = _mm_slli_epi64(x, SFMT_SL5);
+    x = _mm_xor_si128(x, y);
+
+    x = _mm_and_si128(x, sse2_low_mask);
+    x = _mm_or_si128(x, sse2_high_const);
+    a->si = x;
+}
+#else
 INLINE static void filter(w128_t *a) {
     a->a[0] ^= (a->a[0] >> 29) & 0x5555555555555555ULL;
     a->a[1] ^= (a->a[1] >> 29) & 0x5555555555555555ULL;
@@ -100,6 +180,7 @@ INLINE static void filter(w128_t *a) {
     a->a[0] |= SFMT_HIGH_CONST;
     a->a[1] |= SFMT_HIGH_CONST;
 }
+#end
 
 INLINE static double filter52(uint64_t a) {
     w64_t w;
@@ -114,11 +195,18 @@ INLINE static double filter52(uint64_t a) {
     return w.d;
 }
 
+#ifdef SSE2
+INLINE static void filter_co(w128_t *a) {
+    filter(a);
+    a->sd = _mm_add_pd(a->sd, sse2_double_m_one);
+}
+#else
 INLINE static void filter_co(w128_t *a) {
     filter(a);
     a->d[0] = a->d[0] - 1.0;
     a->d[1] = a->d[1] - 1.0;
 }
+#end
 
 INLINE static void convert_oc(w128_t array[], int size) {
     int i;
@@ -205,6 +293,7 @@ INLINE static void gen_rand_arrayco(w128_t array[], int size) {
 
 INLINE double genrand_close1_open2(void) {
     double r;
+    uint64_t *psfmt = &(sfmt[0].a[0]);
 
     if (idx >= N * 2) {
 	gen_rand_all();
@@ -268,6 +357,9 @@ void init_gen_rand(uint64_t seed)
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
     }
     idx = N * 2;
+#ifdef SSE2
+    setup_const();
+#endif
 }
 
 #include "test_time3.c"

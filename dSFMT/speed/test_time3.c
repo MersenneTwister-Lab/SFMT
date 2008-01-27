@@ -576,10 +576,10 @@ void test_seq_12(void) {
 
 int main(int argc, char *argv[]) {
     if ((argc >= 2) && (strncmp(argv[1],"-v",2) == 0)) {
+	check_12();
 	check_co();
 	check_oc();
 	check_oo();
-	check_12();
     }
     printf("consumed time for generating %u randoms.\n", NUM_RANDS * TIC_COUNT);
     test_co();
