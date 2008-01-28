@@ -74,6 +74,16 @@ inline static int idxof(int i) {
 #endif
 
 #ifdef SSE2
+static __m128i sse2_param_mask;
+static __m128i sse2_temp_mask1;
+static __m128i sse2_temp_mask2;
+static __m128i sse2_temp_mask3;
+static __m128i sse2_low_mask;
+static __m128i sse2_high_const;
+static __m128i sse2_int_one;
+static __m128d sse2_double_two;
+static __m128d sse2_double_m_one;
+
 static void setup_const(void) {
     static int first = true;
     if (!first) {
@@ -99,15 +109,13 @@ static void setup_const(void) {
 #endif
 
 #ifdef SSE2
-INLINE static void mm_recursion(w128_t *r, w128_t *a, w128_t *u) {
+INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *u) {
     __m128i v, w, x, y, z;
     
-    x = _mm_load_si128(a->si);
+    x = a->si;
     y = _mm_shuffle_epi32(u->si, SSE2_SHUFF);
     z = _mm_srli_epi64(x, 1);
-    v = _mm_and_si128(x, sse2_int_one);
-    v = _mm_cmpeq_epi32(v, sse2_int_one);
-    v = _mm_and_si128(v, sse2_param_mask);
+    v = _mm_and_si128(x, sse2_param_mask);
     y = _mm_xor_si128(y, x);
     v = _mm_xor_si128(v, y);
     r->si = v;
@@ -116,7 +124,6 @@ INLINE static void mm_recursion(w128_t *r, w128_t *a, w128_t *u) {
     x = _mm_xor_si128(x, u->si);
     x = _mm_xor_si128(x, w);
     u->si = x;
-    return r;
 }
 #else
 INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *lung) {
@@ -141,6 +148,7 @@ INLINE static void convert_co(w128_t array[], int size) {
     }
 }
 #endif
+
 #ifdef SSE2 
 INLINE static void filter(w128_t *a) {
     __m128i x, y;
@@ -158,7 +166,7 @@ INLINE static void filter(w128_t *a) {
     y = _mm_and_si128(y, sse2_temp_mask3);
     x = _mm_xor_si128(x, y);
 
-    y = _mm_slli_epi64(x, SFMT_SL5);
+    y = _mm_srli_epi64(x, SFMT_SR4);
     x = _mm_xor_si128(x, y);
 
     x = _mm_and_si128(x, sse2_low_mask);
@@ -180,7 +188,7 @@ INLINE static void filter(w128_t *a) {
     a->a[0] |= SFMT_HIGH_CONST;
     a->a[1] |= SFMT_HIGH_CONST;
 }
-#end
+#endif
 
 INLINE static double filter52(uint64_t a) {
     w64_t w;
@@ -206,7 +214,7 @@ INLINE static void filter_co(w128_t *a) {
     a->d[0] = a->d[0] - 1.0;
     a->d[1] = a->d[1] - 1.0;
 }
-#end
+#endif
 
 INLINE static void convert_oc(w128_t array[], int size) {
     int i;

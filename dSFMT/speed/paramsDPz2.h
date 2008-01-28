@@ -30,7 +30,7 @@
 #define SFMT_SR3        29
 #define SFMT_SL3        17
 #define SFMT_SL4        37
-#define SFMT_SL5        43
+#define SFMT_SR4        43
 #define SFMT_PCV1	UINT64_C(0x0000000000000001)
 #define SFMT_PCV2	UINT64_C(0x113640cf17e4e100)
 #define SFMT_IDSTR \
