@@ -8,6 +8,10 @@
 #include "util.h"
 #include "dsfmt.h"
 
+extern "C" {
+    #include "mt19937blk.h"
+}
+
 #if !defined(MEXP)
 #define MEXP 19937
 #endif
@@ -56,6 +60,37 @@ DSFMT::DSFMT(uint64_t seed) {
     status = new uint64_t[N + 1][2];
     idx = 0;
     init_gen_rand(seed);
+}
+
+DSFMT::DSFMT(const DSFMT& src) {
+    int i;
+
+    status = new uint64_t[N + 1][2];
+    for (i = 0; i < N + 1; i++) {
+	status[i][0] = src.status[i][0];
+	status[i][1] = src.status[i][1];
+    }
+    idx = src.idx;
+}
+
+DSFMT& DSFMT::operator=(const DSFMT& src) {
+    int i;
+
+    for (i = 0; i < N + 1; i++) {
+	status[i][0] = src.status[i][0];
+	status[i][1] = src.status[i][1];
+    }
+    idx = src.idx;
+    return *this;
+}
+
+void DSFMT::d_p() {
+    int i;
+
+    printf("idx = %d\n", idx);
+    for (i = 0; i < N + 1; i++) {
+	printf("%016"PRIx64" %016"PRIx64"\n", status[i][0], status[i][1]);
+    }
 }
 
 DSFMT::~DSFMT() {
@@ -135,7 +170,7 @@ void DSFMT::gen_rand104spar(uint64_t array[][2], int size) {
     }
 }
 
-void DSFMT::add(DSFMT& src) {
+void DSFMT::add(const DSFMT& src) {
     int i, k;
 
     assert(idx % 2 == 0);
@@ -182,6 +217,30 @@ void DSFMT::read_random_param(FILE *f) {
     MSK1 = get_uint64(line, 16);
     fgets(line, 256, f);
     MSK2 = get_uint64(line, 16);
+}
+
+void DSFMT::fill_rnd() {
+    const int size = (N + 1) * 4;
+    uint32_t array[size];
+    uint64_t u;
+    int i, j;
+
+    mt_fill(array, size);
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 2; j++) {
+	    u = array[idx++];
+	    u = u << 32;
+	    //u = (u | array[idx++]) & 0x000FFFFFFFFFFFFFULL;
+	    u = (u | array[idx++]);
+	    status[i][j] = u;
+	}
+    }
+    for (j = 0; j < 2; j++) {
+	u = array[idx++];
+	u = u << 32;
+	u = u | array[idx++];
+	status[i][j] = u;
+    }
 }
 
 #if defined(MAIN)

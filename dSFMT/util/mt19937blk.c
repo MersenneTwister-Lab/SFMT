@@ -168,8 +168,12 @@ uint32_t mt_gen(void)
 void mt_fill(uint32_t array[], int size)
 {
 
-    assert(size >= 2 * N);
     assert(mti == N);
-
-    gen_rand_array(array, size);
+    if (size >= 2 * N) {;
+	gen_rand_array(array, size);
+    } else {
+	uint32_t a[2 * N];
+	gen_rand_array(a, 2 * N);
+	memcpy(array, a, size * sizeof(uint32_t));
+    }
 }

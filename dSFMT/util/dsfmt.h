@@ -16,10 +16,13 @@ public:
     uint64_t gen_rand104sp(uint64_t arrary[2], int mode);
     void gen_rand104spar(uint64_t array[][2], int size);
     void get_lung(uint64_t lung[2]);
-    void add(DSFMT& src);
+    void add(const DSFMT& src);
+    void fill_rnd();
+    void d_p();
     DSFMT(uint64_t seed);
-    DSFMT(DSFMT& src);
+    DSFMT(const DSFMT& src);
     ~DSFMT();
+    DSFMT& operator=(const DSFMT &src);
 
 private:
     void next_state();

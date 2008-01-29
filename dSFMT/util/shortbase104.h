@@ -10,6 +10,6 @@
 NTL_CLIENT;
 
 void set_up(uint32_t bit_mode, uint32_t len, uint32_t p_mode, bool msb);
-int get_shortest_base(DSFMT& dsfmt);
+int get_shortest_base(const DSFMT& dsfmt);
 
 #endif

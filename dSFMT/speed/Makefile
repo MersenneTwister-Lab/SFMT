@@ -97,8 +97,8 @@ sfmtDN2_fastc: sfmtDN2_fastc.c test_time3.c paramsDN2.h
 sfmtDPz1_fastc: sfmtDPz1_fastc.c test_time3.c paramsDPz1.h
 	${CC} ${CCFLAGS} -o $@ sfmtDPz1_fastc.c
 
-sfmtDPz2_fastc: sfmtDPz2_fastc.c test_time3.c paramsDPz2.h
-	${CC} ${CCFLAGS} -o $@ sfmtDPz2_fastc.c
+sfmtDPz2_fastc: sfmtDPz2.c test_time3.c paramsDPz2.h
+	${CC} ${CCFLAGS} -o $@ sfmtDPz2.c
 
 sfmtDN2_fastca: sfmtDN2_fastca.c test_time3.c paramsDN2.h
 	${CC} ${CCFLAGS} -o $@ sfmtDN2_fastca.c

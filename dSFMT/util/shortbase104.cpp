@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <iostream>
-#include "shortbase128.h"
+#include "shortbase104.h"
 #include "util.h"
 #include "dsfmt-util.h"
 #include "dsfmt.h"
@@ -54,7 +54,7 @@ static void get_next_random104_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 static void get_next_random52_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2, 
 				  DSFMT& sfmt);
 static void set_special(in_status& st, unsigned int special_bit);
-static void set_normal(in_status& st, DSFMT& sfmt);
+static void set_normal(in_status& st, const DSFMT& sfmt);
 static void add_status(in_status& dist, in_status& src);
 static void get_next_state(in_status& st);
 static uint32_t get_shortest(bool dependents[], in_status bases[]);
@@ -262,7 +262,7 @@ static void get_next_random52_lsb(vec_GF2& vec, vec_GF2& prev, vec_GF2& prev2,
 #endif
 }
 
-static void set_normal(in_status& st, DSFMT& dsfmt) {
+static void set_normal(in_status& st, const DSFMT& dsfmt) {
     int zero_count = 0;
 
     st.random = new DSFMT(dsfmt);
@@ -345,7 +345,7 @@ static void get_next_state(in_status& st) {
     st.last_weight_mode = weight_mode;
 }
   
-int get_shortest_base(DSFMT& sfmt) {
+int get_shortest_base(const DSFMT& sfmt) {
     in_status bases[bit_len + 1];
     vec_GF2 next[bit_len + 1];
     bool dependents[bit_len + 1];

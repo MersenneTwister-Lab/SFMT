@@ -58,7 +58,7 @@ DSFMT::DSFMT(uint64_t seed) {
     init_gen_rand(seed);
 }
 
-DSFMT::DSFMT(DSFMT& src) {
+DSFMT::DSFMT(const DSFMT& src) {
     int i;
 
     status = new uint64_t[N + 1][2];
@@ -193,6 +193,30 @@ void DSFMT::read_random_param(FILE *f) {
     MSK1 = get_uint64(line, 16);
     fgets(line, 256, f);
     MSK2 = get_uint64(line, 16);
+}
+
+void DSFMT::fill_rnd() {
+    const int size = (N + 1) * 4;
+    static uint32_t array[size];
+    uint64_t u;
+    int i, j;
+
+    mt_fill(array, size);
+    for (i = 0; i < N; i++) {
+	for (j = 0; j < 2; j++) {
+	    u = array[idx++];
+	    u = u << 32;
+	    //u = (u | array[idx++]) & 0x000FFFFFFFFFFFFFULL;
+	    u = (u | array[idx++]);
+	    status[i][j] = u;
+	}
+    }
+    for (j = 0; j < 2; j++) {
+	u = array[idx++];
+	u = u << 32;
+	u = u | array[idx++];
+	status[i][j] = u;
+    }
 }
 
 #if defined(MAIN)
