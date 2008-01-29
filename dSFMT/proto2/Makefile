@@ -28,8 +28,14 @@ LINKOPT = -ldsfmt -lntl -lgmp
 param-searchDPz3-521: sfmtDPz3.o search.o
 	${CPP} -o $@ sfmtDPz3.o search.o ${LINKOPT}
 
+param-searchDPz4-521: sfmtDPz4.o search.o
+	${CPP} -o $@ sfmtDPz4.o search.o ${LINKOPT}
+
 shortest-baseDPz3-521: sfmtDPz3.o chk-shortest.o
 	${CPP} -o $@ sfmtDPz3.o chk-shortest.o ${LINKOPT}
+
+shortest-baseDPz4-521: sfmtDPz4.o chk-shortest.o
+	${CPP} -o $@ sfmtDPz4.o chk-shortest.o ${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<
