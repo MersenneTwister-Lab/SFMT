@@ -90,8 +90,8 @@ int fill_state_random(DSFMT& sfmt) {
     return 1;
 }
 
-int get_equiv_distrib(int bit, DSFMT& sfmt) {
-    DSFMT sfmtnew(sfmt);
+int get_equiv_distrib(int bit, DSFMT& dsfmt) {
+    DSFMT sfmtnew(dsfmt);
     int shortest;
 
     //fprintf(stderr, "now start get_equiv %d\n", bit);
@@ -101,17 +101,19 @@ int get_equiv_distrib(int bit, DSFMT& sfmt) {
 }
 
 int get_equiv_distrib64(int bit, DSFMT& dsfmt) {
+    DSFMT sfmtnew(dsfmt);
     int dist, min;
     uint32_t mode;
 
     min = INT_MAX;
     for (mode = 0; mode < 2; mode++) {
 	set_up(64, bit, mode, msb);
-	dist = get_shortest_base(dsfmt);
+	dist = get_shortest_base(sfmtnew);
 	//printf("%d\n", dist);
 	if (dist < min) {
 	    min = dist;
 	}
+	sfmtnew = dsfmt;
     }
     return min;
 }

@@ -1,6 +1,6 @@
 /* dSFMT Search Code, M.Saito 2006/9/14 */
 #include <string.h>
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -17,11 +17,13 @@ extern "C" {
 #endif
 
 static int mexp = MEXP;
-static int WORDSIZE = 128;
+static int WORDSIZE = 104;
 static int N = ((MEXP - 128) / WORDSIZE + 1);
 static int MAXDEGREE = WORDSIZE * N + 128;
 static uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
-//static uint64_t HIGH_CONST = 0x0000000000000000ULL;
+static uint64_t HIGH_CONST = 0x0000000000000000ULL;
+static int POS1 = 1;
+static int SL1 = 13;
 static uint64_t MSK1 = 0xedfffffbfffbffbdULL;
 static uint64_t MSK2 = 0xaefeffd36dfdffdfULL;
 
@@ -34,6 +36,8 @@ unsigned int DSFMT::get_rnd_mexp(void) {
 };
 
 void DSFMT::setup_param(uint32_t array[], int *index) {
+    POS1 = array[(*index)++] % (N - 1) + 1;
+    SL1 = array[(*index)++] % (51 - 13) + 13;
     MSK1 = array[(*index)++];
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
@@ -41,6 +45,7 @@ void DSFMT::setup_param(uint32_t array[], int *index) {
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
     MSK1 |= array[(*index)++];
+    //MSK1 |= ~(LOW_MASK);
     MSK2 = array[(*index)++];
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
@@ -48,12 +53,30 @@ void DSFMT::setup_param(uint32_t array[], int *index) {
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
     MSK2 |= array[(*index)++];
+    //MSK2 |= ~(LOW_MASK);
 }
 
 void DSFMT::print_param(FILE *fp) {
-    fprintf(fp, "MSK1 = %016" PRIX64 "\n", MSK1);
-    fprintf(fp, "MSK2 = %016" PRIX64 "\n", MSK2);
+    fprintf(fp, "POS1 = %d\n", POS1);
+    fprintf(fp, "SL1 = %d\n", SL1);
+    fprintf(fp, "MSK1 = %016"PRIx64"\n", MSK1);
+    fprintf(fp, "MSK2 = %016"PRIx64"\n", MSK2);
     fflush(fp);
+}
+
+void DSFMT::read_random_param(FILE *f) {
+    char line[256];
+
+    fgets(line, 256, f);
+    fgets(line, 256, f);
+    fgets(line, 256, f);
+    POS1 = get_uint(line, 10);
+    fgets(line, 256, f);
+    SL1 = get_uint(line, 10);
+    fgets(line, 256, f);
+    MSK1 = get_uint64(line, 16);
+    fgets(line, 256, f);
+    MSK2 = get_uint64(line, 16);
 }
 
 DSFMT::DSFMT(uint64_t seed) {
@@ -89,7 +112,7 @@ void DSFMT::d_p() {
 
     printf("idx = %d\n", idx);
     for (i = 0; i < N + 1; i++) {
-	printf("%016" PRIx64 " %016" PRIx64 "\n", status[i][0], status[i][1]);
+	printf("%016"PRIx64" %016"PRIx64"\n", status[i][0], status[i][1]);
     }
 }
 
@@ -97,17 +120,18 @@ DSFMT::~DSFMT() {
     delete status;
 }
 
-inline static void do_recursion(uint64_t a[2], uint64_t lung[2]) {
-    uint64_t mat1[2] = {0, MSK1};
-    uint64_t mat2[2] = {0, MSK2};
-    uint64_t t0, t1;
+inline static void do_recursion(uint64_t a[2], uint64_t b[2],
+				uint64_t lung[2]) {
+    uint64_t t0, t1, L0, L1;
 
     t0 = a[0];
     t1 = a[1];
-    a[0] = lung[1] ^ (t0 >> 1) ^ mat1[t0 & 1];
-    a[1] = lung[0] ^ (t1 >> 1) ^ mat2[t1 & 1];
-    lung[0] = (lung[0] << 8) ^ lung[0] ^ t0;
-    lung[1] = (lung[1] << 8) ^ lung[1] ^ t1;
+    L0 = lung[0];
+    L1 = lung[1];
+    lung[0] = ((L0 ^ t0) << SL1) ^ (L1 >> 32) ^ (L1 << 32) ^ (b[0] & MSK1);
+    lung[1] = ((L1 ^ t1) << SL1) ^ (L0 >> 32) ^ (L0 << 32) ^ (b[1] & MSK2);
+    a[0] = (lung[0] >> 12) ^ t0;
+    a[1] = (lung[1] >> 12) ^ t1;
 }
 
 /*
@@ -120,7 +144,7 @@ void DSFMT::next_state() {
 	idx = 0;
     }
     i = idx / 2;
-    do_recursion(status[i], status[N]);
+    do_recursion(status[i], status[(i + POS1) % N], status[N]);
 }
 
 /* これは初期状態を出力する */
@@ -200,23 +224,13 @@ void DSFMT::init_gen_rand(uint64_t seed)
     for (i = 1; i < N * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
+	psfmt[i] = (psfmt[i] & LOW_MASK) | HIGH_CONST;
     }
     for (;i < (N + 1) * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
     }
     idx = 0;
-}
-
-void DSFMT::read_random_param(FILE *f) {
-    char line[256];
-
-    fgets(line, 256, f);
-    fgets(line, 256, f);
-    fgets(line, 256, f);
-    MSK1 = get_uint64(line, 16);
-    fgets(line, 256, f);
-    MSK2 = get_uint64(line, 16);
 }
 
 void DSFMT::fill_rnd() {
@@ -230,8 +244,7 @@ void DSFMT::fill_rnd() {
 	for (j = 0; j < 2; j++) {
 	    u = array[idx++];
 	    u = u << 32;
-	    //u = (u | array[idx++]) & 0x000FFFFFFFFFFFFFULL;
-	    u = (u | array[idx++]);
+	    u = (u | array[idx++]) & LOW_MASK;
 	    status[i][j] = u;
 	}
     }

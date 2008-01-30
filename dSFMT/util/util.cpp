@@ -223,8 +223,6 @@ uint64_t get_uint64(char *line, int radix) {
     unsigned int x;
     uint64_t result;
 
-    assert(radix == 16);
-
     for (;(*line) && (*line != '=');line++);
     if (!*line) {
 	fprintf(stderr, "WARN:can't get = in get_uint\n");
