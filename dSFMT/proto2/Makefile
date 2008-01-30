@@ -31,6 +31,12 @@ param-searchDPz3-521: sfmtDPz3.o search.o
 param-searchDPz4-521: sfmtDPz4.o search.o
 	${CPP} -o $@ sfmtDPz4.o search.o ${LINKOPT}
 
+param-searchDPz5-521: sfmtDPz5.o search.o
+	${CPP} -o $@ sfmtDPz5.o search.o ${LINKOPT}
+
+param-searchDPz6-521: sfmtDPz6.o search.o
+	${CPP} -o $@ sfmtDPz6.o search.o ${LINKOPT}
+
 shortest-baseDPz3-521: sfmtDPz3.o chk-shortest.o
 	${CPP} -o $@ sfmtDPz3.o chk-shortest.o ${LINKOPT}
 
