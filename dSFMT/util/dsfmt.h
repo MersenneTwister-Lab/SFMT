@@ -12,6 +12,23 @@ public:
     static void print_param(FILE *fp);
     static unsigned int get_rnd_maxdegree(void);
     static unsigned int get_rnd_mexp(void);
+
+    static int pos1;
+    static int pos2;
+    static int pos3;
+    static int sl1;
+    static int sl2;
+    static int sl3;
+    static int sr1;
+    static int sr2;
+    static int sr3;
+    static uint64_t msk1;
+    static uint64_t msk2;
+    static uint64_t msk3;
+    static uint64_t msk4;
+    static uint64_t msk5;
+    static uint64_t msk6;
+
     void init_gen_rand(uint64_t seed);
     uint64_t gen_rand104sp(uint64_t arrary[2], int mode);
     void gen_rand104spar(uint64_t array[][2], int size);

@@ -16,16 +16,28 @@ extern "C" {
 #define MEXP 19937
 #endif
 
-static int mexp = MEXP;
-static int WORDSIZE = 104;
-static int N = ((MEXP - 128) / WORDSIZE + 1);
-static int MAXDEGREE = WORDSIZE * N + 128;
-static uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
-static uint64_t HIGH_CONST = 0x0000000000000000ULL;
-static int POS1 = 1;
-static int SL1 = 13;
-static uint64_t MSK1 = 0xedfffffbfffbffbdULL;
-static uint64_t MSK2 = 0xaefeffd36dfdffdfULL;
+const int mexp = MEXP;
+const int WORDSIZE = 128;
+const int N = (MEXP - 128) / WORDSIZE + 1;
+const int MAXDEGREE = WORDSIZE * N + 128;
+const uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
+const uint64_t HIGH_CONST = 0x0000000000000000ULL;
+
+int DSFMT::pos1;
+int DSFMT::pos2;
+int DSFMT::pos3;
+int DSFMT::sl1;
+int DSFMT::sl2;
+int DSFMT::sl3;
+int DSFMT::sr1;
+int DSFMT::sr2;
+int DSFMT::sr3;
+uint64_t DSFMT::msk1;
+uint64_t DSFMT::msk2;
+uint64_t DSFMT::msk3;
+uint64_t DSFMT::msk4;
+uint64_t DSFMT::msk5;
+uint64_t DSFMT::msk6;
 
 unsigned int DSFMT::get_rnd_maxdegree(void) {
     return MAXDEGREE;
@@ -36,31 +48,31 @@ unsigned int DSFMT::get_rnd_mexp(void) {
 };
 
 void DSFMT::setup_param(uint32_t array[], int *index) {
-    POS1 = array[(*index)++] % (N - 1) + 1;
-    SL1 = array[(*index)++] % (52 - 13) + 13;
-    MSK1 = array[(*index)++];
-    MSK1 |= array[(*index)++];
-    MSK1 |= array[(*index)++];
-    MSK1 <<= 32;
-    MSK1 |= array[(*index)++];
-    MSK1 |= array[(*index)++];
-    MSK1 |= array[(*index)++];
-    //MSK1 |= ~(LOW_MASK);
-    MSK2 = array[(*index)++];
-    MSK2 |= array[(*index)++];
-    MSK2 |= array[(*index)++];
-    MSK2 <<= 32;
-    MSK2 |= array[(*index)++];
-    MSK2 |= array[(*index)++];
-    MSK2 |= array[(*index)++];
-    //MSK2 |= ~(LOW_MASK);
+    pos1 = array[(*index)++] % (N - 1) + 1;
+    sl1 = array[(*index)++] % (52 - 13) + 13;
+    msk1 = array[(*index)++];
+    msk1 |= array[(*index)++];
+    msk1 |= array[(*index)++];
+    msk1 <<= 32;
+    msk1 |= array[(*index)++];
+    msk1 |= array[(*index)++];
+    msk1 |= array[(*index)++];
+    //msk1 |= ~(LOW_MASK);
+    msk2 = array[(*index)++];
+    msk2 |= array[(*index)++];
+    msk2 |= array[(*index)++];
+    msk2 <<= 32;
+    msk2 |= array[(*index)++];
+    msk2 |= array[(*index)++];
+    msk2 |= array[(*index)++];
+    //msk2 |= ~(LOW_MASK);
 }
 
 void DSFMT::print_param(FILE *fp) {
-    fprintf(fp, "POS1 = %d\n", POS1);
-    fprintf(fp, "SL1 = %d\n", SL1);
-    fprintf(fp, "MSK1 = %016"PRIx64"\n", MSK1);
-    fprintf(fp, "MSK2 = %016"PRIx64"\n", MSK2);
+    fprintf(fp, "pos1 = %d\n", pos1);
+    fprintf(fp, "sl1 = %d\n", sl1);
+    fprintf(fp, "msk1 = %016"PRIx64"\n", msk1);
+    fprintf(fp, "msk2 = %016"PRIx64"\n", msk2);
     fflush(fp);
 }
 
@@ -113,8 +125,8 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2],
     t1 = a[1];
     L0 = lung[0];
     L1 = lung[1];
-    lung[0] = ((L0 ^ t0) << SL1) ^ L1 ^ (b[0] & MSK1);
-    lung[1] = ((L1 ^ t1) << SL1) ^ L0 ^ (b[1] & MSK2);
+    lung[0] = ((L0 ^ t0) << DSFMT::sl1) ^ L1 ^ (b[0] & DSFMT::msk1);
+    lung[1] = ((L1 ^ t1) << DSFMT::sl1) ^ L0 ^ (b[1] & DSFMT::msk2);
     a[0] = (lung[0] >> 12) ^ t0;
     a[1] = (lung[1] >> 12) ^ t1;
 }
@@ -129,7 +141,7 @@ void DSFMT::next_state() {
 	idx = 0;
     }
     i = idx / 2;
-    do_recursion(status[i], status[(i + POS1) % N], status[N]);
+    do_recursion(status[i], status[(i + pos1) % N], status[N]);
 }
 
 /* これは初期状態を出力する */
@@ -224,13 +236,13 @@ void DSFMT::read_random_param(FILE *f) {
     fgets(line, 256, f);
     fgets(line, 256, f);
     fgets(line, 256, f);
-    POS1 = get_uint(line, 10);
+    pos1 = get_uint(line, 10);
     fgets(line, 256, f);
-    SL1 = get_uint(line, 10);
+    sl1 = get_uint(line, 10);
     fgets(line, 256, f);
-    MSK1 = get_uint64(line, 16);
+    msk1 = get_uint64(line, 16);
     fgets(line, 256, f);
-    MSK2 = get_uint64(line, 16);
+    msk2 = get_uint64(line, 16);
 }
 
 void DSFMT::fill_rnd() {

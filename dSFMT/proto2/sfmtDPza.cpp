@@ -1,6 +1,5 @@
 /* dSFMT Search Code, M.Saito 2006/9/14 */
 #include <string.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -50,7 +49,6 @@ unsigned int DSFMT::get_rnd_mexp(void) {
 void DSFMT::setup_param(uint32_t array[], int *index) {
     pos1 = array[(*index)++] % (N - 1) + 1;
     sl1 = array[(*index)++] % (51 - 13) + 13;
-    sr1 = array[(*index)++] % (51 - 1) + 1;
     msk1 = array[(*index)++];
     msk1 |= array[(*index)++];
     msk1 |= array[(*index)++];
@@ -58,7 +56,7 @@ void DSFMT::setup_param(uint32_t array[], int *index) {
     msk1 |= array[(*index)++];
     msk1 |= array[(*index)++];
     msk1 |= array[(*index)++];
-    //msk1 |= ~(LOW_MASK);
+    msk1 &= LOW_MASK;
     msk2 = array[(*index)++];
     msk2 |= array[(*index)++];
     msk2 |= array[(*index)++];
@@ -66,13 +64,12 @@ void DSFMT::setup_param(uint32_t array[], int *index) {
     msk2 |= array[(*index)++];
     msk2 |= array[(*index)++];
     msk2 |= array[(*index)++];
-    //msk2 |= ~(LOW_MASK);
+    msk2 &= LOW_MASK;
 }
 
 void DSFMT::print_param(FILE *fp) {
     fprintf(fp, "pos1 = %d\n", pos1);
     fprintf(fp, "sl1 = %d\n", sl1);
-    fprintf(fp, "sr1 = %d\n", sr1);
     fprintf(fp, "msk1 = %016"PRIx64"\n", msk1);
     fprintf(fp, "msk2 = %016"PRIx64"\n", msk2);
     fflush(fp);
@@ -87,8 +84,6 @@ void DSFMT::read_random_param(FILE *f) {
     pos1 = get_uint(line, 10);
     fgets(line, 256, f);
     sl1 = get_uint(line, 10);
-    fgets(line, 256, f);
-    sr1 = get_uint(line, 10);
     fgets(line, 256, f);
     msk1 = get_uint64(line, 16);
     fgets(line, 256, f);
@@ -144,12 +139,10 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2],
     t1 = a[1];
     L0 = lung[0];
     L1 = lung[1];
-    lung[0] = ((L0 ^ t0) << DSFMT::sl1) ^ L0 ^ (L1 >> DSFMT::sr1) 
-	^ (b[0] & DSFMT::msk1);
-    lung[1] = ((L1 ^ t1) << DSFMT::sl1) ^ L1 ^ (L0 >> DSFMT::sr1) 
-	^ (b[1] & DSFMT::msk2);
-    a[0] = (lung[0] >> 12) ^ t0;
-    a[1] = (lung[1] >> 12) ^ t1;
+    lung[0] = (t0 << DSFMT::sl1) ^ (L1 >> 32) ^ (L1 << 32) ^ b[0];
+    lung[1] = (t1 << DSFMT::sl1) ^ (L0 >> 32) ^ (L0 << 32) ^ b[1];
+    a[0] = (lung[0] >> 12) ^ (lung[0] & DSFMT::msk1) ^ t0;
+    a[1] = (lung[1] >> 12) ^ (lung[1] & DSFMT::msk2) ^ t1;
 }
 
 /*

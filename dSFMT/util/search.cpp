@@ -25,7 +25,6 @@ void search(unsigned int n) {
     int j;
     unsigned int succ = 0;
     int bmOk;
-    DSFMT dsfmt(1);
     GF2X minpoly;
     vec_GF2 vec;
     unsigned int maxdegree;
@@ -40,15 +39,14 @@ void search(unsigned int n) {
     mt_fill(rndarray, rndarray_cnt);
     for (;;) {
 	DSFMT::setup_param(rndarray, &rndarray_idx);
-	dsfmt.init_gen_rand(rndarray[rndarray_idx++]);
 	if (rndarray_idx + 100 > rndarray_cnt) {
 	    mt_fill(rndarray, rndarray_cnt);
 	    rndarray_idx = 0;
 	}
 	bmOk = 1;
-	//    for (j = 0; j < 32; j++) {
 	for (j = 0; j < 1; j++) {
-	    generating_polynomial104(dsfmt, vec, j, maxdegree);
+	    generating_polynomial104(rndarray[rndarray_idx++],
+				     vec, j, maxdegree);
 	    berlekampMassey(minpoly, maxdegree, vec);
 	    if (deg(minpoly) == -1) {
 		bmOk = 0;

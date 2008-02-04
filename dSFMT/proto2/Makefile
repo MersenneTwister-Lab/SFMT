@@ -40,8 +40,26 @@ param-searchDPz6-521: sfmtDPz6.o search.o
 param-searchDPz7-521: sfmtDPz7.o search.o
 	${CPP} -o $@ sfmtDPz7.o search.o ${LINKOPT}
 
+param-searchDPz7-1279: sfmtDPz7.cpp search.o
+	${CPP} -o $@ sfmtDPz7.cpp search.o ${LINKOPT}
+
 param-searchDPz8-521: sfmtDPz8.o search.o
 	${CPP} -o $@ sfmtDPz8.o search.o ${LINKOPT}
+
+param-searchDPz8-1279: sfmtDPz8.o search.o
+	${CPP} -o $@ sfmtDPz8.o search.o ${LINKOPT}
+
+param-searchDPz9-521: sfmtDPz9.cpp search.o
+	${CPP} -o $@ sfmtDPz9.cpp search.o ${LINKOPT}
+
+param-searchDPz9-1279: sfmtDPz9.cpp search.o
+	${CPP} -o $@ sfmtDPz9.cpp search.o ${LINKOPT}
+
+param-searchDPza-521: sfmtDPza.cpp search.o
+	${CPP} -o $@ sfmtDPza.cpp search.o ${LINKOPT}
+
+param-searchDPza-1279: sfmtDPza.cpp search.o
+	${CPP} -o $@ sfmtDPza.cpp search.o ${LINKOPT}
 
 shortest-baseDPz3-521: sfmtDPz3.o chk-shortest.o
 	${CPP} -o $@ sfmtDPz3.o chk-shortest.o ${LINKOPT}
@@ -60,6 +78,12 @@ shortest-baseDPz7-521: sfmtDPz7.o chk-shortest.o
 
 shortest-baseDPz8-521: sfmtDPz8.o chk-shortest.o
 	${CPP} -o $@ sfmtDPz8.o chk-shortest.o ${LINKOPT}
+
+shortest-baseDPz9-521: sfmtDPz9.cpp chk-shortest.o
+	${CPP} -o $@ sfmtDPz9.cpp chk-shortest.o ${LINKOPT}
+
+shortest-baseDPza-521: sfmtDPza.cpp chk-shortest.o
+	${CPP} -o $@ sfmtDPza.cpp chk-shortest.o ${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<

@@ -46,6 +46,19 @@ void generating_polynomial104(DSFMT& dsfmt,
     }
 }
 
+void generating_polynomial104(uint64_t seed,
+			      vec_GF2& vec, 
+			      unsigned int bitpos, 
+			      unsigned int maxdegree) {
+    DSFMT dsfmt(seed);
+
+    if (bitpos < 52) {
+	generating_polynomial104_hi(dsfmt, vec, bitpos, maxdegree);
+    } else {
+	generating_polynomial104_low(dsfmt, vec, bitpos - 52, maxdegree);
+    }
+}
+
 bool static check_minpoly104_hi(const DSFMT& sfmt, const GF2X& minpoly,
 				unsigned int bitpos) {
     uint32_t sum;

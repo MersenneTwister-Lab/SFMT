@@ -55,7 +55,7 @@ INLINE double genrand_close1_open2(void);
 #else
 #define ALWAYSINLINE
 #endif
-INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *lung)
+INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *lung)
     ALWAYSINLINE;
 #if 0
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
@@ -100,7 +100,7 @@ static void setup_const(void) {
 #endif
 
 #ifdef SSE2
-INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *u) {
+INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *u) {
     __m128i v, w, x, y, z;
     
     x = a->si;

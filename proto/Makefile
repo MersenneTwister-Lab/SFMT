@@ -554,6 +554,10 @@ searchX78-parity132049: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
 	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
 		${LINKOPT}
 
+searchX78-parity216091: search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o
+	${CPP} -o $@ search-parity-vector0.o sfmtX78-st.o mt19937ar.o util.o \
+		${LINKOPT}
+
 testP37-parity607:test-parity.o sfmtP37-st.o util.o
 	${CPP} -o $@ test-parity.o sfmtP37-st.o util.o ${LINKOPT}
 

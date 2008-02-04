@@ -16,14 +16,28 @@ extern "C" {
 #define MEXP 19937
 #endif
 
-static int mexp = MEXP;
-static int WORDSIZE = 128;
-static int N = ((MEXP - 128) / WORDSIZE + 1);
-static int MAXDEGREE = WORDSIZE * N + 128;
-static uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
-//static uint64_t HIGH_CONST = 0x0000000000000000ULL;
-static uint64_t MSK1 = 0xedfffffbfffbffbdULL;
-static uint64_t MSK2 = 0xaefeffd36dfdffdfULL;
+const int mexp = MEXP;
+const int WORDSIZE = 128;
+const int N = (MEXP - 128) / WORDSIZE + 1;
+const int MAXDEGREE = WORDSIZE * N + 128;
+const uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
+const uint64_t HIGH_CONST = 0x0000000000000000ULL;
+
+int DSFMT::pos1;
+int DSFMT::pos2;
+int DSFMT::pos3;
+int DSFMT::sl1;
+int DSFMT::sl2;
+int DSFMT::sl3;
+int DSFMT::sr1;
+int DSFMT::sr2;
+int DSFMT::sr3;
+uint64_t DSFMT::msk1;
+uint64_t DSFMT::msk2;
+uint64_t DSFMT::msk3;
+uint64_t DSFMT::msk4;
+uint64_t DSFMT::msk5;
+uint64_t DSFMT::msk6;
 
 unsigned int DSFMT::get_rnd_maxdegree(void) {
     return MAXDEGREE;
@@ -34,25 +48,25 @@ unsigned int DSFMT::get_rnd_mexp(void) {
 };
 
 void DSFMT::setup_param(uint32_t array[], int *index) {
-    MSK1 = array[(*index)++];
-    MSK1 |= array[(*index)++];
-    MSK1 |= array[(*index)++];
-    MSK1 <<= 32;
-    MSK1 |= array[(*index)++];
-    MSK1 |= array[(*index)++];
-    MSK1 |= array[(*index)++];
-    MSK2 = array[(*index)++];
-    MSK2 |= array[(*index)++];
-    MSK2 |= array[(*index)++];
-    MSK2 <<= 32;
-    MSK2 |= array[(*index)++];
-    MSK2 |= array[(*index)++];
-    MSK2 |= array[(*index)++];
+    msk1 = array[(*index)++];
+    msk1 |= array[(*index)++];
+    msk1 |= array[(*index)++];
+    msk1 <<= 32;
+    msk1 |= array[(*index)++];
+    msk1 |= array[(*index)++];
+    msk1 |= array[(*index)++];
+    msk2 = array[(*index)++];
+    msk2 |= array[(*index)++];
+    msk2 |= array[(*index)++];
+    msk2 <<= 32;
+    msk2 |= array[(*index)++];
+    msk2 |= array[(*index)++];
+    msk2 |= array[(*index)++];
 }
 
 void DSFMT::print_param(FILE *fp) {
-    fprintf(fp, "MSK1 = %016" PRIX64 "\n", MSK1);
-    fprintf(fp, "MSK2 = %016" PRIX64 "\n", MSK2);
+    fprintf(fp, "MSK1 = %016" PRIX64 "\n", msk1);
+    fprintf(fp, "MSK2 = %016" PRIX64 "\n", msk2);
     fflush(fp);
 }
 
@@ -98,8 +112,8 @@ DSFMT::~DSFMT() {
 }
 
 inline static void do_recursion(uint64_t a[2], uint64_t lung[2]) {
-    uint64_t mat1[2] = {0, MSK1};
-    uint64_t mat2[2] = {0, MSK2};
+    uint64_t mat1[2] = {0, DSFMT::msk1};
+    uint64_t mat2[2] = {0, DSFMT::msk2};
     uint64_t t0, t1;
 
     t0 = a[0];
@@ -214,9 +228,9 @@ void DSFMT::read_random_param(FILE *f) {
     fgets(line, 256, f);
     fgets(line, 256, f);
     fgets(line, 256, f);
-    MSK1 = get_uint64(line, 16);
+    msk1 = get_uint64(line, 16);
     fgets(line, 256, f);
-    MSK2 = get_uint64(line, 16);
+    msk2 = get_uint64(line, 16);
 }
 
 void DSFMT::fill_rnd() {
