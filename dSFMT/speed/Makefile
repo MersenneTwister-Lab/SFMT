@@ -100,6 +100,9 @@ sfmtDPz1_fastc: sfmtDPz1_fastc.c test_time3.c paramsDPz1.h
 sfmtDPz2_fastc: sfmtDPz2.c test_time3.c paramsDPz2.h
 	${CC} ${CCFLAGS} -o $@ sfmtDPz2.c
 
+sfmtDPza_fastc: sfmtDPza.c test_time3.c paramsDPza.h
+	${CC} ${CCFLAGS} -o $@ sfmtDPza.c
+
 sfmtDN2_fastca: sfmtDN2_fastca.c test_time3.c paramsDN2.h
 	${CC} ${CCFLAGS} -o $@ sfmtDN2_fastca.c
 

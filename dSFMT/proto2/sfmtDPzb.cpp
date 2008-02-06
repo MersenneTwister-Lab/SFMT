@@ -57,7 +57,7 @@ void DSFMT::setup_param(uint32_t array[], int *index) {
     msk1 |= array[(*index)++];
     msk1 |= array[(*index)++];
     msk1 &= LOW_MASK;
-    //msk1 |= 0x0fffU;
+    msk1 |= 0x0fffU;
     msk2 = array[(*index)++];
     msk2 |= array[(*index)++];
     msk2 |= array[(*index)++];
@@ -66,7 +66,7 @@ void DSFMT::setup_param(uint32_t array[], int *index) {
     msk2 |= array[(*index)++];
     msk2 |= array[(*index)++];
     msk2 &= LOW_MASK;
-    //msk2 |= 0x0fffU;
+    msk2 |= 0x0fffU;
 }
 
 void DSFMT::print_param(FILE *fp) {
@@ -141,8 +141,8 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2],
     t1 = a[1];
     L0 = lung[0];
     L1 = lung[1];
-    lung[0] = (t0 << DSFMT::sl1) ^ (L1 >> 32) ^ (L1 << 32) ^ b[0];
-    lung[1] = (t1 << DSFMT::sl1) ^ (L0 >> 32) ^ (L0 << 32) ^ b[1];
+    lung[0] = (t0 << DSFMT::sl1) ^ (L1 >> 32) ^ (L0 << 32) ^ b[0];
+    lung[1] = (t1 << DSFMT::sl1) ^ (L0 >> 32) ^ (L1 << 32) ^ b[1];
     a[0] = (lung[0] >> 12) ^ (lung[0] & DSFMT::msk1) ^ t0;
     a[1] = (lung[1] >> 12) ^ (lung[1] & DSFMT::msk2) ^ t1;
 }
