@@ -66,6 +66,7 @@ INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *lung)
 #if 0
 INLINE static void convert_co(w128_t array[], int size) ALWAYSINLINE;
 #endif
+INLINE static void convert_co128(w128_t *r);
 INLINE static void convert_oc(w128_t array[], int size) ALWAYSINLINE;
 INLINE static void convert_oo(w128_t array[], int size) ALWAYSINLINE;
 
@@ -125,13 +126,14 @@ INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *u) {
 #elif defined(ALTIVEC)
 INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t * b,
 				w128_t *lung) {
-    const vector unsigned char sl1 = (vector unsigned char)(ALTI_SL1);
+    const vector unsigned char sl1 = ALTI_SL1;
     const vector unsigned char sl1_perm = ALTI_SL1_PERM;
     const vector unsigned int sl1_msk = ALTI_SL1_MSK;
-    const vector unsigned char sr = (vector unsigned char)(ALTI_SR);
-    const vector unsigned char sr_perm = ALTI_SR_PERM;
-    const vector unsigned int sr_msk = ALTI_SR_MSK;
+    const vector unsigned char sr1 = ALTI_SR1;
+    const vector unsigned char sr1_perm = ALTI_SR1_PERM;
+    const vector unsigned int sr1_msk = ALTI_SR1_MSK;
     const vector unsigned char perm = ALTI_PERM;
+    const vector unsigned int msk1 = ALTI_MSK1;
     vector unsigned int w, x, y, z;
 
     z = a->v;
@@ -139,11 +141,11 @@ INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t * b,
     x = vec_perm(w, (vector unsigned int)perm, perm);
     y = vec_perm(z, sl1_perm, sl1_perm);
     y = vec_sll(y, sl1);
-    y = vel_and(y, sl1_msk);
+    y = vec_and(y, sl1_msk);
     w = vec_xor(x, b->v);
     w = vec_xor(w, y);
     x = vec_perm(w, (vector unsigned int)sr1_perm, sr1_perm);
-    x = vec_sr(x, sr1);
+    x = vec_srl(x, sr1);
     x = vec_and(x, sr1_msk);
     y = vec_and(w, msk1);
     z = vec_xor(z, y);
@@ -165,7 +167,7 @@ INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t * b,
 }
 #endif
 
-#if 1
+#if 0
 INLINE static void convert_co(w128_t array[], int size) {
     int i;
 
@@ -173,6 +175,17 @@ INLINE static void convert_co(w128_t array[], int size) {
 	array[i].d[0] = array[i].d[0] - 1.0;
 	array[i].d[1] = array[i].d[1] - 1.0;
     }
+}
+#endif
+
+#if defined(SSE2)
+INLINE static void convert_co128(w128_t *r) {
+    r->sd = _mm_add_pd(r->sd, sse2_double_m_one);
+}
+#else
+INLINE static void convert_co128(w128_t *r) {
+    r->d[0] = r->d[0] - 1.0;
+    r->d[1] = r->d[1] - 1.0;
 }
 #endif
 
@@ -250,6 +263,7 @@ INLINE static void gen_rand_arrayco(w128_t array[], int size) {
     for (; i < size - N; i++) {
 	do_recursion(&array[i], &array[i - N], &array[i + SFMT_POS1 - N],
 		     &lung);
+	convert_co128(&array[i - N]);
     }
     for (j = 0; j < 2 * N - size; j++) {
 	sfmt[j] = array[j + size - N];
@@ -258,19 +272,23 @@ INLINE static void gen_rand_arrayco(w128_t array[], int size) {
 	do_recursion(&array[i], &array[i - N], &array[i + SFMT_POS1 - N],
 		     &lung);
 	sfmt[j] = array[i];
+	convert_co128(&array[i - N]);
+    }
+    for (i = size - N; i < size; i++) {
+	convert_co128(&array[i]);
     }
     sfmt[N] = lung;
 }
 
 INLINE double genrand_close1_open2(void) {
     double r;
-    uint64_t *psfmt = &(sfmt[0].a[0]);
+    double *dsfmt = &(sfmt[0].d[0]);
 
     if (idx >= N * 2) {
 	gen_rand_all();
 	idx = 0;
     }
-    r = psfmt[idx++];
+    r = dsfmt[idx++];
     return r;
 }
 
@@ -318,10 +336,11 @@ void init_gen_rand(uint64_t seed)
     uint64_t *psfmt;
 
     psfmt = (uint64_t *)&sfmt[0];
-    psfmt[0] = seed;
+    psfmt[0] = (seed & SFMT_LOW_MASK) | SFMT_HIGH_CONST;
     for (i = 1; i < N * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
+	psfmt[i] = (psfmt[i] & SFMT_LOW_MASK) | SFMT_HIGH_CONST;
     }
     for (;i < (N + 1) * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 

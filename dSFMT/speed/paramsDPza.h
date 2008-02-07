@@ -27,23 +27,21 @@
 
 /* PARAMETERS FOR ALTIVEC */
 #if defined(__APPLE__)	/* For OSX */
-    #define ALTI_SL1 	(vector unsigned char)(2)
+    #define ALTI_SL1 (vector unsigned char)(5)
     #define ALTI_SL1_PERM \
-	(vector unsigned char)(3,4,5,6,7,29,29,29,11,12,13,14,15,0,1,2)
+        (vector unsigned char)(2,3,4,5,6,7,30,30,10,11,12,13,14,15,0,1)
     #define ALTI_SL1_MSK \
-	(vector unsigned int)(0xffffffffU,0xfc000000U,0xffffffffU,0xfc000000U)
-    #define ALTI_SL2 	(vector unsigned char)(21)
-    #define ALTI_SL2_PERM \
-	(vector unsigned char)(2,3,4,5,6,7,30,30,10,11,12,13,14,15,0,1)
-    #define ALTI_SL2_MSK \
-	(vector unsigned int)(0xabffedffU,0xef400000U,0xfeff6fffU,0xddc00000U)
-    #define ALTI_SR 	(vector unsigned char)(4)
-    #define ALTI_SR_PERM \
-	(vector unsigned char)(15,0,1,2,3,4,5,6,15,8,9,10,11,12,13,14)
-    #define ALTI_SR_MSK \
-	(vector unsigned int)(0x000fffffU,0xffffffffU,0x000fffffU,0xffffffffU)
+        (vector unsigned int)(0xffffffffU,0xffe00000U,0xffffffffU,0xffe00000U)
+    #define ALTI_SR1 (vector unsigned char)(4)
+    #define ALTI_SR1_PERM \
+        (vector unsigned char)(15,0,1,2,3,4,5,6,15,8,9,10,11,12,13,14)
+    #define ALTI_SR1_MSK \
+        (vector unsigned int)(0x000fffffU,0xffffffffU,0x000fffffU,0xffffffffU)
+    #define ALTI_MSK1 \
+        (vector unsigned int)(SFMT_MSK32_1, SFMT_MSK32_2, \
+                              SFMT_MSK32_3, SFMT_MSK32_4)
     #define ALTI_PERM \
-	(vector unsigned char)(8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7)
+        (vector unsigned char)(12,13,14,15,8,9,10,11,4,5,6,7,0,1,2,3)
     #define ALTI_LOW_MSK \
 	(vector unsigned int)(SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2, \
 		SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2)

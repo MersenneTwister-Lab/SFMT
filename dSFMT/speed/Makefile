@@ -44,6 +44,9 @@ sfmtD11_alti: sfmtD11_alti.c test_time3.c  paramsD11.h
 sfmtDPf_alti: sfmtDPf_alti.c test_time3.c  paramsDPf.h
 	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ sfmtDPf_alti.c
 
+sfmtDPza_alti: sfmtDPza.c test_time3.c  paramsDPza.h
+	${CC} -faltivec -maltivec ${CCFLAGS} -DALTIVEC -o $@ sfmtDPza.c
+
 sfmtX78_alti: sfmtX78_alti.c test_time3.c
 	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ sfmtX78_alti.c
 
