@@ -172,4 +172,6 @@ double genrand_res53(void)
     unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6; 
     return(a*67108864.0+b)*(1.0/9007199254740992.0); 
 } 
+#ifndef NOINCLUDE
 #include "test_time2.c"
+#endif
