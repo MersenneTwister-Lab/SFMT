@@ -61,8 +61,32 @@
 #define INLINE
 #endif
 
+#if defined(SSE2)
+static __m128i dmt[1];
+#elif defined(ALTIVEC)
+static vector unsigned int dmt[1];
+#endif
 static unsigned int mt[N]; /* the array for the state vector  */
 static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
+#if defined(__GNUC__) && !defined(DEBUG) 
+#define ALWAYSINLINE __attribute__((always_inline)) 
+#else
+#define ALWAYSINLINE
+#endif
+#if defined(SSE2)
+INLINE static __m128i mm_recursion(uint32_t *x, uint32_t *y, uint32_t *z,
+				   __m128i u_mask, __m128i l_mask, 
+				   __m128i mat_a, __m128i one) 
+    ALWAYSINLINE;
+#elif defined(ALTIVEC)
+INLINE static vector unsigned int vec_recursion(vector unsigned int a,
+						vector unsigned int b,
+						vector unsigned int one,
+						vector unsigned int zero,
+						vector unsigned int mat_a) 
+    ALWAYSINLINE;
+#endif
+INLINE static void gen_rand_all(void) ALWAYSINLINE;
 
 /* initializes mt[N] with a seed */
 void init_genrand(unsigned int s)
@@ -109,31 +133,162 @@ void init_by_array(unsigned int init_key[], int key_length)
     mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */ 
 }
 
+#if defined(SSE2)
+INLINE static __m128i mm_recursion(uint32_t *x, uint32_t *y, uint32_t *z,
+				   __m128i u_mask, __m128i l_mask, 
+				   __m128i mat_a, __m128i one) {
+    __m128i a0, a1, b, r;
+    a0 = _mm_load_si128((__m128i *)x);
+    a1 = _mm_loadu_si128((__m128i *)y);
+    b = _mm_loadu_si128((__m128i *)z);
+    a0 = _mm_and_si128(a0, u_mask);
+    a1 = _mm_and_si128(a1, l_mask);
+    r = _mm_or_si128(a0, a1);
+    a1 = _mm_and_si128(a1, one);
+    a1 = _mm_cmpeq_epi32(a1, one);
+    a1 = _mm_and_si128(a1, mat_a);
+    a0 = _mm_srli_epi32(r, 1);
+    r = _mm_xor_si128(b, a0);
+    r = _mm_xor_si128(r, a1);
+    return r;
+}
+
+INLINE static void gen_rand_all(void)
+{
+    //uint32_t y;
+    __m128i r, u_mask, l_mask, mat_a, one;
+    //static uint32_t mag01[2] = { 0x0UL, MATRIX_A };
+    /* mag01[x] = x * MATRIX_A  for x=0,1 */
+
+    int i;
+    u_mask = _mm_set_epi32(UPPER_MASK, UPPER_MASK, UPPER_MASK, UPPER_MASK);
+    l_mask = _mm_set_epi32(LOWER_MASK, LOWER_MASK, LOWER_MASK, LOWER_MASK);
+    mat_a = _mm_set_epi32(MATRIX_A, MATRIX_A, MATRIX_A, MATRIX_A);
+    one = _mm_set_epi32(1, 1, 1, 1);
+
+    for (i = 0; i < N - M - 4; i += 4) {
+	r = mm_recursion(&mt[i], &mt[i + 1], &mt[i + M], u_mask, l_mask,
+			 mat_a, one);
+	_mm_store_si128((__m128i *)&mt[i], r);
+    }
+    mt[N] = mt[0];
+    r = mm_recursion(&mt[i], &mt[i + 1], &mt[i + M], u_mask, l_mask,
+		     mat_a, one);
+    _mm_store_si128((__m128i *)&mt[i], r);
+    i += 4;
+    for (; i < N; i += 4) {
+	r = mm_recursion(&mt[i], &mt[i + 1], &mt[i + M - N], u_mask, l_mask,
+			 mat_a, one);
+	_mm_store_si128((__m128i *)&mt[i], r);
+    }
+    mti = 0;
+
+}
+#elif defined(ALTIVEC)
+INLINE vector unsigned int vec_recursion(vector unsigned int a,
+				      vector unsigned int b,
+				      vector unsigned int one,
+				      vector unsigned int zero,
+				      vector unsigned int mat_a) {
+    vector unsigned int r, m;
+    
+    m = vec_and(a, one);
+    r = vec_sr(a, one);
+    m = vec_cmpeq(m, zero);
+    r = vec_xor(b, r);
+    m = vec_sel(mat_a, zero, m);
+    r = vec_xor(r, m);
+		
+    return r;
+}
+
+INLINE void gen_rand_all(void) {
+    //uint32_t y;
+    vector unsigned int a0, a1, a, b0, b1, b, r;
+    vector unsigned int u_mask = (vector unsigned int)(UPPER_MASK);
+    vector unsigned int l_mask = (vector unsigned int)(LOWER_MASK);
+    vector unsigned int one = (vector unsigned int)(1);
+    vector unsigned int zero = (vector unsigned int)(0);
+    vector unsigned char perm1 = (vector unsigned char)
+	(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
+    vector unsigned int mat_a = (vector unsigned int)(MATRIX_A);
+    //static uint32_t mag01[2] = { 0x0UL, MATRIX_A };
+    /* mag01[x] = x * MATRIX_A  for x=0,1 */
+
+    int i;
+
+    a0 = vec_ld(0, &mt[0]);
+    b0 = vec_ld(0, &mt[M]);
+    for (i = 0; i < N - M - 4; i += 4) {
+	a1 = vec_ld(0, &mt[i + 4]);
+	a = vec_perm(a0, a1, perm1);
+	b1 = vec_ld(0, &mt[i + M + 4]);
+	b = vec_perm(b0, b1, perm1);
+	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	r = vec_recursion(r, b, one, zero, mat_a);
+	vec_st(r, 0, &mt[i]);
+	a0 = a1;
+	b0 = b1;
+    }
+    a1 = vec_ld(0, &mt[i + 4]);
+    a = vec_perm(a0, a1, perm1);
+    b1 = vec_ld(0, &mt[0]);
+    b = vec_perm(b0, b1, perm1);
+    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+    r = vec_recursion(r, b, one, zero, mat_a);
+    vec_st(r, 0, &mt[i]);
+    a0 = a1;
+    b0 = b1;
+    i += 4;
+    for (; i < N - 4; i += 4) {
+	a1 = vec_ld(0, &mt[i + 4]);
+	a = vec_perm(a0, a1, perm1);
+	b1 = vec_ld(0, &mt[i + M - N + 4]);
+	b = vec_perm(b0, b1, perm1);
+	r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+	r = vec_recursion(r, b, one, zero, mat_a);
+	vec_st(r, 0, &mt[i]);
+	a0 = a1;
+	b0 = b1;
+    }
+    a1 = vec_ld(0, &mt[0]);
+    a = vec_perm(a0, a1, perm1);
+    b1 = vec_ld(0, &mt[i + M - N + 4]);
+    b = vec_perm(b0, b1, perm1);
+    r = vec_or(vec_and(a0, u_mask), vec_and(a, l_mask));
+    r = vec_recursion(r, b, one, zero, mat_a);
+    vec_st(r, 0, &mt[i]);
+
+    mti = 0;
+}
+#else
+INLINE void gen_rand_all(void) {
+    static unsigned int mag01[2]={0x0UL, MATRIX_A};
+    /* mag01[x] = x * MATRIX_A  for x=0,1 */
+    unsigned int y;
+    int kk;
+
+    for (kk=0;kk<N-M;kk++) {
+	y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
+	mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    }
+    for (;kk<N-1;kk++) {
+	y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
+	mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    }
+    y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
+    mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
+
+    mti = 0;
+}
+#endif
 /* generates a random number on [0,0xffffffff]-interval */
 INLINE unsigned int genrand_int32(void)
 {
     unsigned int y;
-    static unsigned int mag01[2]={0x0UL, MATRIX_A};
-    /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
     if (mti >= N) { /* generate N words at one time */
-        int kk;
-
-        if (mti == N+1)   /* if init_genrand() has not been called, */
-            init_genrand(5489UL); /* a default initial seed is used */
-
-        for (kk=0;kk<N-M;kk++) {
-            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
-        }
-        for (;kk<N-1;kk++) {
-            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
-        }
-        y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
-        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
-
-        mti = 0;
+	gen_rand_all();
     }
   
     y = mt[mti++];

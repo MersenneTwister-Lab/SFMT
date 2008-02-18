@@ -56,6 +56,9 @@ sfmtX78_org_alti: sfmtX78_alti.c test_time4.c
 mt_msk_alti: mt_msk_alti.c test_time3.c
 	${CC} -faltivec -maltivec ${CCFLAGS} -o $@ mt_msk_alti.c
 
+mt19937ar_alti: mt19937ar.c test_time2.c
+	${CC} -faltivec -maltivec ${CCFLAGS} -DALTIVEC -o $@ mt19937ar.c
+
 ##### SSE2 ####
 sfmtD01_sse2: sfmtD01_sse2.c test_time.c  paramsD01.h
 	${CC} ${CCFLAGS} -o $@ sfmtD01_sse2.c

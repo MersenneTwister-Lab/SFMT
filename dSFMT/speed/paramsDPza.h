@@ -8,7 +8,7 @@
 #define SFMT_HIGH_CONST32 0x3ff00000U
 
 /* for sse2 */
-#define SSE2_SHUFF 0x4e
+#define SSE2_SHUFF 0x1b
 
 #define SFMT_POS1       125
 #define SFMT_SL1	21

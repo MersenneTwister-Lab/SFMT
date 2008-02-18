@@ -150,6 +150,7 @@ INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t * b,
     y = vec_and(w, msk1);
     z = vec_xor(z, y);
     r->v = vec_xor(z, x);
+    lung->v = w;
 }
 #else
 INLINE static void do_recursion(w128_t *r, w128_t *a, w128_t * b,

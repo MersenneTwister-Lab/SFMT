@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 const int mexp = MEXP;
-const int WORDSIZE = 128;
+const int WORDSIZE = 104;
 const int N = (MEXP - 128) / WORDSIZE + 1;
 const int MAXDEGREE = WORDSIZE * N + 128;
 const uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
@@ -233,7 +233,7 @@ void DSFMT::init_gen_rand(uint64_t seed)
     uint64_t *psfmt;
 
     psfmt = status[0];
-    psfmt[0] = seed;
+    psfmt[0] = (seed & LOW_MASK) | HIGH_CONST;
     for (i = 1; i < N * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
