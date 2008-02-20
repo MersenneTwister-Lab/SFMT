@@ -33,6 +33,24 @@
 
 #include <stdio.h>
 
+#if defined(__BYTE_ORDER) && defined(__BIG_ENDIAN)
+  #if __BYTE_ORDER != __BIG_ENDIAN
+    #define NOT_BIG_ENDIAN 1
+  #endif
+#elif defined(__BYTE_ORDER__) && defined(__BIG_ENDIAN__)
+  #if __BYTE_ORDER__ != __BIG_ENDIAN__
+    #define NOT_BIG_ENDIAN 1
+  #endif
+#elif defined(BYTE_ORDER) && defined(BIG_ENDIAN)
+  #if BYTE_ORDER != BIG_ENDIAN
+    #define NOT_BIG_ENDIAN 1
+  #endif
+#endif
+
+#if !defined(NOT_BIG_ENDIAN) && defined(__amd64)
+  #define NOT_BIG_ENDIAN 1
+#endif
+
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
   #include <inttypes.h>
 #elif defined(_MSC_VER) || defined(__BORLANDC__)
@@ -62,7 +80,7 @@
   #define UINT64_C(v) (v ## ULL) 
 #endif
 
-inline double genrand_close1_open2(void);
+double genrand_close1_open2(void);
 #if defined(__GNUC__)
 inline static double genrand_close_open(void) __attribute__((always_inline));
 inline static double genrand_open_close(void) __attribute__((always_inline));

@@ -93,7 +93,7 @@ static void period_certification(void);
  * This function simulate a 32-bit array index overlapped to 64-bit
  * array of LITTLE ENDIAN in BIG ENDIAN machine.
  */
-#if (defined(__BIG_ENDIAN__) || defined(BIG_ENDIAN)) && !defined(__amd64)
+#if (defined(__BIG_ENDIAN__) || defined(BIG_ENDIAN)) && !defined(NOT_BIG_ENDIAN)
 inline static int sfmt_idxof(int i) {
     return i ^ 1;
 }
@@ -358,7 +358,7 @@ int get_min_array_size(void) {
  * function.
  * @return double precision floating point pseudorandom number
  */
-inline double genrand_close1_open2(void) {
+double genrand_close1_open2(void) {
     double r;
 
     assert(is_sfmt_initialized);
