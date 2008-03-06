@@ -133,6 +133,12 @@ shortest-baseD11-607: chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
 check-affin-bm607: chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o
 	${CPP} -o $@ chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o ${LINKOPT}
 
+fix-za: fix-za.o
+	${CPP} -o $@ fix-za.o ${LINKOPT}
+
+lin-za: linear-solv-za.cpp
+	${CPP} -o $@ linear-solv-za.cpp ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
