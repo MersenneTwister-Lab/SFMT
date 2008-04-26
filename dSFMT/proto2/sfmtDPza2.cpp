@@ -20,8 +20,8 @@ const int WORDSIZE = 104;
 const int N = (MEXP - 128) / WORDSIZE + 1;
 const int MAXDEGREE = WORDSIZE * N + 128;
 const uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
+const uint64_t HIGH_CONST = 0x0000000000000000ULL;
 
-uint64_t DSFMT::high_const = 0x0000000000000000ULL;
 int DSFMT::pos1;
 int DSFMT::pos2;
 int DSFMT::pos3;
@@ -39,7 +39,8 @@ uint64_t DSFMT::msk5;
 uint64_t DSFMT::msk6;
 
 unsigned int DSFMT::get_rnd_maxdegree(void) {
-    return MAXDEGREE;
+    //return MAXDEGREE;
+    return 128 * (N + 1);
 };
 
 unsigned int DSFMT::get_rnd_mexp(void) {
@@ -161,6 +162,7 @@ void DSFMT::next_state() {
 }
 
 /* これは初期状態を出力する */
+/* 名前に反するが 128 出力版 */
 uint64_t DSFMT::gen_rand104sp(uint64_t array[2], int mode)
 {
     int i, p;
@@ -173,13 +175,13 @@ uint64_t DSFMT::gen_rand104sp(uint64_t array[2], int mode)
     p = p / 2;
     switch (mode) {
     case 0:
-	array[0] = status[i][0] & LOW_MASK;
-	array[1] = status[i][1] & LOW_MASK;
+	array[0] = status[i][0];
+	array[1] = status[i][1];
 	break;
     case 1:
     default:
-	array[0] = status[i][1] & LOW_MASK;
-	array[1] = status[p][0] & LOW_MASK;
+	array[0] = status[i][1];
+	array[1] = status[p][0];
     }
 
     next_state();
@@ -196,8 +198,8 @@ void DSFMT::gen_rand104spar(uint64_t array[][2], int size) {
 
     for (j = 0; j < size; j++) {
 	i = idx / 2;
-	array[j][0] = status[i][0] & LOW_MASK;
-	array[j][1] = status[i][1] & LOW_MASK;
+	array[j][0] = status[i][0];
+	array[j][1] = status[i][1];
 
 	next_state();
 	idx += 2;
@@ -227,28 +229,16 @@ void DSFMT::get_lung(uint64_t lung[2]) {
     lung[1] = status[N][1];
 }
 
-void DSFMT::init_gen_rand(uint64_t seed, uint64_t high)
+void DSFMT::init_gen_rand(uint64_t seed)
 {
     int i;
     uint64_t *psfmt;
 
-    if (seed == 0) {
-	psfmt = status[0];
-	for (i = 0; i < N * 2; i++) {
-	    psfmt[i] = high;
-	}
-	for (;i < (N + 1) * 2; i++) {
-	    psfmt[i] = 0;
-	}
-	idx = 0;
-	return;
-    }
     psfmt = status[0];
-    psfmt[0] = (seed & LOW_MASK) | high;
+    psfmt[0] = seed;
     for (i = 1; i < N * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
-	psfmt[i] = (psfmt[i] & LOW_MASK) | high;
     }
     for (;i < (N + 1) * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
@@ -257,7 +247,7 @@ void DSFMT::init_gen_rand(uint64_t seed, uint64_t high)
     idx = 0;
 }
 
-void DSFMT::fill_rnd(uint64_t high) {
+void DSFMT::fill_rnd() {
     const int size = (N + 1) * 4;
     uint32_t array[size];
     uint64_t u;
@@ -268,7 +258,7 @@ void DSFMT::fill_rnd(uint64_t high) {
 	for (j = 0; j < 2; j++) {
 	    u = array[idx++];
 	    u = u << 32;
-	    u = ((u | array[idx++]) & LOW_MASK) | high;
+	    u = u | array[idx++];
 	    status[i][j] = u;
 	}
     }
@@ -291,7 +281,7 @@ int main(int argc, char * argv[]) {
     FILE *fp;
 
     LOW_MASK =   0x000FFFFFFFFFFFFFULL;
-    high_const = 0x3ff0000000000000ULL;
+    HIGH_CONST = 0x3ff0000000000000ULL;
     if (argc > 1) {
 	fp = fopen(argv[1], "r");
 	errno = 0;

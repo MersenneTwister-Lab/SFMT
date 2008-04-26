@@ -94,6 +94,15 @@ shortest-baseDPza-521: sfmtDPza.cpp chk-shortest.o
 shortest-baseDPzb-521: sfmtDPzb.cpp chk-shortest.o
 	${CPP} -o $@ sfmtDPzb.cpp chk-shortest.o ${LINKOPT}
 
+chk-charac-DPza521: sfmtDPza2.cpp chk-charac.o
+	${CPP} -o $@ sfmtDPza2.cpp chk-charac.o ${LINKOPT}
+
+chi-zero-521: sfmtDPza.cpp chi-zero.o
+	${CPP} -o $@ sfmtDPza.cpp chi-zero.o ${LINKOPT}
+
+chi-zero-19937: sfmtDPza.cpp chi-zero.o
+	${CPP} -o $@ sfmtDPza.cpp chi-zero.o ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
