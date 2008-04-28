@@ -61,6 +61,9 @@ param-searchDPza-521: sfmtDPza.cpp search.o
 param-searchDPzb-521: sfmtDPzb.cpp search.o
 	${CPP} -o $@ sfmtDPzb.cpp search.o ${LINKOPT}
 
+param-searchDPzc-521: sfmtDPzc.cpp search.o
+	${CPP} -o $@ sfmtDPzc.cpp search.o ${LINKOPT}
+
 param-searchDPza-1279: sfmtDPza.cpp search.o
 	${CPP} -o $@ sfmtDPza.cpp search.o ${LINKOPT}
 
