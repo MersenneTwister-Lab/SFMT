@@ -6,6 +6,7 @@ int main(int argc, char* argv[]) {
     int i, cnt, seed;
     double x, y, pi;
     const int NUM = 10000;
+    dsfmt_t dsfmt;
 
     if (argc >= 2) {
 	seed = strtol(argv[1], NULL, 10);
@@ -13,15 +14,15 @@ int main(int argc, char* argv[]) {
 	seed = 12345;
     }
     cnt = 0;
-    init_gen_rand(seed);
+    dsfmt_init_gen_rand(&dsfmt, seed);
     for (i = 0; i < NUM; i++) {
-	x = genrand_close_open();
-	y = genrand_close_open();
+	x = dsfmt_genrand_close_open(&dsfmt);
+	y = dsfmt_genrand_close_open(&dsfmt);
 	if (x * x + y * y < 1.0) {
 	    cnt++;
 	}
     }
     pi = (double)cnt / NUM * 4;
-    printf("%l\n", pi);
+    printf("%f\n", pi);
     return 0;
 }

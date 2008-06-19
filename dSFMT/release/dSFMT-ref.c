@@ -17,26 +17,26 @@
 #include "dSFMT-params.h"
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
-  #include <inttypes.h>
+#  include <inttypes.h>
 #elif defined(_MSC_VER)
   typedef unsigned int uint32_t;
   typedef unsigned long long uint64_t;
 #else
-  #include <inttypes.h>
+#  include <inttypes.h>
 #endif
 
 #ifndef PRIu64
-  #if defined(_MSC_VER)
-    #define PRIu64 "I64u"
-    #define PRIx64 "I64x"
-  #else
-    #define PRIu64 "llu"
-    #define PRIx64 "llx"
-  #endif
+#  if defined(_MSC_VER)
+#    define PRIu64 "I64u"
+#    define PRIx64 "I64x"
+#  else
+#    define PRIu64 "llu"
+#    define PRIx64 "llx"
+#  endif
 #endif
 
-#ifndef UINT64_C
-  #define UINT64_C(v) (v ## ULL) 
+#if !defined(UINT64_C)
+#  define UINT64_C(v) (v ## ULL) 
 #endif
 
 #if defined(__ppc__)
@@ -372,7 +372,7 @@ void init_by_array(uint32_t init_key[], int key_length) {
     is_sfmt_initialized = 1;
 }
 
-#ifdef MAIN
+#if defined(MAIN)
 int main(int argc, char *argv[]) {
     int i;
     double d;

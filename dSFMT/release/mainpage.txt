@@ -7,6 +7,9 @@
  * This program is based on the IEEE Standard for Binary
  * Floating-Point Arithmetic (ANSI/IEEE Std 754-1985) format.
  *
+ * This version uses \b structure of C language. 
+ * Don't use different \b DSFMT_MEXP for compiling dSFMT.c and your program.
+ *
  * This Project provides pseudorandom number generators of various
  * Mersenne Prime Period: from 2<sup>607</sup>-1 to
  * 2<sup>216091</sup>-1.
@@ -14,7 +17,7 @@
  * To get dSFMT which has the period of 2<sup>607</sup>-1, you have to
  * specify -DMEXP=607 as a compile option. For example, 
  * @verbatim
- gcc -DSFMT_MEXP=607 -msse2 -DHAVE_SSE2 -c dSFMT.c 
+ gcc -DDSFMT_MEXP=607 -msse2 -DHAVE_SSE2 -c dSFMT.c 
 @endverbatim
  * will make dSFMT which has the period of 2<sup>607</sup>-1 and is
  * optimized for SSE2.
@@ -22,48 +25,51 @@
  *   See <a href="howto-compile.html">How to compile</a> to compile
  *   your program with SFMT optimized for SIMD.
  * 
- * - void init_gen_rand() initializes the generator with a 32-bit
+ * - void dsfmt_init_gen_rand() initializes the generator with a 32-bit
  *   integer seed.
- * - void init_by_array() initializes the generator with an array of
+ * - void dsfmt_init_by_array() initializes the generator with an array of
  *   32-bit integers as the seeds.
- * - const char * get_idstring() returns the IDSTRING which identify
+ * - const char * dsfmt_get_idstring() returns the IDSTRING which identify
      the generator.
- * - int get_min_array_size() returns the minimum size of array used for
+ * - int dsfmt_get_min_array_size() returns the minimum size of array used for
  *   \b fill_array functions.   
- * - inline double genrand_close1_open2() generates and returns a
+ * - inline double dsfmt_genrand_close1_open2() generates and returns a
  *   double precision pseudorandom number which distributes uniformly
  *   in the range [1, 2).  This is the primitive and faster than
  *   generating numbers in other ranges.
- * - inline double genrand_close_open() generates and returns a double
+ * - inline double dsfmt_genrand_close_open() generates and returns a double
  *   precision pseudorandom number which distributes uniformly in the
  *   range [0, 1).
- * - inline double genrand_open_close() generates and returns a double
+ * - inline double dsfmt_genrand_open_close() generates and returns a double
  *   precision pseudorandom number which distributes uniformly in the
  *   range (0, 1].
- * - inline double genrand_open_open() generates and returns a double
+ * - inline double dsfmt_genrand_open_open() generates and returns a double
  *   precision pseudorandom number which distributes uniformly in the
  *   range (0, 1).
- * - void fill_array_close1_open2() fills the user-specified array
+ * - void dsfmt_fill_array_close1_open2() fills the user-specified array
  *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range [1, 2).
- * - void fill_array_close_open() fills the user-specified array
+ * - void dsfmt_fill_array_close_open() fills the user-specified array
  *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range [0, 1).
- * - void fill_array_open_close() fills the user-specified array
+ * - void dsfmt_fill_array_open_close() fills the user-specified array
  *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range (0, 1].
- * - void fill_array_open_open() fills the user-specified array
+ * - void dsfmt_fill_array_open_open() fills the user-specified array
  *   with double precision pseudorandom numbers which distribute
  *   uniformly in the range (0, 1).
+ *
+ * Old names init_gen_rand, init_by_array, etc. are also defined unless
+ * you define DSFMT_DO_NOT_USE_OLD_NAMES.
  *
  * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
  * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
  *
  * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
  *
- * @date 2007-08-22
+ * @date 2008-02-28
  *
- * Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * Copyright (C) 2007, 2008 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University. All rights reserved.
  *
  * The new BSD License is applied to this software.

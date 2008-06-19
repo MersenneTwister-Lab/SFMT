@@ -1,3 +1,17 @@
+ver 1.3.1
+-------
+change dSFMT.h not to include dSFMT-params.h
+change Makefile to clean test files.
+
+ver 1.3
+-------
+add `dsfmt_' prefix to functions.
+changed to structure base code. 
+put Intel Compiler into silence.
+bug fix checking BIG_ENDIAN and BYTE_ORDER
+change test.c not to include dSFMT.c
+dSFMT-alti.h and dSFMT-sse2.h are marged into dSFMT.c
+
 ver 1.2.1
 -------
 add #include <altivec.h> to dSFMT.c

@@ -10,13 +10,14 @@ int main(int argc, char* argv[]) {
     const int R_SIZE = 2 * NUM;
     int size;
     double *array;
+    dsfmt_t dsfmt;
 
     if (argc >= 2) {
 	seed = strtol(argv[1], NULL, 10);
     } else {
 	seed = 12345;
     }
-    size = get_min_array_size();
+    size = dsfmt_get_min_array_size();
     if (size < R_SIZE) {
 	size = R_SIZE;
     }
@@ -42,7 +43,6 @@ int main(int argc, char* argv[]) {
 	return 1;
     }
 #else /* in this case, gcc doesn't suppport SSE2 */
-    printf("malloc used\n");
     array = malloc(sizeof(double) * size);
     if (array == NULL) {
 	printf("can't allocate memory.\n");
@@ -51,8 +51,8 @@ int main(int argc, char* argv[]) {
 #endif
     cnt = 0;
     j = 0;
-    init_gen_rand(seed);
-    fill_array_close_open(array, size);
+    dsfmt_init_gen_rand(&dsfmt, seed);
+    dsfmt_fill_array_close_open(&dsfmt, array, size);
     for (i = 0; i < NUM; i++) {
 	x = array[j++];
 	y = array[j++];

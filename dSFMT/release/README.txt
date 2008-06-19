@@ -1,6 +1,6 @@
  =================================================================
- dSFMT ver. 1.2
- 2007.08.22
+ dSFMT ver. 1.3
+ 2008.02.28
 
  double precision SIMD oriented Fast Mersenne Twister(dSFMT)
  based on IEEE 754 floating point format.
@@ -8,7 +8,7 @@
  Mutsuo Saito (Hiroshima University) and
  Makoto Matsumoto (Hiroshima University)
 
- Copyright (C) 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ Copyright (C) 2007, 2008 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  University. All rights reserved.
 
  The (modified) BSD License is applied to this software, see
@@ -17,11 +17,14 @@
  This program only works on systems which have IEEE754 floating point
  format.
 
+ This version uses `struct' of C language.
+ Don't use different DSFMT_MEXP for compiling dSFMT.c and your program.
+
  To see documents, see html/index.html.
 
  To make test program, see html/howto-compile.html.
  If your CPU is BIG ENDIAN and your compiler is not gcc,
- define BIG_ENDIAN preprocessor macro, please.
+ define DSFMT_BIG_ENDIAN preprocessor macro, please.
 
  If you want to redistribute and/or change source files, see LICENSE.txt.
 

@@ -1,20 +1,20 @@
 #ifndef DSFMT_PARAMS4423_H
 #define DSFMT_PARAMS4423_H
 
-#define SFMT_POS1	5
-#define SFMT_SL1	31
-#define SFMT_SL2	1
-#define SFMT_SR1	5
-#define SFMT_SR2	16
-#define SFMT_MSK1	UINT64_C(0xfbff7fffffffffff)
-#define SFMT_MSK2	UINT64_C(0xdabfdb9fffffb77f)
-#define SFMT_MSK32_1	0xfbff7fffU
-#define SFMT_MSK32_2	0xffffffffU
-#define SFMT_MSK32_3	0xdabfdb9fU
-#define SFMT_MSK32_4	0xffffb77fU
-#define SFMT_PCV1	UINT64_C(0x0000000000000001)
-#define SFMT_PCV2	UINT64_C(0x000de72ad8bbb330)
-#define SFMT_IDSTR \
+#define DSFMT_POS1	5
+#define DSFMT_SL1	31
+#define DSFMT_SL2	1
+#define DSFMT_SR1	5
+#define DSFMT_SR2	16
+#define DSFMT_MSK1	UINT64_C(0xfbff7fffffffffff)
+#define DSFMT_MSK2	UINT64_C(0xdabfdb9fffffb77f)
+#define DSFMT_MSK32_1	0xfbff7fffU
+#define DSFMT_MSK32_2	0xffffffffU
+#define DSFMT_MSK32_3	0xdabfdb9fU
+#define DSFMT_MSK32_4	0xffffb77fU
+#define DSFMT_PCV1	UINT64_C(0x0000000000000001)
+#define DSFMT_PCV2	UINT64_C(0x000de72ad8bbb330)
+#define DSFMT_IDSTR \
 	"dSFMT-4423:5-31-1-5-16:fbff7fffffffffff-dabfdb9fffffb77f"
 
 
@@ -28,7 +28,7 @@
     #define ALTI_SL2_PERM \
 	(vector unsigned char)(1,2,3,4,5,6,7,31,9,10,11,12,13,14,15,0)
     #define ALTI_SR1 \
-	(vector unsigned int)(SFMT_SR1, SFMT_SR1, SFMT_SR1, SFMT_SR1)
+	(vector unsigned int)(DSFMT_SR1, DSFMT_SR1, DSFMT_SR1, DSFMT_SR1)
     #define ALTI_SR1_MSK \
 	(vector unsigned int)(0x03ff7fffU,0xffffffffU,0x02bfdb9fU,0xffffb77fU)
     #define ALTI_SR2_PERM \
@@ -36,10 +36,10 @@
     #define ALTI_PERM \
 	(vector unsigned char)(8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7)
     #define ALTI_LOW_MSK \
-	(vector unsigned int)(SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2, \
-		SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2)
+	(vector unsigned int)(DSFMT_LOW_MASK32_1, DSFMT_LOW_MASK32_2, \
+		DSFMT_LOW_MASK32_1, DSFMT_LOW_MASK32_2)
     #define ALTI_HIGH_CONST \
-	(vector unsigned int)(SFMT_HIGH_CONST32, 0, SFMT_HIGH_CONST32, 0)
+	(vector unsigned int)(DSFMT_HIGH_CONST32, 0, DSFMT_HIGH_CONST32, 0)
 #else	/* For OTHER OSs(Linux?) */
     #define ALTI_SL1 	{7, 7, 7, 7}
     #define ALTI_SL1_PERM \
@@ -49,7 +49,7 @@
     #define ALTI_SL2_PERM \
 	{1,2,3,4,5,6,7,31,9,10,11,12,13,14,15,0}
     #define ALTI_SR1 \
-	{SFMT_SR1, SFMT_SR1, SFMT_SR1, SFMT_SR1}
+	{DSFMT_SR1, DSFMT_SR1, DSFMT_SR1, DSFMT_SR1}
     #define ALTI_SR1_MSK \
 	{0x03ff7fffU,0xffffffffU,0x02bfdb9fU,0xffffb77fU}
     #define ALTI_SR2_PERM \
@@ -57,10 +57,10 @@
     #define ALTI_PERM \
 	{8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7}
     #define ALTI_LOW_MSK \
-	{SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2, \
-		SFMT_LOW_MASK32_1, SFMT_LOW_MASK32_2}
+	{DSFMT_LOW_MASK32_1, DSFMT_LOW_MASK32_2, \
+		DSFMT_LOW_MASK32_1, DSFMT_LOW_MASK32_2}
     #define ALTI_HIGH_CONST \
-	{SFMT_HIGH_CONST32, 0, SFMT_HIGH_CONST32, 0}
+	{DSFMT_HIGH_CONST32, 0, DSFMT_HIGH_CONST32, 0}
 #endif
 
 #endif /* DSFMT_PARAMS4423_H */

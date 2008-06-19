@@ -7,6 +7,7 @@ int main(int argc, char* argv[]) {
     double x, y, pi;
     const int NUM = 10000;
     uint32_t seeds[100];
+    dsfmt_t dsfmt;
 
     if (argc >= 2) {
 	seed_cnt = 0;
@@ -19,10 +20,10 @@ int main(int argc, char* argv[]) {
 	seed_cnt = 1;
     }
     cnt = 0;
-    init_by_array(seeds, seed_cnt);
+    dsfmt_init_by_array(&dsfmt, seeds, seed_cnt);
     for (i = 0; i < NUM; i++) {
-	x = genrand_close_open();
-	y = genrand_close_open();
+	x = dsfmt_genrand_close_open(&dsfmt);
+	y = dsfmt_genrand_close_open(&dsfmt);
 	if (x * x + y * y < 1.0) {
 	    cnt++;
 	}

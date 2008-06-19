@@ -19,8 +19,6 @@ dSFMT-params132049.h:	parameters for period of 2^{132049}-1
 dSFMT-params216091.h:	parameters for period of 2^{216091}-1
 dSFMT-ref.c:		simple reference C code.
 dSFMT.c:		C code for standard C (c99) and unix like systems.
-dSFMT-alti.h:		C code optimized for PowerPC AltiVec.
-dSFMT-sse2.h:		C code optimized for intel SSE2.
 test.c:			Test driver for standard C.
 check.sh:		Test shell script.
 dSFMT.607.out.txt:	correct output of dSFMT MEXP=607
