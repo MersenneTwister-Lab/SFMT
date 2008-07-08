@@ -123,6 +123,15 @@ calc-fix2: calc-fix2.c
 	${CC} -c -DMAIN calc-fix2.c
 	${CPP} -o $@ calc-fix2.o ${LINKOPT}
 
+calc-fix-zb: calc-fix-zb.c
+	${CC} -o $@ -DMAIN=1 calc-fix-zb.c
+
+calc-fix-za: calc-fix-za.c
+	${CC} -o $@ -DMAIN=1 calc-fix-za.c
+
+calc-fix-lung-z: calc-fix-lung-z.c
+	${CC} -o $@ calc-fix-lung-z.c
+
 .cpp.o:
 	${CPP} -c $<
 

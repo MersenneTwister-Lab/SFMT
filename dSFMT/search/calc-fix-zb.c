@@ -23,16 +23,18 @@ static int INDEX = 0;
 void calc_fix(int sl1, int sl2, uint64_t msk1, uint64_t msk2);
 static void setup_l(char l[64], int sl);
 static void setup_a(char a[64], int sl1, int sl2);
-static void setup_c(char c[64], uint64_t msk, int sl2);
+static void setup_c(char c[64]);
 static void print_array(char *mess, char *a);
-static void calc_rec(char l[], char a[], char c[], int x, int y);
-static bool calc(char l[], char a[], char c[], int x, int y);
+static void calc_rec(char l[], char a[], int x);
+static bool calc(char l[], char a[], int x);
 static char and(char a, char b);
 static char idxof(char a[], int idx);
 static char plus(char a, char b, char c);
 static void output(char l[64], char a[64]);
-static void do_recursion(uint64_t a[2], uint64_t b[2], uint64_t lung[2]);
-static bool check2(uint64_t a1, uint64_t a2, uint64_t l1, uint64_t l2);
+static void do_recursion(uint64_t a[2], uint64_t b[2], uint64_t lung[2],
+			 int sl1, int sl2);
+static bool check2(uint64_t a1, uint64_t a2, uint64_t l1, uint64_t l2,
+		   int sl1, int sl2);
 
 #ifdef MAIN
 int main(int argc, char* argv[]) {
@@ -64,7 +66,6 @@ int main(int argc, char* argv[]) {
 void calc_fix(int sl1, int sl2, uint64_t msk1, uint64_t msk2) {
     char a[64];
     char l[64];
-    char c[64];
     int i, j;
     bool b;
 
@@ -72,7 +73,7 @@ void calc_fix(int sl1, int sl2, uint64_t msk1, uint64_t msk2) {
     LIST[0].index = 0;
     LIST[1].index = 0;
     setup_l(l, sl2);
-    setup_c(a, sl1);
+    setup_c(a);
     calc(l, a, SL1);
     print_array("l = ", l);
     print_array("a = ", a);
@@ -80,7 +81,7 @@ void calc_fix(int sl1, int sl2, uint64_t msk1, uint64_t msk2) {
 
     INDEX = 1;
     setup_l(l, sl2);
-    setup_c(a, sl2);
+    setup_c(a);
     calc(l, a, SL1);
     print_array("l = ", l);
     print_array("a = ", a);
@@ -96,7 +97,7 @@ void calc_fix(int sl1, int sl2, uint64_t msk1, uint64_t msk2) {
 	    printf("L[0] = %016llx\n", LIST[1].l[j]);
 	    printf("L[1] = %016llx\n", LIST[0].l[i]);
 	    b = check2(LIST[0].a[i], LIST[1].a[j],
-		       LIST[1].l[j], LIST[0].l[i]);
+		       LIST[1].l[j], LIST[0].l[i], sl1, sl2);
 	    if (b) {
 		printf("fix point check OK!\n");
 	    } else {
@@ -302,6 +303,6 @@ static bool check2(uint64_t a1, uint64_t a2, uint64_t l1, uint64_t l2,
     b[1] = a2;
     lung[0] = l1;
     lung[1] = l2;
-    do_recursion(a, b, lung);
+    do_recursion(a, b, lung, sl1, sl2);
     return a[0] == a1 && a[1] == a2 && lung[0] == l1 && lung[1] == l2;
 }
