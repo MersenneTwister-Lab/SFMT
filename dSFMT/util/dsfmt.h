@@ -28,13 +28,14 @@ public:
     static uint64_t msk4;
     static uint64_t msk5;
     static uint64_t msk6;
+    static uint64_t high_const;
 
-    void init_gen_rand(uint64_t seed);
+    void init_gen_rand(uint64_t seed, uint64_t high = high_const);
     uint64_t gen_rand104sp(uint64_t arrary[2], int mode);
     void gen_rand104spar(uint64_t array[][2], int size);
     void get_lung(uint64_t lung[2]);
     void add(const DSFMT& src);
-    void fill_rnd();
+    void fill_rnd(uint64_t high = high_const);
     void d_p();
     DSFMT(uint64_t seed);
     DSFMT(const DSFMT& src);

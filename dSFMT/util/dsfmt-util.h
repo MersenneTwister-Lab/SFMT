@@ -11,6 +11,10 @@ void generating_polynomial104(DSFMT& dsfmt,
 			      vec_GF2& vec, 
 			      unsigned int bitpos, 
 			      unsigned int maxdegree);
+void generating_polynomial128(DSFMT& dsfmt,
+			      vec_GF2& vec, 
+			      unsigned int bitpos, 
+			      unsigned int maxdegree);
 void generating_polynomial104(uint64_t seed,
 			      vec_GF2& vec, 
 			      unsigned int bitpos, 
