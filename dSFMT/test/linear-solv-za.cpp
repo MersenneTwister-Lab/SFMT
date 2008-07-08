@@ -16,7 +16,8 @@ void setup_sl(mat_GF2& m_sl, int sl);
 void setup_sr(mat_GF2& m_sr, int sr);
 void setup_c(vec_GF2& C);
 void makeup(mat_GF2& M, mat_GF2& m1, mat_GF2& m2, mat_GF2& m3, mat_GF2& m4);
-void hakidashi(mat_GF2& M, vec_GF2& C);
+void makeup_kakudai(mat_GF2& K, mat_GF2& M, vec_GF2& C);
+void hakidashi(mat_GF2& M);
 
 int main(int argc, char *argv[]) {
     int sl;
@@ -53,7 +54,10 @@ void calc_fix(int sl, int sr, uint64_t mask1, uint64_t mask2) {
     mat_GF2 m1(INIT_SIZE, 128, 128);
     mat_GF2 m2(INIT_SIZE, 128, 128);
     mat_GF2 M(INIT_SIZE, 104 + 128, 104 + 128);
+    mat_GF2 K, K2;
+    mat_GF2 Id;
     vec_GF2 C;
+    long r1, r2;
 
     ident(m_i, 128);
     setup_mask(m_mask, mask1, mask2);
@@ -74,7 +78,17 @@ void calc_fix(int sl, int sr, uint64_t mask1, uint64_t mask2) {
     add(m2, m2, tmp);
 
     makeup(M, m1, m2, s2, m_perm);
-    hakidashi(M, C);
+    ident(Id, M.NumRows());
+    add(M, M, Id);
+    makeup_kakudai(K, M, C);
+    K2 = K;
+    r1 = gauss(M);
+    r2 = gauss(K);
+    if (r1 < r2) {
+	printf("解なし %ld < %ld\n", r1, r2);
+    } else {
+	hakidashi(K2);
+    }
 }
 
 /* 下位ビットがマトリクスでも小さいインデクス */
@@ -154,7 +168,7 @@ void makeup(mat_GF2& M, mat_GF2& m1, mat_GF2& m2, mat_GF2& m3, mat_GF2& m4) {
 	}
     }
 
-    for (i = 0; i < 128; i++) {
+    for (i = 0; i < 64; i++) {
 	for (j = 0; j < 52; j++) {
 	    M[i + 104][j] = m3[i][j];
 	}
@@ -171,30 +185,33 @@ void makeup(mat_GF2& M, mat_GF2& m1, mat_GF2& m2, mat_GF2& m3, mat_GF2& m4) {
 
 void setup_c(vec_GF2& C) {
     int i;
+    //uint64_t c64 = 0xbff0000000000000LLU;
     uint64_t c64 = 0x3ff0000000000000LLU;
 
-    C.SetLength(128);
+    C.SetLength(128 + 104);
+    clear(C);
     for (i = 0; i < 64; i++) {
-	C[i] = (c64 >> i) & 1;
-	C[i+64] = (c64 >> i) & 1;
+	C[i + 104] = (c64 >> i) & 1;
+	C[i + 104 + 64] = (c64 >> i) & 1;
     }
 }
 
-void hakidashi(mat_GF2& M, vec_GF2& C) {
-    mat_GF2 id;
-    mat_GF2 t(INIT_SIZE, 104 + 128, 104 + 128 + 1);
+void makeup_kakudai(mat_GF2& K, mat_GF2& M, vec_GF2& C) {
+    int i, j;
+
+    K.SetDims(M.NumRows(), M.NumCols() + 1);
+    for (i = 0; i < K.NumRows(); i++) {
+	for (j = 0; j < M.NumCols(); j++) {
+	    K[i][j] = M[i][j];
+	}
+	K[i][M.NumCols()] = C[i];
+    }
+}
+
+void hakidashi(mat_GF2& t) {
     int i, j;
     bool found;
 
-    ident(id, 104 + 128);
-    add(id, id, M);
-    /* copy */
-    for (i = 0; i < 104 + 128; i++) {
-	for (j = 0; j < 104 + 128; j++) {
-	    t[i][j] = M[i][j];
-	}
-	t[i][104 + 128] = C[i];
-    }
     /* 掃き出し */
     for (i = 0; i < t.NumRows(); i++) {
 	if (IsZero(t[i][i])) {
@@ -216,16 +233,50 @@ void hakidashi(mat_GF2& M, vec_GF2& C) {
 	    }
 	}
     }
+#if 0
+    /* 全体のプリント */
     for (i = 0; i < t.NumRows(); i++) {
 	for (j = 0; j < t.NumCols() - 1; j++) {
 	    if (IsOne(t[i][j])) {
 		printf("1");
+	    } else {
+		printf("0");
 	    }
 	}
 	if (IsOne(t[i][t.NumCols() -1])) {
 	    printf(" 1\n");
 	} else {
-	    printf(" 1\n");
+	    printf(" 0\n");
 	}
     }
+#endif
+    /* 解？のプリント */
+    uint64_t a1 = 0;
+    uint64_t a2 = 0;
+    uint64_t l1 = 0;
+    uint64_t l2 = 0;
+    for (i = 0; i < 52; i++) {
+	if (IsOne(t[i][t.NumCols() -1])) {
+	    a1 = a1 | ((uint64_t)1 << i);
+	}
+    }
+    for (i = 0; i < 52; i++) {
+	if (IsOne(t[i + 52][t.NumCols() -1])) {
+	    a2 = a2 | ((uint64_t)11 << i);
+	}
+    }
+    for (i = 0; i < 64; i++) {
+	if (IsOne(t[i + 104][t.NumCols() -1])) {
+	    l1 = l1 | ((uint64_t)11 << i);
+	}
+    }
+    for (i = 0; i < 64; i++) {
+	if (IsOne(t[i + 104 + 64][t.NumCols() -1])) {
+	    l2 = l2 | ((uint64_t)11 << i);
+	}
+    }
+    printf("a1 = %016llx\n", a1);
+    printf("a2 = %016llx\n", a2);
+    printf("l1 = %016llx\n", l1);
+    printf("l2 = %016llx\n", l2);
 }

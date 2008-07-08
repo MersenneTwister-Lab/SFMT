@@ -139,6 +139,9 @@ fix-za: fix-za.o
 lin-za: linear-solv-za.cpp
 	${CPP} -o $@ linear-solv-za.cpp ${LINKOPT}
 
+lin-zb: linear-solv-zb.o
+	${CPP} -o $@ linear-solv-zb.cpp ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
