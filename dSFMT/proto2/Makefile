@@ -15,13 +15,13 @@
 %132049:MEXP=132049
 %216091:MEXP=216091
 
-#DDEBUG = -O0 -g
+#DDEBUG = -O0 -g -UNDEBUG
 
 DMEXP = -DMEXP=${MEXP}
 
 CC = gcc -Wall -O9 -Wmissing-prototypes -I../util -L../util \
 	$(DDEBUG) $(DMEXP) $(DPG)
-CPP = g++ -Wall -O9  -I../util -L../util $(DDEBUG) $(DMEXP) $(DPG)
+CPP = g++ -Wall -O9  -DNDEBUG -I../util -L../util $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -ldsfmt -lntl -lgmp
 
@@ -94,6 +94,9 @@ shortest-baseDPz9-521: sfmtDPz9.cpp chk-shortest.o
 shortest-baseDPza-521: sfmtDPza.cpp chk-shortest.o
 	${CPP} -o $@ sfmtDPza.cpp chk-shortest.o ${LINKOPT}
 
+shortest-baseDPza-1279: sfmtDPza.cpp chk-shortest.o
+	${CPP} -o $@ sfmtDPza.cpp chk-shortest.o ${LINKOPT}
+
 shortest-baseDPzb-521: sfmtDPzb.cpp chk-shortest.o
 	${CPP} -o $@ sfmtDPzb.cpp chk-shortest.o ${LINKOPT}
 
@@ -105,6 +108,18 @@ chi-zero-521: sfmtDPza.cpp chi-zero.o
 
 chi-zero-19937: sfmtDPza.cpp chi-zero.o
 	${CPP} -o $@ sfmtDPza.cpp chi-zero.o ${LINKOPT}
+
+get-charactorDPza-521: sfmtDPza.cpp get-charactor.cpp
+	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
+
+get-charactorDPza-19937: sfmtDPza.cpp get-charactor.cpp
+	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
+
+get-parity-vectorDPza-521: sfmtDPza.cpp search-parity-vector.cpp
+	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
+
+get-parity-vectorDPza-1279: sfmtDPza.cpp search-parity-vector.cpp
+	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<

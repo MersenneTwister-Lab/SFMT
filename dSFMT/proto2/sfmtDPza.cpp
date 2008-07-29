@@ -133,6 +133,41 @@ DSFMT::~DSFMT() {
     delete status;
 }
 
+int period certification() {
+    int inner = 0;
+    int i, j;
+    uint64_t tmp[2];
+    uint64_t work;
+
+    tmp[0] = status[N].u[0] ^ fix[0];
+    tmp[1] = status[N].u[1] ^ fix[1];
+    for (i = 0; i < 2; i++) {
+	work = tmp[i] & pcv[i];
+	for (j = 0; j < 64; j++) {
+	    inner ^= work & 1;
+	    work = work >> 1;
+	}
+    }
+    /* check OK */
+    if (inner == 1) {
+	return 1;
+    }
+    /* check NG, and modification */
+    for (i = 0; i < 2; i++) {
+	work = 1;
+	for (j = 0; j < 64; j++) {
+	    if ((work & pcv[i]) != 0) {
+		dsfmt->sfmt[N].u[i] ^= work;
+		//printf("mod lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
+		//printf("mod lung %016"PRIx64"\n", dsfmt->sfmt[N].u[1]);
+		return 0;
+	    }
+	    work = work << 1;
+	}
+    }
+    return 0;
+}
+
 inline static void do_recursion(uint64_t a[2], uint64_t b[2],
 				uint64_t lung[2]) {
     uint64_t t0, t1, L0, L1;
@@ -147,6 +182,16 @@ inline static void do_recursion(uint64_t a[2], uint64_t b[2],
     a[1] = (lung[1] >> 12) ^ (lung[1] & DSFMT::msk2) ^ t1;
 }
 
+void DSFMT::set_const(){
+    const uint64_t high = 0x3ff0000000000000ULL;
+
+    memset(status, 0, sizeof(uint64_t) * 2 * (N + 1));
+    status[N][0] = high;
+    status[N][1] = high;
+    status[N - 1][0] = high >> 12;
+    status[N - 1][1] = high >> 12;
+    idx = 0;
+}
 /*
  * これは直接呼び出さないでgenrandを呼び出している。
  */
@@ -278,6 +323,25 @@ void DSFMT::fill_rnd(uint64_t high) {
 	u = u | array[idx++];
 	status[i][j] = u;
     }
+}
+
+void DSFMT::fill_rnd_all(int p) {
+    int i, j, k;
+
+    if (p < (int)get_rnd_maxdegree() - 128) {
+	i = p / 104;
+	j = (p % 104) / 52;
+	k = p % 52;
+    } else {
+	i = N;
+	j = (p - 104 * N) / 64;
+	k = (p - 104 * N) % 64;
+    }
+    assert(0 <= i && i <= N);
+    assert(0 <= j && j <= 1);
+    assert(0 <= k && k < 64);
+    memset(status, 0, sizeof(uint64_t) * 2 * (N + 1));
+    status[i][j] = (uint64_t)1 << k;
 }
 
 #if defined(MAIN)
