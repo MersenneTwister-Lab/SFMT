@@ -15,6 +15,10 @@
 #include "dsfmt.h"
 #include "dsfmt-util.h"
 
+extern "C" {
+    #include "mt19937blk.h"
+}
+
 NTL_CLIENT;
 
 const int WORD_WIDTH = 128;
@@ -27,9 +31,7 @@ struct IN_STATUS {
 };
 typedef struct IN_STATUS in_status;
 
-#define NTH_BIT2(i) (1U << (31 - (i)))
-
-void search_lung (GF2X& f);
+void search_lung (GF2X& f, uint64_t parity[2]);
 void set_status(in_status *st);
 void add_status(in_status *dist, in_status *src);
 void get_next_state(in_status *st);
@@ -38,17 +40,19 @@ int get_dependent_index(uint8_t dependents[], int size);
 int get_dependent_trans(uint8_t dependent[], vec_GF2 array[], int size);
 int dependent_rows(uint8_t result[], mat_GF2& mat);
 void convert(mat_GF2& mat, vec_GF2 array[], int bit_len);
-void search_parity_check_vector(in_status *st, int size);
+void search_parity_check_vector(uint64_t parity[2], in_status *st, int size);
 void set_bit(in_status *st, GF2X& f, uint32_t *bit_pos);
+static void test_parity0(GF2X& f, uint64_t parity[2]);
 
 static int mexp;
 static int maxdegree;
+static int verbose = true;
 
 int main(int argc, char *argv[]) {
     GF2X f;
     FILE *fp;
-    char c;
-    char s[257];
+    uint64_t parity[2];
+    uint32_t seed;
 
     if (argc != 2) {
 	printf("usage:%s filename %d\n", argv[0], argc);
@@ -58,6 +62,9 @@ int main(int argc, char *argv[]) {
     maxdegree = DSFMT::get_rnd_maxdegree();
     printf("mexp = %d\n", mexp);
     printf("filename:%s\n", argv[1]);
+    seed = (unsigned int)time(NULL);
+    printf("seed = %u\n", seed);
+    mt_init(seed);
     fp = fopen(argv[1], "r");
     errno = 0;
     if ((fp == NULL) || errno) {
@@ -67,32 +74,149 @@ int main(int argc, char *argv[]) {
     }
     DSFMT::read_random_param(fp);
     DSFMT::print_param(stdout);
-    c = getc(fp);
-    if (c < '0' || c > '9') {
-	fgets(s, 256, fp);
-    } else {
-	ungetc(c, fp);
-    }
-    readFile(f, fp);
+    readFile(f, fp, true);
     printf("deg poly = %ld\n", deg(f));
     fclose(fp);
-    search_lung(f);
+    search_lung(f, parity);
+    test_parity0(f, parity);
     return 0;
+}
+
+static void test_parity0(GF2X& f, uint64_t parity[2]) {
+    DSFMT dsfmt;
+    GF2X minpoly;
+    GF2X q, rem;
+    vec_GF2 vec;
+    int i;
+    int r;
+    int result = 0;
+    int count;
+
+    if (verbose) {
+	count = 10;
+    } else {
+	count = 100;
+    }
+    printf("start parity zero\n");
+    DSFMT::set_pcv(parity);
+    for (i = 0; i < count; i++) {
+	if (verbose) printf("------\n");
+	if (verbose) printf("==shoki (%d)\n", i);
+	dsfmt.init_gen_rand(i + 1, 0);
+	vec.SetLength(2 * maxdegree);
+	generating_polynomial104(dsfmt, vec, 0, maxdegree);
+	berlekampMassey(minpoly, maxdegree, vec);
+	DivRem(q, rem, minpoly, f);
+	if (deg(rem) != -1) {
+	    printf("minpoly = %ld\n", deg(minpoly));
+	    printf("rem != 0 deg rempoly = %ld\n", deg(rem));
+	    printf("deg q = %ld\n", deg(q));
+	    result = 0;
+	    break;
+	}
+	if (verbose || deg(minpoly) < mexp) {
+	    printf("minpoly = %ld\n", deg(minpoly));
+	}
+	if (deg(minpoly) < mexp) {
+	    result = 0;
+	    break;
+	}
+	r = dsfmt.period_certification(true);
+	if (r == 1) {
+	    if (verbose) printf("period certification OK\n");
+	} else {
+	    if (verbose) printf("period certification NG -> OK\n");
+	    if (!dsfmt.period_certification()) {
+		result = 0;
+		printf("period critification didn't change status!!\n");
+		break;
+	    }
+	}
+	dsfmt.fill_rnd(0);
+	//dsfmt.d_p();
+	make_zero_state(dsfmt, f);
+	//dsfmt.d_p();
+	if (verbose) printf("==zero\n");
+	generating_polynomial104(dsfmt, vec, 0, maxdegree);
+	berlekampMassey(minpoly, maxdegree, vec);
+	if (verbose || deg(minpoly) >= mexp) {
+	    printf("minpoly = %ld\n", deg(minpoly));
+	}
+	if (deg(minpoly) >= mexp) {
+	    printf("make zero state failed\n");
+	    result = 0;
+	    break;
+	}
+	r = dsfmt.period_certification(true);
+	if (r == 1) {
+	    if (verbose) printf("period certification OK [ERROR]\n");
+	    dsfmt.d_p();
+	    result = 0;
+	    break;
+	} else {
+	    if (verbose) printf("period certification NG -> OK\n");
+	    if (!dsfmt.period_certification(true)) {
+		result = 0;
+		printf("period certification didn't chanege status!!\n");
+		break;
+	    }
+	}
+	generating_polynomial104(dsfmt, vec, 0, maxdegree);
+	berlekampMassey(minpoly, maxdegree, vec);
+	if (verbose || deg(minpoly) < mexp) {
+	    printf("minpoly = %ld\n", deg(minpoly));
+	}
+	if (deg(minpoly) < mexp) {
+	    result = 0;
+	    break;
+	}
+	r = dsfmt.period_certification(true);
+	if (r == 1) {
+	    if (verbose) printf("period certification OK\n");
+	} else {
+	    if (verbose) printf("period certification NG -> OK\n");
+	    if (!dsfmt.period_certification(true)) {
+		printf("error!!\n");
+		return;
+	    }
+	}
+	result++;
+    }
+    if (result) {
+	printf("test successed %d / %d\n", result, count);
+    } else {
+	printf("test failed at count %d\n", count);
+    }
+}
+
+void chk_minpoly(DSFMT& dsfmt) {
+    DSFMT chk(dsfmt);
+    GF2X minpoly;
+    vec_GF2 vec;
+
+    vec.FixLength(2 * maxdegree);
+    generating_polynomial104(chk, vec, 0, maxdegree);
+    berlekampMassey(minpoly, maxdegree, vec);
+    printf("deg minpoly = %d\n", (int)deg(minpoly));
 }
 
 void set_bit(in_status *st, GF2X& f, int *bit_pos) {
     for (;*bit_pos <= maxdegree;) {
 	st->dsfmt.fill_rnd_all(*bit_pos);
+	st->dsfmt.d_p();	// debug
 	(*bit_pos)++;
 	make_zero_state(st->dsfmt, f);
+	chk_minpoly(st->dsfmt);
+	st->dsfmt.d_p();	// debug
 	set_status(st);
 	if (!st->zero) {
 	    break;
 	}
+	printf("skipped\n");	// debug
     }
 }
 
-void search_lung (GF2X& f) {
+void search_lung (GF2X& f, uint64_t parity[2]) {
     static in_status bases[WORD_WIDTH];
     int i, j;
     int count;
@@ -141,16 +265,16 @@ void search_lung (GF2X& f) {
 	}
 	printf("\n");
     }
-    search_parity_check_vector(bases, size);
+    search_parity_check_vector(parity, bases, size);
 }
 
 #include <inttypes.h>
 
-void search_parity_check_vector(in_status base[], int size) {
+void search_parity_check_vector(uint64_t parity[2],
+				in_status base[], int size) {
     mat_GF2 mx;
     mat_GF2 my;
     uint64_t mask;
-    uint64_t parity[2];
     int i, j, k;
 
     mx.SetDims(WORD_WIDTH, size);
@@ -202,8 +326,8 @@ void set_vector(vec_GF2& vec, uint64_t lung[2]) {
     clear(vec);
     k = 0;
     for (i = 1; i >= 0; i--) {
-	mask = (uint64_t)1 << 51;
-	for (j = 0; j < 52; j++) {
+	mask = (uint64_t)1 << 63;
+	for (j = 0; j < 63; j++) {
 	    if ((lung[i] & mask) != 0) {
 		vec.put(k, 1);
 	    } else {

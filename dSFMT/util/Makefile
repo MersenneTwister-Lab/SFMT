@@ -20,8 +20,8 @@
 DMEXP = -DMEXP=${MEXP}
 
 CC = gcc -Wall -O9 -Wmissing-prototypes -I/opt/local/include \
-	$(DDEBUG) $(DMEXP) $(DPG)
-CPP = g++ -Wall -O9 -I/opt/local/include $(DDEBUG) $(DMEXP) $(DPG)
+	-L. $(DDEBUG) $(DMEXP) $(DPG)
+CPP = g++ -Wall -O9 -I/opt/local/include -L. $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -ldsfmt -lntl -lgmp
 
@@ -32,7 +32,7 @@ shortest-baseDPz2-607: sfmtDPz2.o chk-shortest.o libdsfmt.a
 	${CPP} -o $@ sfmtDPz2.o chk-shortest.o ${LINKOPT}
 
 libdsfmt.a: mt19937blk.o util.o dsfmt-util.o shortbase104.o
-	ar -rsv libdsfmt.a mt19937blk.o util.o dsfmt-util.o shortbase104.o 
+	ar -rLsv libdsfmt.a mt19937blk.o util.o dsfmt-util.o shortbase104.o 
 
 .cpp.o:
 	${CPP} -c $<

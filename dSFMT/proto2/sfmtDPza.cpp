@@ -37,6 +37,8 @@ uint64_t DSFMT::msk3;
 uint64_t DSFMT::msk4;
 uint64_t DSFMT::msk5;
 uint64_t DSFMT::msk6;
+uint64_t DSFMT::fix[2];
+uint64_t DSFMT::pcv[2];
 
 unsigned int DSFMT::get_rnd_maxdegree(void) {
     return MAXDEGREE;
@@ -69,15 +71,25 @@ void DSFMT::setup_param(uint32_t array[], int *index) {
     //msk2 |= 0x0fffU;
 }
 
+void DSFMT::set_pcv(uint64_t in_pcv[2]) {
+    pcv[0] = in_pcv[0];
+    pcv[1] = in_pcv[1];
+}
+
 void DSFMT::print_param(FILE *fp) {
     fprintf(fp, "pos1 = %d\n", pos1);
     fprintf(fp, "sl1 = %d\n", sl1);
     fprintf(fp, "msk1 = %016"PRIx64"\n", msk1);
     fprintf(fp, "msk2 = %016"PRIx64"\n", msk2);
+    fprintf(fp, "fix1 = %016"PRIx64"\n", fix[0]);
+    fprintf(fp, "fix2 = %016"PRIx64"\n", fix[1]);
+    fprintf(fp, "pcv1 = %016"PRIx64"\n", pcv[0]);
+    fprintf(fp, "pcv2 = %016"PRIx64"\n", pcv[1]);
     fflush(fp);
 }
 
 void DSFMT::read_random_param(FILE *f) {
+    int c;
     char line[256];
 
     fgets(line, 256, f);
@@ -90,6 +102,23 @@ void DSFMT::read_random_param(FILE *f) {
     msk1 = get_uint64(line, 16);
     fgets(line, 256, f);
     msk2 = get_uint64(line, 16);
+    c = getc(f);
+    if (isdigit(c)) {
+	ungetc(c, f);
+	return;
+    }
+    ungetc(c, f);
+    fgets(line, 256, f);
+    if (strncmp(line, "fix", 3) != 0) {
+	return;
+    }
+    fix[0] = get_uint64(line, 16);
+    fgets(line, 256, f);
+    fix[1] = get_uint64(line, 16);
+    fgets(line, 256, f);
+    pcv[0] = get_uint64(line, 16);
+    fgets(line, 256, f);
+    pcv[1] = get_uint64(line, 16);
 }
 
 DSFMT::DSFMT(uint64_t seed) {
@@ -133,14 +162,29 @@ DSFMT::~DSFMT() {
     delete status;
 }
 
-int period certification() {
+void DSFMT::mask_status() {
+    int i;
+    uint64_t msk = 0x3FF0000000000000ULL;
+
+    for (i = 0; i < N; i++) {
+	status[i][0] = (status[i][0] & LOW_MASK) | msk;
+	status[i][1] = (status[i][1] & LOW_MASK) | msk;
+    }
+}
+
+int DSFMT::period_certification(bool no_fix) {
     int inner = 0;
     int i, j;
     uint64_t tmp[2];
     uint64_t work;
 
-    tmp[0] = status[N].u[0] ^ fix[0];
-    tmp[1] = status[N].u[1] ^ fix[1];
+    if (no_fix) {
+	tmp[0] = status[N][0];
+	tmp[1] = status[N][1];
+    } else {
+	tmp[0] = status[N][0] ^ fix[0];
+	tmp[1] = status[N][1] ^ fix[1];
+    }
     for (i = 0; i < 2; i++) {
 	work = tmp[i] & pcv[i];
 	for (j = 0; j < 64; j++) {
@@ -157,9 +201,7 @@ int period certification() {
 	work = 1;
 	for (j = 0; j < 64; j++) {
 	    if ((work & pcv[i]) != 0) {
-		dsfmt->sfmt[N].u[i] ^= work;
-		//printf("mod lung %016"PRIx64"\n", dsfmt->sfmt[N].u[0]);
-		//printf("mod lung %016"PRIx64"\n", dsfmt->sfmt[N].u[1]);
+		status[N][i] ^= work;
 		return 0;
 	    }
 	    work = work << 1;
@@ -307,6 +349,7 @@ void DSFMT::fill_rnd(uint64_t high) {
     uint32_t array[size];
     uint64_t u;
     int i, j;
+    int idx = 0;
 
     mt_fill(array, size);
     for (i = 0; i < N; i++) {

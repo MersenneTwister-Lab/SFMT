@@ -277,7 +277,7 @@ void get_characteristic(char *filename) {
 	return;
     }
     printf("deg lcm poly = %ld\n", deg(lcmpoly));
-    printf("weight = %ld\n", weight(lcmpoly));
+    printf("characteristic polynomial weight = %ld\n", weight(lcmpoly));
     printBinary(stdout, lcmpoly);
     DivRem(smallpoly, rempoly, lcmpoly, poly);
     printf("deg tmp = %ld\n", deg(tmp));

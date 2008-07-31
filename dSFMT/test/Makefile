@@ -133,6 +133,9 @@ shortest-baseD11-607: chk-shortest.o shortbase128.o sfmtD11-st.o util.o \
 check-affin-bm607: chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o
 	${CPP} -o $@ chk-bm.o sfmtD11-afst.o util.o dsfmt-util.o ${LINKOPT}
 
+test2-ref-parity521:test2-ref-parity.cpp dsfmt2-ref-st.cpp util.cpp dsfmt2-ref-st.h
+	 ${CPP} -o $@ test2-ref-parity.cpp dsfmt-ref-st.cpp util.cpp ${LINKOPT}
+
 fix-za: fix-za.o
 	${CPP} -o $@ fix-za.o ${LINKOPT}
 

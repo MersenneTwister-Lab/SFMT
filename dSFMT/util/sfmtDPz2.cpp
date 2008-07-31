@@ -21,8 +21,8 @@ const int WORDSIZE = 128;
 const int N = (MEXP - 128) / WORDSIZE + 1;
 const int MAXDEGREE = WORDSIZE * N + 128;
 const uint64_t LOW_MASK = 0x000FFFFFFFFFFFFFULL;
-const uint64_t HIGH_CONST = 0x0000000000000000ULL;
 
+uint64_t DSFMT::high_const = 0x0000000000000000ULL;
 int DSFMT::pos1;
 int DSFMT::pos2;
 int DSFMT::pos3;
@@ -204,16 +204,28 @@ void DSFMT::get_lung(uint64_t lung[2]) {
     lung[1] = status[N][1];
 }
 
-void DSFMT::init_gen_rand(uint64_t seed)
+void DSFMT::init_gen_rand(uint64_t seed, uint64_t high)
 {
     int i;
     uint64_t *psfmt;
 
+    if (seed == 0) {
+	psfmt = status[0];
+	for (i = 0; i < N * 2; i++) {
+	    psfmt[i] = high;
+	}
+	for (;i < (N + 1) * 2; i++) {
+	    psfmt[i] = 0;
+	}
+	idx = 0;
+	return;
+    }
     psfmt = status[0];
-    psfmt[0] = seed;
+    psfmt[0] = (seed & LOW_MASK) | high;
     for (i = 1; i < N * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
 	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
+	psfmt[i] = (psfmt[i] & LOW_MASK) | high;
     }
     for (;i < (N + 1) * 2; i++) {
 	psfmt[i] = 6364136223846793005ULL 
@@ -233,7 +245,7 @@ void DSFMT::read_random_param(FILE *f) {
     msk2 = get_uint64(line, 16);
 }
 
-void DSFMT::fill_rnd() {
+void DSFMT::fill_rnd(uint64_t high) {
     const int size = (N + 1) * 4;
     uint32_t array[size];
     uint64_t u;
@@ -244,8 +256,7 @@ void DSFMT::fill_rnd() {
 	for (j = 0; j < 2; j++) {
 	    u = array[idx++];
 	    u = u << 32;
-	    //u = (u | array[idx++]) & 0x000FFFFFFFFFFFFFULL;
-	    u = (u | array[idx++]);
+	    u = ((u | array[idx++]) & LOW_MASK) | high;
 	    status[i][j] = u;
 	}
     }

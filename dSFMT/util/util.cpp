@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
@@ -181,10 +182,32 @@ int32_t gauss_plus(mat_GF2& mat) {
     return rank;
 }
 
-void readFile(GF2X& poly, FILE *fp) {
-    char c;
+static void skip_line(FILE *fp) {
+    int c;
+    while ((c = getc(fp)) != EOF) {
+	if (c == '\n') {
+	    break;
+	}
+    }
+}
+
+void readFile(GF2X& poly, FILE *fp, bool skip) {
+    int c;
     unsigned int j = 0;
 
+    if (skip) {
+	for (;;) {
+	    c = getc(fp);
+	    if (c == EOF) {
+		break;
+	    } else if (isdigit(c)) {
+		ungetc(c, fp);
+		break;
+	    } else {
+		skip_line(fp);
+	    }
+	}
+    }
     while ((c = getc(fp)) != EOF) {
 	if (c < ' ') {
 	    continue;

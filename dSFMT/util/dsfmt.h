@@ -8,6 +8,7 @@
 class DSFMT {
 public:
     static void setup_param(uint32_t array[], int *index);
+    static void set_pcv(uint64_t pcv[2]);
     static void read_random_param(FILE *fp);
     static void print_param(FILE *fp);
     static unsigned int get_rnd_maxdegree(void);
@@ -29,6 +30,8 @@ public:
     static uint64_t msk5;
     static uint64_t msk6;
     static uint64_t high_const;
+    static uint64_t fix[2];
+    static uint64_t pcv[2];
 
     void init_gen_rand(uint64_t seed, uint64_t high = high_const);
     uint64_t gen_rand104sp(uint64_t arrary[2], int mode);
@@ -36,8 +39,12 @@ public:
     void get_lung(uint64_t lung[2]);
     void add(const DSFMT& src);
     void fill_rnd(uint64_t high = high_const);
+    void fill_rnd_all(int p);
     void d_p();
-    DSFMT(uint64_t seed);
+    void mask_status();
+    void set_const();
+    int period_certification(bool no_fix = false);
+    DSFMT(uint64_t seed = 1);
     DSFMT(const DSFMT& src);
     ~DSFMT();
     DSFMT& operator=(const DSFMT &src);
