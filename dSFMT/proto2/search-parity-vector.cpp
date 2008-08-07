@@ -27,7 +27,7 @@ const int WORD_WIDTH = 128;
 struct IN_STATUS {
     bool zero;
     vec_GF2 next;
-    DSFMT dsfmt;
+    DSFMT *dsfmt;
 };
 typedef struct IN_STATUS in_status;
 
@@ -202,17 +202,14 @@ void chk_minpoly(DSFMT& dsfmt) {
 
 void set_bit(in_status *st, GF2X& f, int *bit_pos) {
     for (;*bit_pos <= maxdegree;) {
-	st->dsfmt.fill_rnd_all(*bit_pos);
-	st->dsfmt.d_p();	// debug
+	st->dsfmt->fill_rnd_all(*bit_pos);
 	(*bit_pos)++;
-	make_zero_state(st->dsfmt, f);
-	chk_minpoly(st->dsfmt);
-	st->dsfmt.d_p();	// debug
+	make_zero_state(*st->dsfmt, f);
+	//chk_minpoly(st->dsfmt);
 	set_status(st);
 	if (!st->zero) {
 	    break;
 	}
-	printf("skipped\n");	// debug
     }
 }
 
@@ -224,6 +221,9 @@ void search_lung (GF2X& f, uint64_t parity[2]) {
     int size = 2;
     int base_num = maxdegree - mexp;
 
+    for (i = 0; i < WORD_WIDTH; i++) {
+	bases[i].dsfmt = new DSFMT(123);
+    }
     set_bit(&(bases[0]), f, &bit_pos);
     set_bit(&(bases[1]), f, &bit_pos);
     //while(size <= base_num) {
@@ -237,7 +237,8 @@ void search_lung (GF2X& f, uint64_t parity[2]) {
 	}
 	if (count == size) {
 	    if (size + 1 <= base_num) {
-		set_bit(&bases[size++], f, &bit_pos);
+		set_bit(&bases[size], f, &bit_pos);
+		size++;
 	    } else {
 		break;
 	    }
@@ -253,6 +254,14 @@ void search_lung (GF2X& f, uint64_t parity[2]) {
 	fprintf(stderr, "count = %d\n", count);
 	fprintf(stderr, "bit_pos = %d\n", bit_pos);
 #endif
+    }
+#if 0
+    for (i = 0; i < size; i++) {
+	chk_minpoly(*bases[i].dsfmt);
+    }
+#endif
+    for (i = 0; i < WORD_WIDTH; i++) {
+	delete bases[i].dsfmt;
     }
     printf("----\n");
     for (i = 0; i < size; i++) {
@@ -327,7 +336,7 @@ void set_vector(vec_GF2& vec, uint64_t lung[2]) {
     k = 0;
     for (i = 1; i >= 0; i--) {
 	mask = (uint64_t)1 << 63;
-	for (j = 0; j < 63; j++) {
+	for (j = 0; j < 64; j++) {
 	    if ((lung[i] & mask) != 0) {
 		vec.put(k, 1);
 	    } else {
@@ -342,9 +351,11 @@ void set_vector(vec_GF2& vec, uint64_t lung[2]) {
 void set_status(in_status *st) {
     int zero_count = 0;
     uint64_t lung[2];
+    uint64_t ar[1][2];
 
     st->zero = false;
-    st->dsfmt.get_lung(lung);
+    st->dsfmt->gen_rand104spar(ar, 1);
+    st->dsfmt->get_lung(lung);
     set_vector(st->next, lung);
     while (IsZero(st->next)) {
 	zero_count++;
@@ -352,24 +363,27 @@ void set_status(in_status *st) {
 	    st->zero = true;
 	    break;
 	}
-	st->dsfmt.get_lung(lung);
+	st->dsfmt->gen_rand104spar(ar, 1);
+	st->dsfmt->get_lung(lung);
 	set_vector(st->next, lung);
     }
 }
 
 void add_status(in_status *dist, in_status *src) {
-    dist->dsfmt.add(src->dsfmt);
+    dist->dsfmt->add(*src->dsfmt);
     dist->next += src->next;
 }
 
 void get_next_state(in_status *st) {
     int zero_count = 0;
     uint64_t lung[2];
+    uint64_t ar[1][2];
 
     if (st->zero) {
 	return;
     }
-    st->dsfmt.get_lung(lung);
+    st->dsfmt->gen_rand104spar(ar, 1);
+    st->dsfmt->get_lung(lung);
     set_vector(st->next, lung);
     while (IsZero(st->next)) {
 	zero_count++;
@@ -377,7 +391,8 @@ void get_next_state(in_status *st) {
 	    st->zero = true;
 	    break;
 	}
-	st->dsfmt.get_lung(lung);
+	st->dsfmt->gen_rand104spar(ar, 1);
+	st->dsfmt->get_lung(lung);
 	set_vector(st->next, lung);
     }
 }

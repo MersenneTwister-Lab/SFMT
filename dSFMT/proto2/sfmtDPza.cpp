@@ -179,25 +179,31 @@ int DSFMT::period_certification(bool no_fix) {
     uint64_t work;
 
     if (no_fix) {
-	tmp[0] = status[N][0];
-	tmp[1] = status[N][1];
+	tmp[0] = status[N][0] & pcv[0];
+	tmp[1] = status[N][1] & pcv[1];
     } else {
-	tmp[0] = status[N][0] ^ fix[0];
-	tmp[1] = status[N][1] ^ fix[1];
+	tmp[0] = (status[N][0] ^ fix[0]) & pcv[0];
+	tmp[1] = (status[N][1] ^ fix[1]) & pcv[1];
     }
     for (i = 0; i < 2; i++) {
-	work = tmp[i] & pcv[i];
+	work = tmp[i];
 	for (j = 0; j < 64; j++) {
 	    inner ^= work & 1;
 	    work = work >> 1;
 	}
     }
     /* check OK */
+    printf("L[0] = %016"PRIx64"\n", status[N][0]);
+    printf("L[1] = %016"PRIx64"\n", status[N][1]);
+    printf("PCV[0] = %016"PRIx64"\n", pcv[0]);
+    printf("PCV[1] = %016"PRIx64"\n", pcv[1]);
+    printf("tmp[0] = %016"PRIx64"\n", tmp[0]);
+    printf("tmp[1] = %016"PRIx64"\n", tmp[1]);
     if (inner == 1) {
 	return 1;
     }
     /* check NG, and modification */
-    for (i = 0; i < 2; i++) {
+    for (i = 1; i >= 0; i--) {
 	work = 1;
 	for (j = 0; j < 64; j++) {
 	    if ((work & pcv[i]) != 0) {
