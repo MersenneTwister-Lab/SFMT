@@ -46,7 +46,7 @@ static void test_parity0(GF2X& f, uint64_t parity[2]);
 
 static int mexp;
 static int maxdegree;
-static int verbose = true;
+static int verbose = false;
 
 int main(int argc, char *argv[]) {
     GF2X f;
@@ -132,10 +132,10 @@ static void test_parity0(GF2X& f, uint64_t parity[2]) {
 		break;
 	    }
 	}
-	dsfmt.fill_rnd(0);
+	//dsfmt.fill_rnd(0);
+	dsfmt.init_gen_rand(i + 3, 0);
 	//dsfmt.d_p();
 	make_zero_state(dsfmt, f);
-	//dsfmt.d_p();
 	if (verbose) printf("==zero\n");
 	generating_polynomial104(dsfmt, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
@@ -147,6 +147,7 @@ static void test_parity0(GF2X& f, uint64_t parity[2]) {
 	    result = 0;
 	    break;
 	}
+	//dsfmt.d_p();
 	r = dsfmt.period_certification(true);
 	if (r == 1) {
 	    if (verbose) printf("period certification OK [ERROR]\n");
@@ -283,8 +284,7 @@ void search_parity_check_vector(uint64_t parity[2],
 				in_status base[], int size) {
     mat_GF2 mx;
     mat_GF2 my;
-    uint64_t mask;
-    int i, j, k;
+    int i, j;
 
     mx.SetDims(WORD_WIDTH, size);
     for (i = 0; i < WORD_WIDTH; i++) {
@@ -309,42 +309,10 @@ void search_parity_check_vector(uint64_t parity[2],
 	}
 	printf("\n");
     }
-    k = 0;
-    for (i = 0; i < 2; i++) {
-	mask = (uint64_t)1 << 63;
-	parity[i] = 0;
-	for (j = 0; j < 64; j++) {
-	    if (!IsZero(my.get(0, k))) {
-		parity[i] = parity[i] | mask;
-	    }
-	    mask = mask >> 1;
-	    k++;
-	}
-    }
+    vec_to_uint128(parity, my[0], 64);
     printf("parity check vector\n");
-    for (i = 0, j = 1; i < 2; i++) {
-	printf("p[%d] = 0x%016" PRIx64 "\n", i, parity[j--]);
-    }
-}
-
-void set_vector(vec_GF2& vec, uint64_t lung[2]) {
-    int i, j, k;
-    uint64_t mask;
-
-    vec.SetLength(WORD_WIDTH);
-    clear(vec);
-    k = 0;
-    for (i = 1; i >= 0; i--) {
-	mask = (uint64_t)1 << 63;
-	for (j = 0; j < 64; j++) {
-	    if ((lung[i] & mask) != 0) {
-		vec.put(k, 1);
-	    } else {
-		vec.put(k, 0);
-	    }
-	    k++;
-	    mask = mask >> 1;
-	}
+    for (i = 0; i < 2; i++) {
+	printf("p[%d] = 0x%016" PRIx64 "\n", i, parity[i]);
     }
 }
 
@@ -356,7 +324,7 @@ void set_status(in_status *st) {
     st->zero = false;
     st->dsfmt->gen_rand104spar(ar, 1);
     st->dsfmt->get_lung(lung);
-    set_vector(st->next, lung);
+    uint128_to_vec(st->next, lung, 64);
     while (IsZero(st->next)) {
 	zero_count++;
 	if (zero_count > maxdegree) {
@@ -365,7 +333,7 @@ void set_status(in_status *st) {
 	}
 	st->dsfmt->gen_rand104spar(ar, 1);
 	st->dsfmt->get_lung(lung);
-	set_vector(st->next, lung);
+	uint128_to_vec(st->next, lung, 64);
     }
 }
 
@@ -384,7 +352,7 @@ void get_next_state(in_status *st) {
     }
     st->dsfmt->gen_rand104spar(ar, 1);
     st->dsfmt->get_lung(lung);
-    set_vector(st->next, lung);
+    uint128_to_vec(st->next, lung, 64);
     while (IsZero(st->next)) {
 	zero_count++;
 	if (zero_count > maxdegree) {
@@ -393,7 +361,7 @@ void get_next_state(in_status *st) {
 	}
 	st->dsfmt->gen_rand104spar(ar, 1);
 	st->dsfmt->get_lung(lung);
-	set_vector(st->next, lung);
+	uint128_to_vec(st->next, lung, 64);
     }
 }
 

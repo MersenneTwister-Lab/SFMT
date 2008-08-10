@@ -28,7 +28,6 @@ static uint64_t high3ff = 0x3FF0000000000000ULL;
 
 static void test_parity0(GF2X& f);
 static void test_parity(GF2X& f, GF2X& smallf);
-//static void test_test();
 
 int main(int argc, char *argv[]) {
     GF2X f;
@@ -85,26 +84,10 @@ int main(int argc, char *argv[]) {
 	printf("deg rem = %ld\n", deg(rem));
 	return 1;
     }
-    //test_test();
     test_parity0(f);
     test_parity(f, smallf);
     return 0;
 }
-
-#if 0
-void test_test() {
-    DSFMT a(1234);
-    uint64_t ar[2];
-
-    DSFMT b(a);
-    a.mask_status();
-    a.gen_rand104sp(ar, 0);
-    b.gen_rand104sp(ar, 0);
-    b.add(a);
-    b.d_p();
-    exit(0);
-}
-#endif
 
 void get_dsfmtfix(DSFMT& dsfmt_fix, GF2X& poly, GF2X& smallpoly) {
     GF2X a, b, d;
@@ -169,27 +152,21 @@ static void test_parity(GF2X& f, GF2X& smallf) {
 	    result = 0;
 	    break;
 	}
-	r = dsfmt.period_certification();
+	r = dsfmt.period_certification(true);
 	if (r == 1) {
 	    if (verbose) printf("period certification OK\n");
 	} else {
 	    if (verbose) printf("period certification NG -> OK\n");
-	    if (!dsfmt.period_certification()) {
+	    if (!dsfmt.period_certification(true)) {
 		result = 0;
 		printf("period critification didn't change status!!\n");
 		break;
 	    }
 	}
-	dsfmt.fill_rnd(0);
-	//dsfmt.d_p();
+	dsfmt.init_gen_rand(i, 0);
 	make_zero_state(dsfmt, f);
-	//dsfmt.d_p();
 	dsfmt.add(dsfmt_fix);
-	//dsfmt.d_p();
-	//printf("dsfmtfix\n");
-	//dsfmt_fix.d_p();
 	dsfmt.mask_status();
-	//dsfmt.d_p();
 	if (verbose) printf("==zero\n");
 	generating_polynomial104(dsfmt, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
@@ -201,14 +178,15 @@ static void test_parity(GF2X& f, GF2X& smallf) {
 	    result = 0;
 	    break;
 	}
-	r = dsfmt.period_certification();
+	r = dsfmt.period_certification(false);
 	if (r == 1) {
 	    if (verbose) printf("period certification OK [ERROR]\n");
+	    dsfmt.d_p();
 	    result = 0;
 	    break;
 	} else {
 	    if (verbose) printf("period certification NG -> OK\n");
-	    if (!dsfmt.period_certification()) {
+	    if (!dsfmt.period_certification(false)) {
 		result = 0;
 		printf("period certification didn't chanege status!!\n");
 		break;
@@ -223,12 +201,12 @@ static void test_parity(GF2X& f, GF2X& smallf) {
 	    result = 0;
 	    break;
 	}
-	r = dsfmt.period_certification();
+	r = dsfmt.period_certification(false);
 	if (r == 1) {
 	    if (verbose) printf("period certification OK\n");
 	} else {
 	    if (verbose) printf("period certification NG -> OK\n");
-	    if (!dsfmt.period_certification()) {
+	    if (!dsfmt.period_certification(false)) {
 		printf("error!!\n");
 		return;
 	    }
@@ -285,16 +263,16 @@ static void test_parity0(GF2X& f) {
 	    if (verbose) printf("period certification OK\n");
 	} else {
 	    if (verbose) printf("period certification NG -> OK\n");
-	    if (!dsfmt.period_certification()) {
+	    if (!dsfmt.period_certification(true)) {
 		result = 0;
 		printf("period critification didn't change status!!\n");
 		break;
 	    }
 	}
-	dsfmt.fill_rnd(0);
+	//dsfmt.fill_rnd(0);
+	dsfmt.init_gen_rand(i + 3, 0);
 	//dsfmt.d_p();
 	make_zero_state(dsfmt, f);
-	//dsfmt.d_p();
 	if (verbose) printf("==zero\n");
 	generating_polynomial104(dsfmt, vec, 0, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
@@ -306,6 +284,7 @@ static void test_parity0(GF2X& f) {
 	    result = 0;
 	    break;
 	}
+	//dsfmt.d_p();
 	r = dsfmt.period_certification(true);
 	if (r == 1) {
 	    if (verbose) printf("period certification OK [ERROR]\n");

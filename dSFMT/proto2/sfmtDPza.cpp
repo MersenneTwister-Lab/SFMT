@@ -121,6 +121,12 @@ void DSFMT::read_random_param(FILE *f) {
     pcv[1] = get_uint64(line, 16);
 }
 
+DSFMT::DSFMT() {
+    status = new uint64_t[N + 1][2];
+    idx = 0;
+    init_gen_rand(0);
+}
+
 DSFMT::DSFMT(uint64_t seed) {
     status = new uint64_t[N + 1][2];
     idx = 0;
@@ -193,16 +199,14 @@ int DSFMT::period_certification(bool no_fix) {
 	}
     }
     /* check OK */
-    printf("L[0] = %016"PRIx64"\n", status[N][0]);
-    printf("L[1] = %016"PRIx64"\n", status[N][1]);
-    printf("PCV[0] = %016"PRIx64"\n", pcv[0]);
-    printf("PCV[1] = %016"PRIx64"\n", pcv[1]);
-    printf("tmp[0] = %016"PRIx64"\n", tmp[0]);
-    printf("tmp[1] = %016"PRIx64"\n", tmp[1]);
     if (inner == 1) {
 	return 1;
     }
     /* check NG, and modification */
+    if ((pcv[1] & 1) == 1) {
+	status[N][1] ^= 1;
+	return 0;
+    }
     for (i = 1; i >= 0; i--) {
 	work = 1;
 	for (j = 0; j < 64; j++) {

@@ -13,12 +13,6 @@
 #include "dsfmt-util.h"
 #include "dsfmt.h"
 
-#if 0
-extern "C" {
-#include "mt19937blk.h"
-}
-#endif
-
 NTL_CLIENT;
 
 int get_equiv_distrib(int bit, DSFMT& sfmt);
@@ -292,6 +286,7 @@ void get_characteristic(char *filename) {
     }
     b *= smallpoly;
     a *= poly;
+#if 1
     sfmt_const.set_const();
     make_zero_state(sfmt_const, b);
     sfmt_const2.set_const();
@@ -304,6 +299,9 @@ void get_characteristic(char *filename) {
     if (deg(d) != 0) {
 	printf("failure d != 1\n");
     }
+#endif
+    /* 実は上はいらない */
+    //sfmt_const.set_const();
     make_zero_state(sfmt_const, b);
     sfmt_const.get_lung(lung);
     sfmt_const.d_p();
