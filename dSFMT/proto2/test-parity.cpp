@@ -93,6 +93,7 @@ void get_dsfmtfix(DSFMT& dsfmt_fix, GF2X& poly, GF2X& smallpoly) {
     GF2X a, b, d;
     GF2X t1(1, 1);
 
+    SetCoeff(t1, 0);
     /* a*poly + b*smallpoly = d */
     XGCD(d, a, b, poly, smallpoly);
     if (deg(d) != 0) {
@@ -100,8 +101,8 @@ void get_dsfmtfix(DSFMT& dsfmt_fix, GF2X& poly, GF2X& smallpoly) {
     }
     b *= smallpoly;
     dsfmt_fix.set_const();
-    dsfmt_fix.mask_status();
-    //make_zero_state(dsfmt_fix, b);
+    //dsfmt_fix.mask_status();
+    make_zero_state(dsfmt_fix, b);
 
     /* a*poly + b*t1 = d */
     XGCD(d, a, b, poly, t1);

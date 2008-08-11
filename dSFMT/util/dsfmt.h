@@ -44,7 +44,9 @@ public:
     void mask_status();
     void set_const();
     int period_certification(bool no_fix = false);
-    DSFMT(uint64_t seed = 1);
+    double gen_rand();
+    DSFMT();
+    DSFMT(uint64_t seed);
     DSFMT(const DSFMT& src);
     ~DSFMT();
     DSFMT& operator=(const DSFMT &src);

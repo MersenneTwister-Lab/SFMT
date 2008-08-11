@@ -124,6 +124,9 @@ get-parity-vectorDPza-1279: sfmtDPza.cpp search-parity-vector.cpp
 test-parityDPza-521: sfmtDPza.cpp test-parity.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
 
+test-genDPza-521: sfmtDPza.cpp test-gen.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 

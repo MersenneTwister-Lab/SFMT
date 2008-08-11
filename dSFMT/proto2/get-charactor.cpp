@@ -17,6 +17,8 @@ NTL_CLIENT;
 
 int get_equiv_distrib(int bit, DSFMT& sfmt);
 void test_shortest(char *filename);
+void chk_fix(DSFMT& fix, DSFMT& con);
+int deg_min_pol(DSFMT& dsfmt);
 
 static int mexp;
 static int maxdegree;
@@ -167,6 +169,36 @@ void set_up_random(char *filename, GF2X& poly) {
     printBinary(stdout, poly);
 }
 
+void chk_fix(DSFMT& fix, DSFMT& con) {
+    DSFMT tmp;
+    uint64_t ar[1][2];
+
+    printf("===chk fix start ===\n");
+    printf("deg min fix = %d\n", deg_min_pol(fix));
+    fix.d_p();
+    printf("deg min con = %d\n", deg_min_pol(con));
+    con.d_p();
+    tmp = fix;
+    tmp.gen_rand104spar(ar, 1);
+    printf("deg min tmp after gen = %d\n", deg_min_pol(tmp));
+    tmp.d_p();
+    tmp.add(con);
+    tmp.add(fix);
+    tmp.d_p();
+    printf("===chk fix end ===\n");
+}
+
+int deg_min_pol(DSFMT& dsfmt) {
+    vec_GF2 vec;
+    GF2X minpoly;
+    DSFMT tmp(dsfmt);
+
+    vec.SetLength(2 * maxdegree);
+    generating_polynomial104(tmp, vec, 0, maxdegree);
+    berlekampMassey(minpoly, maxdegree, vec);
+    return (int)deg(minpoly);
+}
+
 void get_lcm(GF2X& lcmpoly, const DSFMT& dsfmt, const GF2X& poly) {
     GF2X minpoly;
     GF2X tmp;
@@ -251,11 +283,14 @@ void get_characteristic(char *filename) {
     uint64_t lung[2];
     GF2X t1(1, 1);
 
+    SetCoeff(t1, 0);
+    //cout << "t1 = " << t1 << endl;
     vec.SetLength(2 * maxdegree);
     set_up_random(filename, poly);
     DSFMT sfmt(123);
     DSFMT sfmt_const(123);
     DSFMT sfmt_const2(123);
+    DSFMT const_L_save(123);
     //DSFMT sfmt_save(sfmt);
     get_lcm(lcmpoly, sfmt, poly);
     if (deg(lcmpoly) < maxdegree) {
@@ -286,27 +321,34 @@ void get_characteristic(char *filename) {
     }
     b *= smallpoly;
     a *= poly;
-#if 1
     sfmt_const.set_const();
+#if 1
     make_zero_state(sfmt_const, b);
+    const_L_save = sfmt_const;
     sfmt_const2.set_const();
     make_zero_state(sfmt_const2, a);
     sfmt_const2.add(sfmt_const);
     printf("kakunin modoru\n");
     sfmt_const2.d_p();
+#endif
+    /* 実は上はいらない */
     /* a*poly + b*t1 = d */
     XGCD(d, a, b, poly, t1);
     if (deg(d) != 0) {
 	printf("failure d != 1\n");
     }
-#endif
-    /* 実は上はいらない */
-    //sfmt_const.set_const();
     make_zero_state(sfmt_const, b);
     sfmt_const.get_lung(lung);
     sfmt_const.d_p();
     printf("fix[0] = %16"PRIx64"\n", lung[0]);
     printf("fix[1] = %16"PRIx64"\n", lung[1]);
+#if 0
+    chk_fix(sfmt_const, const_L_save);
+    printf("deg of minpoly of fix = %d\n", deg_min_pol(sfmt_const));
+    make_zero_state(sfmt_const, poly);
+    printf("deg of minpoly of fix = %d\n", deg_min_pol(sfmt_const));
+    sfmt_const.d_p();
+#endif
 }
 
 int main(int argc, char *argv[]) {

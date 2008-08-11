@@ -304,6 +304,26 @@ void DSFMT::gen_rand104spar(uint64_t array[][2], int size) {
     }
 }
 
+double DSFMT::gen_rand() {
+    int i, j;
+    union {
+	uint64_t u;
+	double d;
+    } x;
+
+    if (idx % 2 == 0) {
+	idx += 2;
+	if (idx >= N) {
+	    idx = 0;
+	}
+	next_state();
+    }
+    i = idx / 2;
+    j = idx % 2;
+    x.u = status[i][j];
+    return x.d;
+}
+
 void DSFMT::add(const DSFMT& src) {
     int i, k;
 
