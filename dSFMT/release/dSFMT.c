@@ -46,20 +46,19 @@ inline static void lshift128(w128_t *out, const w128_t *in, int shift);
 #if defined(HAVE_SSE2)
 #  include <emmintrin.h>
 /** mask data for sse2 */
-static uint32_t sse2_param_mask[4] = {DSFMT_MSK32_2, DSFMT_MSK32_1,
-				      DSFMT_MSK32_4, DSFMT_MSK32_3};
+static __m128i sse2_param_mask;
 /** low mask data for sse2 */
-static uint32_t sse2_low_mask[4] = {DSFMT_LOW_MASK32_2, DSFMT_LOW_MASK32_1,
-				     DSFMT_LOW_MASK32_2, DSFMT_LOW_MASK32_1};
+static __m128i sse2_low_mask;
 /** high constant data for sse2 */
-static uint32_t sse2_high_const[4] = {0, DSFMT_HIGH_CONST32,
-				      0, DSFMT_HIGH_CONST32};
+static __m128i sse2_high_const;
 /** 1 in 64bit for sse2 */
-static uint32_t sse2_int_one  = {1, 0, 1, 0};
+static __m128i sse2_int_one;
 /** 2.0 double for sse2 */
-static double sse2_double_two = {2.0, 2.0};
+static __m128d sse2_double_two;
 /** -1.0 double for sse2 */
-static double sse2_double_m_one = {1.0, 1.0};
+static __m128d sse2_double_m_one;
+
+static void setup_const(void);
 #endif
 
 /**
@@ -121,6 +120,26 @@ inline static void do_recursion(w128_t *rr,
 }
 #elif defined(HAVE_SSE2)
 /**
+ * This function setup some constant variables for SSE2.
+ */
+static void setup_const(void) {
+    static int first = 1;
+    if (!first) {
+	return;
+    }
+    sse2_param_mask = _mm_set_epi32(DSFMT_MSK32_3, DSFMT_MSK32_4,
+				    DSFMT_MSK32_1, DSFMT_MSK32_2);
+    sse2_low_mask = _mm_set_epi32(DSFMT_LOW_MASK32_1, DSFMT_LOW_MASK32_2,
+				  DSFMT_LOW_MASK32_1, DSFMT_LOW_MASK32_2);
+    sse2_int_one = _mm_set_epi32(0, 1, 0, 1);
+    sse2_high_const = _mm_set_epi32(DSFMT_HIGH_CONST32, 0,
+				    DSFMT_HIGH_CONST32, 0);
+    sse2_double_two = _mm_set_pd(2.0, 2.0);
+    sse2_double_m_one = _mm_set_pd(-1.0, -1.0);
+    first = 0;
+}
+
+/**
  * This function represents the recursion formula.
  * @param r output 128-bit
  * @param a a 128-bit part of the internal state array
@@ -128,38 +147,6 @@ inline static void do_recursion(w128_t *rr,
  * @param c a 128-bit part of the internal state array
  * @param d a 128-bit part of the internal state array (I/O)
  */
-#  if defined(HAVE_SSE2_NO_ALIGN)
-inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b,
-				w128_t *c, w128_t *d) {
-    register __m128i v, w, x, y, z;
-    register __m128i p, param_mask, low_mask, high_const;
-
-    param_mask = _mm_loadu_si128((__m128i *)&sse2_maram_mask);
-    low_mask = _mm_loadu_si128((__m128i *)&sse2_low_mask);
-    high_const = _mm_loadu_si128((__m128i *)&sse2_high_const);
-
-    z = _mm_loadu_si128(&a->si);
-    p = _mm_loadu_si128(&b->si);
-    y = _mm_srli_epi64(p, DSFMT_SR1);
-    y = _mm_and_si128(y, param_mask);
-    p = _mm_loadu_si128(&c->si);
-    w = _mm_slli_epi64(p, DSFMT_SL1);
-    x = _mm_srli_epi64(p, DSFMT_SR2);
-    p = _mm_loadu_si128(&d->si);
-    v = _mm_shuffle_epi32(p, SSE2_SHUFF);
-    w = _mm_xor_si128(w, x);
-    v = _mm_xor_si128(v, z);
-    z = _mm_slli_si128(z, DSFMT_SL2);
-    w = _mm_xor_si128(w, y);
-    v = _mm_xor_si128(v, z);
-    v = _mm_xor_si128(v, w);
-    v = _mm_and_si128(v, low_mask);
-    p = _mm_xor_si128(p, v);
-    _mm_storeu_si128(&d->si, p);
-    v = _mm_or_si128(v, high_const);
-    _mm_storeu_si128(&r->si, v);
-}
-#  else
 inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b,
 				w128_t *c, w128_t *d) {
     __m128i v, w, x, y, z;
@@ -180,7 +167,6 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b,
     d->si = _mm_xor_si128(d->si, v);
     r->si = _mm_or_si128(v, sse2_high_const);
 }
-#  endif
 #else /* standard C */
 /**
  * This function simulates SIMD 128-bit left shift by the standard C.
@@ -229,40 +215,19 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
  * in the range [0, 1).
  * @param w 128bit stracture of double precision floating point numbers (I/O)
  */
-#  if defined(HAVE_SSE2_NO_ALIGN)
-inline static void convert_c0o1(w128_t *w) {
-    __m128d d, double_m_one;
-
-    double_m_one = _mm_loadu_pd(&sse2_double_m_one);
-    d = _mm_loadu_pd(&w->sd);
-    d = _mm_add_pd(d, double_m_one);
-    _mm_storeu_pd(&w->sd, d);
-}
-#  else
 inline static void convert_c0o1(w128_t *w) {
     w->sd = _mm_add_pd(w->sd, sse2_double_m_one);
 }
-#  endif
+
 /**
  * This function converts the double precision floating point numbers which
  * distribute uniformly in the range [1, 2) to those which distribute uniformly
  * in the range (0, 1].
  * @param w 128bit stracture of double precision floating point numbers (I/O)
  */
-#  if defined(HAVE_SSE2_NO_ALIGN)
-inline static void convert_o0c1(w128_t *w) {
-    __m128d d, double_two;
-
-    double_two = _mm_loadu_pd(&sse2_double_two);
-    d = _mm_loadu_pd(&w->sd);
-    d = _mm_sub_pd(double_two, d);
-    _mm_storeu_pd(&w->sd, d);
-}
-#  else
 inline static void convert_o0c1(w128_t *w) {
     w->sd = _mm_sub_pd(sse2_double_two, w->sd);
 }
-#  endif
 
 /**
  * This function converts the double precision floating point numbers which
@@ -270,24 +235,10 @@ inline static void convert_o0c1(w128_t *w) {
  * in the range (0, 1).
  * @param w 128bit stracture of double precision floating point numbers (I/O)
  */
-#  if defined(HAVE_SSE2_NO_ALIGN)
-inline static void convert_o0o1(w128_t *w) {
-    __m128i int_one;
-    __m128d d, double_m_one;
-
-    int_one = _mm_loadu_si128((__m128i *)&sse2_int_one)
-    double_m_one = _mm_loadu_pd(&sse2_double_m_one);
-    d = _mm_loadu_pd(&w->sd);
-    d = (__m128d)_mm_or_si128((__m128i)d, int_one);
-    d = _mm_add_pd(d, double_m_one);
-    _mm_storeu_pd(&w->sd, d);
-}
-#  else
 inline static void convert_o0o1(w128_t *w) {
     w->si = _mm_or_si128(w->si, sse2_int_one);
     w->sd = _mm_add_pd(w->sd, sse2_double_m_one);
 }
-#  endif
 #else /* standard C and altivec */
 /**
  * This function converts the double precision floating point numbers which
@@ -735,6 +686,9 @@ void dsfmt_chk_init_gen_rand(dsfmt_t *dsfmt, uint32_t seed, int mexp) {
     initial_mask(dsfmt);
     period_certification(dsfmt);
     dsfmt->idx = DSFMT_N64;
+#if defined(HAVE_SSE2)
+    setup_const();
+#endif
 }
 
 /**
@@ -818,6 +772,9 @@ void dsfmt_chk_init_by_array(dsfmt_t *dsfmt, uint32_t init_key[],
     initial_mask(dsfmt);
     period_certification(dsfmt);
     dsfmt->idx = DSFMT_N64;
+#if defined(HAVE_SSE2)
+    setup_const();
+#endif
 }
 #if defined(__INTEL_COMPILER)
 #  pragma warning(default:981)

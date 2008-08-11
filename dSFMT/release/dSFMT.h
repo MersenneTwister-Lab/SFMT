@@ -56,10 +56,6 @@
  * of 64-bit integers.*/
 #define DSFMT_N64 (DSFMT_N * 2)
 
-#if (defined(__CYGWIN__) || defined(__CYGWIN32__)) && defined(HAVE_SSE2)
-#  define HAVE_SSE2_NO_ALIGN 1
-#endif
-
 #if !defined(DSFMT_BIG_ENDIAN)
 #  if defined(__BYTE_ORDER) && defined(__BIG_ENDIAN)
 #    if __BYTE_ORDER == __BIG_ENDIAN
