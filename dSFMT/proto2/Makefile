@@ -112,8 +112,14 @@ chi-zero-19937: sfmtDPza.cpp chi-zero.o
 get-charactorDPza-521: sfmtDPza.cpp get-charactor.cpp
 	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
 
+get-charactorDPza-1279: sfmtDPza.cpp get-charactor.cpp
+	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
+
 get-charactorDPza-19937: sfmtDPza.cpp get-charactor.cpp
 	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
+
+get-parity-vectorDPza-19937: sfmtDPza.cpp search-parity-vector.cpp
+	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
 
 get-parity-vectorDPza-521: sfmtDPza.cpp search-parity-vector.cpp
 	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
@@ -121,10 +127,46 @@ get-parity-vectorDPza-521: sfmtDPza.cpp search-parity-vector.cpp
 get-parity-vectorDPza-1279: sfmtDPza.cpp search-parity-vector.cpp
 	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
 
+get-charactorDPza-11213: sfmtDPza.cpp get-charactor.cpp
+	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
+
+get-parity-vectorDPza-11213: sfmtDPza.cpp search-parity-vector.cpp
+	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
+
+test-parityDPza-11213: sfmtDPza.cpp test-parity.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
+
+get-charactorDPza-4253: sfmtDPza.cpp get-charactor.cpp
+	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
+
+get-parity-vectorDPza-4253: sfmtDPza.cpp search-parity-vector.cpp
+	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
+
+test-parityDPza-4253: sfmtDPza.cpp test-parity.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
+
+get-charactorDPza-2203: sfmtDPza.cpp get-charactor.cpp
+	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
+
+get-parity-vectorDPza-2203: sfmtDPza.cpp search-parity-vector.cpp
+	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
+
+test-parityDPza-2203: sfmtDPza.cpp test-parity.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
+
 test-parityDPza-521: sfmtDPza.cpp test-parity.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
 
+test-parityDPza-1279: sfmtDPza.cpp test-parity.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
+
+test-parityDPza-19937: sfmtDPza.cpp test-parity.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
+
 test-genDPza-521: sfmtDPza.cpp test-gen.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
+
+test-genDPza-19937: sfmtDPza.cpp test-gen.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
 
 .cpp.o:

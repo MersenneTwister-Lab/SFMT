@@ -92,7 +92,7 @@ static void test_gen() {
     uint64_t hi_c = 0x3FF0000000000000ULL;
     int i, j;
 
-    dsfmt.init_gen_rand(0, hi_c);
+    dsfmt.init_gen_rand(1, hi_c);
     dsfmt.period_certification(false);
     for (i = 0; i < 1000; i++) {
 	printf("%1.15f ", dsfmt.gen_rand());
@@ -101,7 +101,7 @@ static void test_gen() {
 	}
     }
     for (i = 1; i < 100; i++) {
-	dsfmt.init_gen_rand(i, hi_c);
+	dsfmt.init_gen_rand(i + 1, hi_c);
 	dsfmt.period_certification(false);
 	printf("seed = %d\n", i);
 	for (j = 0; j < 12; j++) {

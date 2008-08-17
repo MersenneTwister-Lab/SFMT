@@ -124,7 +124,7 @@ void DSFMT::read_random_param(FILE *f) {
 DSFMT::DSFMT() {
     status = new uint64_t[N + 1][2];
     idx = 0;
-    init_gen_rand(0);
+    init_gen_rand(1);
 }
 
 DSFMT::DSFMT(uint64_t seed) {
