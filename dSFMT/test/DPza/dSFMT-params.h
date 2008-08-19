@@ -1,0 +1,61 @@
+#ifndef DSFMT_PARAMS_H
+#define DSFMT_PARAMS_H
+
+#include "dSFMT.h"
+
+/*----------------------
+  the parameters of DSFMT
+  following definitions are in dSFMT-paramsXXXX.h file.
+  ----------------------*/
+/** the pick up position of the array.
+#define DSFMT_POS1 122 
+*/
+
+/** the parameter of shift left as four 32-bit registers.
+#define DSFMT_SL1 18
+ */
+
+/** the parameter of shift right as four 32-bit registers.
+#define DSFMT_SR1 12
+*/
+
+/** A bitmask, used in the recursion.  These parameters are introduced
+ * to break symmetry of SIMD.
+#define DSFMT_MSK1 (uint64_t)0xdfffffefULL
+#define DSFMT_MSK2 (uint64_t)0xddfecb7fULL
+*/
+
+/** These definitions are part of a 128-bit period certification vector.
+#define DSFMT_PCV1	UINT64_C(0x00000001)
+#define DSFMT_PCV2	UINT64_C(0x00000000)
+*/
+
+#define DSFMT_LOW_MASK  UINT64_C(0x000FFFFFFFFFFFFF)
+#define DSFMT_HIGH_CONST UINT64_C(0x3FF0000000000000)
+
+/* for sse2 */
+#define SSE2_SHUFF 0x4e
+
+#if DSFMT_MEXP == 521
+  #include "dSFMT-params521.h"
+#elif DSFMT_MEXP == 1279
+  #include "dSFMT-params1279.h"
+#elif DSFMT_MEXP == 2203
+  #include "dSFMT-params2203.h"
+#elif DSFMT_MEXP == 4253
+  #include "dSFMT-params4253.h"
+#elif DSFMT_MEXP == 11213
+  #include "dSFMT-params11213.h"
+#elif DSFMT_MEXP == 19937
+  #include "dSFMT-params19937.h"
+#else
+#ifdef __GNUC__
+  #error "DSFMT_MEXP is not valid."
+  #undef DSFMT_MEXP
+#else
+  #undef DSFMT_MEXP
+#endif
+
+#endif
+
+#endif /* DSFMT_PARAMS_H */

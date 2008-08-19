@@ -15,6 +15,7 @@ void LCM(GF2X& lcm, const GF2X& x, const GF2X& y);
 void readFile(GF2X& poly, FILE *fp, bool skip = false);
 unsigned int get_uint(char *line, int radix);
 uint64_t get_uint64(char *line, int radix);
+void print_factorial(const GF2X& poly);
 static inline uint64_t vec_to_uint64(vec_GF2& vec);
 static inline void uint64_to_vec(vec_GF2& vec, uint64_t u, int size);
 static inline void vec_to_uint128(uint64_t u[2], vec_GF2& vec, int size);

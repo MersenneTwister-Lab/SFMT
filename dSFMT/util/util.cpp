@@ -271,3 +271,14 @@ uint64_t get_uint64(char *line, int radix) {
     return result;
 }
 
+void print_factorial(const GF2X& poly) {
+    vec_pair_GF2X_long factors;
+    int i;
+    
+    CanZass(factors, poly);
+    for (i = 0; i < factors.length(); i++) {
+	printf("deg = %d, mul = %d\n",
+	       (int)deg(factors[i].a),
+	       (int)factors[i].b);
+    }
+}

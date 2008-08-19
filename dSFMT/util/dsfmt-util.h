@@ -23,4 +23,6 @@ bool check_minpoly104(const DSFMT& sfmt,
 		      const GF2X& minpoly,
 		      unsigned int bitpos);
 void make_zero_state(DSFMT& sfmt, const GF2X& poly);
+int deg_min_pol(DSFMT& dsfmt, int maxdegree);
+int min_pol(GF2X& minpoly, DSFMT& dsfmt, int maxdegree);
 #endif

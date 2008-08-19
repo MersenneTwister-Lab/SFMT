@@ -24,8 +24,6 @@ NTL_CLIENT;
 static int mexp;
 static int maxdegree;
 static int verbose = 0;
-static uint64_t high3ff = 0x3FF0000000000000ULL;
-
 static void test_gen();
 
 int main(int argc, char *argv[]) {

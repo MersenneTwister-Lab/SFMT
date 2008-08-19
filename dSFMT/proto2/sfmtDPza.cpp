@@ -311,11 +311,11 @@ double DSFMT::gen_rand() {
 	double d;
     } x;
 
+    idx++;
+    if (idx >= N * 2) {
+	idx = 0;
+    }
     if (idx % 2 == 0) {
-	idx += 2;
-	if (idx >= N) {
-	    idx = 0;
-	}
 	next_state();
     }
     i = idx / 2;
@@ -344,10 +344,21 @@ void DSFMT::get_lung(uint64_t lung[2]) {
     lung[1] = status[N][1];
 }
 
+void DSFMT::initial_mask(uint64_t high) {
+    int i;
+    uint64_t *psfmt;
+
+    psfmt = &status[0][0];
+    for (i = 0; i < N * 2; i++) {
+        psfmt[i] = (psfmt[i] & LOW_MASK) | high;
+    }
+}
+
 void DSFMT::init_gen_rand(uint64_t seed, uint64_t high)
 {
     int i;
     uint64_t *psfmt;
+    uint32_t *psfmt32;
 
     if (seed == 0) {
 	psfmt = status[0];
@@ -360,18 +371,14 @@ void DSFMT::init_gen_rand(uint64_t seed, uint64_t high)
 	idx = 0;
 	return;
     }
-    psfmt = status[0];
-    psfmt[0] = (seed & LOW_MASK) | high;
-    for (i = 1; i < N * 2; i++) {
-	psfmt[i] = 6364136223846793005ULL 
-	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
-	psfmt[i] = (psfmt[i] & LOW_MASK) | high;
+    psfmt32 = (uint32_t *)&status[0][0];
+    psfmt32[idxof(0)] = seed;
+    for (i = 1; i < (N + 1) * 4; i++) {
+        psfmt32[idxof(i)] = 1812433253UL 
+	    * (psfmt32[idxof(i - 1)] ^ (psfmt32[idxof(i - 1)] >> 30)) + i;
     }
-    for (;i < (N + 1) * 2; i++) {
-	psfmt[i] = 6364136223846793005ULL 
-	    * (psfmt[i - 1] ^ (psfmt[i - 1] >> 62)) + i;
-    }
-    idx = 0;
+    initial_mask(high);
+    idx = N * 2;
 }
 
 void DSFMT::fill_rnd(uint64_t high) {

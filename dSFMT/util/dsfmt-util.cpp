@@ -1,4 +1,5 @@
 #include "dsfmt.h"
+#include "util.h"
 #include "dsfmt-util.h"
 
 void static generating_polynomial104_hi(DSFMT& dsfmt,
@@ -180,4 +181,25 @@ void make_zero_state(DSFMT& dsfmt, const GF2X& poly) {
 	}
 	tmp.gen_rand104sp(ar, 0);
     }
+}
+
+int deg_min_pol(DSFMT& dsfmt, int maxdegree) {
+    vec_GF2 vec;
+    GF2X minpoly;
+    DSFMT tmp(dsfmt);
+
+    vec.SetLength(2 * maxdegree);
+    generating_polynomial104(tmp, vec, 0, maxdegree);
+    berlekampMassey(minpoly, maxdegree, vec);
+    return (int)deg(minpoly);
+}
+
+int min_pol(GF2X& minpoly, DSFMT& dsfmt, int maxdegree) {
+    vec_GF2 vec;
+    DSFMT tmp(dsfmt);
+
+    vec.SetLength(2 * maxdegree);
+    generating_polynomial104(tmp, vec, 0, maxdegree);
+    berlekampMassey(minpoly, maxdegree, vec);
+    return (int)deg(minpoly);
 }
