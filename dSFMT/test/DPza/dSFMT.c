@@ -37,9 +37,6 @@ inline static void gen_rand_array_o0o1(dsfmt_t *dsfmt, w128_t array[],
 inline static int idxof(int i);
 static void initial_mask(dsfmt_t *dsfmt);
 static void period_certification(dsfmt_t *dsfmt);
-#if !defined(HAVE_SSE2) && !defined(HAVE_ALTIVEC)
-inline static void lshift128(w128_t *out, const w128_t *in, int shift);
-#endif
 
 #if defined(HAVE_SSE2)
 #  include <emmintrin.h>
@@ -448,8 +445,7 @@ static void initial_mask(dsfmt_t *dsfmt) {
 static void period_certification(dsfmt_t *dsfmt) {
     uint64_t pcv[2] = {DSFMT_PCV1, DSFMT_PCV2};
     uint64_t tmp[2];
-    uint64_t inner = 0;
-    uint64_t work;
+    uint64_t inner;
 
     tmp[0] = (dsfmt->status[DSFMT_N].u[0] ^ DSFMT_FIX1);
     tmp[1] = (dsfmt->status[DSFMT_N].u[1] ^ DSFMT_FIX2);

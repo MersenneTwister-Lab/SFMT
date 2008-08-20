@@ -103,9 +103,9 @@ static void test_parity0(GF2X& f, uint64_t parity[2]) {
 	if (verbose) printf("------\n");
 	if (verbose) printf("==shoki (%d)\n", i);
 	dsfmt.init_gen_rand(i + 1, 0);
-	vec.SetLength(2 * maxdegree);
-	generating_polynomial104(dsfmt, vec, 0, maxdegree);
-	berlekampMassey(minpoly, maxdegree, vec);
+	vec.SetLength(4 * maxdegree);
+	generating_polynomial104(dsfmt, vec, 0, 2 * maxdegree);
+	berlekampMassey(minpoly, 2 * maxdegree, vec);
 	DivRem(q, rem, minpoly, f);
 	if (deg(rem) != -1) {
 	    printf("minpoly = %ld\n", deg(minpoly));

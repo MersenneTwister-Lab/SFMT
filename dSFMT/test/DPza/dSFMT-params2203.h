@@ -1,21 +1,21 @@
-#ifndef DSFMT_PARAMS1279_H
-#define DSFMT_PARAMS1279_H
+#ifndef DSFMT_PARAMS2203_H
+#define DSFMT_PARAMS2203_H
 
-/* #define DSFMT_N	12 */
-/* #define DSFMT_MAXDEGREE	1376 */
-#define DSFMT_POS1	9
+/* #define DSFMT_N	20 */
+/* #define DSFMT_MAXDEGREE	2208 */
+#define DSFMT_POS1	7
 #define DSFMT_SL1	19
-#define DSFMT_MSK1	UINT64_C(0x000efff7ffddffee)
-#define DSFMT_MSK2	UINT64_C(0x000fbffffff77fff)
-#define DSFMT_MSK32_1	0x000efff7U
-#define DSFMT_MSK32_2	0xffddffeeU
-#define DSFMT_MSK32_3	0x000fbfffU
-#define DSFMT_MSK32_4	0xfff77fffU
-#define DSFMT_FIX1	UINT64_C(0xb66627623d1a31be)
-#define DSFMT_FIX2	UINT64_C(0x04b6c51147b6109b)
-#define DSFMT_PCV1	UINT64_C(0x7049f2da382a6aeb)
-#define DSFMT_PCV2	UINT64_C(0xde4ca84a40000001)
-#define DSFMT_IDSTR	"dSFMT2-1279:9-19:efff7ffddffee-fbffffff77fff"
+#define DSFMT_MSK1	UINT64_C(0x000fdffff5edbfff)
+#define DSFMT_MSK2	UINT64_C(0x000f77fffffffbfe)
+#define DSFMT_MSK32_1	0x000fdfffU
+#define DSFMT_MSK32_2	0xf5edbfffU
+#define DSFMT_MSK32_3	0x000f77ffU
+#define DSFMT_MSK32_4	0xfffffbfeU
+#define DSFMT_FIX1	UINT64_C(0xb14e907a39338485)
+#define DSFMT_FIX2	UINT64_C(0xf98f0735c637ef90)
+#define DSFMT_PCV1	UINT64_C(0x8000000000000000)
+#define DSFMT_PCV2	UINT64_C(0x0000000000000001)
+#define DSFMT_IDSTR	"dSFMT2-2203:7-19:fdffff5edbfff-f77fffffffbfe"
 
 
 /* PARAMETERS FOR ALTIVEC */
@@ -37,4 +37,4 @@
 	{DSFMT_MSK32_1, DSFMT_MSK32_2, DSFMT_MSK32_3, DSFMT_MSK32_4}
 #endif
 
-#endif /* DSFMT_PARAMS1279_H */
+#endif /* DSFMT_PARAMS2203_H */

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "dSFMT-params.h"
 
-static void test_gen();
+static void test_gen(void);
 
 int main(int argc, char *argv[]) {
     printf("mexp = %d\n", DSFMT_MEXP);

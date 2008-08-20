@@ -166,6 +166,18 @@ test-parityDPza-19937: sfmtDPza.cpp test-parity.cpp
 test-genDPza-521: sfmtDPza.cpp test-gen.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
 
+test-genDPza-1279: sfmtDPza.cpp test-gen.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
+
+test-genDPza-2203: sfmtDPza.cpp test-gen.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
+
+test-genDPza-4253: sfmtDPza.cpp test-gen.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
+
+test-genDPza-11213: sfmtDPza.cpp test-gen.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
+
 test-genDPza-19937: sfmtDPza.cpp test-gen.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
 

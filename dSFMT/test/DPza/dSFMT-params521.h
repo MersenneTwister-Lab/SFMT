@@ -1,6 +1,8 @@
 #ifndef DSFMT_PARAMS521_H
 #define DSFMT_PARAMS521_H
 
+/* #define DSFMT_N	4 */
+/* #define DSFMT_MAXDEGREE	544 */
 #define DSFMT_POS1	3
 #define DSFMT_SL1	25
 #define DSFMT_MSK1	UINT64_C(0x000fbfefff77efff)
