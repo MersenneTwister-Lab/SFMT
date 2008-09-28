@@ -18,6 +18,7 @@ NTL_CLIENT;
 int get_equiv_distrib(int bit, DSFMT& sfmt);
 void test_shortest(char *filename);
 void chk_fix(DSFMT& fix, DSFMT& con);
+void show_factorial(GF2X& pol);
 
 static int mexp;
 static int maxdegree;
@@ -124,7 +125,7 @@ void lcm_check1(const DSFMT& sfmt, GF2X& lcmpoly, GF2X& poly) {
 	printf("check minpoly OK!\n");
 	DivRem(tmp, rempoly, lcmpoly, poly);
 	if (deg(rempoly) != -1) {
-	    printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
+	    printf("lcm_chk1:rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
 	}
     } else {
 	printf("check minpoly NG!\n");
@@ -137,7 +138,7 @@ void div_check(GF2X& lcmpoly, GF2X& poly, int i) {
 
     DivRem(tmp, rempoly, lcmpoly, poly);
     if (deg(rempoly) != -1) {
-	printf("rem != 0 deg rempoly = %ld: %d\n", deg(rempoly), i);
+	printf("div_check: rem != 0 deg rempoly = %ld: %d\n", deg(rempoly), i);
     }
 }
 
@@ -187,12 +188,12 @@ void chk_fix(DSFMT& fix, DSFMT& con) {
     printf("===chk fix end ===\n");
 }
 
-void get_lcm(GF2X& lcmpoly, const DSFMT& dsfmt, const GF2X& poly) {
+void get_lcm(GF2X& lcmpoly, const GF2X& poly) {
     GF2X minpoly;
     GF2X tmp;
     GF2X rempoly;
     vec_GF2 vec;
-    DSFMT sfmt(dsfmt);
+    DSFMT sfmt(123);
     int i;
     int lcmcount;
 
@@ -201,7 +202,12 @@ void get_lcm(GF2X& lcmpoly, const DSFMT& dsfmt, const GF2X& poly) {
     berlekampMassey(lcmpoly, maxdegree, vec);
     DivRem(tmp, rempoly, lcmpoly, poly);
     if (deg(rempoly) != -1) {
-	printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
+	printf("get_lcm 1:rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
+	printf("maxdegree = %d\n", maxdegree);
+	printf("len vec = %ld\n", vec.length());
+	printf("deg minpoly = %ld\n", deg(lcmpoly));
+	show_factorial(lcmpoly);
+	sfmt.d_p();
     } else {
 	printf("divide OK\n");
     }
@@ -209,6 +215,14 @@ void get_lcm(GF2X& lcmpoly, const DSFMT& dsfmt, const GF2X& poly) {
     for (i = 1; i < 104; i++) {
 	generating_polynomial104(sfmt, vec, i, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
+	DivRem(tmp, rempoly, minpoly, poly);
+	if (deg(rempoly) != -1) {
+	    printf("get_lcm:rem != 0 deg rempoly = %ld: i = %d\n",
+		   deg(rempoly), i);
+	    printf("deg minpoly = %ld\n", deg(lcmpoly));
+	    show_factorial(lcmpoly);
+	    return;
+	}
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
 	// div_check(lcmpoly, poly, i);// for debug
@@ -223,6 +237,14 @@ void get_lcm(GF2X& lcmpoly, const DSFMT& dsfmt, const GF2X& poly) {
 		break;
 	    }
 	    berlekampMassey(minpoly, maxdegree, vec);
+	    DivRem(tmp, rempoly, minpoly, poly);
+	    if (deg(rempoly) != -1) {
+		printf("get_lcm:rem != 0 deg rempoly = %ld: i = %d, j = %d\n",
+		       deg(rempoly), i, j);
+		printf("deg minpoly = %ld\n", deg(lcmpoly));
+		show_factorial(lcmpoly);
+		return;
+	    }
 	    LCM(tmp, lcmpoly, minpoly);
 	    if (deg(tmp) > (long)maxdegree) {
 		break;
@@ -235,7 +257,7 @@ void get_lcm(GF2X& lcmpoly, const DSFMT& dsfmt, const GF2X& poly) {
 	}
     }
     if (deg(lcmpoly) != maxdegree) {
-	printf("fail to get lcm, deg = %ld < %d\n", deg(lcmpoly), maxdegree);
+	printf("fail to get lcm, deg = %ld != %d\n", deg(lcmpoly), maxdegree);
     }
 #if 0
     if (check_minpoly104(sfmt_save, lcmpoly, 0)) {
@@ -256,6 +278,17 @@ void fill_poly(GF2X& small, int diff) {
 	    printf("deg = %d, mul = %d\n",
 		   (int)deg(factors[i].a), (int)factors[i].b);
 	}
+    }
+}
+
+void show_factorial(GF2X& pol) {
+    vec_pair_GF2X_long factors;
+    int i;
+    
+    CanZass(factors, pol);
+    for (i = 0; i < factors.length(); i++) {
+	printf("deg = %d, mul = %d\n",
+	       (int)deg(factors[i].a), (int)factors[i].b);
     }
 }
 
@@ -280,28 +313,33 @@ void get_characteristic(char *filename) {
     DSFMT sfmt_const2(123);
     DSFMT const_L_save(123);
     //DSFMT sfmt_save(sfmt);
-    get_lcm(lcmpoly, sfmt, poly);
+    get_lcm(lcmpoly, poly);
     if (deg(lcmpoly) < maxdegree) {
 	DivRem(tmp, rempoly, lcmpoly, poly);
 	if (deg(rempoly) != -1) {
-	    printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
+	    printf("get_characteristic 1:rem != 0 deg rempoly = %ld\n",
+		   deg(rempoly));
+	    show_factorial(lcmpoly);
 	    exit(1);
 	}
 	fill_poly(tmp, maxdegree - (int)deg(lcmpoly));
     }
     if (deg(lcmpoly) != maxdegree) {
 	printf("can't get characteristic polynomial!\n");
+	show_factorial(lcmpoly);
 	return;
     }
     printf("deg lcm poly = %ld\n", deg(lcmpoly));
     printf("characteristic polynomial weight = %ld\n", weight(lcmpoly));
-    printBinary(stdout, lcmpoly);
     DivRem(smallpoly, rempoly, lcmpoly, poly);
     printf("deg tmp = %ld\n", deg(tmp));
     if (deg(rempoly) != -1) {
-	printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
+	printf("get_characteristic 2:rem != 0 deg rempoly = %ld\n",
+	       deg(rempoly));
+	show_factorial(lcmpoly);
 	return;
     }
+    printBinary(stdout, lcmpoly);
     /* a*poly + b*smallpoly = d */
     XGCD(d, a, b, poly, smallpoly);
     if (deg(d) != 0) {
