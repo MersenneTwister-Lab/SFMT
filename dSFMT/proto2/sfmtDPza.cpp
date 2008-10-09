@@ -403,6 +403,7 @@ void DSFMT::fill_rnd(uint64_t high) {
 	u = u | array[idx++];
 	status[i][j] = u;
     }
+    this->idx = 0;
 }
 
 void DSFMT::fill_rnd_all(int p) {
@@ -421,6 +422,7 @@ void DSFMT::fill_rnd_all(int p) {
     assert(0 <= j && j <= 1);
     assert(0 <= k && k < 64);
     memset(status, 0, sizeof(uint64_t) * 2 * (N + 1));
+    idx = 0;
     status[i][j] = (uint64_t)1 << k;
 }
 

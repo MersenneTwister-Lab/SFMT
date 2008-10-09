@@ -197,7 +197,7 @@ void get_lcm(GF2X& lcmpoly, const GF2X& poly) {
     int i;
     int lcmcount;
 
-    vec.SetLength(2 * maxdegree);
+    vec.SetLength(2 * maxdegree + 1);
     generating_polynomial104(sfmt, vec, 0, maxdegree);
     berlekampMassey(lcmpoly, maxdegree, vec);
     DivRem(tmp, rempoly, lcmpoly, poly);
@@ -275,8 +275,14 @@ void fill_poly(GF2X& small, int diff) {
     CanZass(factors, small);
     for (i = 0; i < factors.length(); i++) {
 	if (deg(factors[i].a) <= diff) {
-	    printf("deg = %d, mul = %d\n",
+	    printf("deg = %d, mul = %d",
 		   (int)deg(factors[i].a), (int)factors[i].b);
+	    if (deg(factors[i].a) > 30) {
+		printf("\n");
+	    } else {
+		printf(" : ");
+		printBinary(stdout, factors[i].a);
+	    }
 	}
     }
 }
@@ -287,8 +293,14 @@ void show_factorial(GF2X& pol) {
     
     CanZass(factors, pol);
     for (i = 0; i < factors.length(); i++) {
-	printf("deg = %d, mul = %d\n",
+	printf("deg = %d, mul = %d",
 	       (int)deg(factors[i].a), (int)factors[i].b);
+	if (deg(factors[i].a) > 30) {
+	    printf("\n");
+	} else {
+	    printf(" : ");
+	    printBinary(stdout, factors[i].a);
+	}
     }
 }
 
