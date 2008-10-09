@@ -43,10 +43,12 @@ void convert(mat_GF2& mat, vec_GF2 array[], int bit_len);
 void search_parity_check_vector(uint64_t parity[2], in_status *st, int size);
 void set_bit(in_status *st, GF2X& f, uint32_t *bit_pos);
 static void test_parity0(GF2X& f, uint64_t parity[2]);
+static void get_lcm(DSFMT& dsfmt);
 
 static int mexp;
 static int maxdegree;
 static int verbose = false;
+static GF2X lcmpoly;
 
 int main(int argc, char *argv[]) {
     GF2X f;
@@ -58,6 +60,7 @@ int main(int argc, char *argv[]) {
 	printf("usage:%s filename %d\n", argv[0], argc);
 	exit(1);
     }
+    lcmpoly = 1;
     mexp = DSFMT::get_rnd_mexp();
     maxdegree = DSFMT::get_rnd_maxdegree();
     printf("mexp = %d\n", mexp);
@@ -79,6 +82,9 @@ int main(int argc, char *argv[]) {
     fclose(fp);
     search_lung(f, parity);
     test_parity0(f, parity);
+    printf("LCM: %ld + %ld = %ld : maxdegree = %d\n",
+	   deg(f), deg(lcmpoly), deg(f) + deg(lcmpoly), maxdegree);
+    printBinary(stdout, lcmpoly);
     return 0;
 }
 
@@ -201,6 +207,22 @@ void chk_minpoly(DSFMT& dsfmt) {
     printf("deg minpoly = %d\n", (int)deg(minpoly));
 }
 
+static void get_lcm(DSFMT& src) {
+    GF2X minpoly;
+    GF2X tmp;
+    vec_GF2 vec;
+    DSFMT dsfmt = src;
+    int i;
+
+    vec.SetLength(2 * maxdegree + 1);
+    for (i = 0; i < 104; i++) {
+	generating_polynomial104(dsfmt, vec, i, maxdegree);
+	berlekampMassey(minpoly, maxdegree, vec);
+	LCM(tmp, lcmpoly, minpoly);
+	lcmpoly = tmp;
+    }
+}
+
 void set_bit(in_status *st, GF2X& f, int *bit_pos) {
     for (;*bit_pos <= maxdegree;) {
 	st->dsfmt->fill_rnd_all(*bit_pos);
@@ -209,6 +231,7 @@ void set_bit(in_status *st, GF2X& f, int *bit_pos) {
 	//chk_minpoly(st->dsfmt);
 	set_status(st);
 	if (!st->zero) {
+	    get_lcm(*st->dsfmt);
 	    break;
 	}
     }
