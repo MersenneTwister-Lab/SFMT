@@ -184,6 +184,9 @@ test-genDPza-11213: sfmtDPza.cpp test-gen.cpp
 test-genDPza-19937: sfmtDPza.cpp test-gen.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
 
+test-minpolyDPza-86243: sfmtDPza.cpp test-minpoly.o
+	${CPP} -o $@ sfmtDPza.cpp test-minpoly.o ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
