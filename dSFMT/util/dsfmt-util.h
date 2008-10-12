@@ -9,16 +9,16 @@ NTL_CLIENT;
 
 void generating_polynomial104(DSFMT& dsfmt,
 			      vec_GF2& vec, 
-			      unsigned int bitpos, 
-			      unsigned int maxdegree);
+			      int bitpos, 
+			      int maxdegree);
 void generating_polynomial128(DSFMT& dsfmt,
 			      vec_GF2& vec, 
-			      unsigned int bitpos, 
-			      unsigned int maxdegree);
+			      int bitpos, 
+			      int maxdegree);
 void generating_polynomial104(uint64_t seed,
 			      vec_GF2& vec, 
-			      unsigned int bitpos, 
-			      unsigned int maxdegree);
+			      int bitpos, 
+			      int maxdegree);
 bool check_minpoly104(const DSFMT& sfmt,
 		      const GF2X& minpoly,
 		      unsigned int bitpos);

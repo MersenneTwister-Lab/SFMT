@@ -146,6 +146,44 @@ void printBinary(FILE *fp, GF2X& poly)
     fprintf(fp, "deg=%ld\n", deg(poly));
 }
 
+void printBinary(FILE *fp, vec_GF2& vec)
+{
+    int i;
+    if (vec.length() == 0) {
+	fprintf(fp, "[]\n");
+	return;
+    }
+    if (vec.length() < 20) {
+	fprintf(fp, "[");
+	for(i = 0; i < vec.length(); i++) {
+	    if(IsOne(vec[i])) {
+		fprintf(fp, "1");
+	    } else {
+		fprintf(fp, "0");
+	    }
+	}
+	fprintf(fp, "]\n");
+	return;
+    }
+    fprintf(fp, "[");
+    for(i = 0; i < 20; i++) {
+	if(IsOne(vec[i])) {
+	    fprintf(fp, "1");
+	} else {
+	    fprintf(fp, "0");
+	}
+    }
+    fprintf(fp, "...");
+    for(i = vec.length() - 20; i < vec.length(); i++) {
+	if(IsOne(vec[i])) {
+	    fprintf(fp, "1");
+	} else {
+	    fprintf(fp, "0");
+	}
+    }
+    fprintf(fp, "]\n");
+}
+
 void LCM(GF2X& lcm, const GF2X& x, const GF2X& y) {
     GF2X gcd;
     mul(lcm, x, y);

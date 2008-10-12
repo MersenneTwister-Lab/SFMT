@@ -262,7 +262,9 @@ uint64_t DSFMT::gen_rand104sp(uint64_t array[2], int mode)
 {
     int i, p;
 
-    next_state();
+    if (idx >= N * 2) {
+	idx = 0;
+    }
     i = idx / 2;
     p = idx + 2;
     if (p >= N * 2) {
@@ -280,7 +282,7 @@ uint64_t DSFMT::gen_rand104sp(uint64_t array[2], int mode)
 	array[1] = status[p][0] & LOW_MASK;
     }
 
-    //next_state();
+    next_state();
     idx += 2;
     if (idx >= N * 2) {
 	idx = 0;
@@ -292,18 +294,18 @@ void DSFMT::gen_rand104spar(uint64_t array[][2], int size) {
     int i;
     int j;
 
+    if (idx >= N * 2) {
+	idx = 0;
+    }
+    i = idx / 2;
     for (j = 0; j < size; j++) {
-	next_state();
-	i = idx / 2;
 	array[j][0] = status[i][0] & LOW_MASK;
 	array[j][1] = status[i][1] & LOW_MASK;
-
 	//next_state();
-	idx += 2;
-	if (idx >= N * 2) {
-	    idx = 0;
-	}
+	do_recursion(status[i], status[(i + pos1) % N], status[N]);
+	i = (i + 1) % N ;
     }
+    idx = i * 2;
 }
 
 double DSFMT::gen_rand() {

@@ -10,6 +10,7 @@ NTL_CLIENT;
 int non_reducible(GF2X& fpoly, int degree);
 void berlekampMassey(GF2X& minpoly, unsigned int maxdegree, vec_GF2& vec);
 void printBinary(FILE *fp, GF2X& poly);
+void printBinary(FILE *fp, vec_GF2& vec);
 int32_t gauss_plus(mat_GF2& mat);
 void LCM(GF2X& lcm, const GF2X& x, const GF2X& y);
 void readFile(GF2X& poly, FILE *fp, bool skip = false);

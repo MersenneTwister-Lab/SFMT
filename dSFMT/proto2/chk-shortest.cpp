@@ -79,17 +79,6 @@ void option(int argc, char * argv[]) {
     }
 }
 
-int fill_state_random(DSFMT& sfmt) {
-    static int count = 0;
-
-    if (count > 5000) {
-	return 0;
-    }
-    sfmt.fill_rnd();
-    count++;
-    return 1;
-}
-
 int get_equiv_distrib(int bit, DSFMT& dsfmt) {
     DSFMT sfmtnew(dsfmt);
     int shortest;
@@ -118,31 +107,6 @@ int get_equiv_distrib64(int bit, DSFMT& dsfmt) {
     return min;
 }
 
-void lcm_check1(const DSFMT& sfmt, GF2X& lcmpoly, GF2X& poly) {
-    GF2X tmp;
-    GF2X rempoly;
-
-    if (check_minpoly104(sfmt, lcmpoly, 0)) {
-	printf("check minpoly OK!\n");
-	DivRem(tmp, rempoly, lcmpoly, poly);
-	if (deg(rempoly) != -1) {
-	    printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
-	}
-    } else {
-	printf("check minpoly NG!\n");
-    }
-}
-
-void div_check(GF2X& lcmpoly, GF2X& poly, int i) {
-    GF2X tmp;
-    GF2X rempoly;
-
-    DivRem(tmp, rempoly, lcmpoly, poly);
-    if (deg(rempoly) != -1) {
-	printf("rem != 0 deg rempoly = %ld: %d\n", deg(rempoly), i);
-    }
-}
-
 void set_up_random(char *filename, GF2X& poly) {
     FILE *fp;
 
@@ -163,65 +127,30 @@ void set_up_random(char *filename, GF2X& poly) {
     printBinary(stdout, poly);
 }
 
-void get_characteristic(GF2X& lcmpoly, const DSFMT& dsfmt, const GF2X& poly) {
+/*
+ * その初期値から始まる系列の横104ビットだけを見る。
+ */
+void get_lcm1(GF2X& lcmpoly, DSFMT& dsfmt, const GF2X& poly) {
     GF2X minpoly;
     GF2X tmp;
     GF2X rempoly;
     vec_GF2 vec;
-    DSFMT sfmt(dsfmt);
     int i;
-    int lcmcount;
 
+    lcmpoly = 1;
     vec.SetLength(2 * maxdegree);
-    generating_polynomial104(sfmt, vec, 0, maxdegree);
-    berlekampMassey(lcmpoly, maxdegree, vec);
-    DivRem(tmp, rempoly, lcmpoly, poly);
-    if (deg(rempoly) != -1) {
-	printf("rem != 0 deg rempoly = %ld: 0\n", deg(rempoly));
-    } else {
-	printf("divide OK\n");
-    }
-    //lcm_check1(*sfmt, lcmpoly, poly);
-    for (i = 1; i < 104; i++) {
-	generating_polynomial104(sfmt, vec, i, maxdegree);
+    for (i = 0; i < 104; i++) {
+	generating_polynomial104(dsfmt, vec, i, maxdegree);
 	berlekampMassey(minpoly, maxdegree, vec);
+	DivRem(tmp, rempoly, minpoly, poly);
+	if (deg(rempoly) != -1) {
+	    printf("get_lcm1 %d:rem != 0 deg rempoly = %ld: 0\n",
+		   i, deg(rempoly));
+	}
 	LCM(tmp, lcmpoly, minpoly);
 	lcmpoly = tmp;
-	// div_check(lcmpoly, poly, i);// for debug
     }
-    for (i = 0; i < maxdegree; i++) {
-	if (fill_state_random(sfmt) == 0) {
-	    break;
-	}
-//	for (int j = 0; j < 104; j++) {
-	    generating_polynomial104(sfmt, vec, i % 104, maxdegree);
-	    if (IsZero(vec)) {
-		break;
-	    }
-	    berlekampMassey(minpoly, maxdegree, vec);
-	    LCM(tmp, lcmpoly, minpoly);
-	    if (deg(tmp) > (long)maxdegree) {
-		break;
-	    }
-	    lcmpoly = tmp;
-	    lcmcount++;
-	    if (deg(lcmpoly) >= (long)maxdegree) {
-		break;
-	    }
-//	}
-    }
-    //if (deg(lcmpoly) > maxdegree) {
-    if (deg(lcmpoly) != maxdegree) {
-	printf("fail to get lcm, deg = %ld\n", deg(lcmpoly));
-	//exit(1);
-    }
-#if 0
-    if (check_minpoly104(sfmt_save, lcmpoly, 0)) {
-	printf("check minpoly 2 OK!\n");
-    } else {
-	printf("check minpoly 2 NG!\n");
-    }
-#endif
+    printf("deg lcm = %ld\n", deg(lcmpoly));
 }
 
 void calc_shortest(DSFMT& sfmt) {
@@ -283,23 +212,19 @@ void test_shortest(char *filename) {
     vec.SetLength(2 * maxdegree);
     set_up_random(filename, poly);
     DSFMT sfmt(123);
-    //DSFMT sfmt_save(sfmt);
-    get_characteristic(lcmpoly, sfmt, poly);
-    printf("deg lcm poly = %ld\n", deg(lcmpoly));
-    printf("weight = %ld\n", weight(lcmpoly));
-    printBinary(stdout, lcmpoly);
+    get_lcm1(lcmpoly, sfmt, poly);
     DivRem(tmp, rempoly, lcmpoly, poly);
     printf("deg tmp = %ld\n", deg(tmp));
     if (deg(rempoly) != -1) {
 	printf("rem != 0 deg rempoly = %ld\n", deg(rempoly));
 	exit(1);
     }
-    //sfmt = sfmt_save;
     make_zero_state(sfmt, tmp);
     generating_polynomial104(sfmt, vec, 0, maxdegree);
     berlekampMassey(minpoly, maxdegree, vec);
-    if (deg(minpoly) != mexp) {
-	printf("deg zero state = %ld\n", deg(minpoly));
+    if (minpoly != poly) {
+	printf("minpoly is not our irr-poly\n");
+	printBinary(stdout, minpoly);
 	return;
     }
     calc_shortest(sfmt);

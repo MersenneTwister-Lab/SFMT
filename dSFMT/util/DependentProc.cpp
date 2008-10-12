@@ -9,20 +9,34 @@
 #include <NTL/mat_GF2.h>
 #include "dependent_proc.h"
 
-NTL_CLIENT;
+using namespace std;
+using namespace NTL;
 
-dependent_proc::dependent_proc(vec_GF2 array[], int size) {
+void convert(mat_GF2& mat, vec_GF2 array[], int size);
+void concat(mat_GF2& r, mat_GF2& a, mat_GF2& b);
+void separate(mat_GF2& a, mat_GF2& b, mat_GF2& M);
+void get_vec(vec_GF2& vec, mat_GF2& M, int pos);
+int first_one(vec_GF2& vec);
+int get_dependent(vec_GF2& dependent, vec_GF2 array[], int size);
+
+DependentProc::DependentProc(vec_GF2 array[], int size) {
     convert(mat, array, size);
     ident(P, mat.NumRows());
 }
 
-dependent_proc::get_dependent(vec_GF2& vec) {
+void DependentProc::get_dependent(vec_GF2& vec) {
     mat_GF2 M;
+    int w;
     int rank;
 
+    w = mat.NumCols();
     concat(M, mat, P); 
-    rank = gauss(M);
+    rank = gauss(M, w);
     separate(mat, P, M);
+    if (rank >= M.NumRows()) {
+	vec.SetLength(0);
+	return;
+    }
     get_vec(vec, P, rank);
 }
 
@@ -45,7 +59,7 @@ void concat(mat_GF2& r, mat_GF2& a, mat_GF2& b) {
 }
 
 /* separate M to a and b, b is square */
-void seperate(mat_GF2& a, mat_GF2& b, mat_GF2& M) {
+void separate(mat_GF2& a, mat_GF2& b, mat_GF2& M) {
     int i, j, k;
     int rows, cols;
 
@@ -100,7 +114,7 @@ int first_one(vec_GF2& vec) {
     return -1;
 }
 
-int get_dependent(vec_GF2& dependent, vec_GF2& array[], int size) {
+int get_dependent(vec_GF2& dependent, vec_GF2 array[], int size) {
     mat_GF2 A;
     mat_GF2 E;
     mat_GF2 M;
