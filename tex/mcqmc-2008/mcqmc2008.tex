@@ -21,7 +21,7 @@
 %\usepackage{makeidx}         % allows index generation
 \usepackage{graphicx}        % standard LaTeX graphics tool
                              % when including figure files
-\makeindex             % used for the subject index
+%\makeindex             % used for the subject index
                        % please use the style sprmidx.sty with
                        % your makeindex program
 
@@ -34,7 +34,6 @@
 %\newdef{definition}[theorem]{Definition}
 %\newdef{remark}[theorem]{Remark}
 
-\newcommand{\bbf2}{\mathbb{F}_2}
 % \def\F2{{\mathbb F}_2}
 % \def\wt{{\rm wt}}
 % \def\wo{{\rm wt}_o}
@@ -50,8 +49,13 @@
 % \def\id{{\mathrm{Id}}}
 % \def\tr{{\mathrm{tr}}}
 
+\def\bbf2{\ifmmode \mathbb{F}_2 \else $\mathbb{F}_2$ \fi}
+%\newcommand{\bbf2}{{\ifmmode \mathbb{F}_2 \else $\mathbb{F}_2$ \fi}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
+%\newcommand{\bbf2}{\ifmmode \mathbb{F}_2 \else $\mathbb{F}_2$ \fi}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %\title*{Ultra-Fast Low-Discrepancy Points}
 %\titlerunning{Fast Points}
@@ -169,11 +173,11 @@ a floating point number, and the convertion is slow.
 
 An idea to fasten the conversion is using bit operations on integer
 number to fit to IEEE 754 floating point format. For example in C
-language, to convert 64-bit interger $x$ to double precision floating
-point number $y$ is done by:
+language, to convert 64-bit interger \texttt{x} to double precision floating
+point number \texttt{y} is done by:
 \begin{verbatim}
- $x$ = ($x$ >> 12) | 0x3FF0000000000000ULL;
- $y$ = *((double *)&x);
+ x = (x >> 12) | 0x3FF0000000000000ULL;
+ y = *((double *)&x);
 \end{verbatim}, more appropriate way in C is to use union.
 
 This method was known at latest in 1997, Anger Fog used this
@@ -193,78 +197,117 @@ vectors can be regarded as floating point numbers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{IEEE double precision floating point format}
-\labes{sec:ieee}
+\label{sec:ieee}
 
 IEEE Standard for Binary Floating-Point Arithmetic (ANSI/IEEE Std
 754-1985) \cite{ieee} is the most widely-used standard for
 floating-point numbers.
 
-The double precision floating point number defined by the standard
-\includegraphics[width=0.7\linewidth]{ieee.pdf}
+\begin{center}
+  \begin{figure}
+    \caption{double precision floating point number \label{fig:ieee}}
+    \includegraphics[width=0.7\linewidth]{ieee.eps}
+  \end{figure}
 
+  \begin{tabular}{|l|c|c|c|} \hline
+    & exponent & fraction & represented number \\ \hline
+    zero & 0 & 0 & $\pm 0$ \\ \hline
+    denormalized number & 0 & $\neq$ 0 & $\pm 0.xxxx \times 2^{-1022}$ \\ \hline
+    $\infty$ & 2047 & 0 & $\pm\infty$ \\ \hline
+    NaN & 2047 & $\neq$ 0 & Not a Number \\ \hline
+    normalized number & 
+    other & any & 
+    $\pm 1.xxxxx \times 2^{e - 1023}$ \\ \hline
+    % \[ s \times (1 + f \times 2^{-52}) \times 2^{e - 1023} \]
+    % \[ \pm 1.xxxxx \times 2^{e - 1023} \]
+  \end{tabular}
+
+  $xxxx$ shows the bit pattern of fraction part.
+\end{center}
+
+if sign bit is 0 and exponent part (11 bit) is 0x3ff,
+then the format represent a normalized number in the range [1, 2).
+
+Because of the format of normalized number, We decided to design a
+PRNG whose output is uniformly distributed in the range [1, 2).  A
+normalize number has additional 1 bit and the exponent part is
+adjusted so that the integer part only has this additional 1 bit.
+Therefore this format has 53-bit precision though it has only 52-bit
+fraction part. On the other hand, our generator has 52-bit precision
+because the exponent part is fixed.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{SIMD-oriented Fast Mersenne Twister}
-\label{sec:jump}
+\section{Theoretical base}
+\label{sec:base}
 
-We propose a SIMD-oriented Fast Mersenne Twister (SFMT) 
-pseudorandom number generator. It is a
-Linear Feedbacked Shift Register (LFSR) generator based
-on a recursion over $\F2^{128}$.
-We identify
-the set of bits $\{0,1\}$
-with the two element field $\F2$. This means that
-every arithmetic operation is done modulo 2. 
-A $w$-bit integer is identified with 
-a horizontal vector in $\F2^{w}$, and 
-$+$ denotes the sum as vectors (i.e., 
-bit-wise exor), not as integers.
-We consider three cases: $w$ is 32, 64 or 128.
+Our new generator is based on Linear Feedback Shift Register (LFSR)
+like MT. Moreover it has additional memory called `lung'.  LFSR with
+additional memory is call Pulmonary LFSR.
 
-\subsection{LFSR generators}
-A LFSR method is to generate
-a sequence $\bx_0, \bx_1, \bx_2, \ldots$
-of elements $\F2^{w}$ by a recursion
-\begin{equation}\label{eq:recursion}
-\bx_{i+N}:=g(\bx_i, \bx_{i+1}, \ldots, \bx_{i+N-1}),
-\end{equation}
-where $\bx_i \in \F2^{w}$ and 
-$g:(\F2^{w})^N \to \F2^{w}$ is an $\F2$-linear function
-(i.e., the multiplication of a $(wN \times w)$-matrix 
-from the right to a $wN$-dimensional vector)
-and use it as a pseudorandom $w$-bit integer sequence.
-In the implementation, this recursion is computed
-by using an array {\tt W[0..N-1]} of $N$ integers of $w$-bit size,
-by the simultaneous substitutions
-$$
-{\tt
-W[0] \leftarrow W[1],\ 
-W[1] \leftarrow W[2],\  \ldots,
-W[N-2] \leftarrow W[N-1],\  
-W[N-1] \leftarrow} g({\tt W[0]},\ldots,{\tt W[N-1]}). 
-$$
+\subsection{Pulmonary LFSR}
+\label{sec:pulmonary}
+
+% \begin{definition}
+%   \begin{itemize}
+%   \item A bit $\{0,1\}$ is identified with $\bbf2$, the two element
+%     field.
+%   \item $b$-bit memories in computer are identified with horizontal vectors in
+%     $\bbf2^{b}$. 
+%   \item We consider an array of $N$ $b$-bit in computer memory as the
+%     vector space $(\bbf2^{b})^N$.
+%   \end{itemize}
+% \end{definition}
+
+We identify the set of bit \{0, 1\} with the two element field \bbf2 .
+This means that every arithmetic operation is done modulo 2.  A
+$\mathbf{b}$-bit register or memory is identified with a vertical
+vector in $\bbf2^b$, and $+$ denotes the sum as vectors (i.e.,
+bit-wize exclusive or). We consider an array of $N$ $b$-bit in
+computer memory as the vector space $(\bbf2^{b})^N$.
+
+% \begin{definition}
+%   Linear Feedbacked Shift Register (LFSR) is defined by a recursion
+%   formula of rank $N$:
+%   \[  \mathbf{w}_i = g(\mathbf{w}_{i-N}, ..., \mathbf{w}_{i-1}),  \]
+%   where $g$ is an $\bbf2$-linear map $(\bbf2^{b})^N \rightarrow \bbf2^b$
+%   and $\mathbf{w}_i \in \bbf2^b$.
+% \end{definition}
+
+An LFSR method is to generate a sequence $\mathbf{w_0}$,$\mathbf{w_1}$,
+$\mathbf{w_2},...$ of elements $\bbf2^b$ by a recursion
+\[ \mathbf{w}_{i+N} = g(\mathbf{w}_{i}, ..., \mathbf{w}_{i + N-1}), \]
+where $g$ is an $\bbf2$-linear map $(\bbf2^{b})^N \rightarrow
+\bbf2^b$.  In the implementation, this recursion is computed by using
+an array \texttt{W[0...N-1]} of $N$ word of $b$-bit size, by the
+simultanous substitutions
+\[
+\texttt{W[0]} \leftarrow \texttt{W[1]},\ 
+\texttt{W[1]} \leftarrow \texttt{W[2]},\  \ldots,
+\texttt{W[N-2]} \leftarrow \texttt{W[N-1]},\  
+\texttt{[N-1]} \leftarrow
+g(\texttt{W[0]},\ldots,\texttt{W[N-1]}). 
+\]
 The first $N-1$ substitutions shift the content of 
 the array, hence the name of LFSR. 
 Note that in the implementation we may use 
 an indexing technique to avoid
 computing these substitutions, see \cite[P.28 Algorithm A]{knuth:bible}.
-The array {\tt W[0..N-1]} is called the state array.
 Before starting the generation, we need to 
 set some values to the state array, 
 which is called the initialization. 
 
 Mersenne Twister (MT) \cite{MT}
 is an example with
-$$
-g(\bw_0,\ldots,\bw_{N-1})=(\bw_0|\bw_1)A + \bw_M,
-$$
-where $(\bw_0|\bw_1)$ denotes
+\[
+g(\mathbf{w}_0,\ldots,\mathbf{w}_{N-1})=(\mathbf{w}_0|\mathbf{w}_1)A + 
+\mathbf{w}_M,
+\]
+where $(\mathbf{w}_0|\mathbf{w}_1)$ denotes
 the concatenation of 
-%$32-r$ MSBs of $\bw_0$ and $r$ LSBs of $\bw_1$,
-the $32-r$ most significant bits (MSBs) of $\bw_0$ and 
-the $r$ least significant bits (LSBs) of $\bw_1$,
+the $32-r$ most significant bits (MSBs) of $\mathbf{w}_0$ and 
+the $r$ least significant bits (LSBs) of $\mathbf{w}_1$,
 %and $A$ is a $(32\times 32)$-matrix 
 $A$ is a $(32\times 32)$-matrix 
-for which the multiplication $\bw A$ is computable 
+for which the multiplication $\mathbf{w} A$ is computable 
 by a few bit-operations, and $M$ is an integer
 ($1 < M < N$).
 Its period is $2^{32N-r}-1$, chosen to be a Mersenne prime.
@@ -272,75 +315,132 @@ To obtain a better equidistribution property,
 MT transforms the sequence by
 a suitably chosen $(32\times 32)$ matrix $T$,
 namely, MT outputs
-$\bx_0T , \bx_1T, \bx_2T, \ldots$
+$\mathbf{x}_0 T , \mathbf{x}_1 T, \mathbf{x}_2 T, \ldots$
 (called tempering).
 
-\subsection{New features of modern CPUs for personal computers}
-Modern CPUs for personal computers (e.g.\ Pentium and
-PowerPC) have new features such as 
-(1) fast integer multiplication instructions
-(2) fast floating point operations 
-(3) SIMD operations 
-(4) multi-stage pipelining.
-These were not common
-to standard PC CPUs, when MT was designed.
+LFSR has a problem about slow recovery from the status 
+which have many zero bits and little one bits \cite[\S 7]{well}.
+A Pulmonary LFSR method is to generate a sequence
+$\mathbf{w_0}$,$\mathbf{w_1}$, $\mathbf{w_2},...$ of elements
+$\bbf2^b$ by a recursion
+\begin{eqnarray*}
+  \mathbf{w}_i &=& g(\mathbf{w}_{i-N+1}, ..., \mathbf{w}_{i-1},
+  \mathbf{u}_{i-1}), \\
+  \mathbf{u}_i &=& h(\mathbf{w}_{i-N+1}, ..., \mathbf{w}_{i-1},
+  \mathbf{u}_{i-1}).
+\end{eqnarray*}
+where $g$ and $h$ are $\bbf2$-linear maps $(\bbf2^{b})^N \rightarrow \bbf2^b$
+and $\mathbf{w}_i, \mathbf{u}_i \in \bbf2^b$.
+In the implementation, $\mathbf{u_i}$ is expected to be kept in a
+register of CPU.
+The idea of Pulmonary LFSR was appeared in the talk of Hiroshi Haramoto
+in MCM 2005, and used in WELL PRNG \cite{well} in 2006.
 
-An advantage of $\F2$-linear generators 
-over integer multiplication generators 
-(such as Linear Congruential Generators \cite{knuth:bible}
-or Multiple Recursive Generators \cite{MRG})
-was high-speed generation by avoiding multiplications.
-This advantage is now smaller, since 
-32-bit integer multiplication is now quite fast. 
+% figure~\ref{fig:plfsr} shows LFSR and Pulmonary LFSR.
+% \begin{center}
+%   \begin{figure}
+%     \caption{Standard LFSR and Pulmonary LFSR \label{fig:plfsr}}
+%     \hspace*{\fill}
+%     \includegraphics[width=0.45\textwidth]{LFSR.pdf}
+%     \hspace{\fill}
+%     \includegraphics[width=0.45\textwidth]{puLFSR.pdf}
+%     \hspace{\fill}
+%   \end{figure}
+% \end{center}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Design of dSFMT}
+\label{sec:dsfmt}
 
-Among the new features,
-(3) and (4) fit $\F2$-linear generators. 
-Our idea is simple: to design
-a 128-bit integer PRNG, considering
-the benefit of such parallelism in the recursion.
+The aim of this article is to design and to implement a fast floating
+point pseudorandom number generator with sufficient quality suitable
+for large scale scientific simulation. We decided to use 128-bit
+operation optimizable in SIMD feature of modern CPUs because we 
+succeeded in SFMT.
 
-\subsection{The recursion of SFMT}
-We choose $g$ in the recursion (\ref{eq:recursion}) as
-\begin{eqnarray}\label{eq:rec-SFMT}
-g(\bw_0,\ldots,\bw_{N-1}) 
-%&=& g(\bw_0, \bw_M, \bw_{N-2}, \bw_{N-1}) \\
-&=& \bw_0A + \bw_MB + \bw_{N-2}C + \bw_{N-1}D,
-\end{eqnarray}
-% \[x_{n+i} = x_{n-1+i}A + x_{n-2+i}B+ x_{m+i}C + x_{i}D,\]
-where 
-$\bw_0, \bw_M, \ldots$ are $w(=128)$-bit integers 
-(= horizontal vectors in $\F2^{128}$),
-and $A, B, C, D$ are sparse $128 \times 128$ matrices
-over $\F2$ for which 
-$\bw A, \bw B, \bw C, \bw D$ can be computed by
-a few SIMD bit-operations.
-%\begin{figure}
-%\begin{center}
-%\includegraphics[width=0.7\linewidth]{sfmt-a.eps}
-%\includegraphics[width=0.7\linewidth]{sfmt-a2.eps}
-%\end{center}
-%\caption{The transition function of SIMD-oriented Fast MT.}
-%\end{figure}
-The choice of the suffixes $N-1$, $N-2$ is for  
-speed: in the implementation of $g$, 
-{\tt W[0]} and {\tt W[M]} are read from the array
-{\tt W}, while the copies of 
-{\tt W[N-2]} and {\tt W[N-1]}
-are kept in 
-two 128-bit registers in the CPU, 
-say {\tt r1} and {\tt r2}. Concretely speaking, we assign 
-${\tt r2} \leftarrow {\tt r1}$ and
-${\tt r1} \leftarrow \mbox{``the result of (\ref{eq:rec-SFMT})''}$
-at every generation, then {\tt r2} ({\tt r1}) keeps
-a copy of {\tt W[N-2]} ({\tt W[N-1]}, respectively). 
-The merit of doing this is to use the pipeline effectively. To fetch 
-{\tt W[0]} and {\tt W[M]} from memory takes some
-time. In the meantime, the
-CPU can compute $\bw_{N-2}C$ and $\bw_{N-1}D$,
-because copies of $\bw_{N-2}$ and $\bw_{N-1}$ are kept 
-in the registers. This selection was made through experiments
-on the speed of generation.
+We call our new generator dSFMT, which stands for double precision
+floating point SIMD-oriented Fast Mersenne Twister. dSFMT is
+specialized in generating double precesion floating point number in
+IEEE 754 format.  We released dSFMT based on this idea in 2007 from
+our web page\cite{web:dsfmt}.
 
+Here we propose an improved version of dSFMT, dSFMT ver. 2.
+
+\subsection{The recursion of dSFMT}
+\label{sec:recursion}
+
+dSFMT ver. 2 is a pulmonary LFSR, whose recursion formulas are:
+\begin{eqnarray*}
+  h(\mathbf{w}_0, ..., \mathbf{w}_{N-2}, \mathbf{u}_0)
+  &=& A\mathbf{w}_{0} + \mathbf{w}_{M} + B\mathbf{u}_{0}, \\
+  g(\mathbf{w}_0, ..., \mathbf{w}_{N-2}, \mathbf{u}_0)
+  &=& \mathbf{w}_{0} 
+  + Ch(\mathbf{w}_0, ..., \mathbf{w}_{N-2}, \mathbf{u}_0),
+\end{eqnarray*}
+where $\mathbf{w}_0$, $\mathbf{w}_M$, $\mathbf{w}_{N-2}$, and $u$ are
+b(= 128) bit element of computer memory, regarding horizontal vectors
+in $\bbf2^{128}$, and $A$, $B$, $C$ are sparse $128 \times 128$
+matrices over \bbf2 for which $\mathbf{w}A$, $\mathbf{w}B$,
+$\mathbf{w}C$ can be computed by a few SIMD operations. These vectors
+are kept in an N elements array of computer memory, where
+$\mathbf{w}_0$, ..., $\mathbf{w}_{N-2}$ are 0th to (N-2)th element and
+u is the last element.
+
+\begin{itemize}
+\item 
+  $\mathbf{w} A := \mathbf{w} \stackrel{64}{<<} p_1$
+
+  This notation means that $\mathbf{w}$ is regarded as two 
+  64-bit memories, and $\mathbf{w} A$ is the result of the left-shift
+  of $\mathbf{w}$ by $p_1$ bits. There is such a SIMD operation in 
+  Pentium SSE2, and PowerPC AltiVec SIMD can emulate it.
+  $p_1$ is a parameter $12 \le p_1 < 64$.
+
+\item
+  $\mathbf{u} B := \mathbf{u}\textrm{perm(4, 3, 2, 1)}$
+
+  This notation means that $\mathbf{u}$ is regarded as four
+  32-bit memories and $\mathbf{u}\textrm{perm(4, 3, 2, 1)}$ is
+  the result of reverse the order of 32-bit block in 128-bit.
+  The permutation can be done by one SIMD operation.
+
+\item 
+  $\mathbf{u} C := (\mathbf{u} \stackrel{64}{>>} 12) 
+  + (\mathbf{u} \& p_2)$
+
+  The notation $\mathbf{u} \stackrel{64}{>>} 12$ means that
+  $\mathbf{u}$ is regarded as two 64-bit memories like $A$ and
+  right-shifted 12 bit.  And the notation $\&$ means 128-bit
+  bitwise logical `\textbf{AND}' with a 128-bit constant vector $p_2$.
+  $p_2$ is a concatination of two 64-bit vectors and each of them has
+  12 bits of 0s in their most significant bits.
+
+\end{itemize}
+Here is a peice of code to show the recursion written in C language.
+\begin{verbatim}
+    u[0] = (w0[0] << p1) ^ wm[0] ^ (u0[1] >> 32) ^ (u0[1] << 32);
+    u[1] = (w0[1] << p1) ^ wm[1] ^ (u0[0] >> 32) ^ (u0[0] << 32);
+    w[0] = w0[0] ^ (u[0] >> 12) ^ (u[0] & p2[0]);
+    w[0] = w0[1] ^ (u[1] >> 12) ^ (u[1] & p2[1]);
+\end{verbatim}
+where every array is defined to have two unsigned 64-bit integers
+and \texttt{w0} is for $w_0$, and so on.
+
+Fig.~\ref{fig:dsfmt} shows the recursion.
+\begin{figure}
+\caption{Diagram of dSFMT \label{fig:dsfmt}}
+\begin{center}
+\includegraphics[width=\linewidth]{fig-dsfmt.eps}
+\end{center}
+\end{figure}
+
+\subsection{Parameter Search}
+\label{sec:search}
+
+To assure the least period of PRNG, we used Mersenne Prime. \cite{MT}
+Parameters $M$, $p_1$, $p_2$ are randomly selected to fit the
+condition that $0 < M < N - 1$
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 By trial and error, 
 we searched for a set of parameters of SFMT,
 with the period being a multiple of $2^{19937}-1$
@@ -349,12 +449,12 @@ The degree of recursion $N$ is $\lceil 19937/128 \rceil=156$,
 and the linear transformations $A,B,C,D$ are as follows.
 \begin{itemize}
 \item 
-$\bw A := (\bw \stackrel{128}{<<} 8) + \bw.$
+$\mathbf{w} A := (\mathbf{w} \stackrel{128}{<<} 8) + \mathbf{w}.$
 
-This notation means that $\bw$ is regarded
+This notation means that $\mathbf{w}$ is regarded
 as a single 128-bit integer, and 
-$\bw A$ is the result of the left-shift
-of $\bw$ by 8 bits. There is such a SIMD operation
+$\mathbf{w} A$ is the result of the left-shift
+of $\mathbf{w}$ by 8 bits. There is such a SIMD operation
 in both Pentium SSE2 and PowerPC AltiVec SIMD instruction 
 sets (SSE2 permits only a multiple of 8
 as the amount of shifting). 
@@ -362,9 +462,9 @@ Note that the notation $+$ means the exclusive-or
 in this article.
 
 \item
-$\bw B := (\bw \stackrel{32}{>>} 11) \& (\mbox{\tt BFFFFFF6 BFFAFFFF DDFECB7F DFFFFFEF}).$
+$\mathbf{w} B := (\mathbf{w} \stackrel{32}{>>} 11) \& (\mbox{\tt BFFFFFF6 BFFAFFFF DDFECB7F DFFFFFEF}).$
 
-This notation means that $\bw$ is considered to be 
+This notation means that $\mathbf{w}$ is considered to be 
 a quadruple of $32$-bit integers, and
 each $32$-bit integer is shifted to the right by 11 bits,
 (thus the eleven most significant bits are filled with 0s, 
@@ -381,19 +481,19 @@ This is because we prefer to have more 1's for a denser
 feedback.
 
 \item 
-$\bw C := (\bw \stackrel{128}{>>} 8).$
+$\mathbf{w} C := (\mathbf{w} \stackrel{128}{>>} 8).$
 
 %The notation 
-%$(\bw \stackrel{128}{>>} 8)$ 
+%$(\mathbf{w} \stackrel{128}{>>} 8)$ 
 This is the right shift of 
 an 128-bit integer
 by 8 bits, similar to the first.
 
 \item
-$\bw D := (\bw \stackrel{32}{<<} 18).$
+$\mathbf{w} D := (\mathbf{w} \stackrel{32}{<<} 18).$
 
 Similar to the second,
-$\bw$ is cut into four pieces of 32-bit integers,
+$\mathbf{w}$ is cut into four pieces of 32-bit integers,
 and each of these is shifted by 18 bits to the left.
 \end{itemize}
 All these instructions are available in 
@@ -408,12 +508,12 @@ of SFMT19937 generator with period a multiple of $2^{19937}-1$.
 \label{fig:SFMT-B2}
 \end{figure}
 \subsection{Endianness}
-Let $\bx[0..3]$ be an array 
+Let $\mathbf{x}[0..3]$ be an array 
 of 32-bit integers of size four.
 There are two natural ways to convert the 
 array to a 128-bit integer. One is to 
 concatenate in the order of
-$\bx[3]\bx[2]\bx[1]\bx[0]$, from MSBs to LSBs,
+$\mathbf{x}[3]\mathbf{x}[2]\mathbf{x}[1]\mathbf{x}[0]$, from MSBs to LSBs,
 which is called the little-endian system, 
 adopted in Pentium.
 The converse is the big-endian system
@@ -487,13 +587,13 @@ for a recursion with good DE admitting a fast implementation.
 %LFSR by the recursion (\ref{eq:recursion})
 An LFSR that obeys the recursion (\ref{eq:recursion})
 may be considered as an automaton, 
-with the state space $S=(\F2^{w})^{N}$
+with the state space $S=(\bbf2^{w})^{N}$
 and the state transition function 
 $f: S \to S$ given by
-$(\bw_0,\ldots,\bw_{N-1})
-\mapsto (\bw_1,\ldots,\bw_{N-1}, g(\bw_0,\ldots,\bw_{N-1}))$.  
+$(\mathbf{w}_0,\ldots,\mathbf{w}_{N-1})
+\mapsto (\mathbf{w}_1,\ldots,\mathbf{w}_{N-1}, g(\mathbf{w}_0,\ldots,\mathbf{w}_{N-1}))$.  
 As a $w$-bit integer generator, the output function is 
-$o: S \to \F2^{w},\  (\bw_0,\ldots,\bw_{N-1}) \mapsto \bw_0$.
+$o: S \to \bbf2^{w},\  (\mathbf{w}_0,\ldots,\mathbf{w}_{N-1}) \mapsto \mathbf{w}_0$.
 
 Let $\chi_f$ be the characteristic polynomial of $f:S \to S$.
 If $\chi_f$ is primitive, then the 
@@ -590,10 +690,10 @@ We checked the following.
 \begin{proposition}
 The period of SFMT19937 as a 128-bit integer generator is 
 a nonzero multiple of $2^{19937}-1$, if the 32 MSBs of 
-$\bw_0$ are set to 
+$\mathbf{w}_0$ are set to 
 the value {\tt 6d736d6d} in hexadecimal form.
 \end{proposition}
-This value of $\bw_0$ assures that $s_p\neq 0$,
+This value of $\mathbf{w}_0$ assures that $s_p\neq 0$,
 see \cite{PMT} for a way to find such a value.
 
 \begin{remark}
@@ -610,18 +710,18 @@ We briefly recall the definition of dimension of
 equidistribution (cf. \cite{CLT}\cite{COMBTAUS}). 
 \begin{definition}\label{def:DE}
 A periodic sequence with period $P$
-$$\chi:=\bx_0, \bx_1, \ldots, \bx_{P-1}, \bx_P=\bx_0, \ldots$$
+$$\chi:=\mathbf{x}_0, \mathbf{x}_1, \ldots, \mathbf{x}_{P-1}, \mathbf{x}_P=\mathbf{x}_0, \ldots$$
 of $v$-bit integers is said to be {\em $k$-dimensionally equidistributed}
 if any $kv$-bit pattern occurs equally often as a $k$-tuple
 $$
-(\bx_i, \bx_{i+1}, \ldots, \bx_{i+k-1})
+(\mathbf{x}_i, \mathbf{x}_{i+1}, \ldots, \mathbf{x}_{i+k-1})
 $$
 for a period $i=0,\ldots, P-1$.
 We allow an exception for 
 the all-zero pattern, which may occur once less often.
 (This last loosening of the condition is technically
 necessary, because the zero state does not occur
-in an $\F2$-linear generator). 
+in an $\bbf2$-linear generator). 
 The largest value of such $k$ is called the dimension 
 of equidistribution (DE).
 \end{definition}
@@ -631,7 +731,7 @@ We define the $k$-window set of the periodic sequence $\chi$
 as
 $$
 W_k(\chi):=
-\{(\bx_i, \bx_{i+1}, \ldots, \bx_{i+k-1}) | 
+\{(\mathbf{x}_i, \mathbf{x}_{i+1}, \ldots, \mathbf{x}_{i+k-1}) | 
 i =0,1,\ldots, P-1\},
 $$
 which is considered as a {\em multi-set}, namely, 
@@ -643,7 +743,7 @@ where the multiplicity of each element in $T$ is
 multiplied by $m$. Then, the above definition of
 equidistribution is equivalent to 
 $$
-W_k(\chi)=(m\cdot \F2^{vk}) \setminus \{{\mathbf 0}\},
+W_k(\chi)=(m\cdot \bbf2^{vk}) \setminus \{{\mathbf 0}\},
 $$
 where $m$ is the multiplicity of the occurrences,
 and the operator $\setminus$ means that the multiplicity
@@ -652,13 +752,13 @@ of ${\mathbf 0}$ is subtracted by one.
 \begin{definition}
 In the above setting, if there exist a positive integer $m$ 
 and a multi-subset
-$D \subset (m\cdot \F2^{vk})$
+$D \subset (m\cdot \bbf2^{vk})$
 such that
 $$
-W_k(\chi)=(m\cdot \F2^{vk}) \setminus D,
+W_k(\chi)=(m\cdot \bbf2^{vk}) \setminus D,
 $$
 we say that $\chi$ is $k$-dimensionally equidistributed 
-with defect ratio $\#(D)/\#(m \cdot \F2^{vk})$, 
+with defect ratio $\#(D)/\#(m \cdot \bbf2^{vk})$, 
 where the cardinality is counted with multiplicity. 
 \end{definition}
 Thus, in Definition~\ref{def:DE}, the defect ratio up to $1/(P+1)$
@@ -690,14 +790,14 @@ There is a difficulty in computing $k(v)$ when
 a 128-bit integer generator is used as a 32-bit 
 (or 64-bit) integer generator.
 SFMT generates a sequence
-$\bx_0, \bx_1, \bx_2, \ldots$ of 128-bit integers. 
+$\mathbf{x}_0, \mathbf{x}_1, \mathbf{x}_2, \ldots$ of 128-bit integers. 
 Then, they are converted to a sequence of 32-bit integers
-$\bx_0[0], \bx_0[1], \bx_0[2], \bx_0[3], \bx_1[0], \bx_1[1],\ldots$,
+$\mathbf{x}_0[0], \mathbf{x}_0[1], \mathbf{x}_0[2], \mathbf{x}_0[3], \mathbf{x}_1[0], \mathbf{x}_1[1],\ldots$,
 where 
-$\bx[0]$ is the 32 LSBs of $\bx$, 
-$\bx[1]$ is the 33rd--64th bits,
-$\bx[2]$ is the 65rd--96th bits,
-and $\bx[3]$ is the 32 MSBs. 
+$\mathbf{x}[0]$ is the 32 LSBs of $\mathbf{x}$, 
+$\mathbf{x}[1]$ is the 33rd--64th bits,
+$\mathbf{x}[2]$ is the 65rd--96th bits,
+and $\mathbf{x}[3]$ is the 32 MSBs. 
 %(This is called the 
 %little-endian system, see 
 %\cite{wiki:endian}).
@@ -719,7 +819,7 @@ f'(s,i):=
 \right.
 $$
 and the output function is 
-$$o': S' \to \F2^{32},\  ((\bw_0,\ldots,\bw_{N-1}),i) \mapsto \bw_0[i].$$
+$$o': S' \to \bbf2^{32},\  ((\mathbf{w}_0,\ldots,\mathbf{w}_{N-1}),i) \mapsto \mathbf{w}_0[i].$$
 
 We fix $1\leq v \leq w$, and let $o_k(s,i)$ be the $k$-tuple
 of the $v$ MSBs of the consecutive $k$-outputs from 
@@ -729,8 +829,8 @@ Assume that $f$ is bijective.
 Let $k'=k'(v)$ denote the maximum $k$ 
 such that 
 \begin{equation}\label{eq:chi-k-i}
-%o_k(-,i): V_p \subset S \to \F2^{kv}, \quad s \mapsto o_k(s,i)
-o_k(-,i): V_p \to \F2^{kv}, \quad s \mapsto o_k(s,i)
+%o_k(-,i): V_p \subset S \to \bbf2^{kv}, \quad s \mapsto o_k(s,i)
+o_k(-,i): V_p \to \bbf2^{kv}, \quad s \mapsto o_k(s,i)
 \end{equation}
 are surjective for all $i=0,1,2,3$. 
 %Take the initial state $s$ satisfying $s_p \neq 0$.
@@ -755,9 +855,9 @@ since $p>r$ and $2^p-1$ is a prime.
 The surjectivity of the linear mapping $o_{k'}(-,i)$
 implies that the image of 
 $$
-o_{k'}(-,i): V_p \times U \to \F2^{kv}
+o_{k'}(-,i): V_p \times U \to \bbf2^{kv}
 $$
-is $m\cdot \F2^{kv}$ as a multi-set for some $m$.
+is $m\cdot \bbf2^{kv}$ as a multi-set for some $m$.
 The defect comes from $0 \in V_p$, whose ratio
 in $V_p$ is $2^{-p}$. Then the first statement follows,
 since $W_{k'}(\chi)$ is the union of the images
@@ -765,7 +865,7 @@ $o_{k'}(-,i)((V_p-\{0\})\times U)$ for $i=0,1,2,3$.
 
 For the latter half, we define
 $L_i$ as the multiset of the image of 
-$o_{k'+1}(-,i): V_p \to \F2^{(k'+1)v}$.
+$o_{k'+1}(-,i): V_p \to \bbf2^{(k'+1)v}$.
 Because of $s_r=0$, we have $U=\{0\}$, and
 the union of $(L_i-\{0\})$ $(i=0,1,2,3)$ as a multi-set is 
 $W_{k'+1}(\chi)$. If the sequence is $(k'+1)$-dimensionally
@@ -1160,7 +1260,7 @@ as seen in Table~\ref{tab:speed}.
 Since $\Delta=0$, WELL has a better quality than MT or SFMT
 in a theoretical sense. 
 However, one may argue whether this difference is 
-observable or not. In the case of an $\F2$-linear generator,
+observable or not. In the case of an $\bbf2$-linear generator,
 the dimension of equidistribution $k(v)$ of $v$-bit accuracy
 means that
 there is no constant linear relation among the 
@@ -1173,7 +1273,7 @@ by extracting the $v$ MSBs from each.
 However, the existence of a linear relation does not necessarily
 mean the existence of some observable bias.
 According to \cite{TESTWEIGHT}, it requires $10^{28}$
-samples to detect an $\F2$-linear relation with 
+samples to detect an $\bbf2$-linear relation with 
 15 (or more) terms among 521 bits, by weight distribution test. 
 If the number of 
 bits is increased, 
@@ -1185,7 +1285,7 @@ observable.
 Thus, SFMT focuses more on the speed, for applications
 that require fast generations. 
 (Note: the referee pointed out that statistical
-tests based on the rank of $\F2$-matrix is sensitive to 
+tests based on the rank of $\bbf2$-matrix is sensitive to 
 the linear relations \cite{TESTU01}, 
 so the above observation is not necessarily true.)
 
