@@ -243,7 +243,7 @@ Our new generator is based on Linear Feedback Shift Register (LFSR)
 like MT. Moreover it has additional memory called `lung'.  LFSR with
 additional memory is call Pulmonary LFSR.
 
-\subsection{Pulmonary LFSR}
+\subsection{LFSR and Pulmonary LFSR}
 \label{sec:pulmonary}
 
 % \begin{definition}
@@ -336,6 +336,20 @@ register of CPU.
 The idea of Pulmonary LFSR was appeared in the talk of Hiroshi Haramoto
 in MCM 2005, and used in WELL PRNG \cite{well} in 2006.
 
+In the case of dSFMT, we need an array which have fixed value 0x3ff in
+MSBs of its elements.  We can exclude these fixed bits from our state
+space, but we have to consider the influence of the fixed bits to the
+state space. In this case, the state transition function is changed
+from $\bbf2$-linear to $\bbf2$-affine.  Here, the affine means $x
+\mapsto Ax+c$ where $x$ is a state vector, $A$ is an $\mathbb{F}_2$
+matrix, and $c$ is a constant vector.
+
+Combinations or direct products of affine functions become affine
+again, hence the difference from those of linear functions are only
+constants. This means the equi-distribution property of PRNG which has
+affine state transition function $Ax+c$ is the same as that of the
+PRNG which has linear state transition function $Ax.$
+
 % figure~\ref{fig:plfsr} shows LFSR and Pulmonary LFSR.
 % \begin{center}
 %   \begin{figure}
@@ -422,8 +436,9 @@ Here is a peice of code to show the recursion written in C language.
     w[0] = w0[0] ^ (u[0] >> 12) ^ (u[0] & p2[0]);
     w[0] = w0[1] ^ (u[1] >> 12) ^ (u[1] & p2[1]);
 \end{verbatim}
-where every array is defined to have two unsigned 64-bit integers
-and \texttt{w0} is for $w_0$, and so on.
+where \texttt{\^} and \texttt{\&} means bitwise exclusive `OR' and
+`AND' respectively, every array is defined to have two unsigned 64-bit
+integers and \texttt{w0} is for $w_0$, and so on.
 
 Fig.~\ref{fig:dsfmt} shows the recursion.
 \begin{figure}
@@ -436,155 +451,47 @@ Fig.~\ref{fig:dsfmt} shows the recursion.
 \subsection{Parameter Search}
 \label{sec:search}
 
-To assure the least period of PRNG, we used Mersenne Prime. \cite{MT}
+To assure the least period of PRNG, we used Mersenne Prime\cite{MT}.
+$N$, the size of 128-bit array is $\lceil MEXP - 128 / 104 \rceil + 1$.
 Parameters $M$, $p_1$, $p_2$ are randomly selected to fit the
-condition that $0 < M < N - 1$
+condition that $0 < M < N - 2$.
+By trial and error, 
+we searched for a set of parameters of dSFMT,
+with the period being a multiple of Mersenne Prime
+and having good equidistribution properties.
+Taable~\ref{tab:params} shows some parameter sets.
+
+\begin{table}
+  \begin{center}
+    \caption{Parameter sets \label{tab:params}}
+    \begin{tabular}{rrrrr} \hline
+      Least Period & $N$ & $M$ & SL1 & MASK(LOW) & MASK(HIGH) \\ \hline \hline
+      $2^521-1$ & 5 & 3 & 25 & \texttt{0x000fbfefff77efff} 
+      & \texttt{0x000ffeebfbdfbfdf} \\
+      $2^1279-1$ & 13 & 9 & 19 & \texttt{0x000efff7ffddffee} 
+      & \texttt{0x000fbffffff77fff} \\
+      $2^2203-1$ & 21 & 7 & 19 & \texttt{0x000fdffff5edbfff} 
+      & \texttt{0x000f77fffffffbfe} \\
+      $2^4253-1$ & 41 & 19 & 19 & \texttt{0x0007b7fffef5feff} 
+      & \texttt{0x000ffdffeffefbfc} \\
+      $2^11213-1$ & 108 & 37 & 19 & \texttt{0x000ffffffdf7fffd} 
+      & \texttt{0x000dfffffff6bfff} \\
+      $2^19937-1$ & 192 & 117 & 19 & \texttt{0x000ffafffffffb3f} 
+      & \texttt{0x000ffdfffc90fffd} \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-By trial and error, 
-we searched for a set of parameters of SFMT,
-with the period being a multiple of $2^{19937}-1$
-and having good equidistribution properties.
-The degree of recursion $N$ is $\lceil 19937/128 \rceil=156$, 
-and the linear transformations $A,B,C,D$ are as follows.
-\begin{itemize}
-\item 
-$\mathbf{w} A := (\mathbf{w} \stackrel{128}{<<} 8) + \mathbf{w}.$
-
-This notation means that $\mathbf{w}$ is regarded
-as a single 128-bit integer, and 
-$\mathbf{w} A$ is the result of the left-shift
-of $\mathbf{w}$ by 8 bits. There is such a SIMD operation
-in both Pentium SSE2 and PowerPC AltiVec SIMD instruction 
-sets (SSE2 permits only a multiple of 8
-as the amount of shifting). 
-Note that the notation $+$ means the exclusive-or
-in this article.
-
-\item
-$\mathbf{w} B := (\mathbf{w} \stackrel{32}{>>} 11) \& (\mbox{\tt BFFFFFF6 BFFAFFFF DDFECB7F DFFFFFEF}).$
-
-This notation means that $\mathbf{w}$ is considered to be 
-a quadruple of $32$-bit integers, and
-each $32$-bit integer is shifted to the right by 11 bits,
-(thus the eleven most significant bits are filled with 0s, 
-for each 32-bit integer).
-The C-like notation $\&$ means the bitwise AND
-with a constant 128-bit integer,
-denoted in the hexadecimal form.
-
-In the search,
-this constant is generated as follows. 
-Each bit in the 128-bit integer is independently 
-randomly chosen, with the probability to choose 1 being $7/8$.
-This is because we prefer to have more 1's for a denser 
-feedback.
-
-\item 
-$\mathbf{w} C := (\mathbf{w} \stackrel{128}{>>} 8).$
-
-%The notation 
-%$(\mathbf{w} \stackrel{128}{>>} 8)$ 
-This is the right shift of 
-an 128-bit integer
-by 8 bits, similar to the first.
-
-\item
-$\mathbf{w} D := (\mathbf{w} \stackrel{32}{<<} 18).$
-
-Similar to the second,
-$\mathbf{w}$ is cut into four pieces of 32-bit integers,
-and each of these is shifted by 18 bits to the left.
-\end{itemize}
-All these instructions are available in 
-both Intel Pentium's SSE2 and PowerPC's AltiVec SIMD instruction sets.
-Figure~\ref{fig:SFMT-B2} shows a concrete description
-of SFMT19937 generator with period a multiple of $2^{19937}-1$.
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.5\linewidth]{sfmt-b2.eps}
-\end{center}
-\caption{A circuit-like description of SFMT19937.}
-\label{fig:SFMT-B2}
-\end{figure}
-\subsection{Endianness}
-Let $\mathbf{x}[0..3]$ be an array 
-of 32-bit integers of size four.
-There are two natural ways to convert the 
-array to a 128-bit integer. One is to 
-concatenate in the order of
-$\mathbf{x}[3]\mathbf{x}[2]\mathbf{x}[1]\mathbf{x}[0]$, from MSBs to LSBs,
-which is called the little-endian system, 
-adopted in Pentium.
-The converse is the big-endian system
-adopted in PowerPC,
-see \cite{wiki:endian}.
-
-The descriptions in this article is based on the former.
-To assure the portability for both endian systems, 
-we implemented two codes: one is for little-endian 
-system (SSE2 of Pentium) and the other is for
-big-endian system (AltiVec of PowerPC), to 
-assure the exactly same outputs 
-as 32-bit integer generators.
-In the latter code, the recursion (\ref{eq:rec-SFMT}) is considered as 
-a recursion on quadruples of 32-bit integers, rather than
-128-bit integers, so that the content of the state array 
-coincides both for little and big endian systems,
-as an array of 32-bit integers (not as 128-bit integers).
-Thus, shift-operations on 128-bit integers in the little-endian
-system is different from that in the big-endian system.
-PowerPC supports arbitrary permutations of 
-16 blocks of 8-bit integers in a 128-bit register,
-which can emulate the shift in (\ref{eq:rec-SFMT}).
-
-\subsection{Block-generation}\label{sec:block}
-In the block-generation scheme, 
-the user of the PRNG specifies an array
-of $w$-bit integers of the length $L$, 
-where $w=32$, 64 or 128 and $L$ is specified
-by the user.
-In the case of SFMT19937,
-$wL$ should be a multiple of $128$
-and no less than $N \times 128$,
-since the array needs to accommodate the state space
-(note that $N=156$).
-By calling the block generation function 
-with the pointer to this array, $w$, and $L$, 
-the routine fills up the array with
-pseudorandom integers, as follows. SFMT19937 keeps the state
-space $S$ in an internal array of 128-bit integers of length 156.
-We concatenate this state array with the user-specified array, 
-using the indexing technique.
-Then, the routine generates 128-bit integers in the user-specified 
-array by recursion (\ref{eq:rec-SFMT}), as described
-in Figure~\ref{fig:B1}, until it fills up the array.
-The last 156 128-bit integers
-are copied back to the internal array
-of SFMT19937. 
-This makes the generation much faster than sequential generation
-(i.e., one generation per one call) as shown in Table~\ref{tab:speed}.
-\begin{figure}
-\begin{center}
-%\includegraphics[width=0.7\linewidth,height=0.36\textheight,
-\includegraphics[height=0.3\textheight,
-keepaspectratio]{fill_array.eps}
-\end{center}
-\caption{Block-generation scheme}
-\label{fig:B1}
-\end{figure}
-
 \section{How to select the recursion and parameters.}
 We wrote a code to compute the period and
 the dimensions of equidistribution (DE,
 see \S\ref{sec:DE}). 
-%Then, we search
 Then, we searched
 for a recursion with good DE admitting a fast implementation.  
 
 \subsection{Computation of the Period}\label{sec:period}
-%\subsection{Reducible transition function}
-%LFSR by the recursion (\ref{eq:recursion})
 An LFSR that obeys the recursion (\ref{eq:recursion})
 may be considered as an automaton, 
 with the state space $S=(\bbf2^{w})^{N}$
