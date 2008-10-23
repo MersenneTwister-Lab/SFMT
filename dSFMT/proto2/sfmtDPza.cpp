@@ -50,7 +50,8 @@ unsigned int DSFMT::get_rnd_mexp(void) {
 
 void DSFMT::setup_param(uint32_t array[], int *index) {
     pos1 = array[(*index)++] % (N - 1) + 1;
-    sl1 = array[(*index)++] % (51 - 13) + 13;
+    //sl1 = array[(*index)++] % (51 - 13) + 13;
+    sl1 = (array[(*index)++] % 8) * 2 + 13;
     msk1 = array[(*index)++];
     msk1 |= array[(*index)++];
     msk1 |= array[(*index)++];
@@ -153,6 +154,22 @@ DSFMT& DSFMT::operator=(const DSFMT& src) {
     }
     idx = src.idx;
     return *this;
+}
+
+bool DSFMT::operator==(const DSFMT& src) {
+    int i;
+
+    if (status[N][0] != src.status[N][0] ||
+	status[N][1] != src.status[N][1]) {
+	return false;
+    }
+    for (i = 0; i < N; i++) {
+	if (status[(idx + i) % N][0] != src.status[(src.idx + i) % N][0] ||
+	    status[(idx + i) % N][1] != src.status[(src.idx + i) % N][1]) {
+	    return false;
+	}
+    }
+    return true;
 }
 
 void DSFMT::d_p() {

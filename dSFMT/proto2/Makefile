@@ -115,6 +115,9 @@ chi-zero-19937: sfmtDPza.cpp chi-zero.o
 get-charactorDPza-521: sfmtDPza.cpp get-charactor.cpp
 	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
 
+get2-charactorDPza-521: sfmtDPza.cpp get2-charactor.cpp
+	${CPP} -o $@ sfmtDPza.cpp get2-charactor.cpp ${LINKOPT}
+
 get-charactorDPza-1279: sfmtDPza.cpp get-charactor.cpp
 	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
 

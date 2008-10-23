@@ -73,6 +73,7 @@ public:
     DSFMT(const DSFMT& src);
     ~DSFMT();
     DSFMT& operator=(const DSFMT &src);
+    bool operator==(const DSFMT &src);
 
 private:
     void initial_mask(uint64_t high);

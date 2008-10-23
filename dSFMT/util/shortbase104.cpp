@@ -412,9 +412,13 @@ int get_shortest_base(const DSFMT& sfmt) {
 	    cout << "dependent:";
 #endif
 	    for (i = 0; i <= bit_len; i++) {
-		cout << dependents[i] ;
+		if (dependents[i]) {
+		    printf("1");
+		} else {
+		    printf("0");
+		}
 	    }
-	    cout << endl;
+	    printf("\n");
 	    for (i = 0; i <= bit_len; i++) {
 		cout << next[i] << endl;
 	    }
