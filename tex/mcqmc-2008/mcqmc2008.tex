@@ -230,11 +230,27 @@ format because it is always 1.
     \label{tab:ieee}
   \end{center}
 \end{table}
-if sign bit is 0 and exponent part (11 bit) is 0x3ff,
-then the format represent a normalized number in the range [1, 2).
 
-Because of the format of normalized number, We decided to design a
-PRNG whose output is uniformly distributed in the range [1, 2).
+If sign bit is 0 and exponent part (11 bit) is 0x3ff,
+%then the format represent a normalized number in the range [1, 2).
+then the number $r$ represented by the format is in the range $1 \le r
+< 2$. Hence, We decided to design a PRNG whose output is uniformly
+distributed in the range [1, 2).
+
+Most of application program needs floating point numbers $r$ in the
+range $0 \le r < 1$, then our generator can also generate floating
+point numbers in the range $0 \le r < 1$ and $0 < r \le 1$. The
+conversion is just a simple subtraction between floating points, hence
+it is fast.  Additionally, our generator supports to generate numbers
+in the range $0 < r < 1$.  In this case, we need to set LSB of
+fraction part, hence this is little bit slower.
+
+In some cases, for example if you need floating points in the range $0
+\le r < 2\pi$ for trigonometric functions, you can use the number in
+the range $1 \le r < 2$ instead of the number in the range $0 \le r <
+1$, because they indicates same value for trigonometric functions
+after multiplying $2\pi$.
+
 \begin{note}
   A normalized number has additional 1 bit and the exponent part is
   adjusted so that the integer part only has this additional 1 bit.
@@ -272,7 +288,7 @@ simultaneous substitutions
 \begin{multline*}
     \texttt{W[0]} \leftarrow \texttt{W[1]},\ 
     \texttt{W[1]} \leftarrow \texttt{W[2]}, \ldots,
-    \texttt{W[N-2]} \leftarrow \texttt{W[N-1]} \\  
+    \texttt{W[N-2]} \leftarrow \texttt{W[N-1]}, \\  
     \texttt{[N-1]} \leftarrow
     g(\texttt{W[0]},\ldots,\texttt{W[N-1]}). 
   \end{multline*}
@@ -580,7 +596,7 @@ denoted by $\Delta$.
 
 $k(v)$ of affine state transition function which have fix point is
 almost same that of linear transition function, except that the
-exceptional tuple which occurs one less offen is not all zero tuple.
+exceptional tuple which occurs one less often is not all zero tuple.
 
 There is a difficulty in computing $k(v)$ when 
 a 128-bit vector generator is used as a 32-bit 
@@ -736,7 +752,7 @@ a weighted norm,
 %{\em weighted lattice method} to compute $k'(v)$,
 generalizing \cite{CLT}. This will be written 
 somewhere else,
-because of lack of space.
+because of lack of space. HARASE
 %rather complicated mathematics, we omit it here
 %(we plan another article for this). 
 
@@ -847,7 +863,7 @@ Note that (\ref{eq:dsfmt}) does not have neither constants of affine
 transformation, nor \texttt{0x3ff} of IEEE 754 exponent part.  Still,
 dSFMT has affine transformation function and generates double
 precision floating point number in $[1, 2)$ when initial value $w_0,
-..., w_{N-2}$ have \texttt{0x3ff} in their exponet part. This trick
+..., w_{N-2}$ have \texttt{0x3ff} in their exponent part. This trick
 contributed the speed up of dSFMT ver. 2 because extra operations for
 setting constants are omitted.
 
@@ -922,67 +938,61 @@ certification vector(PCV) corresponds with some Mersenne exponents.
   \end{center}
 \end{table}
 
+% Most of application program needs floating point numbers $r$ in the range
+% $0 \le r < 1$, then dSFMT ver.2 can also generate floating point numbers in
+% the range $0 \le r < 1$ and $0 < r \le 1$. The conversion is just a simple
+% subtraction between floating points, hence it is fast.
+% Additionally, dSFMT supports to generate numbers in the range $0 < r < 1$.
+% In this case, we need to set LSB of fraction part, hence this is little
+% bit slower.
+
+% In some cases, for example if you need floating points in the range $0
+% \le r < 2\pi$ for trigonometric functions, you can use the number in
+% the range $1 \le r < 2$ instead of the number in the range $0 \le r <
+% 1$, because they indecates same value for trigonometric functions
+% after multiplying $2\pi$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Comparison of speed}\label{sec:comp-speed}
-We compared two algorithms: MT19937, SFMT19937, dSFMT ver. 1 19937
-and dSFMT ver. 2 19937.
-with implementations using and without using SIMD instructions.
+We compared two algorithms: MT19937, 64-bit MT19937, SFMT19937, dSFMT
+ver.1 19937 and dSFMT ver.2 19937 with implementations using and
+without using SIMD instructions. For MT and SFMT, `mask' means the
+conversion by bit operation described in \S\ref{sec:floating}, and
+`$\times$ const' means the conversion by multiplying $2^{-64}$. Note
+that original MT and SFMT don't use `mask' conversion.
 
-We measured the speeds for five different CPUs:
-Pentium M 1.4GHz, Pentium IV 3GHz, 
-AMD Athlon 64 3800+, and PowerPC G4 1.33GHz.  
-In returning the random values, we used two different methods.
-One is sequential generation, where one 32-bit random 
-integer is returned for one call. 
-The other is block generation, where an array
-of random integers is generated for one call 
-(cf. \cite{knuth:bible}). 
-For detail, see \S\ref{sec:block} below. 
+We measured the speeds for five different CPUs: Pentium M 1.4GHz,
+Pentium IV 3GHz, core 2 duo 1.83GHz (32-bit mode, use 1 core), AMD
+Athlon 64 3800+ (64-bit mode), and PowerPC G4 1.33GHz.  In returning
+the random values, we used two different methods.  One is sequential
+generation, where one double floating point random numbers is returned
+for one call.  The other is block generation, where an array of random
+double floating point numbers is generated for one call.  We used
+Intel C Compiler for intel CPUs (Pentium M, Pentium IV, core 2 duo)
+and GNU C Compiler for others (AMD Athlon, Power PC G4).
 
-We measured the consumed CPU time in second, 
-for $10^8$ generations of 32-bit integers. More precisely,
-in case of the block generation, we generate $10^5$
-of 32-bit random integers by one call, and this is iterated
-for $10^3$ times. 
-For sequential generation, the same $10^8$
- 32-bit integers are generated, one per call.
-%To avoid the function call, the code uses 
-%an inline declaration. 
-We used the inline declaration
-{\tt inline} to avoid the function call,
-and unsigned 32-bit, 64-bit integer types 
-{\tt uint32\_t}, {\tt uint64\_t} defined in 
-INTERNATIONAL STANDARD ISO/IEC 9899 : 1999(E) 
-Programming Language-C, Second Edition
-(which we shall refer to as C99 in the rest of this article).
-Implementations without SIMD are written in C99,
-whereas those with SIMD use
-some standard SIMD extension of C99 supported by 
-the compilers icl (Intel C compiler) and gcc.
+We measured the consumed CPU time in second, for $10^8$ generations of
+floating point numbers in the range $[0, 1)$ to compare with other
+generators.  More precisely, in case of the block generation, we
+generate $10^5$ of floating point numbers by one call, and this is
+iterated for $10^3$ times.  For sequential generation, the same $10^8$
+floating point numbers integers are generated, one per call.  We used
+the inline declaration {\tt inline} to avoid the function call.
+Implementations without SIMD are written in INTERNATIONAL STANDARD
+ISO/IEC 9899 : 1999(E) Programming Language-C, Second Edition (which
+we shall refer to as C99 in the rest of this article), whereas those
+with SIMD use some standard SIMD extension of C99 supported by the
+compilers Intel C compiler and GNU C Compiler.
 
-Table~\ref{tab:speed} summarises the speed comparisons.
- The first four lines list the CPU time
-(in seconds) needed to generate $10^8$ 
-32-bit integers, for a Pentium-M CPU with the Intel C/C++
-compiler. The first line lists the seconds for the
-block-generation scheme. The second line shows the 
-ratio of CPU time to that of 
-SFMT(SIMD). Thus, SFMT coded in SIMD is 2.10 times
-faster than MT coded in SIMD, and 3.77 times faster
-than MT without SIMD. The third line lists the seconds
-for the sequential generation scheme. The fourth line
-lists the ratio, with the basis taken
-at SFMT(SIMD) block-generation (not sequential). 
-Thus, the block-generation of SFMT(SIMD) is 2.00 times
-faster than the sequential-generation of SFMT(SIMD).
+Table~\ref{tab:speed-simd} summarises the speed comparisons using SIMD
+and Table|\ref{tab:speed-c} shows the speed comparisons with out using
+SIMD.  64-bit MT is not listed in Table~\ref{tab:speed-simd}, because
+we don't have SIMD version.  The first two lines list the CPU time (in
+seconds) needed to generate $10^8$ floating point numbers, for a
+Pentium-M CPU.  The first line lists the seconds for the
+block-generation scheme.  The second line lists the seconds for the
+sequential generation scheme.
 
-Roughly speaking, in the block generation, 
-SFMT(SIMD) is twice as fast as MT(SIMD),
-and four times faster than MT without using SIMD.
-Even in the sequential generation case,
-SFMT(SIMD) is still considerably faster than MT(SIMD).
-
-\begin{table}[h]
+\begin{table}
   \begin{center}
     \begin{tabular}{|ll|r|r|r|r|r|} \hline
       && dSFMTv2 & dSFMTv1 & MT & SFMT & SFMT \\
@@ -999,10 +1009,49 @@ SFMT(SIMD) is still considerably faster than MT(SIMD).
       1.33GHz & seq & 1.212 & 1.401 & 5.624 & 2.994 & 7.712 \\ \hline
     \end{tabular}
     \caption{The CPU time (sec.) for $10^8$ generations of double precision
-      floating point numbers,
-      for four different CPUs and two different return-value methods. 
-      The ratio to the SFMT coded in SIMD is listed, too.}
-    \label{tab:speed}
+      floating point numbers [0, 1) using SIMD feature.}
+    \label{tab:speed-simd}
+  \end{center}
+\end{table}
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{|ll|r|r|r|r|r|r|} \hline
+      &  & dSFMT2 & dSFMT1 & MT 64 & MT & SFMT & SFMT \\
+      &  &(new)&(old)& mask & mask & mask & $\times$ const \\ \hline\hline
+      Pentium M & blk & 1.345 & 2.023 & 2.031 & 3.002 & 2.026 & 3.355 \\
+      1.4 Ghz & seq & 2.004 & 2.386 & 2.579 & 3.308 & 2.835 & 3.910 \\ \hline
+      Pentium 4 & blk & 1.079 & 1.128 & 1.432 & 2.515 & 1.929 & 3.762 \\
+      3 Ghz & seq & 1.431 & 1.673 & 3.137 & 3.534 & 3.485 & 4.331 \\ \hline
+      core 2 duo & blk & 0.899 & 1.382 & 1.359 & 2.404 & 1.883 & 1.418 \\
+      1.83GHz & seq & 0.777 & 1.368 & 1.794 & 1.997 & 1.925 & 2.716 \\ \hline
+      Athlon 64 & blk & 0.334 & 0.765 & 0.820 & 1.896 & 1.157 & 1.677 \\
+      2.4GHz & seq & 0.567 & 0.970 & 1.046 & 2.134 & 1.129 & 2.023 \\ \hline
+      PowerPC G4 & blk & 1.834 & 3.567 & 2.297 & 4.326 & 4.521 & 12.685 \\
+      1.33GHz & seq & 1.960 & 2.865 & 4.090 & 5.489 & 5.464 & 9.110 \\ \hline
+    \end{tabular}
+    \caption{The CPU time (sec.) for $10^8$ generations of double precision
+      floating point numbers [0, 1) using standard C.}
+    \label{tab:speed-c}
+  \end{center}
+\end{table}
+
+For reference, Table~\ref{tab:speed-other} shows the speed of other
+generators.
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{|l|r|r|r|} \hline
+      & WELL1024 & WELL19937 & XORSHIFT \\ \hline
+      Pentium M & & & \\
+      Pentium 4 & & & \\
+      core 2 duo & & & \\
+      Athlon 64 & & & \\
+      PowerPC G4 & & & \\ \hline
+    \end{tabular}
+    \caption{The CPU time (sec.) for $10^8$ generations of double precision
+      floating point numbers [0, 1) using standard C.}
+    \label{tab:speed-other}
   \end{center}
 \end{table}
 
@@ -1016,8 +1065,8 @@ Table~\ref{tab:dd} lists the dimension defects $d(v)$ of dSFMT, for
 Mersenne exponent mexp $= 521, 1279, 2203, 4253, 11213, 19937$ and
 $v=1,2,\ldots, 52$.  $d(v)$ are small for $1 \le v \le 52$, larger mexp
 has larger $d(v)$ for later half of $v$s, still mexp 19937 has total
-dimension defect $\Delta$ is $2608$, which is smaller than $4188$ of
-SFMT19937 and $6750$ of MT19937.
+dimension defect $\Delta$ $2608$, which is smaller than $4188$ of
+SFMT19937's 32-bit $\Delta$ and $6750$ of MT19937's 32-bit $\Delta$.
 
 \begin{table}
   \begin{center}
@@ -1067,16 +1116,26 @@ SFMT19937 and $6750$ of MT19937.
 
 \begin{center}
   The number of non zero term in $\chi_f(t)$
-  \begin{tabular}{crrrrrr} \hline
+  \begin{tabular}{c|rrrrrr} \hline
     MEXP & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\
     weight & 273 & 673 & 1076 & 2233 & 5684 & 9756 \\ \hline
   \end{tabular}
 \end{center}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Concluding remarks}
-We proposed the double precision floating point SFMT (dSFMT)
-pseudorandom number generator, which is a very fast generator with
-satisfactorily high-dimensional equidistribution property.
+
+We proposed PRNG specialized in generating double precision
+floating point numbers. Using \bbf2-affine state transition
+function our generator makes IEEE 754 format vector in computer
+memory. And we discuss about the theoretical base of this
+generator.
+
+By trial and error, and considering architecture of modern CPUs, we
+implement double precision floating point SFMT (dSFMT) which have
+Mersenne Prime $2^{521}-1$,$2^{1279}-1$,$2^{2203}-1$,$2^{4253}-1$,
+$2^{11213}-1$,$2^{19937}-1$ as their least period.
+Their generation is very fast compared with existing generators,
+and they have good equidistribution property.
 
 % %\subsection{Trade-off between speed and quality}
 % It is difficult to measure the generation speed of a PRNG in a fair way,
@@ -1148,107 +1207,10 @@ No.18005.
 \bibliography{sfmt-kanren}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{How to select the recursion and parameters.}
-We wrote a code to compute the period and
-the dimensions of equidistribution (DE,
-see \S\ref{sec:DE}). 
-Then, we searched
-for a recursion with good DE admitting a fast implementation.  
-
-\section{Recovery from 0-excess states}
-%LFSR with a sparse feedback function $g$ has
-%the following phenomenon: 
-For an LFSR with a sparse feedback function $g$,
-we observe the following phenomenon: 
-if the bits in the state space 
-contain too many 0's and few 1's (called a 0-excess state), then
-%this tendency continues for considerable generations,
-this tendency continues for many steps,
-since only a small part is changed in the state array
-%at one generation, and the change is not well-reflected to 
-%the next generation because of the sparseness.
-at one step, and the change is not well-reflected to 
-the next step because of the sparseness.
-
-We measure the recovery time from 0-excess states, 
-by the method introduced in \cite{WELL}, as follows.
-\begin{enumerate}
-\item Choose an initial state with only one bit being 1.
-\item Generate $k$ pseudorandom numbers, and discard them.
-\item Compute the ratio of 1's among the 
-next 32000 bits of outputs
-(i.e., in the next 1000 pseudorandom 32-bit integers).
-\item Let $\gamma_k$ be the average of the ratio over
-all such initial states.
-\end{enumerate}
-We draw graphs of these ratio $\gamma_k$ $(1 \leq k \leq 20000)$
-in Figure~\ref{fig:zero-recovery}
-for the following generators: (1) WELL19937c, 
-(2) PMT19937 %\cite{PMT},
- (3) SFMT19937, and (4) MT19937. 
-%For (1), (2), (3) and (3), the chosen 
-%initial states are those with only one bit being 1
-%and all the rest 0. For (2*), the 32 MSBs in the first 128-bit
-%integer in the state array is fixed to the value 
-%{\tt 6d736d6d} in the hexadecimal form, and the initial states
-%are those with only one bit being 1, except these 32 bits.
-%Setting these 32 bits to this value assures that SFMT19937
-%has the period being a nonzero multiple of $2^{19937}-1$,
-%see \S\ref{sec:period}.
-\begin{figure}
-\begin{center}
-\vskip -3mm
-\includegraphics[width=0.7\linewidth]{sfmt-zero.eps}
-\end{center}
-\caption{$\gamma_k \ (k=0,\ldots,20000)$:
-Starting from extreme 0-excess states,
-discard the first $k$ outputs and then measure
-the ratio $\gamma_k$ of 1's in the next 1000 outputs. 
-In the order of the recovery speed: 
-(1) WELL19937c, 
-(2) PMT19937, (3) SFMT19937, and (3) MT19937.
-}\label{fig:zero-recovery}
-\end{figure}
-Because of its dense feedback, WELL19937c shows
-%the fastest recovery among the compared. 
-the fastest recovery among the compared generators. 
-SFMT is better than MT, since its recursion refers to 
-%the previously-computed words (i.e., {\tt W[N-1]} and {\tt W[N-2]}) 
-two most recently computed words ({\tt W[N-1]} and {\tt W[N-2]}) 
-that acquire new 1s, while
-MT refers only to the words generated long before 
-({\tt W[M]} and {\tt W[0]}). PMT19937 shows faster recovery 
-than SFMT19937, since PMT19937 has two feedback loops.
-%(hence the name of Pulmonary Mersenne Twister).
-The speed of recovery from 0-excess states 
-is a trade-off 
-with the speed of generation. 
-Such 0-excess states will not happen practically, 
-since the probability 
-that 19937 random bits have less than $19937\times 0.4$ of 1's 
-is about $5.7\times 10^{-177}$.
-The only plausible case would be that
-a poor initialization scheme gives a 0-excess initial state
-(or gives two initial states whose Hamming distance is too small). 
-In a typical simulation, the number of 
-initializations is far smaller than the number of generations,
-therefore we may spend more CPU time in the initialization
-than the generation. Under the assumption that
-a good initialization scheme is provided, the slower
-recovery of SFMT compared to WELL would perhaps not be
-a great issue.
-% Once we avoid problematic initial states
-%by a well-designed initialization, then the recovery 
-%speed would not matter.%, in a practical sense. 
-%We think the slower recovery of SFMT compared to WELL 
-%would not be a great issue, under the assumption that
-%a good initialization scheme is provided. 
-
-\end{document}
-
 % LocalWords:  MCQMC denormalized xxxx NaN xxxxx Hiroshi Haramoto MCM nw RTM tI
 % LocalWords:  wN th wr wo PCV kv vk sl rrrrrrr MEXP fbfefff efff ffeebfbdfbfdf
 % LocalWords:  ffddffee fbffffff fff fdffff edbfff fffffffbfe fffef feff fffd
 % LocalWords:  ffdffeffefbfc ffffffdf dfffffff bfff ffafffffffb ffdfffc rr xcfb
 % LocalWords:  xccaa xc ae adb xb da aeb xde xf ef fd cb ba xd caae uint IEC le
-% LocalWords:  icl dSFMTv const blk Ghz mexp rrrrrr sfmt kanren
+% LocalWords:  icl dSFMTv const blk Ghz mexp rrrrrr sfmt kanren equi LSB intel
+% LocalWords:  crrrrrr
