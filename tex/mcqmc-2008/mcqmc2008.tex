@@ -103,7 +103,8 @@ Dept.\ of Math.\ Hiroshima University
   The generator makes pseudorandom 64-bit patterns with the most
   significant 12-bit is specified, so that they represent floating
   point numbers in the range [1,2) obeying the IEEE 754 format in
-  memory, using an $\mathbb{F}_2$ affine transition.
+  memory. We use an $\mathbb{F}_2$ affine transition function in the
+  generation.
 
   Here, the affine means $x \mapsto Ax+c$ where
   $x$ is a state vector, $A$ is an $\mathbb{F}_2$
@@ -117,7 +118,7 @@ Dept.\ of Math.\ Hiroshima University
   Using SIMD instruction set, we designed dSFMT (double precision floating
   point SFMT), which generates two floating point numbers at one recursion.
   The generation speed is almost same or faster than Mersenne Twister's
-  single precision floating point number generation.
+  double precision floating point number generation from 32-bit integer.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -455,12 +456,12 @@ so that the inner product becomes one.
 
 For our new generator dSFMT, the state transition function is:
 \[
-  f': S \to S ; \quad s \mapsto f(s) + c,
+  f_a: S \to S ; \quad s \mapsto f(s) + c,
 \]
 where $c \in S$ is a constant vector.  Applying above decomposition,
 we can get:
 \begin{eqnarray*}
-  f'(s) &=& f'_p(s) + f'_r(s) \\
+  f_a(s) &=& f_{ap}(s) + f_{ar}(s) \\
   &=&f_p(s) + c_p + f_r(s) + c_r,
 \end{eqnarray*}
 where $c_p \in V_p$ and $c_r \in V_r$.
@@ -474,9 +475,9 @@ a(t)\phi_p + b(t)\phi_r = 1.
 This means $b(t)\phi_r = 1 (\mmod \phi_p)$ hence we get the projection
 $P_p = b(f)\phi_r(f).$
 
-We concern the affine function $f'_p$. If $\exists z\, f_p(z) = z$,
-$z$ is called the fix point of affine function. if z exists, 
-$(\textrm{Id}_{V_p} - f_p)(z) = c_p$. In this case,
+We concern the affine function $f_ap$. If $\exists v\, f_{ap}(v) = v$,
+$v$ is called the fix point of affine function. if $v$ exists, 
+$(\textrm{Id}_{V_p} - f_p)(v) = c_p$. In this case,
 $\phi_p$ is a characteristic polynomial of $f_p$ and is irreducible,
 $(1 - t)$ is coprime with $\phi_p$, then we can get $(1 - t)^{-1} \mmod 
 \phi_p$ using extended Euclidean algorithm, and we can get fix point
@@ -495,18 +496,20 @@ by assigning $f_p$ into $t$ and applying $c_p.$
 % $(f_p -\textrm{Id}_{V_p})^{-1}$. Let $z := (f_p -\textrm{Id}_{V_p})^{-1}(c_p)$
 % then $f_p(z) = z.$ 
 
-When affine function has a fix point $z$, then
+When affine function has a fix point $v_f$, then
+% \begin{eqnarray*}
+%   f'_p(z) &=& f_p(z) + c_p = z \\
+%   c_p &=& z - f_p(z) \\
+%   f'_p(s) &=& f_p(s) + z - f_p(z) \\
+%   f'_p(s) - z &=& f_p(s - z).
+% \end{eqnarray*}
 \begin{eqnarray*}
-  f'_p(z) &=& f_p(z) + c_p = z \\
-  c_p &=& z - f_p(z) \\
-  f'_p(s) &=& f_p(s) + z - f_p(z) \\
-  f'_p(s) - z &=& f_p(s - z).
+  f_{ap}(s) - v_f &=& f_p(s - v_f) \\
+  f_{ap}^n(s) - v_f  &=& f_p^n(s - v_f) 
 \end{eqnarray*}
-Hence, the affine function can be regarded as a linear function.  Then
-the period of affine function is same as the linear function.  To
-assure the period, we subtract the fix point from the initial state
-$s_0$ first, then check if the result state is not in
-$V_r$. 
+Hence, the period of affine function is same as the linear function.
+To assure the period, we subtract the fix point $v_f$ from the initial state
+$s_0$ first, then check if the result state is not in $V_r$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Computation of the dimension of equidistribution}
@@ -587,12 +590,20 @@ k(v) \leq \lfloor \log_2 (P+1) / v \rfloor.
 The gap between the realized $k(v)$ and the upper bound is
 called the dimension defect at $v$ of the sequence,
 and denoted by
-$$
-d(v):=\lfloor \log_2 (P+1) / v \rfloor -k(v).
-$$
+\[
+d(v):=\lfloor \log_2 (P+1) / v \rfloor -k(v) 
+\mbox{ and } \Delta:=\sum_{v=1}^w d(v).
+\]
 The summation of all the dimension defects at
-$1 \leq v \leq 32$ is called the total dimension defect, 
+$1 \leq v \leq w$ is called the total dimension defect, 
 denoted by $\Delta$.
+% We may compute $k(v)$ by standard linear algebra.
+% We used a more efficient algorithm based on 
+% a weighted norm,
+% %{\em weighted lattice method} to compute $k'(v)$,
+% generalizing \cite{CLT}. This will be written 
+% somewhere else,
+% because of lack of space. HARASE
 
 $k(v)$ of affine state transition function which have fix point is
 almost same that of linear transition function, except that the
@@ -601,8 +612,7 @@ exceptional tuple which occurs one less often is not all zero tuple.
 There is a difficulty in computing $k(v)$ when 
 a 128-bit vector generator is used as a 32-bit 
 (or 64-bit) vector generator. This is possible by
-using weighted norm and shifted status, (c.f. \cite{SFMT} \cite{thesis:saito}).
-
+using weighted norm.\cite{SFMT}\cite{thesis:saito}
 
 % SFMT generates a sequence
 % $\mathbf{x}_0, \mathbf{x}_1, \mathbf{x}_2, \ldots$ of 128-bit integers. 
@@ -731,28 +741,28 @@ using weighted norm and shifted status, (c.f. \cite{SFMT} \cite{thesis:saito}).
 % $s_p \neq 0$. Thus, we adopt the following definition
 % (analogously to $t_l$ in \cite{COMBTAUS}).
 
-\begin{definition}\label{def:virtual}
-Let $k$ be the maximum such that
-(\ref{eq:chi-k-i}) is satisfied. We call this
-the dimension of equidistribution
-of $v$-bit accuracy, and denote it simply by $k(v)$.
-We have an upper bound $k(v) \leq \lfloor p/v \rfloor$.
+% \begin{definition}\label{def:virtual}
+% Let $k$ be the maximum such that
+% (\ref{eq:chi-k-i}) is satisfied. We call this
+% the dimension of equidistribution
+% of $v$-bit accuracy, and denote it simply by $k(v)$.
+% We have an upper bound $k(v) \leq \lfloor p/v \rfloor$.
 
-We define the dimension defect at $v$
-%for SFMT19937 used as 32-bit integer generators
-by
-$$
-d(v):=\lfloor p/v \rfloor - k(v) 
-\mbox{ and } \Delta:=\sum_{v=1}^w d(v).
-$$
-\end{definition}
-We may compute $k(v)$ by standard linear algebra.
-We used a more efficient algorithm based on 
-a weighted norm,
-%{\em weighted lattice method} to compute $k'(v)$,
-generalizing \cite{CLT}. This will be written 
-somewhere else,
-because of lack of space. HARASE
+% We define the dimension defect at $v$
+% %for SFMT19937 used as 32-bit integer generators
+% by
+% $$
+% d(v):=\lfloor p/v \rfloor - k(v) 
+% \mbox{ and } \Delta:=\sum_{v=1}^w d(v).
+% $$
+% \end{definition}
+% We may compute $k(v)$ by standard linear algebra.
+% We used a more efficient algorithm based on 
+% a weighted norm,
+% %{\em weighted lattice method} to compute $k'(v)$,
+% generalizing \cite{CLT}. This will be written 
+% somewhere else,
+% because of lack of space. HARASE
 %rather complicated mathematics, we omit it here
 %(we plan another article for this). 
 
@@ -956,9 +966,10 @@ certification vector(PCV) corresponds with some Mersenne exponents.
 We compared two algorithms: MT19937, 64-bit MT19937, SFMT19937, dSFMT
 ver.1 19937 and dSFMT ver.2 19937 with implementations using and
 without using SIMD instructions. For MT and SFMT, `mask' means the
-conversion by bit operation described in \S\ref{sec:floating}, and
-`$\times$ const' means the conversion by multiplying $2^{-64}$. Note
-that original MT and SFMT don't use `mask' conversion.
+conversion by bit operation described in \S\ref{sec:floating} from 64
+bit integer of two 32-bit integers, and `$\times$ const' means the
+conversion by multiplying $2^{-64}$. Note that original MT and SFMT
+don't use `mask' conversion.
 
 We measured the speeds for five different CPUs: Pentium M 1.4GHz,
 Pentium IV 3GHz, core 2 duo 1.83GHz (32-bit mode, use 1 core), AMD
@@ -990,7 +1001,10 @@ we don't have SIMD version.  The first two lines list the CPU time (in
 seconds) needed to generate $10^8$ floating point numbers, for a
 Pentium-M CPU.  The first line lists the seconds for the
 block-generation scheme.  The second line lists the seconds for the
-sequential generation scheme.
+sequential generation scheme. 
+
+The result is clear, dSFMT ver. 2 is the fastest for all CPUs, all
+returning methods, using SIMD and without using SIMD.
 
 \begin{table}
   \begin{center}
@@ -1037,20 +1051,23 @@ sequential generation scheme.
 \end{table}
 
 For reference, Table~\ref{tab:speed-other} shows the speed of other
-generators.
+generators. It's difficult to compare dSFMT with other generators
+because dSFMT has 52-bit precision and other generators have 32-bit
+precision. In most cases, dSFMT' sequential generation using standard
+C (or slowest case) is faster than other generators, except xorshift128.
 
 \begin{table}
   \begin{center}
-    \begin{tabular}{|l|r|r|r|} \hline
-      & WELL1024 & WELL19937 & XORSHIFT \\ \hline
-      Pentium M & & & \\
-      Pentium 4 & & & \\
-      core 2 duo & & & \\
-      Athlon 64 & & & \\
-      PowerPC G4 & & & \\ \hline
+    \begin{tabular}{|l|r|r|r|r|} \hline
+      & WELL1024 & WELL19937 & MT19937 & XORSHIFT128 \\ \hline
+      Pentium M & 2.076 & 2.876 & 2.028 & 1.233 \\
+      Pentium 4 & 1.626 & 2.031 & 1.232 & 1.023 \\
+      core 2 duo & 1.165 & 1.913 & 1.032 & 0.653 \\
+      Athlon 64 & 0.804 & 1.191 & 0.971 & 0.975 \\
+      Power PC G4 & 2.947 & 7.524 & 3.082 & 2.267 \\ \hline
     \end{tabular}
     \caption{The CPU time (sec.) for $10^8$ generations of double precision
-      floating point numbers [0, 1) using standard C.}
+      floating point numbers [0, 1) from 32 bit integer using standard C.}
     \label{tab:speed-other}
   \end{center}
 \end{table}
@@ -1118,7 +1135,9 @@ SFMT19937's 32-bit $\Delta$ and $6750$ of MT19937's 32-bit $\Delta$.
   The number of non zero term in $\chi_f(t)$
   \begin{tabular}{c|rrrrrr} \hline
     MEXP & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\
-    weight & 273 & 673 & 1076 & 2233 & 5684 & 9756 \\ \hline
+    degree of $\chi_f(t)$ & 544 & 1376 & 2208 & 4288 & 11256 & 19992 \\
+    weight & 273 & 673 & 1076 & 2233 & 5684 & 9756 \\ 
+    ratio & 0.50 & 0.49 & 0.49 & 0.52 & 0.50 & 0.49 \\ \hline
   \end{tabular}
 \end{center}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -1213,4 +1232,4 @@ No.18005.
 % LocalWords:  ffdffeffefbfc ffffffdf dfffffff bfff ffafffffffb ffdfffc rr xcfb
 % LocalWords:  xccaa xc ae adb xb da aeb xde xf ef fd cb ba xd caae uint IEC le
 % LocalWords:  icl dSFMTv const blk Ghz mexp rrrrrr sfmt kanren equi LSB intel
-% LocalWords:  crrrrrr
+% LocalWords:  crrrrrr ap ar xorshift
