@@ -97,18 +97,19 @@ Dept.\ of Math.\ Hiroshima University
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
 \begin{abstract} 
-  We propose a pseudorandom number generator specialized to
+  We propose a pseudorandom number generator (PRNG) specialized to
   generate double precision floating point numbers in IEEE 754 format.
 
-  The generator makes pseudorandom 64-bit patterns with the most
-  significant 12-bit is specified, so that they represent floating
-  point numbers in the range [1,2) obeying the IEEE 754 format in
-  memory. We use an $\mathbb{F}_2$ affine transition function in the
-  generation.
+  The generator makes pseudorandom 52-bit patterns supplemented
+  by a constant most significant 12-bit (sign and exponent), so 
+  that the concatenated 64-bit represents a floating
+  point number in the range [1,2) obeying the IEEE 754 format.
 
-  Here, the affine means $x \mapsto Ax+c$ where
-  $x$ is a state vector, $A$ is an $\mathbb{F}_2$
-  matrix, and $c$ is a constant vector. 
+  Many PRNGs use a linear transition function over the two element 
+  field $\mathbb{F}_2$, but here we use an affine transition function,
+  namely the state vector $x$ is mapped to the next state $Ax+c$,
+  where $A$ is an $\mathbb{F}_2$ matrix, and $c$ is a constant vector. 
+  The existence of $c$ is due to the constant 12-bit.
   %This constant
   %is necessary to fix the most significant bits.
   By a slight modification of the classical linear case,
@@ -116,9 +117,13 @@ Dept.\ of Math.\ Hiroshima University
   equi-distribution of the generator.
 
   Using SIMD instruction set, we designed dSFMT (double precision floating
-  point SFMT), which generates two floating point numbers at one recursion.
-  The generation speed is almost same or faster than Mersenne Twister's
-  double precision floating point number generation from 32-bit integer.
+  point SFMT), which generates two floating point numbers of 52-bit precision
+  at one recursion.
+%  The generation speed is almost same or faster than Mersenne Twister's
+%  double precision floating point number generation from 32-bit integer.
+  The generation speed is faster than Mersenne Twister's
+  floating point number generation from 32-bit integer
+  that has 32-bit precision only.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -137,16 +142,17 @@ of Mersenne Twister\cite{MT} (MT) and faster than the original and has
 better equidistribution property.
 
 SFMT is based on a Single Instruction Multiple Data\cite{wiki:SIMD}
-(SIMD) feature of recent CPUs. The specialization in hardware made
-speed up of SFMT. We also proposed another specialization, block
-generation which returns large block of pseudorandom numbers by one
-call.  Both of them have been widely known as a technique of speed
-up.  Generally saying, specialization is a possible choice to make a
-faster PRNG.
+(SIMD) feature of recent CPUs. SIMD processes 128-bit data
+at one time, and the design of SFMT fits to SIMD.
+We also proposed another speed up: block generation 
+procedure which returns a large block of pseudorandom numbers by one
+call.  
+%Both of them have been widely known as a technique of speed
+%up, and can be seen as a speed-up by a restriction/specialization.
 
 We are interested in scientific simulations, and most scientific
 Monte-Carlo simulation requires great deal of floating point
-pseudorandom numbers.  In this article, we describe about a PRNG
+pseudorandom numbers. In this article, we describe a faster PRNG
 specialized in generating floating point numbers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,35 +160,49 @@ specialized in generating floating point numbers.
 \label{sec:floating}
 
 Usually, floating point pseudorandom numbers are obtained by
-converting integer pseudorandom numbers, because recursion in floating
-point numbers accumulates errors, which sometimes have different values
-in different CPUs. Generating integer number numbers (which is exact and
-fast) and converting it by multiplying a constant is usual way,
-however this multiplication has conversion from a integer to
-a floating point number, hence the conversion is slow.
+converting integer pseudorandom numbers. 
+One may consider recursion in floating
+point numbers for PRNG, but it accumulates approximation errors.
+Since the rounding-off is not standardized, the generated
+sequence often depends on CPUs. 
+Thus, usual PRNGs generate integer random numbers by integer recursion
+(which is exact and fast) and converts them 
+to floating point numbers by multiplying a constant.
+However, this method requires a conversion from an integer to
+a floating point number, which is rather slow.
 
-An idea to make the conversion fast is using bit operations on integer
-number to fit to IEEE 754 floating point format. For example in C
-language, to convert 64-bit integer \texttt{x} to double precision floating
-point number \texttt{y} is done by:
+A faster conversion is given by using bit operations on integer
+number to fit to IEEE 754 floating point format. For example, in C
+language, conversion of a 64-bit integer \texttt{x} to 
+the corresponding double precision floating point number \texttt{y} can be done by:
 \begin{verbatim}
    x = (x >> 12) | 0x3FF0000000000000ULL;
    y = *((double *)&x);
 \end{verbatim}, more appropriate way in C is to use \textbf{union}.
+The first line shifts \texttt{x} to the right by 12 bits,
+and set the 12 most significant bits (MSBs) to the constant.
+These 12 bits specify the sign and the exponent, and thus, if the 64-bit
+is regarded as a floating point number by the second line, then 
+it gives a floating point number normalized in $[1,2)$.
 
-This method was known at latest in 1997. Anger Fog used this method in
-his open source library\cite{web:Fog}.  Others found this method
+This method was known at least in 1997. Anger Fog used this method in
+his open source library\cite{web:Fog}.  Others seemed to find this method
 independently around the year.
 
-Another idea is to convert the unsigned integer to the same bit-sized
-signed integer, then (signed) floating point number. The reason why
-this method is fast is that implicit conversion uses signed integer
-which size is larger than unsigned one. (c.f. \cite{doornik})
+Another method is to convert the unsigned integer to 
+a signed integer with same number of bits,
+and then to a (signed) floating point number.
+This method is often fast, because coverting unsigned
+integer to floating point is slower than signed integer 
+(hardware converter is sometimes designated for signed integer,
+cf. \cite{doornik}). 
 
-Thinking about \bbf2-linear generator like MT, its recursion is done
-in \bbf2 vector space and its output vectors are considered as
-integers.  In this article, we propose an \bbf2-linear generator whose
-output vectors can be regarded as floating point numbers.
+Thinking about \bbf2-linear generator like MT, its output is 
+a vector with components in \bbf2, considered as
+a binary integer. In this article, we propose an \bbf2-linear 
+(more exactly, \bbf2-affine) generator whose
+output vectors are regarded as representations 
+of floating point numbers in IEEE754 format. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{IEEE double precision floating point format}
@@ -191,26 +211,29 @@ output vectors can be regarded as floating point numbers.
 IEEE Standard for Binary Floating-Point Arithmetic (ANSI/IEEE Std
 754-2008)\cite{ieee754} is the most widely-used standard for
 floating-point numbers. The standard was defined in 1985 and revised
-in 2008. Here we treat the 64-bit binary format, defined in 1985
-standard and also available in 2008 standard.  Figure~\ref{fig:ieee}
+in 2008. Here we treat the 64-bit binary format defined in 1985,
+which is equally valid in the 2008 standard. Figure~\ref{fig:ieee}
 shows the 64-bit binary format, which has 1 sign bit, 11 exponent bits
 and 52 fraction bits.
 
 \begin{figure}
   \begin{center}
     \includegraphics[width=0.7\linewidth]{ieee.pdf}
-    \caption{sign bit, exponent bits and fraction bits of double
-      precision floating point number}
+    \caption{Sign bit, exponent bits and fraction bits of double
+      precision floating point number.}
     \label{fig:ieee}
   \end{center}
 \end{figure}
 
 Table~\ref{tab:ieee} shows how floating point numbers are described in
-the format. Most of numbers are normalized. The exponent part $e$ is
-adjusted so that the fraction part has a number $f (1 \le f < 2)$, and
-$e$ has an offset 1023, then the total of the format shows the number
-$f \times 2^{e - 1023}$. And the first 1 of $f$ is omitted in the
-format because it is always 1.
+the format. Usually, numbers are represented as a normalized
+number as in the last column. In a normalized number, 
+the 52-bit fraction part \texttt{xxx}$\ldots$ is interpreted
+as a binary floating number 1.\texttt{xxx}$\ldots$, which 
+is denoted by $f$. Thus, $1 \le f < 2$.
+The exponent part $e$ has an offset 1023, 
+and the total 64-bit of the format represents the number
+$\pm f \times 2^{e - 1023}$. 
 
 \begin{table}[h]
   \begin{center}
@@ -227,7 +250,7 @@ format because it is always 1.
       $\pm 1.\texttt{xxxxx} \times 2^{e - 1023}$ \\ \hline
     \end{tabular}
     \caption{Description of double precision floating point
-      number. \texttt{xxxx} shows the bit pattern of fraction part.}
+      numbers. \texttt{xxxx} denotes the bit pattern of the fraction part.}
     \label{tab:ieee}
   \end{center}
 \end{table}
@@ -235,62 +258,62 @@ format because it is always 1.
 If sign bit is 0 and exponent part (11 bit) is 0x3ff,
 %then the format represent a normalized number in the range [1, 2).
 then the number $r$ represented by the format is in the range $1 \le r
-< 2$. Hence, We decided to design a PRNG whose output is uniformly
+< 2$. Hence, we decided to design a PRNG whose output is uniformly
 distributed in the range [1, 2).
 
-Most of application program needs floating point numbers $r$ in the
-range $0 \le r < 1$, then our generator can also generate floating
-point numbers in the range $0 \le r < 1$ and $0 < r \le 1$. The
-conversion is just a simple subtraction between floating points, hence
-it is fast.  Additionally, our generator supports to generate numbers
-in the range $0 < r < 1$.  In this case, we need to set LSB of
-fraction part, hence this is little bit slower.
+Most of application programs need PRNG in the range $[0,1)$
+or $(0,1]$, but the conversion from $[1,2)$ is just a simple
+subtraction between floating points, hence
+it is fast. Our generator also supports the range $(0,1)$
+by setting the least significant bit of the
+fraction part, which is a little bit slower.
 
-In some cases, for example if you need floating points in the range $0
-\le r < 2\pi$ for trigonometric functions, you can use the number in
-the range $1 \le r < 2$ instead of the number in the range $0 \le r <
-1$, because they indicates same value for trigonometric functions
-after multiplying $2\pi$.
+Note that when one uses the generated random number $r$
+as in $\sin(2 \pi r)$, then $[0,1)$ and $[1,2)$ give the same distribution.
 
-\begin{note}
-  A normalized number has additional 1 bit and the exponent part is
-  adjusted so that the integer part only has this additional 1 bit.
-  Therefore this format has 53-bit precision though it has only 52-bit
-  fraction part. On the other hand, our generator has 52-bit precision
-  because the exponent part is fixed.
-\end{note}
+%\begin{note}
+%  As described above, 
+%  a normalized number has 53-bit precision though it has only 52-bit
+%  fraction part. On the other hand, our generator has 52-bit precision
+%  because the exponent part is fixed.
+%\end{note}
+%  I (Makoto) can guess what is meant, but I feel it inappropriate
+%  here, since the definition of ``precision'' is unclear.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Theoretical base}
 \label{sec:base}
 
-Our new generator is based on Linear Feedback Shift Register (LFSR)
-like MT. Moreover it has additional memory called `lung'.  LFSR with
-additional memory is called Pulmonary LFSR.
+Our proposal is based on Linear Feedback Shift Register (LFSR),
+with additional memory called `lung' (LFSR with
+lung is called Pulmonary LFSR).
 
 %%%%%%%%%%%%%%%%%%%%
-\subsection{LFSR and Pulmonary LFSR}
+\subsection{LFSR, Pulmonary LFSR, and affine version}
 \label{sec:pulmonary}
 
 We identify the set of bit \{0, 1\} with the two element field \bbf2.
 This means that every arithmetic operation is done modulo 2.  A
-$\mathbf{b}$-bit register or memory is identified with a horizontal
+$b$-bit register or memory is identified with a horizontal
 vector in $\bbf2^b$, and $+$ denotes the sum as vectors (i.e.,
-bit-wise exclusive or). We consider an array of $N$ $b$-bit in
+bit-wise exclusive or). We consider an array of $b$-bit integers of
+size $N$ in
 computer memory as the vector space $(\bbf2^{b})^N$.
 
 An LFSR method is to generate a sequence $\mathbf{w_0}$,$\mathbf{w_1}$,
 $\mathbf{w_2},...$ of elements $\bbf2^b$ by a recursion
-\[ \mathbf{w}_{i+N} = g(\mathbf{w}_{i}, ..., \mathbf{w}_{i + N-1}), \]
+\[ \mathbf{w}_{i+N} = g(\mathbf{w}_{i}, ..., \mathbf{w}_{i + N-1}), 
+\quad (i=0,1,2,\ldots)
+\]
 where $g$ is an $\bbf2$-linear map $(\bbf2^{b})^N \rightarrow
 \bbf2^b$.  In the implementation, this recursion is computed by using
-an array \texttt{W[0...N-1]} of $N$ word of $b$-bit size, by the
+an array \texttt{W[0..N-1]} of $N$ word of $b$-bit size, by the
 simultaneous substitutions
 
 \begin{multline*}
     \texttt{W[0]} \leftarrow \texttt{W[1]},\ 
     \texttt{W[1]} \leftarrow \texttt{W[2]}, \ldots,
     \texttt{W[N-2]} \leftarrow \texttt{W[N-1]}, \\  
-    \texttt{[N-1]} \leftarrow
+    \texttt{W[N-1]} \leftarrow
     g(\texttt{W[0]},\ldots,\texttt{W[N-1]}). 
   \end{multline*}
 
@@ -327,105 +350,249 @@ $\bbf2^b$ by a recursion
   \mathbf{w}_i &=& g(\mathbf{w}_{i-N+1}, ..., \mathbf{w}_{i-1},
   \mathbf{u}_{i-1}), \label{eq:recursion} \\
   \mathbf{u}_i &=& h(\mathbf{w}_{i-N+1}, ..., \mathbf{w}_{i-1},
-  \mathbf{u}_{i-1}).
+  \mathbf{u}_{i-1}). \label{eq:lung}
 \end{eqnarray}
 where $g$ and $h$ are $\bbf2$-linear maps $(\bbf2^{b})^N \rightarrow
 \bbf2^b$ and $\mathbf{w}_i, \mathbf{u}_i \in \bbf2^b$.  In the
-implementation, $\mathbf{u_i}$ is expected to be kept in a register of
-CPU.  The idea of Pulmonary LFSR was appeared in the talk of Hiroshi
+implementation, $\mathbf{w}_i$'s are kept in an array
+\texttt{W[0..N-1]}, and $\mathbf{u}_i$
+is (expected to be) kept in a register of
+CPU, which is called the {\em lung}. We denote the register
+by \texttt{U}. The first line (\ref{eq:recursion})
+renews the array \texttt{W[0..N-1]}, and the second line (\ref{eq:lung}) renews
+the register (lung) \texttt{U}.
+The idea of Pulmonary LFSR appeared in the talk of Hiroshi
 Haramoto in MCM 2005, and used in WELL PRNG\cite{WELL} in 2006.
+The lung realizes a short feedback loop, which improves
+some measures of randomness such as higher dimensional 
+equidistributions and the density of nonzero coefficients
+in the characteristic polynomial.
 
-In the case of dSFMT, we need an array which have fixed value
-\texttt{0x3ff} in MSBs of its elements.  We can exclude these fixed
-bits from our state space, but we have to consider the influence of
-the fixed bits to the state space. In this case, the state transition
-function is changed from $\bbf2$-linear to $\bbf2$-affine.  Here, the
-affine means $x \mapsto Ax+c$ where $x$ is a state vector, $A$ is an
+\subsection{Affinity introduced by the constant part}
+A new difficulty appeared in dSFMT is that each component
+of the array \texttt{W[0..N-1]} has fixed value
+\texttt{0x3ff} in the 12 MSBs through the generation.
+We may treat this part by bit-masking, but it leads to
+slow-down. Keeping these 12 constant bits makes it difficult
+to use the standard technique
+to analyze the property of the generated sequence,
+such as the period. Our solution to this difficulty 
+is (a) to exclude the constant part of the array
+from the state space, and (b) to consider an affine
+state transition function.
+
+More concretely, let $\mathbf{w}_{i}'$ denote the
+lower 52-bit of $\mathbf{w}_i$. Since the upper 12-bit
+is a constant, the recursion
+formula (\ref{eq:recursion}), (\ref{eq:lung})
+can be described by
+\begin{eqnarray}
+  \mathbf{w}_i' &=& g'(\mathbf{w}_{i-N+1}', ..., \mathbf{w}_{i-1}',
+  \mathbf{u}_{i-1}), \label{eq:recursion-dash} \\
+  \mathbf{u}_i &=& h'(\mathbf{w}_{i-N+1}', ..., \mathbf{w}_{i-1}',
+  \mathbf{u}_{i-1}). \label{eq:lung-dash}
+\end{eqnarray}
+Here, it is easy to see that the linearity of $g$ (resp.\ $h$)
+implies the affinity of $g'$ (resp.\ $h'$). (Here affine means
+linear plus a constant.)
+
+We make a model of this generator by an automaton.
+Let $b_w$ denote the number of variable bits 
+in each \texttt{W[i]} (52 in the above case), 
+and $b_u$ denote the number of bits in the 
+lung \texttt{U}.
+Such a plumonary LFSR (precisely, not linear but affine)
+is considered as an automaton, with the state space 
+$S=\bbf2^{b_u + b_w \times (N-1)}$.
+The state transition function $F: S \to S$ is given by
+\begin{equation*}
+  \begin{split}
+    (\mathbf{w}_0', &\ldots,\mathbf{w}_{N-2}', \mathbf{u}_0) \\
+    &\mapsto 
+    (\mathbf{w}_1',\ldots,\mathbf{w}_{N-2}',
+    g'(\mathbf{w}_0',\ldots,\mathbf{w}_{N-2}', \mathbf{u}_0),
+    h'(\mathbf{w}_0',\ldots,\mathbf{w}_{N-2}', \mathbf{u}_0)).
+  \end{split}
+\end{equation*}
+As a $b_w$-bit vector generator (i.e., removing
+the constant bits), the output function is 
+\[
+  o: S \to {\bbf2}^{b_w}; \quad
+  (\mathbf{w}_0', \ldots, \mathbf{w}_{N-2}', \mathbf{u}_0) 
+  \mapsto \mathbf{w}_0'.
+\]
+
+%We shall consider the variable bits in the array and the lung
+%as the state space of the PRNG.
+Now, both $F$ and $o$ are not linear
+but affine. Namely, they have a form of 
+$x \mapsto Ax+c$ where $x$ is a vector, $A$ is an
 $\mathbb{F}_2$ matrix, and $c$ is a constant vector.
+(If $c=0$, it is linear.)
 
 %%%%%%%%%%%%%%%%%%%%
 \subsection{Computation of the Period}
 \label{sec:period}
-%To assure the period of PRNG, we used Mersenne Prime\cite{MT}.
+%To assure the period of PRNG, we used Mersenne prime\cite{MT}.
+If the transition function $F:S \to S$ is linear, then standard
+methods compute its period. Let $f$ denote the linear part of $F$,
+namely, put $c:=F(0)$ and 
+\begin{equation}
+F(x) = f(x) + c
+\end{equation}
+with linear $f: S \to S$. 
+If $F$ has a fixed point
+$F(s)=s$, then $F(x-s)=f(x-s)+c=f(x)-s$, and
+consequently $F^n(x-s)=f^n(x)-s$.
+Thus, for the state transition $x_0,x_1,x_2,\ldots$ by $F$,
+its translation $x_0+s, x_1+s, \ldots$ by the constant $s$
+is obtained by the linear state transition $f$, hence can be analyzed
+by the existing methods. This solves the affinity problem,
+since the property on randomness is essentially
+unchanged by the translation.
 
-A Pulmonary LFSR that obeys the recursion (\ref{eq:recursion}) may be
-considered as an automaton, with the state space $S=\bbf2^{b_u + b_w
-  \times (N-1)}$ where $b_u$ is size of vector $u$ and $b_w$ is that of
-$w$. And the state transition function $f: S \to S$ is given by
-\begin{equation*}
-  \begin{split}
-    (\mathbf{w}_0, &\ldots,\mathbf{w}_{N-2}, \mathbf{u}_0) \\
-    &\mapsto 
-    (\mathbf{w}_1,\ldots,\mathbf{w}_{N-2},
-    g(\mathbf{w}_0,\ldots,\mathbf{w}_{N-2}, \mathbf{u}_0),
-    h(\mathbf{w}_0,\ldots,\mathbf{w}_{N-2}, \mathbf{u}_0)).
-  \end{split}
-\end{equation*}
-As a $b_w$-bit vector generator, the output function is 
-\[
-  o: S \to {\bbf2}^{b_w}; \quad
-  (\mathbf{w}_0, \ldots, \mathbf{w}_{N-2}, \mathbf{u}_0) 
-  \mapsto \mathbf{w}_0.
-\]
+The equation $F(s)=s$ is equivalent to $(f-\textrm{Id})(s)=c$.
+Thus, a fixed point exists 
+if the characterisitc polynomial $\chi_f$ of $f$ 
+does not have 1 as a root, 
+in particular if irreducible with degree $\geq 2$.
 
-Let $\chi_f$ be the characteristic polynomial of $f:S \to S$.  If
-$\chi_f$ is primitive, then the period of the state transition takes
-the maximal value $2^{\dim(S)}-1$ \cite[\S3.2.2]{knuth:bible}.  To
-avoid the the integer factorization of this number, we use the
-Mersenne Primes, which are primes $2^p-1$. Here $p$ is called the
-Mersenne exponent, which itself is a prime.
+However, this is not the case for dSFMT, where 
+$\chi_f$ is reducible. One main difficulty in 
+computing the period lies in the factorization of
+$2^n-1$. If $\chi_f$ is irreducible, then the 
+possible maximum period is $2^{\dim S}-1$. 
+To certificate the period, we need the factorization 
+of this number. For this, $\dim S$ must be not too
+large (say, $<2000$), or otherwise, $\dim S$ must be a Mersenne
+exponent (i.e. $2^{\dim S}-1$ itself is a prime:
+such a prime is called a Mersenne prime.)
 
-MT and WELL\cite{WELL} discard $r$ specific bits from the
-array $S$, so that $nw-r$ is a Mersenne exponent. 
-Then, the primitivity of $\chi_f$ is easily checked
-by the algorithm in \cite[\S3.2.2]{knuth:bible}.
-
+One way to avoid this difficulty is to adjust $\dim S$
+to be a Mersenne prime by discarding (i.e., not using in the feedback function)
+some specific bits from the array \texttt{W}, such as in 
+MT and WELL\cite{WELL}.
+ 
 SFMT adopted another method to avoid the integer factorization, the
 reducible transition method (RTM), which uses a reducible
 characteristic polynomial with a large primitive factor.  This idea
-appeared in \cite{FUSHIMI90} \cite{BRENT}\cite{BRENT-PRIM}.
+appeared in somewhat different purposes in 
+\cite{FUSHIMI90} \cite{BRENT}\cite{BRENT-PRIM}.
+RTM in our context means to find a linear transition function $f:S \to S$
+that has decomposition $S=V_p\oplus V_r$
+by $f$-invariant subspaces, where $V_p$ has 
+a Mersenne exponent dimension $p$, and the restriction 
+$f_p$ of $f$ to $V_p$ has the maximal period $2^p-1$.
+The rest $V_r$ has the dimension $r < p$, and thus
+the period of $f$ is at least the period of $f_p$,
+and the high dimensional equidistribution is 
+better than or equal to that of $f_p$ (see \cite{SFMT}).
+Thus, we can obtain the lower bound of the period
+and the dimension of equidistibution of $f$ by 
+those of $f_p$, and for the latter, the period certification
+is easy (see \cite[\S3.2.2]{knuth:bible}).
+RTM needs not to discard $r$ bits at each generation, 
+so at the geneation stage it is faster than discarding 
+methods. 
 
-Let $p$ be the Mersenne exponent, and %$N:=\lceil p/b_w \rceil$.
-$N$ is length of array in computer memory which just stores $p$-bit
-status space.
-Then,
-we randomly choose parameters for the recursion of LFSR
-(\ref{eq:recursion}).  By applying the Berlekamp-Massey Algorithm to
-the output sequence, we obtain $\chi_f(t)$.  (Note that a direct
-computation of $\det(tI-f)$ is time-consuming because
-$\dim(S)$ is large.)
+The new generator dSFMT uses this RTM, namely reducible $\chi_f$.
+Although the affine transition function $F$ may not have
+a fixed point, its restriction to $V_p$ does have:
+if $c=c_p\oplus c_r$ and $x=x_p\oplus x_r$ are
+the decompositions along $V_p\oplus V_r$, then
+\begin{equation}\label{eq:decomp-F}
+F(x)=f(x)+c=(f_p(x_p)+c_p) \oplus (f_r(x_r)+c_r):=F_p(x_p)\oplus F_r(x_r).
+\end{equation}
+Thus, the state transition $F$ is a direct sum of affine transitions
+$F_p: V_p \to V_p$ and $F_r: V_r \to V_r$. Since $p>1$ and
+$f_p$ is irreducible, $F_p$ has a fixed point as proved above.
+Then, we can compute the period and equidistribution 
+property with respect to $f_p$, which are equal to 
+those for $F_p$, giving lower bounds for those for $F$.
 
-By using a sieve, we remove all factors of small degree from $\chi_f$,
-until we know that it has no irreducible factor of degree $p$, or that
-it has a (possibly reducible) factor of degree $p$.  In the latter
-case, the factor is passed to the primitivity test described in
-\cite[\S3.2.2]{knuth:bible}.
+We explain how to choose parameters.
+For the linear transition function, the method is 
+described in \cite{SFMT}, so they are only briefly 
+recalled.
+%just sketching show how to search an $f$ such that 
+%$\chi_f$ has an irreducible $f_p$
+%(cf. \cite{SFMT} which section). 
+Let $p$ be a Mersenne exponent, and %$N:=\lceil p/b_w \rceil$.
+$N$ be the smallest length of the array such that
+the dimension of the state space 
+$S=\bbf2^{b_u + b_w \times (N-1)}$
+is greater than or equal to $p$. Thus, 
+$r:=\dim S - p < b_w$ holds.
 
-Suppose that we found a recursion with an irreducible factor of
-desired degree $p$ in $\chi_f(t)$. Then, we have a factorization
+We randomly choose parameters for the recursion 
+(\ref{eq:recursion-dash}) and
+(\ref{eq:lung-dash}). Let $F:S \to S$ be the 
+corresponding affine transition function, and $f:S \to S$ be
+its linear part. We compute the characteristic
+polynomial $\chi_f(t)$ by using Berlekamp-Massey algorithm, and
+check whether it decomposes to 
 \[
-\chi_f=\phi_p \phi_r,
+\chi_f=\phi_p \phi_r
 \]
 where $\phi_p$ is a primitive polynomial of degree $p$
 and $\phi_r$ is a polynomial of degree %$r = wN-p$.
-$r$ which is remain bit after $N$ element array stores
-$p$ bit.
-These are coprime, 
-since we assume $p>r$.
-Let $\ker(g)$ denote the kernel of a linear transformation $g$.
-By putting $V_p:=\ker \left(\phi_p(f)\right)$ 
-and $V_r:=\ker \left(\phi_r(f)\right)$,
-we have a decomposition into $f$-invariant subspaces
+$r:=\dim S -p < b_w$. We assume $r<p$, which is natural
+in our context where $p$ is large.
+%and then check whether 
+%it has a desired irreducible component.
+%Fix a linear basis $B$ of $S$, 
+%and for a $b \in B$, we compute the state transition 
+%$b, f(b), f^2(b), \ldots$. Fix a bit in the state space,
+%and compute the minimal polynomial $\phi_b(t)$ 
+%of the bit sequence with respect to these transitions,
+%by the Berlekamp-Massey Algorithm. 
+%(Note that a direct computation of $\det(tI-f)$ is 
+%prohibitedly slow, compared to the Berlekamp-Massey
+%algorithm.)
+%Then $\phi_b(t)$ divides $\chi_f(t)$. If the degree
+%of $\phi_b(t)$ is equal to $\dim S$, then $\phi_b(t)$
+%is $\chi_f(t)$. If not, we compute $\phi_{b'}$ for
+%another $b' \in B$, and take the least common multiple (LCM) with
+%$\phi_b(t)$. If its degree is equal to $\dim S$, we have
+%$\chi_f(t)$. We iterate this for different element in $B$
+%until the least common multple reaches to $\chi_f(t)$ or
+%elements of $B$ are exhausted. In the latter case, we abondon
+%the parameter.
+%(One can easily show that the LCM of $\phi_b(t)$
+% for all $b\in B$ and all bit in $S$ is equal to the minimal 
+% polynomial of $f$, hence may not coinside with $\chi_f(t)$).
+%To find a desired irreducible factor in $\chi_f(t)$,
+%we use a sieve to divide out $\chi_f$ by
+%all factors of small degree,
+%until $\chi_f$ turns out to have no irreducible factor of degree $p$, 
+%or it has a (possibly reducible) factor of degree $p$.  In the latter
+%case, the factor is passed to the primitivity test described in
+%\cite[\S3.2.2]{knuth:bible}. 
+%
+%If it passes, we found a parameter with a period certification.
+%We have already computed a factorization
+%\[
+%\chi_f=\phi_p \phi_r,
+%\]
+%
+Then these two factors are coprime, and extended Euclidean
+algorithm computes polynomials $a(t),b(t)$.
 \[
-S=V_p \oplus V_r \quad (\dim V_p=p, \ \dim V_r=r).
+a(t)\phi_p + b(t)\phi_r = 1.
 \]
-Note that the characteristic polynomial of 
+It is standard in the linear algebra that 
+$P_p = b(f)\phi_r(f)$ and $P_r=a(f)\phi_p(f)$
+are projectors giving the decomposition into $f$-invariant subspaces
+\[
+S=V_p \oplus V_r:= \mathrm{Im}P_p \oplus \mathrm{Im}P_r \quad (\dim V_p=p, \ \dim V_r=r).
+\]
+The characteristic polynomial of 
 the restriction $f_p$ of $f$ to $V_p$ is $\phi_p(t)$, and
 that of the restriction $f_r$ to $V_r$ is $\phi_r(t)$. 
 For any state $s \in S$, we denote $s=s_p+s_r$ for the corresponding
 decomposition with $s_p \in V_p$ and $s_r \in V_r$.
 Then, the $k$-th state $f^k(s)$ is equal to
-$f_p^k(s_p) + f_r^k(s_r)$. 
+$f_p^k(s_p) + f_r^k(s_r)$.
 
 % This implies that the automaton 
 % is equivalent to the sum of two automata $f_p:V_p \to V_p$ and
@@ -435,53 +602,57 @@ $f_p^k(s_p) + f_r^k(s_r)$.
 % Their purpose is to obtain a good PRNG from several simple generators,
 % which is different from ours.
 
-The period length of the state transition is the least common multiple
+The period length of the state transition by $f$ 
+is the least common multiple
 of that started from $s_p$ and that started from $s_r$. Hence, 
 if $s_p \neq 0$, then the period is a nonzero multiple of $2^p-1$.
-
-To assure that $s_p \neq 0$, we look small subspace of $S$ whose
-dimension is greater than that of $V_r$, i.e, one of $w_i$s or $u$.
-Let $V_w$ is this subspace, and $V_{wr} = V_w \cap V_r$.  We can get
-the basis of $V_{wr}$ by applying $\phi_p(f)$ to randomly selected $s
-\in S$, and check in-dependency of the result vector in $V_{wr}$. Then
-we can get the basis of orthogonal space $V_{wo}$ of $V_{wr}$ in $V_w$
-by linear algebra. We take one of the basis and call it {\em the
-  period certification vector} (PCV).
-
-Inner product of PCV and a vector in $V_{wr}$ is always zero,
-hence if inner product of the restriction to $V_w$ of initials state $s$
-and PCV is not zero, $s$ is not in $V_r$. For period certification of
-PRNG, if the inner product is zero, then change 1 bit of a initial state
+To assure that $s_p \neq 0$, we look some number of bits in the state
+space $S$ more than $r=\dim V_r$ bits. For example,
+we pick one of \texttt{W[i]} or \texttt{U}, say \texttt{U}.
+By looking at only the bits in \texttt{U}, 
+we have a projection $\pi:S \to V_U$, where we assume $\dim V_U > r$.
+Now the image $\pi(V_r) \subset V_U$ is a proper subspace.
+If we equip the standard inner product in $V_U$, then 
+there is a nonzero vector which is orthogonal to $\pi(V_r)$.
+We call such a vector {\em the period certification vector} (PCV).
+Such vector can be obtained by solving a linear equation,
+representing the orthogonality to all $\phi_p(f)(b)$
+for $b$ moves in a fixed basis of $S$.
+%dimension is greater than that of $V_r$, i.e, one of $w_i$s or $u$.
+%Let $V_w$ is this subspace, and $V_{wr} = V_w \cap V_r$.  We can get
+%the basis of $V_{wr}$ by applying $\phi_p(f)$ to randomly selected $s
+%\in S$, and check in-dependency of the result vector in $V_{wr}$. Then
+%we can get the basis of orthogonal space $V_{wo}$ of $V_{wr}$ in $V_w$
+%by linear algebra. 
+%??? the above seems to be wrong, V_w is not a subspace but a quotient
+%space.
+The inner product of PCV and any vector in $\pi(V_r)$ is zero.
+Hence, if a state $s \in S$ has
+non-zero inner product $\mathrm{PCV}\cdot \pi(s)=1$, 
+then it implies that $s \notin V_r$, and thus $s_p \neq 0$,
+which assures the period at least $2^p-1$ for $f$.
+Note that this inner product is taken in $V_U$, i.e., looking
+at the bits in \texttt{U} of $s$. 
+If the inner product happens to be 0, 
+then change one bit in $\pi(s)$, where PCV has 1, 
 so that the inner product becomes one.
+In sum, the initial state can not be chosen arbitrarily:
+one bit in \texttt{U} is computed from the rest bit in \texttt{U},
+to assure the period being a multiple of $2^p-1$.
 
-For our new generator dSFMT, the state transition function is:
-\[
-  f_a: S \to S ; \quad s \mapsto f(s) + c,
-\]
-where $c \in S$ is a constant vector.  Applying above decomposition,
-we can get:
-\begin{eqnarray*}
-  f_a(s) &=& f_{ap}(s) + f_{ar}(s) \\
-  &=&f_p(s) + c_p + f_r(s) + c_r,
-\end{eqnarray*}
-where $c_p \in V_p$ and $c_r \in V_r$.
-
-To get $c_p$ (or $c_r$), we need a projection function $P_p: S \to
-V_p$ (or $V_r$). Using extended Euclidean algorithm, we can
-calculate such polynomial $a(t), b(t)$ that:
-\[
-a(t)\phi_p + b(t)\phi_r = 1.
-\]
-This means $b(t)\phi_r = 1 (\mmod \phi_p)$ hence we get the projection
-$P_p = b(f)\phi_r(f).$
-
-We concern the affine function $f_ap$. If $\exists v\, f_{ap}(v) = v$,
-$v$ is called the fix point of affine function. if $v$ exists, 
-$(\textrm{Id}_{V_p} - f_p)(v) = c_p$. In this case,
-$\phi_p$ is a characteristic polynomial of $f_p$ and is irreducible,
-$(1 - t)$ is coprime with $\phi_p$, then we can get $(1 - t)^{-1} \mmod 
-\phi_p$ using extended Euclidean algorithm, and we can get fix point
-by assigning $f_p$ into $t$ and applying $c_p.$
+Now we treat the affine case.
+Consider the decomposition of the state transition function
+$$
+F(x_p\oplus x_r)=
+(f_p(x_p)+c_p) \oplus (f_r(x_r)+c_r),
+$$
+as in (\ref{eq:decomp-F}).
+Projectors $P_p$, $P_r$ compute $c_p$ and $c_r$.
+Since $\phi_p$ is irreducible, there is a fixed point $v \in V_p$
+with $F_p(v)=f_p(v)+c_p=v$. It is
+efficiently computed by using the inverse polynomial
+$\xi(t) \mmod \phi_p$ of $(1 - t) \mmod \phi_p$,
+since $v:=\xi(f)(c_p)$ gives the solution.
 
 %  $\phi_p$ is a characteristic
 % polynomial of $V_p$ and is irreducible,
@@ -496,87 +667,75 @@ by assigning $f_p$ into $t$ and applying $c_p.$
 % $(f_p -\textrm{Id}_{V_p})^{-1}$. Let $z := (f_p -\textrm{Id}_{V_p})^{-1}(c_p)$
 % then $f_p(z) = z.$ 
 
-When affine function has a fix point $v_f$, then
+%When affine function has a fix point $v_f$, then
 % \begin{eqnarray*}
 %   f'_p(z) &=& f_p(z) + c_p = z \\
 %   c_p &=& z - f_p(z) \\
 %   f'_p(s) &=& f_p(s) + z - f_p(z) \\
 %   f'_p(s) - z &=& f_p(s - z).
 % \end{eqnarray*}
-\begin{eqnarray*}
-  f_{ap}(s) - v_f &=& f_p(s - v_f) \\
-  f_{ap}^n(s) - v_f  &=& f_p^n(s - v_f) 
-\end{eqnarray*}
-Hence, the period of affine function is same as the linear function.
-To assure the period, we subtract the fix point $v_f$ from the initial state
-$s_0$ first, then check if the result state is not in $V_r$.
+%\begin{eqnarray*}
+%  f_{ap}(s) - v_f &=& f_p(s - v_f) \\
+%  f_{ap}^n(s) - v_f  &=& f_p^n(s - v_f) 
+%\end{eqnarray*}
+The period of the outputs with respect to 
+the affine transition $F$ with initial 
+state $s$ is bounded from below
+by that of $F_p$ with $s_p$ (since the latter being a Mersenne prime,
+it is coprime to that of $F_r$ for $r<p$).
+As stated in the begining of this subsection,
+the state transition of $F_p$ becomes the state transition 
+by $f_p$ after the translation of state vectors by adding $v$. 
+Thus, for the period certification, it suffices to 
+show that $s + v \notin V_r$. Using the projection 
+$\pi: S \to V_U$, it suffices to keep $\pi(v)$ (not whole $v$),
+and compute $(\pi(s) + \pi(v))\cdot \mathrm{PCV}$, 
+and invert one bit in $\pi(s)$ if the inner product is zero, as 
+explained above. All these computations can be done
+inside \texttt{U} in the initialization stage, which
+is not time consuming. 
+
+%To assure the period, we subtract the fix point $v_f$ from the initial state
+%$s_0$ first, then check if the result state is not in $V_r$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Computation of the dimension of equidistribution}
 \label{sec:DE}
 We briefly recall the definition of dimension of 
-equidistribution (cf. \cite{CLT}\cite{COMBTAUS}). 
+equidistribution (cf. \cite{CLT}\cite{COMBTAUS}\cite{SFMT}).
+The version used here and its back ground are described in \cite{SFMT}. 
 \begin{definition}\label{def:DE}
-A periodic sequence with period $P$
+Consider a periodic sequence with period $P$
 \[
 \chi:=\mathbf{x}_0, \mathbf{x}_1, \ldots,
  \mathbf{x}_{P-1}, \mathbf{x}_P=\mathbf{x}_0, \ldots
 \]
-of $v$-bit integers is said to be {\em $k$-dimensionally equidistributed}
-if any $kv$-bit pattern occurs equally often as a $k$-tuple
-\[
-(\mathbf{x}_i, \mathbf{x}_{i+1}, \ldots, \mathbf{x}_{i+k-1})
-\]
-for a period $i=0,\ldots, P-1$.
-We allow an exception for 
-the all-zero pattern, which may occur once less often.
-(This last loosening of the condition is technically
-necessary, because the zero state does not occur
-in an $\bbf2$-linear generator). 
-The largest value of such $k$ is called the dimension 
-of equidistribution (DE).
-\end{definition}
-
-We want to generalize this definition slightly.
-We define the $k$-window set of the periodic sequence $\chi$
+of $v$-bit integers.
+Define the $k$-window multi-set of $\chi$
 as
 \[
 W_k(\chi):=
 \{(\mathbf{x}_i, \mathbf{x}_{i+1}, \ldots, \mathbf{x}_{i+k-1}) | 
 i =0,1,\ldots, P-1\},
 \]
-which is considered as a {\em multi-set}, namely, 
-the multiplicity of each element is considered. 
-
-For a positive integer $m$ and a multi-set $T$,
-let us denote by $m \cdot T$ the multi-set 
-where the multiplicity of each element in $T$ is
-multiplied by $m$. Then, the above definition of
-equidistribution is equivalent to 
-\[
-W_k(\chi)=(m\cdot \bbf2^{vk}) \setminus \{{\mathbf 0}\},
-\]
-where $m$ is the multiplicity of the occurrences,
-and the operator $\setminus$ means that the multiplicity
-of ${\mathbf 0}$ is subtracted by one. 
-
-\begin{definition}
-In the above setting, if there exist a positive integer $m$ 
-and a multi-subset
-$D \subset (m\cdot \bbf2^{vk})$
-such that
-\[
-W_k(\chi)=(m\cdot \bbf2^{vk}) \setminus D,
-\]
-we say that $\chi$ is $k$-dimensionally equidistributed 
-with defect ratio $\#(D)/\#(m \cdot \bbf2^{vk})$, 
-where the cardinality is counted with multiplicity. 
+where the multiplicity is counted. 
+For a positive integer $m$,  
+$m\cdot \bbf2^{vk}$ denote the multiset
+consisting of every element of $\bbf2^{vk}$ with
+multiplicity $m$. 
+If there is an $m$ such that $W_k(\chi)$ is close
+to $m\cdot \bbf2^{vk}$, namely, suppose that
+$W_k(\chi) \subset m\cdot \bbf2^{vk}$
+and the ratio of the complement 
+$$r:=(\#(m \cdot \bbf2^{vk})-\#(W_k(\chi))) /\#(m \cdot \bbf2^{vk})$$
+is ``small,'' 
+then $\chi$
+is said to be {\em $k$-dimensionally equidistributed}.
+The largest value of such $k$ is called the dimension 
+of equidistribution (DE).
 \end{definition}
-Thus, in Definition~\ref{def:DE}, the defect ratio up to $1/(P+1)$
-is allowed to claim the dimension of equidistribution.
-If $P=2^{p}-1$, then $1/(P+1)=2^{-p}$. 
-In the following, the dimension of equidistribution 
-allows the defect ratio up to $2^{-p}$. 
+Here, ``small'' means less than or equal to $2^{-p}$, where $p$ 
+is the Mersenne exponent considered in the PRNG. 
 
 For a $b$-bit integer sequence, its {\em dimension of 
 equidistribution at $v$-bit accuracy} $k(v)$
@@ -584,19 +743,18 @@ is defined as the DE of the $v$-bit sequence, obtained by extracting
 the $v$ MSBs from each of the $b$-bit integers.
 If the defect ratio is $1/(P+1)$, 
 then there is an upper bound 
-\[
-k(v) \leq \lfloor \log_2 (P+1) / v \rfloor.
-\]
-The gap between the realized $k(v)$ and the upper bound is
+$k(v) \leq \lfloor \log_2 (P+1) / v \rfloor$,
+and their gap $d(v)$ is 
 called the dimension defect at $v$ of the sequence,
-and denoted by
+and their sum $\Delta$ over $v=1,\ldots,b$ is called
+the total dimension defect, namely: 
 \[
 d(v):=\lfloor \log_2 (P+1) / v \rfloor -k(v) 
-\mbox{ and } \Delta:=\sum_{v=1}^w d(v).
+\mbox{ and } \Delta:=\sum_{v=1}^b d(v).
 \]
-The summation of all the dimension defects at
-$1 \leq v \leq w$ is called the total dimension defect, 
-denoted by $\Delta$.
+%The summation of all the dimension defects at
+%$1 \leq v \leq w$ is called the total dimension defect, 
+%denoted by $\Delta$.
 % We may compute $k(v)$ by standard linear algebra.
 % We used a more efficient algorithm based on 
 % a weighted norm,
@@ -605,14 +763,25 @@ denoted by $\Delta$.
 % somewhere else,
 % because of lack of space. HARASE
 
-$k(v)$ of affine state transition function which have fix point is
-almost same that of linear transition function, except that the
-exceptional tuple which occurs one less often is not all zero tuple.
+In the linear transition case, $k(v)$ is
+efficiently computed by lattice method \cite{CLT}.
+In the affine state transition case, if there is a
+fixed point, then $k(v)$ is unchanged when
+the affine transition function 
+and the affine output function are replaced with their linear parts,
+by translation arguments.
 
-There is a difficulty in computing $k(v)$ when 
-a 128-bit vector generator is used as a 32-bit 
-(or 64-bit) vector generator. This is possible by
-using weighted norm.\cite{SFMT}\cite{thesis:saito}
+In the RTM case, $k(v)$'s for the generator restricted to 
+the transition $F_p: V_p \to V_p$ and the output
+function $o|_{V_p}$ gives a lower bound of $k(v)$'s of the 
+whole generator (see \cite{SFMT}). Accordingly, we define $k(v)$ of
+RTM by $k(v)$ with respect to $V_p$ with period $2^p-1$. 
+Since the fixed point exists for $F_p$, computation reduces to the linear case.
+
+%There is a difficulty in computing $k(v)$ when 
+%a 128-bit vector generator is used as a 32-bit 
+%(or 64-bit) vector generator. This is solved by
+%using weighted norm (see \cite{SFMT}\cite{thesis:saito}).
 
 % SFMT generates a sequence
 % $\mathbf{x}_0, \mathbf{x}_1, \mathbf{x}_2, \ldots$ of 128-bit integers. 
@@ -783,51 +952,56 @@ using weighted norm.\cite{SFMT}\cite{thesis:saito}
 \section{Implementation}
 \label{sec:implement}
 
-The aim of this article is to design and to implement a fast floating
-point pseudorandom number generator with sufficient quality suitable
-for large scale scientific simulation. We decided to use 128-bit
-operation customizable in SIMD feature of modern CPUs because we 
-succeeded in SFMT.
+%The aim of this article is to design and to implement a fast floating
+%point pseudorandom number generator with sufficient quality suitable
+%for large scale scientific simulation. We decided to use 128-bit
+%operation customizable in SIMD feature of modern CPUs because we 
+%succeeded in SFMT.
+As in SFMT, we decided to use 128-bit operations available in 
+standard SIMD features for the efficient generation.
+The proposed generator is named dSFMT (double precision
+floating point SIMD-oriented Fast Mersenne Twister).
+%is
+%specialized in generating double precision floating point number in
+%IEEE 754 format. 
 
-We call our new generator dSFMT, which stands for double precision
-floating point SIMD-oriented Fast Mersenne Twister. dSFMT is
-specialized in generating double precision floating point number in
-IEEE 754 format.  We released dSFMT based on this idea in 2007 from
-our web page\cite{web:SFMT}.
-
-Here we propose an improved version of dSFMT, dSFMT ver. 2.
+Note that there is another dSFMT released in 
+2007 from our web page\cite{web:SFMT}, 
+but no corresponding article exists.
+The generator proposed here is improved by
+adopting the pulmonary LFSR and a more efficient recursion.
+To avoid the confusion, we call the generator proposed 
+in this paper as dSFMT ver. 2.
 
 %%%%%%%%%%%%%%%%%%%%
 \subsection{The recursion of dSFMT}
 \label{sec:recursion}
 
-dSFMT ver. 2 is a pulmonary LFSR, whose recursion formulas are:
+dSFMT ver. 2 is a pulmonary LFSR, whose recursion formulas are
+(\ref{eq:recursion})(\ref{eq:lung}) with
 \begin{eqnarray}
-  h(\mathbf{w}_0, ..., \mathbf{w}_{N-2}, \mathbf{u}_0)
+  h(\mathbf{w}_0, \ldots , \mathbf{w}_{N-2}, \mathbf{u}_0)
   &=& \mathbf{w}_{0}A + \mathbf{w}_{M} + \mathbf{u}_{0}B, \label{eq:dsfmt}
   \\
-  g(\mathbf{w}_0, ..., \mathbf{w}_{N-2}, \mathbf{u}_0)
+  g(\mathbf{w}_0, \ldots , \mathbf{w}_{N-2}, \mathbf{u}_0)
   &=& \mathbf{w}_{0} 
-  + h(\mathbf{w}_0, ..., \mathbf{w}_{N-2}, \mathbf{u}_0)C,
+  + h(\mathbf{w}_0, \ldots , \mathbf{w}_{N-2}, \mathbf{u}_0)C, \label{eq:dsfmt-lung}
 \end{eqnarray}
-where $\mathbf{w}_0$, $\mathbf{w}_M$, $\mathbf{w}_{N-2}$, and $u$ are
-b(= 128) bit element of computer memory, regarding horizontal vectors
-in $\bbf2^{128}$, and $A$, $B$, $C$ are sparse $128 \times 128$
-matrices over \bbf2 for which $\mathbf{w}A$, $\mathbf{w}B$,
-$\mathbf{w}C$ can be computed by a few SIMD operations. These vectors
-are kept in an N elements array of computer memory, where
-$\mathbf{w}_0$, ..., $\mathbf{w}_{N-2}$ are 0th to (N-2)th element and
-$u$ is the last element.
-
+where $\mathbf{w}_i$'s and $\mathbf{u}$ are
+b(= 128) bit integers regarded as horizontal vectors
+in $\bbf2^{128}$, and $A$, $B$, $C$ are linear transformations
+described below, 
+computable by a few SIMD operations. The number $b_w$ of variable bits
+is $128-12\times 2=104$, while $b_u=128$.
 \begin{itemize}
 \item 
   $\mathbf{w} A := \mathbf{w} \stackrel{64}{<<} \textrm{SL1}$
 
   This notation means that $\mathbf{w}$ is regarded as two 
   64-bit memories, and $\mathbf{w} A$ is the result of the left-shift
-  of $\mathbf{w}$ by SL1 bits. There is such a SIMD operation in 
-  Pentium SSE2, and PowerPC AltiVec SIMD can emulate it.
-  SL1 is a parameter $12 \le \textrm{SL1} < 64$.
+  of each 64-bit by SL1 bits. There is such a SIMD operation in 
+  Pentium SSE2, and can be emulated in PowerPC AltiVec SIMD.
+  SL1 is a parameter with $12 \le \textrm{SL1} < 64$.
 
 \item
   $\mathbf{u} B := \mathbf{u}\,\textrm{perm(4, 3, 2, 1)}$
@@ -842,24 +1016,29 @@ $u$ is the last element.
   + (\mathbf{u}\, \& \,\textrm{MASK})$
 
   The notation $\mathbf{u} \stackrel{64}{>>} 12$ means that
-  $\mathbf{u}$ is regarded as two 64-bit memories like $A$ and
-  right-shifted 12 bit.  And the notation $\&$ means 128-bit
+  $\mathbf{u}$ is regarded as two 64-bit memories and each
+  right-shifted by 12 bit.  The notation $\&$ means 128-bit
   bitwise logical `\textbf{AND}' with a 128-bit constant vector \textbf{MASK}.
-  MASK is a concatenation of two 64-bit vectors and each of them has
-  12 bits of 0s in their most significant bits.
+  MASK is a concatenation of two 64-bit vectors with 0s in the 12 MSBs 
+  for both.
 
 \end{itemize}
-Here is a piece of code to show the recursion written in C language.
-\begin{verbatim}
-    u[0] = (w0[0] << SL1) ^ wm[0] ^ (u0[1] >> 32) ^ (u0[1] << 32);
-    u[1] = (w0[1] << SL1) ^ wm[1] ^ (u0[0] >> 32) ^ (u0[0] << 32);
-    w[0] = w0[0] ^ (u[0] >> 12) ^ (u[0] & MASK[0]);
-    w[0] = w0[1] ^ (u[1] >> 12) ^ (u[1] & MASK[1]);
-\end{verbatim}
-where \texttt{\^} and \texttt{\&} means bitwise exclusive `OR' and
-`AND' respectively, every array is declared to have two unsigned
-64-bit integers and \texttt{w0} is for $w_0$, and so
-on. Fig.~\ref{fig:dsfmt} shows the recursion in circuit like diagram.
+%The state vector
+%is kept in an N elements array of computer memory, where
+%$\mathbf{w}_0$, \ldots , $\mathbf{w}_{N-2}$ are 0th to (N-2)th element and
+%$u$ is the last element. 
+
+%Here is a piece of code to show the recursion written in C language.
+%\begin{verbatim}
+%    u[0] = (w0[0] << SL1) ^ wm[0] ^ (u0[1] >> 32) ^ (u0[1] << 32);
+%    u[1] = (w0[1] << SL1) ^ wm[1] ^ (u0[0] >> 32) ^ (u0[0] << 32);
+%    w[0] = w0[0] ^ (u[0] >> 12) ^ (u[0] & MASK[0]);
+%    w[0] = w0[1] ^ (u[1] >> 12) ^ (u[1] & MASK[1]);
+%\end{verbatim}
+%where \texttt{\^} and \texttt{\&} means bitwise exclusive `OR' and
+%`AND' respectively, every array is declared to have two unsigned
+%64-bit integers and \texttt{w0} is for $w_0$, and so on. 
+Fig.~\ref{fig:dsfmt} shows the recursion in a circuit-like diagram.
 
 \begin{figure}
   \begin{center}
@@ -869,16 +1048,19 @@ on. Fig.~\ref{fig:dsfmt} shows the recursion in circuit like diagram.
   \end{center}
 \end{figure}
 
-Note that (\ref{eq:dsfmt}) does not have neither constants of affine
-transformation, nor \texttt{0x3ff} of IEEE 754 exponent part.  Still,
-dSFMT has affine transformation function and generates double
-precision floating point number in $[1, 2)$ when initial value $w_0,
-..., w_{N-2}$ have \texttt{0x3ff} in their exponent part. This trick
-contributed the speed up of dSFMT ver. 2 because extra operations for
-setting constants are omitted.
+Note that the recursion (\ref{eq:dsfmt})(\ref{eq:dsfmt-lung})
+is linear, and constant \texttt{0x3ff} of IEEE 754 exponent part
+does not appear.
+The recursion is carefully selected so that once
+the initial value $w_0,\ldots , w_{N-2}$ have \texttt{0x3ff} in their 12 MSBs,
+then these constant parts are preserved through the recursion. 
+This trick contributes to the generation speed, by avoiding
+constants setting.
 
-Table~\ref{tab:pcv} shows the sets of fix point and period
-certification vector(PCV) corresponds with some Mersenne exponents.
+Table~\ref{tab:params} lists the parameters 
+for dSFMT ver. 2 with various sizes.
+Table~\ref{tab:pcv} lists the corresponding fixed points and period
+certification vectors(PCV).
 
 % We checked the following. 
 % \begin{proposition}
@@ -967,7 +1149,8 @@ We compared two algorithms: MT19937, 64-bit MT19937, SFMT19937, dSFMT
 ver.1 19937 and dSFMT ver.2 19937 with implementations using and
 without using SIMD instructions. For MT and SFMT, `mask' means the
 conversion by bit operation described in \S\ref{sec:floating} from 64
-bit integer of two 32-bit integers, and `$\times$ const' means the
+bit integer, % of two 32-bit integers,
+and `$\times$ const' means the
 conversion by multiplying $2^{-64}$. Note that original MT and SFMT
 don't use `mask' conversion.
 
@@ -975,7 +1158,7 @@ We measured the speeds for five different CPUs: Pentium M 1.4GHz,
 Pentium IV 3GHz, core 2 duo 1.83GHz (32-bit mode, use 1 core), AMD
 Athlon 64 3800+ (64-bit mode), and PowerPC G4 1.33GHz.  In returning
 the random values, we used two different methods.  One is sequential
-generation, where one double floating point random numbers is returned
+generation, where one double floating point random number is returned
 for one call.  The other is block generation, where an array of random
 double floating point numbers is generated for one call.  We used
 Intel C Compiler for intel CPUs (Pentium M, Pentium IV, core 2 duo)
@@ -986,16 +1169,16 @@ floating point numbers in the range $[0, 1)$ to compare with other
 generators.  More precisely, in case of the block generation, we
 generate $10^5$ of floating point numbers by one call, and this is
 iterated for $10^3$ times.  For sequential generation, the same $10^8$
-floating point numbers integers are generated, one per call.  We used
+floating point numbers are generated, one per call.  We used
 the inline declaration {\tt inline} to avoid the function call.
 Implementations without SIMD are written in INTERNATIONAL STANDARD
 ISO/IEC 9899 : 1999(E) Programming Language-C, Second Edition (which
 we shall refer to as C99 in the rest of this article), whereas those
 with SIMD use some standard SIMD extension of C99 supported by the
-compilers Intel C compiler and GNU C Compiler.
+Intel C compiler and GNU C Compiler.
 
-Table~\ref{tab:speed-simd} summarises the speed comparisons using SIMD
-and Table|\ref{tab:speed-c} shows the speed comparisons with out using
+Table~\ref{tab:speed-simd} summarises the speed comparison using SIMD
+and Table~\ref{tab:speed-c} shows the speed comparison without using
 SIMD.  64-bit MT is not listed in Table~\ref{tab:speed-simd}, because
 we don't have SIMD version.  The first two lines list the CPU time (in
 seconds) needed to generate $10^8$ floating point numbers, for a
@@ -1003,7 +1186,7 @@ Pentium-M CPU.  The first line lists the seconds for the
 block-generation scheme.  The second line lists the seconds for the
 sequential generation scheme. 
 
-The result is clear, dSFMT ver. 2 is the fastest for all CPUs, all
+The result is clear: dSFMT ver. 2 is the fastest for all CPUs, all
 returning methods, using SIMD and without using SIMD.
 
 \begin{table}
@@ -1045,16 +1228,17 @@ returning methods, using SIMD and without using SIMD.
       1.33GHz & seq & 1.960 & 2.865 & 4.090 & 5.489 & 5.464 & 9.110 \\ \hline
     \end{tabular}
     \caption{The CPU time (sec.) for $10^8$ generations of double precision
-      floating point numbers [0, 1) using standard C.}
+      floating point numbers [0, 1) using standard C (without using SIMD).}
     \label{tab:speed-c}
   \end{center}
 \end{table}
 
-For reference, Table~\ref{tab:speed-other} shows the speed of other
-generators. It's difficult to compare dSFMT with other generators
+For a reference, Table~\ref{tab:speed-other} shows the speed of other
+generators. It is not a fair comparison, 
 because dSFMT has 52-bit precision and other generators have 32-bit
-precision. In most cases, dSFMT' sequential generation using standard
-C (or slowest case) is faster than other generators, except xorshift128.
+precision only. Even though, dSFMT's sequential generation using standard
+C (i.e. the slowest case) is faster than other generators, except xorshift128
+\cite{XORSHIFT}.(??? is this the right reference???)
 
 \begin{table}
   \begin{center}
@@ -1067,7 +1251,7 @@ C (or slowest case) is faster than other generators, except xorshift128.
       Power PC G4 & 2.947 & 7.524 & 3.082 & 2.267 \\ \hline
     \end{tabular}
     \caption{The CPU time (sec.) for $10^8$ generations of double precision
-      floating point numbers [0, 1) from 32 bit integer using standard C.}
+      floating point numbers [0, 1) from 32 bit pseudorandom integers using standard C.}
     \label{tab:speed-other}
   \end{center}
 \end{table}
@@ -1076,14 +1260,17 @@ C (or slowest case) is faster than other generators, except xorshift128.
 \subsection{Dimension of equidistribution}
 \label{sec:equidistribution}
 We calculated $d(v)$s for our generators, by using method described 
-\S~\ref{sec:DE}.
+in \S~\ref{sec:DE}.
 
 Table~\ref{tab:dd} lists the dimension defects $d(v)$ of dSFMT, for
-Mersenne exponent mexp $= 521, 1279, 2203, 4253, 11213, 19937$ and
-$v=1,2,\ldots, 52$.  $d(v)$ are small for $1 \le v \le 52$, larger mexp
-has larger $d(v)$ for later half of $v$s, still mexp 19937 has total
-dimension defect $\Delta$ $2608$, which is smaller than $4188$ of
-SFMT19937's 32-bit $\Delta$ and $6750$ of MT19937's 32-bit $\Delta$.
+Mersenne exponent (mexp) $= 521, 1279, 2203, 4253, 11213, 19937$ and
+$v=1,2,\ldots, 52$.  The $d(v)$ for $1 \le v \le 22$ are very small. 
+The larger mexp
+seems to lead to the larger $d(v)$ for $v>22$. Still, the case mexp=19937 has 
+total dimension defect $\Delta=2608$, which is smaller than $4188$ of
+SFMT19937's 32-bit $\Delta$ and $6750$ of MT19937's 32-bit $\Delta$
+(note that $\Delta$ tends to increase according to the increase of the bit size
+of the generated numbers, by its definition).
 
 \begin{table}
   \begin{center}
@@ -1126,15 +1313,16 @@ SFMT19937's 32-bit $\Delta$ and $6750$ of MT19937's 32-bit $\Delta$.
 
 \begin{remark}
   The number of non-zero terms in $\chi_f(t)$ is an index measuring
-  the amount of bit-mixing.  The column \textbf{weight} in
-  following table shows the number. These values are almost
-  half of the degree of $\chi_f(t)$, which implies good bit-mixing.
+  the amount of bit-mixing.  The column \textbf{weight} in the 
+  following table shows these numbers. These values are almost
+  half of the degree of $\chi_f(t)$, larger than those of MT
+  and WELL, which implies good bit-mixing.
 \end{remark}
 
 \begin{center}
   The number of non zero term in $\chi_f(t)$
   \begin{tabular}{c|rrrrrr} \hline
-    MEXP & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\
+    mexp & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\
     degree of $\chi_f(t)$ & 544 & 1376 & 2208 & 4288 & 11256 & 19992 \\
     weight & 273 & 673 & 1076 & 2233 & 5684 & 9756 \\ 
     ratio & 0.50 & 0.49 & 0.49 & 0.52 & 0.50 & 0.49 \\ \hline
@@ -1145,16 +1333,18 @@ SFMT19937's 32-bit $\Delta$ and $6750$ of MT19937's 32-bit $\Delta$.
 
 We proposed PRNG specialized in generating double precision
 floating point numbers. Using \bbf2-affine state transition
-function our generator makes IEEE 754 format vector in computer
-memory. And we discuss about the theoretical base of this
-generator.
+function, our generator makes IEEE754 format floating point number
+representations in the computer
+memory. We discussed the theoretical base of this generator.
 
-By trial and error, and considering architecture of modern CPUs, we
-implement double precision floating point SFMT (dSFMT) which have
-Mersenne Prime $2^{521}-1$,$2^{1279}-1$,$2^{2203}-1$,$2^{4253}-1$,
-$2^{11213}-1$,$2^{19937}-1$ as their least period.
-Their generation is very fast compared with existing generators,
-and they have good equidistribution property.
+By considering architecture of modern CPUs and by trial and error, we
+implemented double precision floating point SFMT (dSFMT) whose periods
+are multiples of 
+Mersenne primes $2^{521}-1$, $2^{1279}-1$, $2^{2203}-1$, $2^{4253}-1$, 
+$2^{11213}-1$, $2^{19937}-1$, respectively.
+Their generation is very fast, compared with existing generators.
+Moreover, they have good equidistribution property.
+%??? These generators passed TestU01 statistical test suite \cite{???}
 
 % %\subsection{Trade-off between speed and quality}
 % It is difficult to measure the generation speed of a PRNG in a fair way,
