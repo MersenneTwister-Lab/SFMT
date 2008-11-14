@@ -49,7 +49,7 @@
 % \def\id{{\mathrm{Id}}}
 % \def\tr{{\mathrm{tr}}}
 
-\def\bbf2{\ifmmode \mathbb{F}_2 \else $\mathbb{F}_2$ \fi}
+\def\bbf2{\ifmmode\mathbb{F}_2\else$\mathbb{F}_2$\fi}%
 %\newcommand{\bbf2}{{\ifmmode \mathbb{F}_2 \else $\mathbb{F}_2$ \fi}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -192,7 +192,7 @@ independently around the year.
 Another method is to convert the unsigned integer to 
 a signed integer with same number of bits,
 and then to a (signed) floating point number.
-This method is often fast, because coverting unsigned
+This method is often fast, because converting unsigned
 integer to floating point is slower than signed integer 
 (hardware converter is sometimes designated for signed integer,
 cf. \cite{doornik}). 
@@ -202,7 +202,7 @@ a vector with components in \bbf2, considered as
 a binary integer. In this article, we propose an \bbf2-linear 
 (more exactly, \bbf2-affine) generator whose
 output vectors are regarded as representations 
-of floating point numbers in IEEE754 format. 
+of floating point numbers in IEEE 754 format. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{IEEE double precision floating point format}
@@ -401,7 +401,7 @@ Let $b_w$ denote the number of variable bits
 in each \texttt{W[i]} (52 in the above case), 
 and $b_u$ denote the number of bits in the 
 lung \texttt{U}.
-Such a plumonary LFSR (precisely, not linear but affine)
+Such a pulmonary LFSR (precisely, not linear but affine)
 is considered as an automaton, with the state space 
 $S=\bbf2^{b_u + b_w \times (N-1)}$.
 The state transition function $F: S \to S$ is given by
@@ -453,7 +453,7 @@ unchanged by the translation.
 
 The equation $F(s)=s$ is equivalent to $(f-\textrm{Id})(s)=c$.
 Thus, a fixed point exists 
-if the characterisitc polynomial $\chi_f$ of $f$ 
+if the characteristic polynomial $\chi_f$ of $f$ 
 does not have 1 as a root, 
 in particular if irreducible with degree $\geq 2$.
 
@@ -477,7 +477,7 @@ SFMT adopted another method to avoid the integer factorization, the
 reducible transition method (RTM), which uses a reducible
 characteristic polynomial with a large primitive factor.  This idea
 appeared in somewhat different purposes in 
-\cite{FUSHIMI90} \cite{BRENT}\cite{BRENT-PRIM}.
+\cite{FUSHIMI90}\cite{BRENT}\cite{BRENT-PRIM}.
 RTM in our context means to find a linear transition function $f:S \to S$
 that has decomposition $S=V_p\oplus V_r$
 by $f$-invariant subspaces, where $V_p$ has 
@@ -488,11 +488,11 @@ the period of $f$ is at least the period of $f_p$,
 and the high dimensional equidistribution is 
 better than or equal to that of $f_p$ (see \cite{SFMT}).
 Thus, we can obtain the lower bound of the period
-and the dimension of equidistibution of $f$ by 
+and the dimension of equidistribution of $f$ by 
 those of $f_p$, and for the latter, the period certification
 is easy (see \cite[\S3.2.2]{knuth:bible}).
 RTM needs not to discard $r$ bits at each generation, 
-so at the geneation stage it is faster than discarding 
+so at the generation stage it is faster than discarding 
 methods. 
 
 The new generator dSFMT uses this RTM, namely reducible $\chi_f$.
@@ -683,7 +683,7 @@ the affine transition $F$ with initial
 state $s$ is bounded from below
 by that of $F_p$ with $s_p$ (since the latter being a Mersenne prime,
 it is coprime to that of $F_r$ for $r<p$).
-As stated in the begining of this subsection,
+As stated in the beginning of this subsection,
 the state transition of $F_p$ becomes the state transition 
 by $f_p$ after the translation of state vectors by adding $v$. 
 Thus, for the period certification, it suffices to 
@@ -1041,11 +1041,10 @@ is $128-12\times 2=104$, while $b_u=128$.
 Fig.~\ref{fig:dsfmt} shows the recursion in a circuit-like diagram.
 
 \begin{figure}
-  \begin{center}
-    \includegraphics[width=\linewidth]{fig-dsfmt.pdf}
-    \caption{Diagram of dSFMT}
-    \label{fig:dsfmt}
-  \end{center}
+  \centering
+  \includegraphics[width=\linewidth]{fig-dsfmt.pdf}
+  \caption{Diagram of dSFMT}
+  \label{fig:dsfmt}
 \end{figure}
 
 Note that the recursion (\ref{eq:dsfmt})(\ref{eq:dsfmt-lung})
@@ -1191,6 +1190,10 @@ returning methods, using SIMD and without using SIMD.
 
 \begin{table}
   \begin{center}
+    \caption{The CPU time (sec.) for $10^8$ generations using SIMD.}
+    %of double precision
+    %floating point numbers [0, 1) using SIMD feature.}
+    \label{tab:speed-simd}
     \begin{tabular}{|ll|r|r|r|r|r|} \hline
       && dSFMTv2 & dSFMTv1 & MT & SFMT & SFMT \\
       && (new) & (old) & mask & mask & $\times$ const \\ \hline \hline
@@ -1205,14 +1208,15 @@ returning methods, using SIMD and without using SIMD.
       PowerPC G4& blk & 0.887 & 1.151 & 2.175 & 1.657 & 8.897 \\
       1.33GHz & seq & 1.212 & 1.401 & 5.624 & 2.994 & 7.712 \\ \hline
     \end{tabular}
-    \caption{The CPU time (sec.) for $10^8$ generations of double precision
-      floating point numbers [0, 1) using SIMD feature.}
-    \label{tab:speed-simd}
   \end{center}
 \end{table}
 
 \begin{table}
   \begin{center}
+    \caption{The CPU time (sec.) for $10^8$ generations (without using SIMD).}
+    %of double precision
+    %floating point numbers [0, 1) using standard C (without using SIMD).}
+    \label{tab:speed-c}
     \begin{tabular}{|ll|r|r|r|r|r|r|} \hline
       &  & dSFMT2 & dSFMT1 & MT 64 & MT & SFMT & SFMT \\
       &  &(new)&(old)& mask & mask & mask & $\times$ const \\ \hline\hline
@@ -1227,9 +1231,6 @@ returning methods, using SIMD and without using SIMD.
       PowerPC G4 & blk & 1.834 & 3.567 & 2.297 & 4.326 & 4.521 & 12.685 \\
       1.33GHz & seq & 1.960 & 2.865 & 4.090 & 5.489 & 5.464 & 9.110 \\ \hline
     \end{tabular}
-    \caption{The CPU time (sec.) for $10^8$ generations of double precision
-      floating point numbers [0, 1) using standard C (without using SIMD).}
-    \label{tab:speed-c}
   \end{center}
 \end{table}
 
@@ -1238,10 +1239,14 @@ generators. It is not a fair comparison,
 because dSFMT has 52-bit precision and other generators have 32-bit
 precision only. Even though, dSFMT's sequential generation using standard
 C (i.e. the slowest case) is faster than other generators, except xorshift128
-\cite{XORSHIFT}.(??? is this the right reference???)
+\cite{XORSHIFT-MAR}.
 
 \begin{table}
   \begin{center}
+    \caption{The CPU time (sec.) for $10^8$ generations.}
+    % of double precision floating point numbers [0, 1).
+    % from 32 bit pseudorandom integers using standard C.}
+    \label{tab:speed-other}
     \begin{tabular}{|l|r|r|r|r|} \hline
       & WELL1024 & WELL19937 & MT19937 & XORSHIFT128 \\ \hline
       Pentium M & 2.076 & 2.876 & 2.028 & 1.233 \\
@@ -1250,9 +1255,6 @@ C (i.e. the slowest case) is faster than other generators, except xorshift128
       Athlon 64 & 0.804 & 1.191 & 0.971 & 0.975 \\
       Power PC G4 & 2.947 & 7.524 & 3.082 & 2.267 \\ \hline
     \end{tabular}
-    \caption{The CPU time (sec.) for $10^8$ generations of double precision
-      floating point numbers [0, 1) from 32 bit pseudorandom integers using standard C.}
-    \label{tab:speed-other}
   \end{center}
 \end{table}
 
@@ -1274,6 +1276,8 @@ of the generated numbers, by its definition).
 
 \begin{table}
   \begin{center}
+    \caption{$d(v)$ of 52-bit fraction part of dSFMTv2.}
+    \label{tab:dd}
     \begin{tabular}{|r|rrrrrr||r|rrrrrr|} \hline
       & 521 & 1279 & 2203 & 4253 & 11213 & 19937 
       & & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\ \hline
@@ -1307,33 +1311,34 @@ of the generated numbers, by its definition).
       & 73 & 135 & 291 & 531 & 1423 & 2608 \\ \hline
     \end{tabular}
   \end{center}
-  \caption{$d(v)$ of 52-bit fraction part of dSFMTv2.}
-  \label{tab:dd}
 \end{table}
 
 \begin{remark}
   The number of non-zero terms in $\chi_f(t)$ is an index measuring
   the amount of bit-mixing.  The column \textbf{weight} in the 
-  following table shows these numbers. These values are almost
+  Table~\ref{tab:weight} shows these numbers. These values are almost
   half of the degree of $\chi_f(t)$, larger than those of MT
   and WELL, which implies good bit-mixing.
 \end{remark}
 
-\begin{center}
-  The number of non zero term in $\chi_f(t)$
-  \begin{tabular}{c|rrrrrr} \hline
-    mexp & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\
-    degree of $\chi_f(t)$ & 544 & 1376 & 2208 & 4288 & 11256 & 19992 \\
-    weight & 273 & 673 & 1076 & 2233 & 5684 & 9756 \\ 
-    ratio & 0.50 & 0.49 & 0.49 & 0.52 & 0.50 & 0.49 \\ \hline
-  \end{tabular}
-\end{center}
+\begin{table}[h]
+  \begin{center}
+    \caption{The number of non zero term in $\chi_f(t)$}
+    \label{tab:weight}
+    \begin{tabular}{c|rrrrrr} \hline
+      mexp & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\
+      degree of $\chi_f(t)$ & 544 & 1376 & 2208 & 4288 & 11256 & 19992 \\
+      weight & 273 & 673 & 1076 & 2233 & 5684 & 9756 \\ 
+      ratio & 0.50 & 0.49 & 0.49 & 0.52 & 0.50 & 0.49 \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Concluding remarks}
 
 We proposed PRNG specialized in generating double precision
 floating point numbers. Using \bbf2-affine state transition
-function, our generator makes IEEE754 format floating point number
+function, our generator makes IEEE 754 format floating point number
 representations in the computer
 memory. We discussed the theoretical base of this generator.
 
@@ -1344,7 +1349,7 @@ Mersenne primes $2^{521}-1$, $2^{1279}-1$, $2^{2203}-1$, $2^{4253}-1$,
 $2^{11213}-1$, $2^{19937}-1$, respectively.
 Their generation is very fast, compared with existing generators.
 Moreover, they have good equidistribution property.
-%??? These generators passed TestU01 statistical test suite \cite{???}
+These generators passed DIEHARD Battery of Tests of Randomness.\cite{diehard}
 
 % %\subsection{Trade-off between speed and quality}
 % It is difficult to measure the generation speed of a PRNG in a fair way,
@@ -1422,4 +1427,4 @@ No.18005.
 % LocalWords:  ffdffeffefbfc ffffffdf dfffffff bfff ffafffffffb ffdfffc rr xcfb
 % LocalWords:  xccaa xc ae adb xb da aeb xde xf ef fd cb ba xd caae uint IEC le
 % LocalWords:  icl dSFMTv const blk Ghz mexp rrrrrr sfmt kanren equi LSB intel
-% LocalWords:  crrrrrr ap ar xorshift
+% LocalWords:  crrrrrr ap ar xorshift Im dSFMT's
