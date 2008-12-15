@@ -130,6 +130,9 @@ get-parity-vectorDPza-19937: sfmtDPza.cpp search-parity-vector.cpp
 get-parity-vectorDPza-521: sfmtDPza.cpp search-parity-vector.cpp
 	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
 
+get2-parity-vectorDPza-521: sfmtDPza.cpp search2-parity-vector.cpp
+	${CPP} -o $@ sfmtDPza.cpp search2-parity-vector.cpp ${LINKOPT}
+
 get-parity-vectorDPza-1279: sfmtDPza.cpp search-parity-vector.cpp
 	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
 
