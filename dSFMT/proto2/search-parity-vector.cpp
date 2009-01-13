@@ -23,51 +23,33 @@ NTL_CLIENT;
 
 const int WORD_WIDTH = 128;
 
-/* internal status */
-struct IN_STATUS {
-    bool zero;
-    vec_GF2 next;
-    DSFMT *dsfmt;
-};
-typedef struct IN_STATUS in_status;
-
 void search_lung (GF2X& f, uint64_t parity[2]);
-void set_status(in_status *st);
-void add_status(in_status *dist, in_status *src);
-void get_next_state(in_status *st);
-void get_base(in_status bases[], int size);
-int get_dependent_index(uint8_t dependents[], int size);
+void get_base(vec_GF2 bases[], int size);
 int get_dependent_trans(uint8_t dependent[], vec_GF2 array[], int size);
 int dependent_rows(uint8_t result[], mat_GF2& mat);
 void convert(mat_GF2& mat, vec_GF2 array[], int bit_len);
-void search_parity_check_vector(uint64_t parity[2], in_status *st, int size);
-void set_bit(in_status *st, GF2X& f, uint32_t *bit_pos);
+void search_parity_check_vector(uint64_t parity[2], vec_GF2 base[], int size);
+void set_vector(vec_GF2& vec, DSFMT& dsfmt);
 static void test_parity0(GF2X& f, uint64_t parity[2]);
-static void get_lcm(DSFMT& dsfmt);
+//static void get_lcm(DSFMT& dsfmt);
 
 static int mexp;
 static int maxdegree;
 static int verbose = false;
-static GF2X lcmpoly;
 
 int main(int argc, char *argv[]) {
     GF2X f;
     FILE *fp;
     uint64_t parity[2];
-    uint32_t seed;
 
     if (argc != 2) {
 	printf("usage:%s filename %d\n", argv[0], argc);
 	exit(1);
     }
-    lcmpoly = 1;
     mexp = DSFMT::get_rnd_mexp();
     maxdegree = DSFMT::get_rnd_maxdegree();
     printf("mexp = %d\n", mexp);
     printf("filename:%s\n", argv[1]);
-    seed = (unsigned int)time(NULL);
-    printf("seed = %u\n", seed);
-    mt_init(seed);
     fp = fopen(argv[1], "r");
     errno = 0;
     if ((fp == NULL) || errno) {
@@ -76,15 +58,14 @@ int main(int argc, char *argv[]) {
 	exit(1);
     }
     DSFMT::read_random_param(fp);
-    DSFMT::print_param(stdout);
     readFile(f, fp, true);
-    printf("deg poly = %ld\n", deg(f));
     fclose(fp);
     search_lung(f, parity);
+    DSFMT::set_pcv(parity);
+    DSFMT::print_param(stdout);
+    printf("deg poly = %ld\n", deg(f));
+    printBinary(stdout, f);
     test_parity0(f, parity);
-    printf("LCM: %ld + %ld = %ld : maxdegree = %d\n",
-	   deg(f), deg(lcmpoly), deg(f) + deg(lcmpoly), maxdegree);
-    printBinary(stdout, lcmpoly);
     return 0;
 }
 
@@ -207,69 +188,49 @@ void chk_minpoly(DSFMT& dsfmt) {
     printf("deg minpoly = %d\n", (int)deg(minpoly));
 }
 
-static void get_lcm(DSFMT& src) {
-    GF2X minpoly;
-    GF2X tmp;
-    vec_GF2 vec;
-    DSFMT dsfmt = src;
-    int i;
-
-    vec.SetLength(2 * maxdegree + 1);
-    for (i = 0; i < 104; i++) {
-	generating_polynomial104(dsfmt, vec, i, maxdegree);
-	berlekampMassey(minpoly, maxdegree, vec);
-	LCM(tmp, lcmpoly, minpoly);
-	lcmpoly = tmp;
-    }
-}
-
-void set_bit(in_status *st, GF2X& f, int *bit_pos) {
+void set_bit(vec_GF2& vec, GF2X& f, int *bit_pos) {
+    DSFMT dsfmt;
     for (;*bit_pos <= maxdegree;) {
-	st->dsfmt->fill_rnd_all(*bit_pos);
+	dsfmt.fill_rnd_all(*bit_pos);
 	(*bit_pos)++;
-	make_zero_state(*st->dsfmt, f);
-	//chk_minpoly(st->dsfmt);
-	set_status(st);
-	if (!st->zero) {
-	    get_lcm(*st->dsfmt);
+	make_zero_state(dsfmt, f);
+	set_vector(vec, dsfmt);
+	if (!IsZero(vec)) {
 	    break;
 	}
     }
 }
 
 void search_lung (GF2X& f, uint64_t parity[2]) {
-    static in_status bases[WORD_WIDTH];
-    int i, j;
+    static vec_GF2 bases[WORD_WIDTH];
+    int i;
     int count;
     int bit_pos = 0;
     int size = 2;
     int base_num = maxdegree - mexp;
 
-    for (i = 0; i < WORD_WIDTH; i++) {
-	bases[i].dsfmt = new DSFMT(123);
-    }
-    set_bit(&(bases[0]), f, &bit_pos);
-    set_bit(&(bases[1]), f, &bit_pos);
+    set_bit(bases[0], f, &bit_pos);
+    set_bit(bases[1], f, &bit_pos);
     //while(size <= base_num) {
     while((bit_pos < maxdegree) && (size <= base_num)) {
 	get_base(bases, size);
 	count = 0;
 	for (i = 0; i < size; i++) {
-	    if (!bases[i].zero) {
+	    if (!IsZero(bases[i])) {
 		count++;
 	    }
 	}
 	if (count == size) {
 	    if (size + 1 <= base_num) {
-		set_bit(&bases[size], f, &bit_pos);
+		set_bit(bases[size], f, &bit_pos);
 		size++;
 	    } else {
 		break;
 	    }
 	} else {
 	    for (i = 0; i < size; i++) {
-		if (bases[i].zero) {
-		    set_bit(&bases[i], f, &bit_pos);
+		if (IsZero(bases[i])) {
+		    set_bit(bases[i], f, &bit_pos);
 		}
 	    }
 	}
@@ -284,13 +245,11 @@ void search_lung (GF2X& f, uint64_t parity[2]) {
 	chk_minpoly(*bases[i].dsfmt);
     }
 #endif
-    for (i = 0; i < WORD_WIDTH; i++) {
-	delete bases[i].dsfmt;
-    }
+#if 0
     printf("----\n");
     for (i = 0; i < size; i++) {
 	for (j = 0; j < WORD_WIDTH; j++) {
-	    if (IsZero(bases[i].next[j])) {
+	    if (IsZero(bases[i][j])) {
 		printf("0");
 	    } else {
 		printf("1");
@@ -298,13 +257,13 @@ void search_lung (GF2X& f, uint64_t parity[2]) {
 	}
 	printf("\n");
     }
+#endif
     search_parity_check_vector(parity, bases, size);
 }
 
 #include <inttypes.h>
 
-void search_parity_check_vector(uint64_t parity[2],
-				in_status base[], int size) {
+void search_parity_check_vector(uint64_t parity[2], vec_GF2 base[], int size) {
     mat_GF2 mx;
     mat_GF2 my;
     int i, j;
@@ -312,7 +271,7 @@ void search_parity_check_vector(uint64_t parity[2],
     mx.SetDims(WORD_WIDTH, size);
     for (i = 0; i < WORD_WIDTH; i++) {
 	for (j = 0; j < size; j++) {
-	    mx.put(i, j, base[j].next[i]);
+	    mx.put(i, j, base[j][i]);
 	}
     }
     kernel(my, mx);
@@ -320,6 +279,7 @@ void search_parity_check_vector(uint64_t parity[2],
 	printf("initial lung can't find\n");
 	return;
     }
+#if 0
     printf("dim kernel = %ld\n", my.NumRows());
     printf("-----\n");
     for (i = 0; i < my.NumRows(); i++) {
@@ -332,131 +292,50 @@ void search_parity_check_vector(uint64_t parity[2],
 	}
 	printf("\n");
     }
+#endif
     vec_to_uint128(parity, my[0], 64);
+#if 0
     printf("parity check vector\n");
     for (i = 0; i < 2; i++) {
 	printf("p[%d] = 0x%016" PRIx64 "\n", i, parity[i]);
     }
+#endif
 }
 
-void set_status(in_status *st) {
+void set_vector(vec_GF2& vec, DSFMT& dsfmt) {
     int zero_count = 0;
     uint64_t lung[2];
     uint64_t ar[1][2];
 
-    st->zero = false;
-    st->dsfmt->gen_rand104spar(ar, 1);
-    st->dsfmt->get_lung(lung);
-    uint128_to_vec(st->next, lung, 64);
-    while (IsZero(st->next)) {
+    dsfmt.gen_rand104spar(ar, 1);
+    dsfmt.get_lung(lung);
+    uint128_to_vec(vec, lung, 64);
+    while (IsZero(vec)) {
 	zero_count++;
-	if (zero_count > maxdegree) {
-	    st->zero = true;
+	if (zero_count > maxdegree / 100) {
 	    break;
 	}
-	st->dsfmt->gen_rand104spar(ar, 1);
-	st->dsfmt->get_lung(lung);
-	uint128_to_vec(st->next, lung, 64);
+	dsfmt.gen_rand104spar(ar, 1);
+	dsfmt.get_lung(lung);
+	uint128_to_vec(vec, lung, 64);
     }
 }
 
-void add_status(in_status *dist, in_status *src) {
-    dist->dsfmt->add(*src->dsfmt);
-    dist->next += src->next;
-}
+void get_base(vec_GF2 bases[], int size) {
+    uint8_t dependents[size];
+    int ret;
+    int i;
 
-void get_next_state(in_status *st) {
-    int zero_count = 0;
-    uint64_t lung[2];
-    uint64_t ar[1][2];
-
-    if (st->zero) {
+    ret = get_dependent_trans(dependents, bases, size);
+    if (ret < 0) {
 	return;
     }
-    st->dsfmt->gen_rand104spar(ar, 1);
-    st->dsfmt->get_lung(lung);
-    uint128_to_vec(st->next, lung, 64);
-    while (IsZero(st->next)) {
-	zero_count++;
-	if (zero_count > maxdegree) {
-	    st->zero = true;
-	    break;
-	}
-	st->dsfmt->gen_rand104spar(ar, 1);
-	st->dsfmt->get_lung(lung);
-	uint128_to_vec(st->next, lung, 64);
-    }
-}
-
-void get_base(in_status bases[], int size) {
-    vec_GF2 next[size];
-    uint8_t dependents[size];
-    int index;
-    int i;
-    int ret;
-    int isZero;
-
-    for (;;) {
-	isZero = false;
-	for (i = 0; i < size; i++) {
-	    if (IsZero(bases[i].next)) {
-		isZero = true;
-		break;
-	    }
-	    next[i] = bases[i].next;
-	}
-	if (isZero) {
-	    break;
-	}
-	ret = get_dependent_trans(dependents, next, size);
-	if (ret < 0) {
-	    break;
-	}
-#if 0
-	fprintf(stderr, "dependents:");
-	for (i = 0; i < size; i++) {
-	    fprintf(stderr, "%1d", dependents[i]);
-	}
-	fprintf(stderr, "\n");
-#endif
-	index = get_dependent_index(dependents, size);
-	for (i = 0; i < size; i++) {
-	    if (i == index) {
-		continue;
-	    }
-	    if (dependents[i] != 0) {
-		add_status(&(bases[index]), &(bases[i]));
-	    }
-	}
-	if (IsZero(bases[index].next)) {
-	    get_next_state(&(bases[index]));
-	} else {
-	    fprintf(stderr, "next is not zero:");
-	    for (i = 0; i < WORD_WIDTH; i++) {
-		if (IsZero(bases[index].next[i])) {
-		    printf("0");
-		} else {
-		    printf("1");
-		}
-	    }
-	    printf("\n");
-	    fprintf(stderr, "ret = %u\n", ret);
-	    fprintf(stderr, "index = %u\n", index);
-	    exit(1);
-	}
-    }
-}
-
-int get_dependent_index(uint8_t dependents[], int size)
-{
-    int i;
-
     for (i = 0; i < size; i++) {
 	if (dependents[i] != 0) {
-	    return i;
+	    clear(bases[i]);
+	    break;
 	}
     }
-    return 0;
 }
 
 int get_dependent_trans(uint8_t dependent[], vec_GF2 array[], int size) {

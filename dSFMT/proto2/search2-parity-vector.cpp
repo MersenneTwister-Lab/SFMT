@@ -58,11 +58,13 @@ int main(int argc, char *argv[]) {
 	exit(1);
     }
     DSFMT::read_random_param(fp);
-    DSFMT::print_param(stdout);
     readFile(f, fp, true);
-    printf("deg poly = %ld\n", deg(f));
     fclose(fp);
     search_lung(f, parity);
+    DSFMT::set_pcv(parity);
+    DSFMT::print_param(stdout);
+    printf("deg poly = %ld\n", deg(f));
+    printBinary(stdout, f);
     test_parity0(f, parity);
     return 0;
 }
@@ -292,10 +294,12 @@ void search_parity_check_vector(uint64_t parity[2], vec_GF2 base[], int size) {
     }
 #endif
     vec_to_uint128(parity, my[0], 64);
+#if 0
     printf("parity check vector\n");
     for (i = 0; i < 2; i++) {
 	printf("p[%d] = 0x%016" PRIx64 "\n", i, parity[i]);
     }
+#endif
 }
 
 void set_vector(vec_GF2& vec, DSFMT& dsfmt) {
