@@ -44,7 +44,7 @@ void generating_polynomial128(DSFMT& dsfmt,
 	pos = 0;
 	mask = (uint64_t)1UL << (128 - bitpos);
     }
-    dsfmt.gen_rand104spar(ar, 2 * maxdegree);
+    dsfmt.gen_rand128spar(ar, 2 * maxdegree);
     clear(vec);
     for (i = 0; i < 2 * maxdegree; i++) {
 	bit = (ar[i][pos] & mask);

@@ -32,6 +32,7 @@ class DSFMT {
 public:
     static void setup_param(uint32_t array[], int *index);
     static void set_pcv(uint64_t pcv[2]);
+    static void set_fix(uint64_t fix[2]);
     static void read_random_param(FILE *fp);
     static void print_param(FILE *fp);
     static unsigned int get_rnd_maxdegree(void);
@@ -59,6 +60,7 @@ public:
     void init_gen_rand(uint64_t seed, uint64_t high = high_const);
     uint64_t gen_rand104sp(uint64_t arrary[2], int mode);
     void gen_rand104spar(uint64_t array[][2], int size);
+    void gen_rand128spar(uint64_t array[][2], int size);
     void get_lung(uint64_t lung[2]);
     void add(const DSFMT& src);
     void fill_rnd(uint64_t high = high_const);

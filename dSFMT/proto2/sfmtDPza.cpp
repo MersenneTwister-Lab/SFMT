@@ -77,6 +77,11 @@ void DSFMT::set_pcv(uint64_t in_pcv[2]) {
     pcv[1] = in_pcv[1];
 }
 
+void DSFMT::set_fix(uint64_t in_fix[2]) {
+    fix[0] = in_fix[0];
+    fix[1] = in_fix[1];
+}
+
 void DSFMT::print_param(FILE *fp) {
     fprintf(fp, "pos1 = %d\n", pos1);
     fprintf(fp, "sl1 = %d\n", sl1);
