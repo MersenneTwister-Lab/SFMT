@@ -312,6 +312,25 @@ uint64_t DSFMT::gen_rand104sp(uint64_t array[2], int mode)
     return array[0];
 }
 
+/* output lung */
+void DSFMT::gen_rand128spar(uint64_t array[][2], int size) {
+    int i;
+    int j;
+
+    if (idx >= N * 2) {
+	idx = 0;
+    }
+    i = idx / 2;
+    for (j = 0; j < size; j++) {
+	array[j][0] = status[N][0];
+	array[j][1] = status[N][1];
+	//next_state();
+	do_recursion(status[i], status[(i + pos1) % N], status[N]);
+	i = (i + 1) % N ;
+    }
+    idx = i * 2;
+}
+
 void DSFMT::gen_rand104spar(uint64_t array[][2], int size) {
     int i;
     int j;
