@@ -25,83 +25,17 @@ CPP = g++ -Wall -O9  -DNDEBUG -I../util -L../util $(DDEBUG) $(DMEXP) $(DPG)
 
 LINKOPT = -ldsfmt -lntl -lgmp
 
-param-searchDPz3-521: sfmtDPz3.o search.o
-	${CPP} -o $@ sfmtDPz3.o search.o ${LINKOPT}
-
-param-searchDPz4-521: sfmtDPz4.o search.o
-	${CPP} -o $@ sfmtDPz4.o search.o ${LINKOPT}
-
-param-searchDPz5-521: sfmtDPz5.o search.o
-	${CPP} -o $@ sfmtDPz5.o search.o ${LINKOPT}
-
-param-searchDPz6-521: sfmtDPz6.o search.o
-	${CPP} -o $@ sfmtDPz6.o search.o ${LINKOPT}
-
-param-searchDPz7-521: sfmtDPz7.o search.o
-	${CPP} -o $@ sfmtDPz7.o search.o ${LINKOPT}
-
-param-searchDPz7-1279: sfmtDPz7.cpp search.o
-	${CPP} -o $@ sfmtDPz7.cpp search.o ${LINKOPT}
-
-param-searchDPz8-521: sfmtDPz8.o search.o
-	${CPP} -o $@ sfmtDPz8.o search.o ${LINKOPT}
-
-param-searchDPz8-1279: sfmtDPz8.o search.o
-	${CPP} -o $@ sfmtDPz8.o search.o ${LINKOPT}
-
-param-searchDPz9-521: sfmtDPz9.cpp search.o
-	${CPP} -o $@ sfmtDPz9.cpp search.o ${LINKOPT}
-
-param-searchDPz9-1279: sfmtDPz9.cpp search.o
-	${CPP} -o $@ sfmtDPz9.cpp search.o ${LINKOPT}
-
 param-searchDPza-521: sfmtDPza.cpp search.o
 	${CPP} -o $@ sfmtDPza.cpp search.o ${LINKOPT}
-
-param-searchDPzb-521: sfmtDPzb.cpp search.o
-	${CPP} -o $@ sfmtDPzb.cpp search.o ${LINKOPT}
-
-param-searchDPzc-521: sfmtDPzc.cpp search.o
-	${CPP} -o $@ sfmtDPzc.cpp search.o ${LINKOPT}
 
 param-searchDPza-1279: sfmtDPza.cpp search.o
 	${CPP} -o $@ sfmtDPza.cpp search.o ${LINKOPT}
 
-param-searchDPzb-1279: sfmtDPzb.cpp search.o
-	${CPP} -o $@ sfmtDPzb.cpp search.o ${LINKOPT}
-
-shortest-baseDPz3-521: sfmtDPz3.o chk-shortest.o
-	${CPP} -o $@ sfmtDPz3.o chk-shortest.o ${LINKOPT}
-
-shortest-baseDPz4-521: sfmtDPz4.o chk-shortest.o
-	${CPP} -o $@ sfmtDPz4.o chk-shortest.o ${LINKOPT}
-
-shortest-baseDPz5-521: sfmtDPz5.o chk-shortest.o
-	${CPP} -o $@ sfmtDPz5.o chk-shortest.o ${LINKOPT}
-
-shortest-baseDPz6-521: sfmtDPz6.o chk-shortest.o
-	${CPP} -o $@ sfmtDPz6.o chk-shortest.o ${LINKOPT}
-
-shortest-baseDPz7-521: sfmtDPz7.o chk-shortest.o
-	${CPP} -o $@ sfmtDPz7.o chk-shortest.o ${LINKOPT}
-
-shortest-baseDPz8-521: sfmtDPz8.o chk-shortest.o
-	${CPP} -o $@ sfmtDPz8.o chk-shortest.o ${LINKOPT}
-
-shortest-baseDPz9-521: sfmtDPz9.cpp chk-shortest.o
-	${CPP} -o $@ sfmtDPz9.cpp chk-shortest.o ${LINKOPT}
-
 shortest-baseDPza-521: sfmtDPza.cpp chk-shortest.o
 	${CPP} -o $@ sfmtDPza.cpp chk-shortest.o ${LINKOPT}
 
-shortest2-baseDPza-521: sfmtDPza.cpp chk2-shortest.o
-	${CPP} -o $@ sfmtDPza.cpp chk2-shortest.o ${LINKOPT}
-
 shortest-baseDPza-1279: sfmtDPza.cpp chk-shortest.o
 	${CPP} -o $@ sfmtDPza.cpp chk-shortest.o ${LINKOPT}
-
-shortest-baseDPzb-521: sfmtDPzb.cpp chk-shortest.o
-	${CPP} -o $@ sfmtDPzb.cpp chk-shortest.o ${LINKOPT}
 
 chk-charac-DPza521: sfmtDPza2.cpp chk-charac.o
 	${CPP} -o $@ sfmtDPza2.cpp chk-charac.o ${LINKOPT}
@@ -115,8 +49,8 @@ chi-zero-19937: sfmtDPza.cpp chi-zero.o
 get-charactorDPza-521: sfmtDPza.cpp get-charactor.cpp
 	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
 
-get2-charactorDPza-521: sfmtDPza.cpp get2-charactor.cpp
-	${CPP} -o $@ sfmtDPza.cpp get2-charactor.cpp ${LINKOPT}
+get-fixDPza-521: sfmtDPza.cpp get-fix.cpp
+	${CPP} -o $@ sfmtDPza.cpp get-fix.cpp ${LINKOPT}
 
 get-charactorDPza-1279: sfmtDPza.cpp get-charactor.cpp
 	${CPP} -o $@ sfmtDPza.cpp get-charactor.cpp ${LINKOPT}
@@ -129,9 +63,6 @@ get-parity-vectorDPza-19937: sfmtDPza.cpp search-parity-vector.cpp
 
 get-parity-vectorDPza-521: sfmtDPza.cpp search-parity-vector.cpp
 	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}
-
-get2-parity-vectorDPza-521: sfmtDPza.cpp search2-parity-vector.cpp
-	${CPP} -o $@ sfmtDPza.cpp search2-parity-vector.cpp ${LINKOPT}
 
 get-parity-vectorDPza-1279: sfmtDPza.cpp search-parity-vector.cpp
 	${CPP} -o $@ sfmtDPza.cpp search-parity-vector.cpp ${LINKOPT}

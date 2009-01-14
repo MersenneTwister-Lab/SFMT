@@ -19,7 +19,7 @@ int get_equiv_distrib(int bit, DSFMT& sfmt);
 void test_shortest(char *filename);
 bool chk_fix(DSFMT& fix, DSFMT& con, GF2X& idf);
 void show_factorial(GF2X& pol);
-bool check_characteristic(GF2X& small);
+bool calc_fixpoint(GF2X& small);
 
 static int mexp;
 static int maxdegree;
@@ -128,7 +128,7 @@ bool chk_fix(DSFMT& fix, DSFMT& con, GF2X& idf) {
     make_zero_state(tmp, idf);
     tmp.add(con);
     if (debug) tmp.d_p();
-    printf("===chk fix end ===\n");
+    if (debug) printf("===chk fix end ===\n");
     return (tmp == fix);
 }
 
@@ -202,48 +202,7 @@ void show_factorial(GF2X& pol) {
     }
 }
 
-bool fill_pol(vec_pair_GF2X_long factors, int pos, GF2X& small, int diff) {
-    int i, d;
-    GF2X p;
-
-    if (debug) printf("fill_pol:pos = %d, diff = %d\n", pos, diff);
-    if (diff == 0) {
-	return check_characteristic(small);
-    } else if (diff < 0 || pos >= factors.length()) {
-	return false;
-    }
-    if (fill_pol(factors, pos + 1, small, diff)) {
-	return true;
-    }
-    p = small;
-    d = deg(factors[pos].a);
-    diff -= d;
-    for (i = 0; diff >= 0; i++) {
-	p *= factors[pos].a;
-	if (fill_pol(factors, pos + 1, p, diff)) {
-	    return true;
-	}
-	diff -= d;
-    }
-    return false;
-}
-
-bool fill_polynomial(GF2X& filler, GF2X& pol, int diff) {
-    vec_pair_GF2X_long factors;
-    
-    CanZass(factors, pol);
-    if (debug) {
-	for (int i = 0; i < factors.length(); i++) {
-	    printf("deg = %d, mul = %d",
-		   (int)deg(factors[i].a), (int)factors[i].b);
-	    printf(" : ");
-	    printBinary(stdout, factors[i].a);
-	}
-    }
-    return fill_pol(factors, 0, pol, diff);
-}
-
-bool check_characteristic(GF2X& small) {
+bool calc_fixpoint(GF2X& small) {
     GF2X a, b, d, idf;
     GF2X t1(1, 1);
     DSFMT sfmt_const0(123);
@@ -253,7 +212,7 @@ bool check_characteristic(GF2X& small) {
     uint64_t fix[2];
 
     if (debug) {
-	printf("check_characteristic: small=");
+	printf("calc_fixpoint: small=");
 	printBinary(stdout, small);
     }
     SetCoeff(t1, 0);
@@ -289,16 +248,16 @@ bool check_characteristic(GF2X& small) {
 	return false;
     }
     make_zero_state(sfmt_const, b);
+    sfmt_const.get_lung(fix);
+    printf("fix1 0x%16"PRIx64"\n", fix[0]);
+    printf("fix2 0x%16"PRIx64"\n", fix[1]);
     if (chk_fix(sfmt_const, const_L_save, idf)) {
-	sfmt_const.get_lung(fix);
-	printf("fix1 0x%16"PRIx64"\n", fix[0]);
-	printf("fix2 0x%16"PRIx64"\n", fix[1]);
 	return true;
     }
     return false;
 }
 
-void get_characteristic(char *filename) {
+void get_fixpoint(char *filename) {
     GF2X poly;
     GF2X lcmpoly;
     GF2X minpoly;
@@ -315,11 +274,7 @@ void get_characteristic(char *filename) {
 
     printf("deg small poly = %ld\n", deg(smallpoly));
     printf("deg lcm poly = %ld\n", deg(lcmpoly));
-    if ((int)deg(lcmpoly) == maxdegree) {
-	res = check_characteristic(smallpoly);
-    } else {
-	res = fill_polynomial(filler, smallpoly, maxdegree - (int)deg(lcmpoly));
-    }
+    res = calc_fixpoint(smallpoly);
     if (!res) {
 	printf("can't find fix point\n");
     }
@@ -330,6 +285,6 @@ int main(int argc, char *argv[]) {
     mexp = DSFMT::get_rnd_mexp();
     maxdegree = DSFMT::get_rnd_maxdegree();
     printf("mexp = %d, maxdegree = %d\n", mexp, maxdegree);
-    get_characteristic(filename);
+    get_fixpoint(filename);
     return 0;
 }

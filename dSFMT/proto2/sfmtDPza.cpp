@@ -157,15 +157,20 @@ DSFMT& DSFMT::operator=(const DSFMT& src) {
 }
 
 bool DSFMT::operator==(const DSFMT& src) {
-    int i;
+    int i, k;
+
+    assert(idx % 2 == 0);
+    assert(src.idx % 2 == 0);
 
     if (status[N][0] != src.status[N][0] ||
 	status[N][1] != src.status[N][1]) {
 	return false;
     }
+    
+    k = (src.idx / 2 - idx / 2 + N) % N;
     for (i = 0; i < N; i++) {
-	if (status[(idx + i) % N][0] != src.status[(src.idx + i) % N][0] ||
-	    status[(idx + i) % N][1] != src.status[(src.idx + i) % N][1]) {
+	if (status[i][0] != src.status[(k + i) % N][0] ||
+	    status[i][1] != src.status[(k + i) % N][1]) {
 	    return false;
 	}
     }
