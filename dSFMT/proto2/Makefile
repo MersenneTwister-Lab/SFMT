@@ -106,6 +106,9 @@ test-parityDPza-1279: sfmtDPza.cpp test-parity.cpp
 test-parityDPza-19937: sfmtDPza.cpp test-parity.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
 
+test-parityDPza-44497: sfmtDPza.cpp test-parity.cpp
+	${CPP} -o $@ sfmtDPza.cpp test-parity.cpp ${LINKOPT}
+
 test-genDPza-521: sfmtDPza.cpp test-gen.cpp
 	${CPP} -o $@ sfmtDPza.cpp test-gen.cpp ${LINKOPT}
 

@@ -83,9 +83,8 @@ void div_check(GF2X& lcmpoly, GF2X& poly, int i) {
     }
 }
 
-void set_up_random(char *filename, GF2X& poly) {
+void set_up_random(char *filename, GF2X& poly, GF2X& charac) {
     FILE *fp;
-    int c;
 
     printf("filename:%s\n", filename);
     fp = fopen(filename, "r");
@@ -95,17 +94,11 @@ void set_up_random(char *filename, GF2X& poly) {
 	fclose(fp);
 	exit(1);
     }
-    //mt_init(1234);
     DSFMT::read_random_param(fp);
     DSFMT::print_param(stdout);
-    c = getc(fp);
-    if (isdigit(c)) {
-	ungetc(c, fp);
-    } else {
-	for(;getc(fp) != '\n';);
-    }
-    readFile(poly, fp);
+    readFile(poly, fp, true);
     printf("deg poly = %ld\n", deg(poly));
+    readFile(charac, fp, true);
     fclose(fp);
     printBinary(stdout, poly);
 }
@@ -211,10 +204,6 @@ bool calc_fixpoint(GF2X& small) {
     DSFMT const_L_save(123);
     uint64_t fix[2];
 
-    if (debug) {
-	printf("calc_fixpoint: small=");
-	printBinary(stdout, small);
-    }
     SetCoeff(t1, 0);
     /* a*poly + b*smallpoly = d */
     XGCD(d, a, b, mexpirr, small);
@@ -267,11 +256,9 @@ void get_fixpoint(char *filename) {
     GF2X filler;
     bool res = false;
 
-    set_up_random(filename, poly);
-    get_lcm(lcmpoly, poly);
+    set_up_random(filename, poly, lcmpoly);
     mexpirr = poly;
     DivRem(smallpoly, rempoly, lcmpoly, poly);
-
     printf("deg small poly = %ld\n", deg(smallpoly));
     printf("deg lcm poly = %ld\n", deg(lcmpoly));
     res = calc_fixpoint(smallpoly);

@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 
     mexp = DSFMT::get_rnd_mexp();
     printf("mexp = %d\n", mexp);
-    maxdegree = DSFMT::get_rnd_maxdegree() * 2;
+    maxdegree = DSFMT::get_rnd_maxdegree();
     printf("filename:%s\n", fname);
     fp = fopen(fname, "r");
     errno = 0;
@@ -124,6 +124,7 @@ static void test_parity(const GF2X& f, const GF2X& smallf) {
     int r;
     int result = 0;
     int count;
+    int mdegree = maxdegree * 2; // for affine.
 
     get_dsfmtfix(dsfmt_fix, f, smallf);
     if (verbose) {
@@ -135,7 +136,7 @@ static void test_parity(const GF2X& f, const GF2X& smallf) {
 	if (verbose) printf("------\n");
 	if (verbose) printf("==shoki (%d)\n", i);
 	dsfmt.init_gen_rand(i + 1, high3ff);
-	min_pol(minpoly, dsfmt, maxdegree);
+	min_pol(minpoly, dsfmt, mdegree);
 	DivRem(q, rem, minpoly, f);
 	if (deg(rem) != -1) {
 	    //dsfmt.d_p();
@@ -162,7 +163,7 @@ static void test_parity(const GF2X& f, const GF2X& smallf) {
 	    }
 	}
 	/* 周期保証後に最小多項式をチェックするべきであったが */
-	min_pol(minpoly, dsfmt, maxdegree);
+	min_pol(minpoly, dsfmt, mdegree);
 	DivRem(q, rem, minpoly, f);
 	if (deg(rem) != -1) {
 	    printf("minpoly = %ld\n", deg(minpoly));
@@ -176,7 +177,7 @@ static void test_parity(const GF2X& f, const GF2X& smallf) {
 	dsfmt.add(dsfmt_fix);
 	dsfmt.mask_status();
 	if (verbose) printf("==zero\n");
-	min_pol(minpoly, dsfmt, maxdegree);
+	min_pol(minpoly, dsfmt, mdegree);
 	if (verbose || deg(minpoly) >= mexp) {
 	    printf("minpoly = %ld\n", deg(minpoly));
 	}
@@ -196,7 +197,7 @@ static void test_parity(const GF2X& f, const GF2X& smallf) {
 		continue;
 	    }
 	}
-	min_pol(minpoly, dsfmt, maxdegree);
+	min_pol(minpoly, dsfmt, mdegree);
 	if (verbose || deg(minpoly) < mexp) {
 	    printf("minpoly = %ld\n", deg(minpoly));
 	}

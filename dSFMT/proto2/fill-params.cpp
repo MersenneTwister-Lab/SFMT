@@ -42,7 +42,6 @@ bool chk_fix(DSFMT& fix, DSFMT& con, GF2X& idf);
 static int mexp;
 static int maxdegree;
 static int verbose = false;
-static bool debug = false;
 static GF2X mexpirr;
 
 int main(int argc, char *argv[]) {
@@ -51,18 +50,24 @@ int main(int argc, char *argv[]) {
     GF2X smallpoly;
     GF2X rempoly;
     FILE *fp;
+    char *filename;
     uint64_t parity[2];
     uint64_t fix[2];
 
-    if (argc != 2) {
+    if (argc < 2) {
 	printf("usage:%s filename %d\n", argv[0], argc);
 	exit(1);
+    } else if (argc == 2) {
+	filename = argv[1];
+    } else {
+	filename = argv[2];
+	verbose = true;
     }
     mexp = DSFMT::get_rnd_mexp();
     maxdegree = DSFMT::get_rnd_maxdegree();
     printf("mexp = %d\n", mexp);
-    printf("filename:%s\n", argv[1]);
-    fp = fopen(argv[1], "r");
+    printf("filename:%s\n", filename);
+    fp = fopen(filename, "r");
     errno = 0;
     if ((fp == NULL) || errno) {
 	perror("main");
@@ -479,7 +484,7 @@ bool calc_fixpoint(uint64_t fix[2], GF2X& small) {
     DSFMT sfmt_const2(123);
     DSFMT const_L_save(123);
 
-    if (debug) {
+    if (verbose) {
 	printf("calc_fixpoint: small=");
 	printBinary(stdout, small);
     }
@@ -501,11 +506,9 @@ bool calc_fixpoint(uint64_t fix[2], GF2X& small) {
     make_zero_state(sfmt_const2, a);
     sfmt_const2.add(sfmt_const);
     if (!(sfmt_const2 == sfmt_const0)) {
-	if (debug) {
-	    printf("modoranai\n");
-	    sfmt_const2.add(sfmt_const0);
-	    sfmt_const2.d_p();
-	}
+	printf("modoranai\n");
+	sfmt_const2.add(sfmt_const0);
+	sfmt_const2.d_p();
 	return false;
     }
 
@@ -521,6 +524,8 @@ bool calc_fixpoint(uint64_t fix[2], GF2X& small) {
     //printf("fix2 0x%16"PRIx64"\n", fix[1]);
     if (chk_fix(sfmt_const, const_L_save, idf)) {
 	return true;
+    } else {
+	printf("chk_fix error\n");
     }
     return false;
 }
@@ -546,19 +551,21 @@ bool chk_fix(DSFMT& fix, DSFMT& con, GF2X& idf) {
     DSFMT tmp;
     uint64_t ar[1][2];
 
-    if (debug) printf("===chk fix start ===\n");
-    if (debug) printf("deg min fix = %d\n", deg_min_pol(fix, maxdegree));
-    if (debug) fix.d_p();
-    if (debug) printf("deg min con = %d\n", deg_min_pol(con, maxdegree));
-    if (debug) con.d_p();
+    if (verbose) printf("===chk fix start ===\n");
+    if (verbose) printf("deg min fix = %d\n", deg_min_pol(fix, maxdegree));
+    if (verbose) fix.d_p();
+    if (verbose) printf("deg min con = %d\n", deg_min_pol(con, maxdegree));
+    if (verbose) con.d_p();
     tmp = fix;
     tmp.gen_rand104spar(ar, 1);
-    if (debug) printf("deg min tmp after gen = %d\n",
+#if 0
+    if (verbose) printf("deg min tmp after gen = %d\n",
 		      deg_min_pol(tmp, maxdegree));
-    if (debug) tmp.d_p();
+    if (verbose) tmp.d_p();
+#endif
     make_zero_state(tmp, idf);
     tmp.add(con);
-    if (debug) tmp.d_p();
-    if (debug) printf("===chk fix end ===\n");
+    if (verbose) tmp.d_p();
+    if (verbose) printf("===chk fix end ===\n");
     return (tmp == fix);
 }
