@@ -1107,10 +1107,10 @@ certification vectors(PCV).
 
 \begin{table}
   \begin{center}
-    \caption{Fix Points and Period certification vectors}
+    \caption{Fixed points and period certification vectors}
     \label{tab:pcv}
     \begin{tabular}{c|rr} \hline
-      MEXP & \multicolumn{1}{c}{Fix Point} 
+      MEXP & \multicolumn{1}{c}{Fixed Point} 
       & \multicolumn{1}{c}{PCV} \\ \hline \hline
       & \texttt{0xcfb393d661638469} & \texttt{0xccaa588000000000} \\
       521 & \texttt{0xc166867883ae2adb} &\texttt{ 0x0000000000000001} \\ \hline
@@ -1276,7 +1276,7 @@ of the generated numbers, by its definition).
 
 \begin{table}
   \begin{center}
-    \caption{$d(v)$ of 52-bit fraction part of dSFMTv2.}
+    \caption{$d(v)$ $(1 \leq v \leq 52)$ of 52-bit fraction part of dSFMTv2.}
     \label{tab:dd}
     \begin{tabular}{|r|rrrrrr||r|rrrrrr|} \hline
       & 521 & 1279 & 2203 & 4253 & 11213 & 19937 
@@ -1323,7 +1323,7 @@ of the generated numbers, by its definition).
 
 \begin{table}[h]
   \begin{center}
-    \caption{The number of non zero term in $\chi_f(t)$}
+    \caption{The number of non zero terms in $\chi_f(t)$}
     \label{tab:weight}
     \begin{tabular}{c|rrrrrr} \hline
       mexp & 521 & 1279 & 2203 & 4253 & 11213 & 19937 \\
@@ -1349,7 +1349,7 @@ Mersenne primes $2^{521}-1$, $2^{1279}-1$, $2^{2203}-1$, $2^{4253}-1$,
 $2^{11213}-1$, $2^{19937}-1$, respectively.
 Their generation is very fast, compared with existing generators.
 Moreover, they have good equidistribution property.
-These generators passed DIEHARD Battery of Tests of Randomness.\cite{diehard}
+These generators passed DIEHARD Battery of Tests of Randomness\cite{diehard}.
 
 % %\subsection{Trade-off between speed and quality}
 % It is difficult to measure the generation speed of a PRNG in a fair way,
@@ -1415,7 +1415,9 @@ in the web page \cite{web:SFMT}.
 This study is partially
 supported by JSPS/MEXT Grant-in-Aid for Scientific Research
 No.19204002, No.18654021, and JSPS Core-to-Core Program
-No.18005.
+No.18005. The second author is partially supported
+as a visiting professor of The Institute of Statistical 
+Mathematics.
 
 \bibliographystyle{plain}
 \bibliography{sfmt-kanren}
@@ -1427,4 +1429,4 @@ No.18005.
 % LocalWords:  ffdffeffefbfc ffffffdf dfffffff bfff ffafffffffb ffdfffc rr xcfb
 % LocalWords:  xccaa xc ae adb xb da aeb xde xf ef fd cb ba xd caae uint IEC le
 % LocalWords:  icl dSFMTv const blk Ghz mexp rrrrrr sfmt kanren equi LSB intel
-% LocalWords:  crrrrrr ap ar xorshift Im dSFMT's DIEHARD
+% LocalWords:  crrrrrr ap ar xorshift Im dSFMT's
