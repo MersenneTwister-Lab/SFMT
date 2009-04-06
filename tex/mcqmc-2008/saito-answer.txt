@@ -1,0 +1,304 @@
+Our answers are marked with !!!.
+
+================================================
+ANSWERS TO THE EDITOR'S REPORT:
+================================================
+MONTE CARLO AND QUASI-MONTE CARLO 2008
+EDITOR'S REPORT
+Title: A PRNG specialized in double precision Floating point numbers
+using an affine transition
+Authors: Mutsuo Saito and Makoto Matsumoto
+Date: February 2009
+General assessment
+This paper contains an interesting and useful contribution, but the current version is clearly
+not publishable in the MCQMC Proceedings, because the clarity of the text and the quality
+of the presentation as well as the English, are unacceptably poor. It is extremely diffcult
+to follow and get a clear view of the main ideas. We will be able to accept your paper for
+publication only if the next revised version is exempt of these problems (we cannot afford
+several rounds of review). The overlap with the MCQMC'2006 paper should be reduced if
+possible. The present paper should be understandable just by itself, but perhaps you can
+refer to the other paper for some of the details.
+Please prepare a revision that addresses this and the other issues raised by the reviewers
+and myself (below). Your revised version should not exceed 14 pages using the latest
+style files provided at http://www.iro.umontreal.ca/~lecuyer/mcqmc08/proceedings/
+callpapers.html.
+
+!!! We added explanation and remove redundancy, and shorten the length to 14 pages.
+
+Speciffic comments
+1. The abstract should (ideally) stand in a single paragraph and avoid technical notation
+and details. For example, "in the range [1, 2)" is more confusing than helpful at this
+stage. "The existence of c ..." is also a detail that is not helpful here. You should
+focus on stating what is the end product of this paper, and leave all these details for
+later.
+
+!!! The abstract is completely rewritten according to this.
+
+2. In the abstract again, the sentence \the (lower bound of) period" is awkward and
+also not very clear. But the abstract is probably not the place to explain how you
+compute the period. Later, "at one recursion" should be "at each step".
+
+!!!Rewritten.
+
+3. The introduction is very poorly written. A good introduction should explain to the
+reader what you have achieved in the paper, in a non-technical language that is easy to
+follow and understand. It should also clearly identify the novelty and the importance
+of the contribution. The current introduction is far from doing that. Only the second
+sentence of page 2 talks of what you have done, and it does not say much: almost
+no more than the title. Subsections 1.1 and 1.2 just recall elementary technicalities
+about Floating point numbers. This does not really belong in the introduction. (This
+material could also be shortened considerably, by the way.)
+
+!!! The introduction is completely rewritten, so that it represents
+!!! what we have done. Floating point representation is shortened in Sec.2.
+
+4. As an illustration of what must improved in the writing style and how, let me just
+take the first part of Section 1. The first paragraph (4 lines) is not needed. The first
+sentence of page 2 is also useless. The two paragraphs at the bottom of page 1 are
+very poorly written. They both discuss the SFMT proposed in the previous paper;
+so it is unclear why this is split in two paragraphs. The acronym \SIMD" is used
+before it is defined for the first time. What does the acronym SFMT stand for? (It
+does not seem to be defined.) Citations must always be preceded by a space (e.g.,
+"Mersenne twister [15]"). Last sentence: This was proposed in the same paper? "by
+one call" "at each call". Just as an illustration, this piece could read as:
+
+"In [15], we proposed a fast version of the Mersenne twister (MT) of [12],
+that exploits the single instruction multiple data (SIMD) feature of some
+recent CPUs, which can process 128 bit at a time. This new pseudoran-
+dom number generator, named SFMT (which stands for SIMD-oriented
+fast Mersenne twister), is faster than the original MT and also has better
+equidistribution. The proposal of [15] also features a block generation
+procedure, which returns a large array of pseudorandom numbers at
+each call."
+!!! We followed to this illustration.
+
+I cannot do this detailed analysis for all the paper. In what follows, I will not be
+listing all the typos and bad sentences; there are just to many. I am only listing a
+small subset. But you really have to correct all of them.
+
+!!! We did correct all, we believe.
+
+5. Section 1,1. line 3: Is it true that it always accumulate error?
+!!! It "may" accumulate: corrected.
+
+6. Page 2, "Anger Fog"  "Agner Fog". "around the year" does not mean what you
+want here.
+!!! Both corrected.
+
+7. The last sentence of section 1.1 is misplaced: This should be said earlier.
+!!! It is explained in the introduction, Sec. 1.
+
+8. Page 3, line -9: \If the sign bit ..." If you use \0x3ff" you must say that this is
+in hexadecimal notation. It may be simpler to just give the binary notation. 
+!!! We prefer to use hexadecimal notation since it appears in the code.
+!!! We explicitly commented that it is in hexadecimal form, everywhere
+!!! needed.
+
+The number "the range [1,2)" is just an interpretation. It may be less confusing to just
+say directly that the represented floating point number is interpreted as a number in
+the interval [0,1) and forget about the interval [1,2).
+!!! We want to say the range "[1,2)," since from the view point of generation 
+!!! speed, [1,2)-version is faster than [0,1)-version. We need a conversion 
+!!! from the former to the latter. We gave an explicite explanation in Sec.2.
+
+9. The last sentence of page 3 is irrelevant: you never use this.
+!!! This sentence about sin(2 pi r) is intended to be used in
+!!! Box-Muller conversion. We made it explicit in the last of Sec. 2.
+
+10. Page 4, line 3: You should introduce the term "pulmonary LFSR" (if really needed)
+only when we can understand where this expression comes from. So if you use this
+expression, it must have a clear definition and an explanation that appear together.
+!!! We elliminated the expression: unified to the notion of "lung".
+
+11. Section 2.1, line 1: "set of bits".
+!!! Corrected
+
+12. Vectors are in bold; why not the matrix A as well?
+!!! Well, this is a preference: we like to keep matrix in a math italic.
+
+13. Section 2.2, line 1: dSFMT is not yet defined!
+!!! dSFMT is now defined in Section 9, and the term is not used before that. 
+
+14. Line 3: "leads to slow down". Is this a significant slowdown? How much?
+!!! 5% to 10%, now stated in Section 4.
+
+15. Equations (3) and (4), and the sentence that follows. would need 
+a bit more explanation, perhaps with an example.
+!!! We understand the problem, but (according to the tight limitation
+!!! of the length) we could not insert an example.
+
+16. Page 5, line -3: "have a form of" "they have the form"
+!!! Corrected.
+
+17. Page 6, line 10: "the property on randomness"? 
+!!! period and equidistribution (corrected).
+"Id" is not defined.
+!!! We defined.
+
+18. Line 14: Why "this is not the case for dSFMT"? Since dSFMT is not yet defined, we
+do not know yet.
+!!! Sure, the explanation why dSFMT has non-irreducible polynomial
+!!! is given in Sec. 6 in a more accessible way.
+
+19. Correct "The rest Vr ..."
+!!! This part is rewritten in Sec. 7.
+
+20. The whole section 2.3 is very hard to follow and we miss some simple insight. In my
+understanding, this generator is exactly equivalent to a combined LFSR generator as
+in [3, 9], and studied in the survey paper of P. L'Ecuyer and F. Panneton, \F2-Linear
+Random Number Generators", GERAD Report 2007-21, to appear in Advancing the
+Frontiers of Simulation: A Festschrift in Honor of George S. fishman, Springer-
+Verlag, and which I will call reference [101]. The combined LFSR generator has
+full period (2^p-1)(2^r-1) if the two polynomials phi_ and phi_r are primitive and if
+gcd(2^p-1; 2^r-1) = 1. You also need to check that each of the two component is in
+a nonzero state. The latter is very simple when the two components are implemented
+separately, as in [3, 9, 101], but perhaps a bit less simple in your case because you only
+have access to the state of the combined generator, and this is why your verification
+is more complicated. Is that right? If this is the correct interpretation, then you
+should give this type of explanation to make the connection with the simpler settings
+explained in [101]. Then, you explain how you resolve the additional complication.
+!!! Sure. What you say is almost true.
+!!! RTM is equivalent to the combined LFSR with component degrees p and r.
+!!! The problem is that the state space of each component is invisible.
+!!! We neglect the degree r part, and rely only on the degree p part.
+!!! In assuring the period, we check whethter the initial state of 
+!!! the degree p part (only) is nonzero. The discussion is rewritten in Sec. 7.,
+!!! along with the line of the above suggestion.
+
+21. Section 2.4, "background"
+!!! concatenated.
+
+22. Definition 1: "close to m" and "small" are undefined before they are used. It would
+be simpler to use the same definition as in [9, 101], based on all possible states of the
+RNG.
+!!! Modified according to the suggestion, see Sec. 8.
+
+23. Is the last paragraph of Section 2 really needed? I am not convinced that this is
+really useful.
+!!! This paragraph is necessary, we think. The explanation was unclear,
+!!! and now we believe it is clear in the last of Sec. 8. Since the degree r component
+!!! may have the zero state (forever), we need to define k(v) and d(v)
+!!! of the degree p component, ad those of the combined generator. 
+
+24. Section 3, line 3: Here you state for the first time what the acronym dSFMT means,
+but there is not yet a definition.
+!!! Sure. Modified as explained above.
+
+25. You say that the generator proposed here will be called "dSFMT ver. 2" but you do
+not use this name consistently all along the paper. Earlier, you just use dSFMT. In
+Table 4, you use dSFMTv2. Why not use this last one everywhere in the paper?
+!!! We make the situation clear: we use dSFMT in the manuscript for this version 2.
+!!! The version 1, which is not explained in the manuscript, is called dSFMT-old.
+!!! We state that in Remark 1 in Sec. 9.
+
+26. Section 3.1: "(1)(2)" should be "(1) and (2)". "... are b(=128) bit integers" should
+be "... are 128-bit integers".
+!!! Corrected.
+
+27. Page 10: "(7)(8) is linear, and constant 0x3ff of IEEE 754"  "(7) and (8) is linear
+and the constant 0x3ff (in hexadecimal) in IEEE 754". Line -5: "initial values".
+!!! Both corrected. 
+
+28. Tables 2 and 3: You should clearly state the format of these numbers, to make sure
+that there is no potential confusion.
+!!! We added captions.
+
+29. Section 3.2: "don't" "do not". "for one call" "call" (twice).
+!!! Corrected (everywhere).
+
+30. Page 12: "10^5 of floating point numbers by one call" "10^5 floating point numbers
+per call". "64-bit MT" "The 64-bit MT".
+!!! Corrected (everywhere).
+
+31. End of Section 3.2: It should be recognized that the xorshift generators of [11] are
+actually quite bad; see F. Panneton and P. L'Ecuyer, "On the Xorshift Random
+Number Generators", ACM Transactions on Modeling and Computer Simulation,
+15, 4 (2005), 346-361.
+!!! Added (the bottom of Sec. 10).
+
+32. Page 13: "increase according to the increase of" is an awkward formulation.
+!!! Modified (P.12, above Remark 2).
+
+33. Last line of Section 3: Are the weights really significantly larger than those of the
+WELL? Where can we see that?
+!!! Added explanation in Remark 2. The ratio is higher than WELL19937a, but
+!!! not siginificantly than WELL19937b.
+
+34. Section 4: Perhaps there is no need to just repeat what you do in the paper if there
+is no added insight. This should already appear in the introduction. 
+!!! Moved to Introduction. 
+Line 4: "base" "basis". 
+!!! Corrected.
+Add "generators" after dSFMT. 
+!!! Corrected.
+"Their generation is very fast" is not a correct formulation. 
+!!! Corrected, accutually removed when they are moved into introduction.
+Read "the DIEHARD" and "the latest versions".
+!!! corrected. 
+
+35. Reference [12]: The paper is published, so you should not give your web page for this
+paper. If the web page is only for the latest version of the code, then this must be
+said.
+!!! Our intention is the latter, so is explicit in P.14 before the acknowledgement.
+=======================================================================================
+ANSWERS TO REFEREE 1
+=======================================================================================
+1. Section 1.2 (pages 2-3): Since the authors only used the old 1985 IEEE 754 standard,
+it appears that Figure 1, Table 1, and their descriptions are well-known. Therefore,
+they can be significantly reduced. 
+!!! We reduced, see Sec.2.
+
+In addition, last sentence on page 3 to support the
+use of PRNG producing the range [1, 2) is very week and it should be removed.
+!!! Our intention is Box-Muller transformation.
+!!! See P.3, last paragraph of Sec. 2., which we hope to become clearer.
+!!! We know that there are other faster ways to generate normal distribution,
+!!! but we want to have this illustrative example.
+
+2. Section 2.1 (page 4): there is a significant duplication with their MCQMC2006 paper
+on the discussion of LFSR and MT. Many of the sentences are exact copy of each other.
+!!! Appropriate referring romoves redundancy, see Sec. 3.
+
+3. Section 2.3 (page 7): it appears that the discussion of period length computation is
+similar to that in their MCQMC2006 paper (section 3.1). It should be shortened, if
+possible.
+!!! Same as above. 
+
+4. Section 2.4 (page 8): The definition of dimension of equidistribution has been given in
+their MCQMC2006 paper (Section 3.2) and there is no need to repeat.
+!!! Yes, but for the self-containedness, we put a shorter version of definition.
+
+5. (page 14) The authors claimed that their generators passed passed DIEHARD Battery
+of Tests of Randomness. However, DIEHARD Battery of Tests is a very old package
+and they should report their empirical tests on the TestU01 library of tests.
+!!! We did, and described the results in P.13, the very last of the manuscript. 
+==============================================================================
+ANSWERS TO REFEREE 2
+==============================================================================
+
+(*) There seems to be demand for extremely fast random number
+    generator. Thus FPGA (Field Programmable Gate Arrays) are used for
+    simulations to speed up generation times. The proposed generator
+    seems to be well-suited for this purpose. 
+    I wonder whether the authors have made any experiences with such
+    computing environments.
+    (This is a suggestion for future research not a request for
+    a revision of the paper.)
+!!! Thank you.
+
+(*) The manuscript should be proof-read. There are typos and
+    errors, like
+    "obtain the (lower bound of) period" (p.1)
+    "an array W[0..N-1] of N word of b-bit size" (p.4)
+    "we look some number of bits" (p.7)
+    "SIMD-oriented fast mersenne twister:a 128-bit" (p.15)
+!!! All modified, and proof-read again.
+
+(*) Readability can be improved if symbols would be used more
+    consistently thoroughout the paper. E.g., 'v' is used for
+    completely different notations in different parts of the paper.
+    Also 'MEXP' could be explained when Tables 2 and 3 discussed.
+!!! Our choice is to include a short explanation in 
+!!! the caption of Table 1. 
+============================================================
+END OF ANSWERS
