@@ -508,7 +508,7 @@ where $\phi_p$ is a primitive polynomial of degree $p$
 and $\phi_r$ is a polynomial of degree %$r = wN-p$.
 $r:=\dim S -p < b_w$. We assume $r<p$, which is natural
 in our context where $p$ is large, and also $b_w\leq b_u$,
-since $b_w$ is the number of the nonconstant part in 
+since $b_w$ is the number of the non-constant part in 
 a $b_u$-bit word.
 We continue the random search of parameters, 
 until we obtain a primitive $\phi_p$.
@@ -533,7 +533,7 @@ to every vector in $\pi (V_r)$. We call such a vector {\em the period certificat
 For a given initial state $s$, if the inner product $\pi(s)\cdot q$ is nonzero,
 then $\pi(s) \notin \pi(V_r)$ and hence $s \notin V_r$, and the period is certified. If
 the inner product is zero, then we make the inner product nonzero by reversing 
-appropreate one bit in $\pi(s)$.
+appropriate one bit in $\pi(s)$.
 
 The period certification for affine case easily reduces to the linear case. 
 Let $z_p \in V_p$ be a fixed point of $F_p$. For the initial state $s \in S$,
@@ -774,7 +774,7 @@ that for the linear part $f_p$, which was done in \cite{SFMT}.
 \section{Implementation of dSFMT}
 \label{sec:implement}
 As a result of the preceding discussion, 
-we propose a generator using SIMD features, an affine transition fuction
+we propose a generator using SIMD features, an affine transition function
 to keep the MSBs constant,
 and reducible characteristic polynomial. 
 The generator is named dSFMT (double precision
@@ -841,7 +841,7 @@ precision floating point numbers at each step.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\linewidth]{fig-dsfmt.pdf}
+  \includegraphics[width=\linewidth]{Saito-fig.pdf}
   \caption{Diagram of dSFMT}
   \label{fig:dsfmt}
 \end{figure}
@@ -938,7 +938,7 @@ and GNU C Compiler for others (AMD Athlon, Power PC G4).
 
 We measured the consumed cpu-time in second, for $10^8$ generations of
 floating point numbers in the range $[0, 1)$ to compare with other
-generators.  More precisely, in case of the block generation, we
+generators. In case of the block generation, we
 generate $10^5$ floating point numbers per call, and this is
 iterated for $10^3$ times.  For sequential generation, the same $10^8$
 floating point numbers are generated, one per call.  We used
@@ -961,8 +961,8 @@ The result is that dSFMT is the fastest for all CPUs, all
 returning methods, using SIMD and without using SIMD.
 Table~\ref{tab:speed-other} shows the speed of other
 generators. Although
-dSFMT has 52-bit precision and the other generators have 32-bit
-precision only, dSFMT's sequential generation using standard
+dSFMT has 52-bit precision while the others have only 32-bit
+precision, dSFMT's sequential generation using standard
 C (i.e. the slowest case) is faster than the other generators, except xorshift128
 \cite{XORSHIFT-MAR}, whose quality is reported to be questionable 
 in \cite{XORSHIFT-LEcuyer}.
@@ -1015,7 +1015,8 @@ in \cite{XORSHIFT-LEcuyer}.
 
 \begin{table}
   \begin{center}
-    \caption{The CPU time (sec.) for $10^8$ generations.}
+    \caption{The CPU time (sec.) for $10^8$ generations for other generators,
+       where conversion to floating point numbers uses constant multiplication.}
     % of double precision floating point numbers [0, 1).
     % from 32 bit pseudorandom integers using standard C.}
     \label{tab:speed-other}
@@ -1168,8 +1169,8 @@ by its definition (\ref{eq:total-dim-difect}).
 The dSFMT generators passed the DIEHARD statistical tests \cite{diehard}.
 They also passed TestU01 \cite{TESTU01} consisting of
 144 different tests, except for 
-\texttt{LinearComp} (fail unconditionary) and 
-MatrixLANK tests (fail if the size of dSFMT is smaller then 
+\texttt{LinearComp} (fail unconditionally) and 
+MatrixRANK tests (fail if the size of dSFMT is smaller then 
 the matrix size). These tests measure ${\mathbb F}_2$-linear 
 dependency of the outputs, and reject ${\mathbb F}_2$-linear generators, 
 such as MT, SFMT and WELL.
@@ -1190,7 +1191,128 @@ referees and the editor for valuable comments.
 \end{acknowledgement}
 
 \bibliographystyle{plain}
-\bibliography{sfmt-kanren}
+%\bibliography{sfmt-kanren}
+\begin{thebibliography}{10}
+
+\bibitem{BRENT}
+R.P. Brent and P.~Zimmermann.
+\newblock Random number generators with period divisible by a {Mersenne} prime.
+\newblock In {\em Computational Science and its Applications - ICCSA 2003},
+  volume 2667, pages 1--10, 2003.
+
+\bibitem{BRENT-PRIM}
+R.P. Brent and P.~Zimmermann.
+\newblock Algorithms for finding almost irreducible and almost primitive
+  trinomials.
+\newblock {\em Fields Inst. Commun.}, 41:91--102, 2004.
+
+\bibitem{CLT}
+R.~Couture, P.~L'Ecuyer, and S.~Tezuka.
+\newblock On the distribution of k-dimensional vectors for simple and combined
+  {Tausworthe} sequences.
+\newblock {\em Math. Comp.}, 60(202):749--761, 1993.
+
+\bibitem{web:Fog}
+Agner Fog.
+\newblock Pseudo random number generators.
+\newblock \url{http://www.agner.org/random/}.
+
+\bibitem{FUSHIMI90}
+M.~Fushimi.
+\newblock Random number generation with the recursion $x_t = x_{t-3p}\oplus
+  x_{t-3q}$.
+\newblock {\em Journal of Computational and Applied Mathematics}, 31:105--118,
+  1990.
+
+\bibitem{ieee754}
+{IEEE} standard for binary floating-point arithmetic 754, 2008.
+\newblock \url{http://ieeexplore.ieee.org/servlet/opac?punumber=4610933}.
+
+\bibitem{knuth:bible}
+D.~E. Knuth.
+\newblock {\em The Art of Computer Programming. Vol.2. Seminumerical
+  Algorithms}.
+\newblock Addison-Wesley, Reading, Mass., 3rd edition, 1997.
+
+\bibitem{COMBTAUS}
+P.~L'Ecuyer.
+\newblock Maximally equidistributed combined tausworthe generators.
+\newblock {\em Math. Comp.}, 65(213):203--213, 1996.
+
+\bibitem{LEcuyer-combdif}
+P.~L'Ecuyer and J.~Granger-Pich\'{e}.
+\newblock Combined generators with components from different families.
+\newblock {\em Mathematics and Computers in Simulation}, 62:395--404, 2003.
+
+\bibitem{F2RNG-LEcuyer}
+P.~L'Ecuyer and F.~Panneton.
+\newblock $\mathbb{F}_2$-linear random number generators.
+\newblock In {\em Advancing the Frontiers of Simulation: A Festschrift in Honor
+  of George Samuel Fishman}, pages 175--200, 2009.
+\newblock C. Alexopoulos, D. Goldsman, and J. R. Wilson Eds.
+
+\bibitem{TESTU01}
+P.~L'Ecuyer and R.~Simard.
+\newblock {TestU01}: {A} {C} library for empirical testing of random number
+  generators.
+\newblock {\em ACM Transactions on Mathematical Software}, 15(4):346--361,
+  2006.
+
+\bibitem{diehard}
+G.~Marsaglia.
+\newblock {The Marsaglia Random Number CDROM, with the DIEHARD Battery of Tests
+  of Randomness.}
+\newblock Department of Statistics, Florida State University, (1996)
+  \url{http://www.stat.fsu.edu/pub/diehard/}.
+
+\bibitem{XORSHIFT-MAR}
+G.~Marsaglia.
+\newblock Xorshift {RNGs}.
+\newblock {\em Journal of Statistical Software}, 8(14):1--6, 2003.
+
+\bibitem{MT}
+M.~Matsumoto and T.~Nishimura.
+\newblock Mersenne twister: A 623-dimensionally equidistributed uniform
+  pseudorandom number generator.
+\newblock {\em ACM Trans. on Modeling and Computer Simulation}, 8(1):3--30,
+  January 1998.
+\newblock \url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html}.
+
+\bibitem{MT64}
+T.~Nishimura.
+\newblock Tables of 64-bit mersenne twisters.
+\newblock {\em ACM Trans. on Modeling and Computer Simulation}, 10(4):348--357,
+  October 2000.
+
+\bibitem{XORSHIFT-LEcuyer}
+F.~Panneton and P.~L'Ecuyer.
+\newblock On the {Xorshift} random number generators.
+\newblock {\em ACM Transactions on Modeling and Computer Simulation},
+  15(4):346--361, 2005.
+
+\bibitem{WELL}
+F.~Panneton, P.~L'Ecuyer, and M.~Matsumoto.
+\newblock Improved long-period generators based on linear reccurences modulo 2.
+\newblock {\em ACM Transactions on Mathematical Software}, 32(1):1--16, 2006.
+
+\bibitem{web:SFMT}
+M.~Saito and M.~Matsumoto.
+\newblock {SFMT Homepage}.
+\newblock
+  \url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/index.html}.
+
+\bibitem{SFMT}
+M.~Saito and M.~Matsumoto.
+\newblock {SIMD}-oriented fast {Mersenne} twister : a 128-bit pseudorandom
+  number generator.
+\newblock In {\em Monte Carlo and Quasi-Monte Carlo Methods 2006}, LNCS, pages
+  607--622. Springer, 2008.
+
+\bibitem{wiki:SIMD}
+{SIMD From Wikipedia, the free encyclopedia}.
+\newblock \url{http://en.wikipedia.org/wiki/SIMD}.
+
+\end{thebibliography}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LocalWords:  MCQMC denormalized xxxx NaN xxxxx Hiroshi Haramoto MCM nw RTM tI
@@ -1199,4 +1321,5 @@ referees and the editor for valuable comments.
 % LocalWords:  ffdffeffefbfc ffffffdf dfffffff bfff ffafffffffb ffdfffc rr xcfb
 % LocalWords:  xccaa xc ae adb xb da aeb xde xf ef fd cb ba xd caae uint IEC le
 % LocalWords:  icl dSFMTv const blk Ghz mexp rrrrrr sfmt kanren equi LSB intel
-% LocalWords:  crrrrrr ap ar xorshift Im dSFMT's
+% LocalWords:  crrrrrr ap ar xorshift Im dSFMT's Agner precomputing PCVs cpu
+% LocalWords:  dSFMTold DIEHARD TestU LinearComp MatrixRANK
