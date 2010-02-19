@@ -2,12 +2,12 @@
 
 OPT = -O9 -finline-functions -fomit-frame-pointer -DNDEBUG
 # for power PC
-CC = gcc -Wall $(OPT) -Wmissing-prototypes -arch ppc  $(DDEBUG) 
+CC = gcc -Wall $(OPT) -Wmissing-prototypes -arch ppc  $(DDEBUG)
 # for Pentium M
 #CC = gcc -Wall $(OPT) -Wmissing-prototypes -march=prescott $(DDEBUG)
 #CC = icl /Wcheck /O3 /QxB /Qc99 /Qprefetch /Fa
 # for Athlon
-#CC = gcc -Wall $(OPT) -Wmissing-prototypes -march=nocona $(DDEBUG) 
+#CC = gcc -Wall $(OPT) -Wmissing-prototypes -march=nocona $(DDEBUG)
 
 #CC = gcc -Wall -O9 -faltivec -Wmissing-prototypes -arch ppc  -fprefetch-loop-arrays $(DDEBUG) $(DMEXP) $(DPG)
 
@@ -48,6 +48,9 @@ random256g2_fastc_inline2: random256g2.c test_time2_inline.c
 	${CC} -o $@ random256g2.c
 
 xor3_fastc_inline2: xor3.c test_time2_inline.c
+	${CC} -o $@ xor3.c
+
+xor3tbl_fastc_inline2: xor3tbl.c test_time2_inline.c
 	${CC} -o $@ xor3.c
 
 .c.o:

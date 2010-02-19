@@ -66,6 +66,14 @@
   #include "dSFMT-params11213.h"
 #elif DSFMT_MEXP == 19937
   #include "dSFMT-params19937.h"
+#elif DSFMT_MEXP == 44497
+  #include "dSFMT-params44497.h"
+#elif DSFMT_MEXP == 86243
+  #include "dSFMT-params86243.h"
+#elif DSFMT_MEXP == 132049
+  #include "dSFMT-params132049.h"
+#elif DSFMT_MEXP == 216091
+  #include "dSFMT-params216091.h"
 #else
 #ifdef __GNUC__
   #error "DSFMT_MEXP is not valid."

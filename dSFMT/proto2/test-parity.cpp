@@ -124,7 +124,7 @@ static void test_parity(const GF2X& f, const GF2X& smallf) {
     int r;
     int result = 0;
     int count;
-    int mdegree = maxdegree * 2; // for affine.
+    int mdegree = maxdegree + 1; // for affine.
 
     get_dsfmtfix(dsfmt_fix, f, smallf);
     if (verbose) {

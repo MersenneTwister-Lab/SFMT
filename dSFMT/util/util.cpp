@@ -144,6 +144,7 @@ void printBinary(FILE *fp, GF2X& poly)
 	}
     }
     fprintf(fp, "deg=%ld\n", deg(poly));
+    fflush(fp);
 }
 
 void printBinary(FILE *fp, vec_GF2& vec)
