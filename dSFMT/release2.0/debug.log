@@ -1,0 +1,16 @@
+2007.3.20
+period certification で間違い
+for (j = 0; j < 52 - SFMT_SR1; j++) {
+は
+for (j = 0; j < 52; j++) {
+でよい
+
+2007.2.24
+athlon で結果が違う
+athlonでは-O1以上を指定すると、BIG_ENDIANが定義される。
+BIG_ENDIANの参照をなくした。
+
+2007.2.23
+period_certification でworkがuint32_tだった。
+uint64_tに修正
+初期化にidxofが必要であった。

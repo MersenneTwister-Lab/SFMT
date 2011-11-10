@@ -1,0 +1,58 @@
+#for GNU make
+
+FILES = dSFMT.h \
+	dSFMT-params.h \
+	dSFMT.c \
+	test.c \
+	check.sh \
+	dSFMT-params521.h \
+	dSFMT-params1279.h \
+	dSFMT-params2203.h \
+	dSFMT-params4253.h \
+	dSFMT-params11213.h \
+	dSFMT-params19937.h \
+	dSFMT-params44497.h \
+	dSFMT-params86243.h \
+	dSFMT-params132049.h \
+	dSFMT-params216091.h \
+	dSFMT.521.out.txt \
+	dSFMT.1279.out.txt \
+	dSFMT.2203.out.txt \
+	dSFMT.4253.out.txt \
+	dSFMT.11213.out.txt \
+	dSFMT.19937.out.txt \
+	dSFMT.44497.out.txt \
+	dSFMT.86243.out.txt \
+	dSFMT.132049.out.txt \
+	dSFMT.216091.out.txt \
+	FILES.txt \
+	LICENSE.txt \
+	Makefile \
+	README.txt \
+	README.jp.txt \
+	CHANGE-LOG.txt \
+	html
+VERSION = 2.1.1
+DIR = dSFMT-src-${VERSION}
+
+doc:
+	rm -rf html
+	doxygen doxygen.cfg
+	cp howto-compile.html html
+
+.PHONY : tar.gz
+tar.gz: $(FILES)
+	mkdir ${DIR}
+	cp -r ${FILES} ${DIR}
+	tar czvf ${DIR}.tar.gz ${DIR}/*
+	rm -rf ${DIR}
+
+.PHONY : zip
+zip: $(FILES)
+	mkdir ${DIR}
+	cp -r ${FILES} ${DIR}
+	zip ${DIR}.zip ${DIR}/* ${DIR}/html/*
+	rm -rf ${DIR}
+
+clean:
+	rm -f *.o *~

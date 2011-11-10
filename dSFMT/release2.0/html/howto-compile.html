@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html 
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" />
+    <title>How to compile dSFMT</title>
+    <style type="text/css">
+      BLOCKQUOTE {background-color:#a0ffa0;
+                  padding-left: 1em;}
+    </style>
+  </head>
+  <body>
+    <h2> How to compile dSFMT</h2>
+
+    <p>
+      This document explains how to compile dSFMT for users who
+      are using UNIX like systems (for example Linux, Free BSD,
+      cygwin, osx, etc) on terminal. I can't help those who use IDE
+      (Integrated Development Environment,) please see your IDE's help
+      to use SIMD feature of your CPU.
+    </p>
+
+    <h3>1. First Step: Compile test programs using Makefile.</h3>
+    <h4>1-1. Compile standard C test program.</h4>
+    <p>
+      Check if dSFMT.c and Makefile are in your current directory.
+      If not, <strong>cd</strong> to the directory where they exist.
+      Then, type
+    </p>
+      <blockquote>
+	<pre>make std</pre>
+      </blockquote>
+    <p>
+      If it causes an error, try to type
+    </p>
+    <blockquote>
+      <pre>cc -DDSFMT_MEXP=19937 -o test-std-M19937 dSFMT.c test.c</pre>
+    </blockquote>
+    <p>
+      or try to type
+    </p>
+    <blockquote>
+      <pre>gcc -DDSFMT_MEXP=19937 -o test-std-M19937 dSFMT.c test.c</pre>
+    </blockquote>
+    <p>
+      If success, then check the test program. Type
+    </p>
+    <blockquote>
+      <pre>./test-std-M19937 -v</pre>
+    </blockquote>
+    <p>
+      You will see many random numbers displayed on your screen.
+      If you want to check these random numbers are correct output,
+      redirect output to a file and <strong>diff</strong> it with
+      <strong>dSFMT.19937.out.txt</strong>, like this:</p>
+    <blockquote>
+      <pre>./test-std-M19937 -v > foo.txt
+diff -w foo.txt dSFMT.19937.out.txt</pre>
+    </blockquote>
+    <p>
+      Silence means they are the same because <strong>diff</strong>
+      reports the difference of two files.
+    </p>
+    <p>
+      If you want to know the generation speed of dSFMT, type
+    </p>
+    <blockquote>
+      <pre>./test-std-M19937 -s</pre>
+    </blockquote>
+    <p>
+      It is very slow. To make it fast, compile it
+      with <strong>-O3</strong> option. If your compiler is gcc, you
+      should specify <strong>-fno-strict-aliasing</strong> option
+      with <strong>-O3</strong>. type
+    </p>
+    <blockquote>
+      <pre>gcc -O3 -fno-strict-aliasing -DDSFMT_MEXP=19937 -o test-std-M19937 dSFMT.c test.c
+./test-std-M19937 -s</pre>
+    </blockquote>
+    <p>
+      If you are using gcc 4.0, you will get more performance of dSFMT
+      by giving additional options
+      <strong>--param max-inline-insns-single=1800</strong>, 
+      <strong>--param inline-unit-growth=500</strong> and 
+      <strong>--param large-function-growth=900</strong>.
+    </p>
+
+    <h4>1-2. Compile SSE2 test program.</h4>
+    <p>
+      If your CPU supports SSE2 and you can use gcc version 3.4 or later,
+      you can make test-sse2-M19937. To do this, type
+    </p>
+    <blockquote>
+      <pre>make sse2</pre>
+    </blockquote>
+    <p>or type</p>
+    <blockquote>
+      <pre>gcc -O3 -msse2 -fno-strict-aliasing -DHAVE_SSE2=1 -DDSFMT_MEXP=19937 -o test-sse2-M19937 dSFMT.c test.c</pre>
+    </blockquote>
+    <p>If everything works well,</p>
+    <blockquote>
+      <pre>./test-sse2-M19937 -s</pre>
+    </blockquote>
+      <p>shows much shorter time than <strong>test-std-M19937 -s</strong>.</p>
+
+    <h4>1-3. Compile AltiVec test program.</h4>
+    <p>
+      If you are using Macintosh computer with PowerPC G4 or G5, and
+      your gcc version is later 3.3, you can make test-alti-M19937. To
+      do this, type
+    </p>
+    <blockquote>
+      <pre>make osx-alti</pre>
+    </blockquote>
+    <p>or type</p>
+    <blockquote>
+      <pre>gcc -O3 -faltivec -fno-strict-aliasing -DHAVE_ALTIVEC=1 -DDSFMT_MEXP=19937 -o test-alti-M19937 dSFMT.c test.c</pre>
+    </blockquote>
+    <p>If everything works well,</p>
+    <blockquote>
+      <pre>./test-alti-M19937 -s</pre>
+    </blockquote>
+    <p>shows much shorter time than <strong>test-std-M19937 -s</strong>.</p>
+
+    <h4>1-4. Compile and check output automatically.</h4>
+    <p>
+      To make test program and check output
+      automatically for all supported SFMT_MEXPs of dSFMT, type
+    </p>
+    <blockquote>
+      <pre>make std-check</pre>
+    </blockquote>
+    <p>
+      To check test program optimized for SSE2, type
+    </p>
+    <blockquote>
+      <pre>make sse2-check</pre>
+    </blockquote>
+    <p>
+      To check test program optimized for OSX PowerPC AltiVec, type
+    </p>
+    <blockquote>
+      <pre>make osx-alti-check</pre>
+    </blockquote>
+    <p>
+      These commands may take some time.
+    </p>
+
+    <h3>2. Second Step: Use dSFMT pseudorandom number generator with
+    your C program.</h3>
+    <h4>2-1. Use sequential call and static link.</h4>
+    <p>
+      Here is a very simple program <strong>sample1.c</strong> which
+      calculates PI using Monte-Carlo method.
+    </p>
+    <blockquote>
+      <pre>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include "dSFMT.h"
+
+int main(int argc, char* argv[]) {
+    int i, cnt, seed;
+    double x, y, pi;
+    const int NUM = 10000;
+    dsfmt_t dsfmt;
+
+    if (argc &gt;= 2) {
+	seed = strtol(argv[1], NULL, 10);
+    } else {
+	seed = 12345;
+    }
+    cnt = 0;
+    dsfmt_init_gen_rand(&amp;dsfmt, seed);
+    for (i = 0; i &lt; NUM; i++) {
+	x = dsfmt_genrand_close_open(&amp;dsfmt);
+	y = dsfmt_genrand_close_open(&amp;dsfmt);
+	if (x * x + y * y &lt; 1.0) {
+	    cnt++;
+	}
+    }
+    pi = (double)cnt / NUM * 4;
+    printf("%f\n", pi);
+    return 0;
+}
+      </pre>
+    </blockquote>
+    <p>To compile <strong>sample1.c</strong> with dSFMT.c with the period of 
+      2<sup>607</sup>, type</p>
+    <blockquote>
+      <pre>gcc -DDSFMT_MEXP=521 -o sample1 dSFMT.c sample1.c</pre>
+    </blockquote>
+    <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
+      SSE2, type</p>
+    <blockquote>
+      <pre>gcc -msse2 -DDSFMT_MEXP=521 -DHAVE_SSE2 -o sample1 dSFMT.c sample1.c</pre>
+    </blockquote>
+    <p>If your Computer is Apple PowerPC G4 or G5 and you want to use 
+      optimized dSFMT for AltiVec, type</p>
+    <blockquote>
+      <pre>gcc -faltivec -DDSFMT_MEXP=521 -DHAVE_ALTIVEC -o sample1 dSFMT.c sample1.c</pre>
+    </blockquote>
+
+    <h4>2-2. Use block call and static link.</h4>
+    <p>
+      Here is <strong>sample2.c</strong> which modifies sample1.c.
+      The block call <strong>dsfmt_fill_array_close_open</strong> is
+      much faster than sequential call, but it needs an aligned
+      memory. The standard function to get an aligned memory
+      is <strong>posix_memalign</strong>, but it isn't usable in every
+      OS.
+    </p>
+    <blockquote>
+      <pre>
+#include &lt;stdio.h&gt;
+#define _XOPEN_SOURCE 600
+#include &lt;stdlib.h&gt;
+#include "dSFMT.h"
+
+int main(int argc, char* argv[]) {
+    int i, j, cnt, seed;
+    double x, y, pi;
+    const int NUM = 10000;
+    const int R_SIZE = 2 * NUM;
+    int size;
+    double *array;
+    dsfmt_t dsfmt;
+
+    if (argc &gt;= 2) {
+	seed = strtol(argv[1], NULL, 10);
+    } else {
+	seed = 12345;
+    }
+    size = dsfmt_get_min_array_size();
+    if (size &lt; R_SIZE) {
+	size = R_SIZE;
+    }
+#if defined(__APPLE__) || \
+    (defined(__FreeBSD__) &amp;&amp; __FreeBSD__ &gt;= 3 &amp;&amp; __FreeBSD__ &lt;= 6)
+    printf("malloc used\n");
+    array = malloc(sizeof(double) * size);
+    if (array == NULL) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#elif defined(_POSIX_C_SOURCE)
+    printf("posix_memalign used\n");
+    if (posix_memalign((void **)&amp;array, 16, sizeof(double) * size) != 0) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#elif defined(__GNUC__) &amp;&amp; (__GNUC__ &gt; 3 || (__GNUC__ == 3 &amp;&amp; __GNUC_MINOR__ &gt;= 3))
+    printf("memalign used\n");
+    array = memalign(16, sizeof(double) * size);
+    if (array == NULL) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#else /* in this case, gcc doesn't suppport SSE2 */
+    array = malloc(sizeof(double) * size);
+    if (array == NULL) {
+	printf("can't allocate memory.\n");
+	return 1;
+    }
+#endif
+    cnt = 0;
+    j = 0;
+    dsfmt_init_gen_rand(&amp;dsfmt, seed);
+    dsfmt_fill_array_close_open(&amp;dsfmt, array, size);
+    for (i = 0; i &lt; NUM; i++) {
+	x = array[j++];
+	y = array[j++];
+	if (x * x + y * y &lt; 1.0) {
+	    cnt++;
+	}
+    }
+    free(array);
+    pi = (double)cnt / NUM * 4;
+    printf("%f\n", pi);
+    return 0;
+}
+      </pre>
+    </blockquote>
+    <p>To compile <strong>sample2.c</strong> with dSFMT.c with the period of
+      2<sup>2281</sup>, type</p>
+    <blockquote>
+      <pre>gcc -DDSFMT_MEXP=2203 -o sample2 dSFMT.c sample2.c</pre>
+    </blockquote>
+    <p>If your CPU supports SSE2 and you want to use optimized dSFMT for
+      SSE2, type</p>
+    <blockquote>
+      <pre>gcc -msse2 -DDSFMT_MEXP=2203 -DHAVE_SSE2 -o sample2 dSFMT.c sample2.c</pre>
+    </blockquote>
+    <p>If your computer is Apple PowerPC G4 or G5 and you want to use 
+      optimized dSFMT for AltiVec, type</p>
+    <blockquote>
+      <pre>gcc -faltivec -DDSFMT_MEXP=2203 -DHAVE_ALTIVEC -o sample2 dSFMT.c sample2.c</pre>
+    </blockquote>
+    <h4>2-3. Initialize dSFMT using dsfmt_init_by_array function.</h4>
+    <p>
+      Here is <strong>sample3.c</strong> which modifies sample1.c.
+      The 32-bit integer seed can only make 2<sup>32</sup> kinds of
+      initial state, to avoid this problem, dSFMT
+      provides <strong>dsfmt_init_by_array</strong> function.  This sample
+      uses dsfmt_init_by_array function which initialize the internal state
+      array with an array of 32-bit. The size of an array can be
+      larger than the internal state array and all elements of the
+      array are used for initialization, but too large array is
+      wasteful.
+    </p>
+    <blockquote>
+      <pre>
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include "dSFMT.h"
+
+int main(int argc, char* argv[]) {
+    int i, cnt, seed_cnt;
+    double x, y, pi;
+    const int NUM = 10000;
+    uint32_t seeds[100];
+    dsfmt_t dsfmt;
+
+    if (argc &gt;= 2) {
+	seed_cnt = 0;
+	for (i = 0; (i &lt; 100) &amp;&amp; (i &lt; strlen(argv[1])); i++) {
+	    seeds[i] = argv[1][i];
+	    seed_cnt++;
+	}
+    } else {
+	seeds[0] = 12345;
+	seed_cnt = 1;
+    }
+    cnt = 0;
+    dsfmt_init_by_array(&amp;dsfmt, seeds, seed_cnt);
+    for (i = 0; i &lt; NUM; i++) {
+	x = dsfmt_genrand_close_open(&amp;dsfmt);
+	y = dsfmt_genrand_close_open(&amp;dsfmt);
+	if (x * x + y * y &lt; 1.0) {
+	    cnt++;
+	}
+    }
+    pi = (double)cnt / NUM * 4;
+    printf("%f\n", pi);
+    return 0;
+}
+      </pre>
+    </blockquote>
+    <p>To compile <strong>sample3.c</strong>, type</p>
+    <blockquote>
+      <pre>gcc -DDSFMT_MEXP=1279 -o sample3 dSFMT.c sample3.c</pre>
+    </blockquote>
+    <p>Now, seed can be a string. Like this:</p>
+    <blockquote>
+      <pre>./sample3 your-full-name</pre>
+    </blockquote>
+  </body>
+</html>
