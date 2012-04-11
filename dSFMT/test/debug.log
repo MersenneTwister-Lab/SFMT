@@ -1,8 +1,0 @@
-2007.03.07
-init_gen_rand の最後で idx = N * 2にしておいたのに、
-next_stateの最初でidxを確認していなかった。
-この結果、minpoly が irrpolyで割り切れないバグ発生。
-
-2007.03.08
-get_fix で ^ とすべきところが | になっていた。
-この結果、パラメータによってmake_zero_stateが失敗するバグ発生。
