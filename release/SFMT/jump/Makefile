@@ -15,6 +15,9 @@ LINKOPT = -lntl -lcrypto $(LIBGF2X) $(LIBGMP)
 calc-characteristic: calc-characteristic.o SFMText.hpp
 	${CPP} -o $@ calc-characteristic.o ${LINKOPT}
 
+calc-jump: calc-jump.o
+	${CPP} -o $@ calc-jump.o ${LINKOPT}
+
 .cpp.o:
 	${CPP} -c $<
 
