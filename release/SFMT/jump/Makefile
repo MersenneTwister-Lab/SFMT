@@ -12,10 +12,10 @@ CPP = g++ -Wall -Wextra -O3 -I../include -msse3 $(DEFINES) $(DDEBUG)
 
 LINKOPT = -lntl -lcrypto $(LIBGF2X) $(LIBGMP)
 
-calc-characteristic: calc-characteristic.o SFMText.hpp
+calc-characteristic: calc-characteristic.o SFMText.hpp string-poly.hpp
 	${CPP} -o $@ calc-characteristic.o ${LINKOPT}
 
-calc-jump: calc-jump.o
+calc-jump: calc-jump.o string-poly.hpp
 	${CPP} -o $@ calc-jump.o ${LINKOPT}
 
 .cpp.o:
