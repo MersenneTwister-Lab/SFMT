@@ -20,6 +20,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include "SFMText.hpp"
+#include "string-poly.hpp"
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
 #include <NTL/GF2XFactoring.h>
@@ -135,35 +136,10 @@ int non_reducible(GF2X& fpoly, int degree) {
     return IterIrredTest(fpoly);
 }
 
-void polytostring(string& x, GF2X& characteristic) {
-    long degree = deg(characteristic);
-    int size = degree / 64 + 1;
-    uint64_t buffer[size];
-    for (int i = 0; i < size; i++) {
-	buffer[i] = 0;
-    }
-    for (int i = 0; i <= degree; i++) {
-	int pos = i / 64;
-	int shift = i % 64;
-	if (IsOne(coeff(characteristic, i))) {
-	    buffer[pos] |= UINT64_C(1) << shift;
-	}
-    }
-    ostringstream os;
-//    os << hex << setw(16);
-//    cout << "buffer[0]:" << hex << setw(16) << setfill('0')
-//	 << buffer[0] << endl;
-    for (int i = 0; i < size; i++) {
-	os << hex << setw(16) << setfill('0') << buffer[i];
-    }
-    os << flush;
-    x = os.str();
-}
-
 int main(int argc, char *argv[]) {
     if (argc < 11) {
 	cout << argv[0]
-	     << "mexp sl1 sl2 sr1 sr2 pos1 mask1 mask2 mask3 mask4"
+	     << " mexp sl1 sl2 sr1 sr2 pos1 mask1 mask2 mask3 mask4"
 	     << " parity1 parity2 parity3 parity4"
 	     << endl;
 	return -1;
@@ -220,8 +196,7 @@ int main(int argc, char *argv[]) {
 #if defined(DEBUG)
     cout << "characteristic:" << x << endl;
 #endif
-    cout << x;
-    cout << "," << dec << mexp;
+    cout << "#" << dec << mexp;
     cout << "," << dec << pos1;
     cout << "," << dec << sl1;
     cout << "," << dec << sl2;
@@ -236,5 +211,6 @@ int main(int argc, char *argv[]) {
     cout << "," << hex << parity[2];
     cout << "," << hex << parity[3];
     cout << endl;
+    cout << hex << x << endl;
     return 0;
 }
