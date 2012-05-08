@@ -1,5 +1,5 @@
-/** 
- * @file SFMT.h 
+/**
+ * @file SFMT.h
  *
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
  * number generator
@@ -18,7 +18,7 @@
  * and you have to define PRIu64 and PRIx64 in this file as follows:
  * @verbatim
  typedef unsigned int uint32_t
- typedef unsigned long long uint64_t  
+ typedef unsigned long long uint64_t
  #define PRIu64 "llu"
  #define PRIx64 "llx"
 @endverbatim
@@ -28,8 +28,8 @@
  * unsigned int and 64-bit unsigned int in hexadecimal format.
  */
 
-#ifndef SFMT_H
-#define SFMT_H
+#ifndef SFMTST_H
+#define SFMTST_H
 
 #include <stdio.h>
 
@@ -72,86 +72,119 @@
   #define PRE_ALWAYS inline
 #endif
 
-uint32_t gen_rand32(void);
-uint64_t gen_rand64(void);
-void fill_array32(uint32_t *array, int size);
-void fill_array64(uint64_t *array, int size);
-void init_gen_rand(uint32_t seed);
-void init_by_array(uint32_t *init_key, int key_length);
-const char *get_idstring(void);
-int get_min_array_size32(void);
-int get_min_array_size64(void);
+#include "SFMT-params.h"
+
+#if defined(HAVE_SSE2)
+  #include <emmintrin.h>
+
+/** 128-bit data structure */
+union W128_T {
+    uint32_t u[4];
+    __m128i si;
+};
+/** 128-bit data type */
+typedef union W128_T w128_t;
+
+#else
+
+/** 128-bit data structure */
+struct W128_T {
+    uint32_t u[4];
+};
+/** 128-bit data type */
+typedef struct W128_T w128_t;
+
+#endif
+
+struct SFMT_T {
+    /** the 128-bit internal state array */
+    w128_t state[SFMT_N];
+    /** index counter to the 32-bit internal state array */
+    int idx;
+};
+
+typedef struct SFMT_T sfmt_t;
+
+uint32_t gen_rand32(sfmt_t * sfmt);
+uint64_t gen_rand64(sfmt_t * sfmt);
+void fill_array32(uint32_t *array, int size, sfmt_t * sfmt);
+void fill_array64(uint64_t *array, int size, sfmt_t * sfmt);
+void init_gen_rand(uint32_t seed, sfmt_t * sfmt);
+void init_by_array(uint32_t *init_key, int key_length, sfmt_t * sfmt);
+const char * get_idstring(sfmt_t * sfmt);
+int get_min_array_size32(sfmt_t * sfmt);
+int get_min_array_size64(sfmt_t * sfmt);
 
 /* These real versions are due to Isaku Wada */
 /** generates a random number on [0,1]-real-interval */
 inline static double to_real1(uint32_t v)
 {
-    return v * (1.0/4294967295.0); 
-    /* divided by 2^32-1 */ 
+    return v * (1.0/4294967295.0);
+    /* divided by 2^32-1 */
 }
 
 /** generates a random number on [0,1]-real-interval */
-inline static double genrand_real1(void)
+inline static double genrand_real1(sfmt_t * sfmt)
 {
-    return to_real1(gen_rand32());
+    return to_real1(gen_rand32(sfmt));
 }
 
 /** generates a random number on [0,1)-real-interval */
 inline static double to_real2(uint32_t v)
 {
-    return v * (1.0/4294967296.0); 
+    return v * (1.0/4294967296.0);
     /* divided by 2^32 */
 }
 
 /** generates a random number on [0,1)-real-interval */
-inline static double genrand_real2(void)
+inline static double genrand_real2(sfmt_t * sfmt)
 {
-    return to_real2(gen_rand32());
+    return to_real2(gen_rand32(sfmt));
 }
 
 /** generates a random number on (0,1)-real-interval */
 inline static double to_real3(uint32_t v)
 {
-    return (((double)v) + 0.5)*(1.0/4294967296.0); 
+    return (((double)v) + 0.5)*(1.0/4294967296.0);
     /* divided by 2^32 */
 }
 
 /** generates a random number on (0,1)-real-interval */
-inline static double genrand_real3(void)
+inline static double genrand_real3(sfmt_t * sfmt)
 {
-    return to_real3(gen_rand32());
+    return to_real3(gen_rand32(sfmt));
 }
 /** These real versions are due to Isaku Wada */
 
 /** generates a random number on [0,1) with 53-bit resolution*/
-inline static double to_res53(uint64_t v) 
-{ 
+inline static double to_res53(uint64_t v)
+{
     return v * (1.0/18446744073709551616.0L);
 }
 
 /** generates a random number on [0,1) with 53-bit resolution from two
  * 32 bit integers */
-inline static double to_res53_mix(uint32_t x, uint32_t y) 
-{ 
+inline static double to_res53_mix(uint32_t x, uint32_t y)
+{
     return to_res53(x | ((uint64_t)y << 32));
 }
 
 /** generates a random number on [0,1) with 53-bit resolution
  */
-inline static double genrand_res53(void) 
-{ 
-    return to_res53(gen_rand64());
-} 
+inline static double genrand_res53(sfmt_t * sfmt)
+{
+    return to_res53(gen_rand64(sfmt));
+}
 
 /** generates a random number on [0,1) with 53-bit resolution
     using 32bit integer.
  */
-inline static double genrand_res53_mix(void) 
-{ 
+inline static double genrand_res53_mix(sfmt_t * sfmt)
+{
     uint32_t x, y;
 
-    x = gen_rand32();
-    y = gen_rand32();
+    x = gen_rand32(sfmt);
+    y = gen_rand32(sfmt);
     return to_res53_mix(x, y);
-} 
+}
 #endif
