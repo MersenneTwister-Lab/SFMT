@@ -5,8 +5,11 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * Copyright (C) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
- * University. All rights reserved.
+ * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University.
+ * Copyright (C) 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+ * University and The University of Tokyo.
+ * All rights reserved.
  *
  * The new BSD License is applied to this software, see LICENSE.txt
  */
@@ -14,6 +17,10 @@
 #include <assert.h>
 #include "SFMTst.h"
 #include "SFMT-params.h"
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 #if defined(__BIG_ENDIAN__) && !defined(__amd64) && !defined(BIG_ENDIAN64)
 #define BIG_ENDIAN64 1
@@ -210,12 +217,14 @@ static void period_certification(sfmt_t * sfmt) {
 /*----------------
   PUBLIC FUNCTIONS
   ----------------*/
+#define UNUSED_VARIABLE(x) (void)(x)
 /**
  * This function returns the identification string.
  * The string shows the word size, the Mersenne exponent,
  * and all parameters of this generator.
  */
-const char *get_idstring(sfmt_t * sfmt) {
+const char *sfmt_get_idstring(sfmt_t * sfmt) {
+    UNUSED_VARIABLE(sfmt);
     return SFMT_IDSTR;
 }
 
@@ -224,7 +233,8 @@ const char *get_idstring(sfmt_t * sfmt) {
  * fill_array32() function.
  * @return minimum size of array used for fill_array32() function.
  */
-int get_min_array_size32(sfmt_t * sfmt) {
+int sfmt_get_min_array_size32(sfmt_t * sfmt) {
+    UNUSED_VARIABLE(sfmt);
     return SFMT_N32;
 }
 
@@ -233,7 +243,8 @@ int get_min_array_size32(sfmt_t * sfmt) {
  * fill_array64() function.
  * @return minimum size of array used for fill_array64() function.
  */
-int get_min_array_size64(sfmt_t * sfmt) {
+int sfmt_get_min_array_size64(sfmt_t * sfmt) {
+    UNUSED_VARIABLE(sfmt);
     return SFMT_N64;
 }
 
@@ -243,7 +254,7 @@ int get_min_array_size64(sfmt_t * sfmt) {
  * init_gen_rand or init_by_array must be called before this function.
  * @return 32-bit pseudorandom number
  */
-uint32_t gen_rand32(sfmt_t * sfmt) {
+uint32_t sfmt_genrand_uint32(sfmt_t * sfmt) {
     uint32_t r;
     uint32_t * psfmt32 = (uint32_t *)(sfmt->state);
 
@@ -262,7 +273,7 @@ uint32_t gen_rand32(sfmt_t * sfmt) {
  * unless an initialization is again executed.
  * @return 64-bit pseudorandom number
  */
-uint64_t gen_rand64(sfmt_t * sfmt) {
+uint64_t sfmt_genrand_uint64(sfmt_t * sfmt) {
 #if defined(BIG_ENDIAN64) && !defined(ONLY64)
     uint32_t r1, r2;
     uint32_t * psfmt32 = (uint32_t *)(sfmt->state);
@@ -315,7 +326,7 @@ uint64_t gen_rand64(sfmt_t * sfmt) {
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-void fill_array32(uint32_t *array, int size, sfmt_t * sfmt) {
+void sfmt_fill_array32(sfmt_t * sfmt, uint32_t *array, int size) {
     assert(sfmt->idx == SFMT_N32);
     assert(size % 4 == 0);
     assert(size >= SFMT_N32);
@@ -350,7 +361,7 @@ void fill_array32(uint32_t *array, int size, sfmt_t * sfmt) {
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-void fill_array64(uint64_t *array, int size, sfmt_t * sfmt) {
+void sfmt_fill_array64(sfmt_t * sfmt, uint64_t *array, int size) {
     assert(sfmt->idx == SFMT_N32);
     assert(size % 2 == 0);
     assert(size >= SFMT_N64);
@@ -369,7 +380,7 @@ void fill_array64(uint64_t *array, int size, sfmt_t * sfmt) {
  *
  * @param seed a 32-bit integer used as the seed.
  */
-void init_gen_rand(uint32_t seed, sfmt_t * sfmt) {
+void sfmt_init(sfmt_t * sfmt, uint32_t seed) {
     int i;
     uint32_t * psfmt32 = (uint32_t *)(sfmt->state);
 
@@ -389,7 +400,7 @@ void init_gen_rand(uint32_t seed, sfmt_t * sfmt) {
  * @param init_key the array of 32-bit integers, used as a seed.
  * @param key_length the length of init_key.
  */
-void init_by_array(uint32_t *init_key, int key_length, sfmt_t * sfmt) {
+void sfmt_init_by_array(sfmt_t * sfmt, uint32_t *init_key, int key_length) {
     int i, j, count;
     uint32_t r;
     int lag;
@@ -454,4 +465,7 @@ void init_by_array(uint32_t *init_key, int key_length, sfmt_t * sfmt) {
     period_certification(sfmt);
 }
 
+#if defined(__cplusplus)
+}
+#endif
 
