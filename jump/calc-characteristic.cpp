@@ -20,62 +20,51 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include "SFMText.hpp"
-#include "string-poly.hpp"
+#include "SFMT-calc-jump.hpp"
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
 #include <NTL/GF2XFactoring.h>
 
-using namespace sfmt;
-using namespace NTL;
-using namespace std;
-
-void calc_minimal(GF2X& minimal, SFMText& sfmt, int bitpos)
-{
-    uint32_t mask[4];
-    for (int i = 0; i < 4; i++) {
-	mask[i] = 0;
-    }
-    int pos = bitpos / 32;
-    uint32_t m = 1 << (bitpos % 32);
-    mask[pos] = m;
-    int maxdegree = sfmt.get_maxdegree();
-    vec_GF2 seq;
-    seq.SetLength(2 * maxdegree);
-    for (int i = 0; i < 2 * maxdegree; i++) {
-	seq[i] = sfmt.next(mask);
-    }
-    MinPolySeq(minimal, seq, maxdegree);
-#ifdef DEBUG
-    if (deg(minimal) == 0) {
-	cout << "deg minimal:" << dec << deg(minimal) << endl;
-	cout << "minimal:" << minimal << endl;
-	cout << "seq:" << seq << endl;
-    }
-#endif
-}
-
-void LCM(GF2X& lcm, const GF2X& x, const GF2X& y) {
-    GF2X gcd;
-    mul(lcm, x, y);
-    GCD(gcd, x, y);
-    lcm /= gcd;
-}
-
-void get_lcm(GF2X& lcmpoly, SFMText& sfmt) {
-    GF2X minimal;
-    GF2X tmp;
-    int maxdegree = sfmt.get_maxdegree();
-    sfmt.seeding(1234);
-    for (int bitpos = 0; bitpos < 128; bitpos++) {
-	calc_minimal(minimal, sfmt, bitpos);
-	LCM(tmp, lcmpoly, minimal);
-	lcmpoly = tmp;
-	if (deg(lcmpoly) == maxdegree) {
-	    return;
+namespace sfmt {
+    using namespace NTL;
+    using namespace std;
+    static void calc_minimal(GF2X& minimal, SFMText& sfmt, int bitpos)
+    {
+	uint32_t mask[4];
+	for (int i = 0; i < 4; i++) {
+	    mask[i] = 0;
 	}
+	int pos = bitpos / 32;
+	uint32_t m = 1 << (bitpos % 32);
+	mask[pos] = m;
+	int maxdegree = sfmt.get_maxdegree();
+	vec_GF2 seq;
+	seq.SetLength(2 * maxdegree);
+	for (int i = 0; i < 2 * maxdegree; i++) {
+	    seq[i] = sfmt.next(mask);
+	}
+	MinPolySeq(minimal, seq, maxdegree);
+#ifdef DEBUG
+	if (deg(minimal) == 0) {
+	    cout << "deg minimal:" << dec << deg(minimal) << endl;
+	    cout << "minimal:" << minimal << endl;
+	    cout << "seq:" << seq << endl;
+	}
+#endif
     }
-    for (int i = 0; i < maxdegree; i++) {
-	sfmt.init_basis();
+
+    static void LCM(GF2X& lcm, const GF2X& x, const GF2X& y) {
+	GF2X gcd;
+	mul(lcm, x, y);
+	GCD(gcd, x, y);
+	lcm /= gcd;
+    }
+
+    void get_characteristic(GF2X& lcmpoly, SFMText& sfmt) {
+	GF2X minimal;
+	GF2X tmp;
+	int maxdegree = sfmt.get_maxdegree();
+	sfmt.seeding(1234);
 	for (int bitpos = 0; bitpos < 128; bitpos++) {
 	    calc_minimal(minimal, sfmt, bitpos);
 	    LCM(tmp, lcmpoly, minimal);
@@ -84,57 +73,72 @@ void get_lcm(GF2X& lcmpoly, SFMText& sfmt) {
 		return;
 	    }
 	}
-    }
-    cerr << "deg:" << deg(lcmpoly) << endl;
-    throw new logic_error("can't find lcm");
-}
-
-void check(SFMText& sfmt) {
-    sfmt.seeding(1234);
-
-    for (int i = 0; i < 10; i++) {
-	w128_t x = sfmt.next();
-	for (int j = 0; j < 4; j++) {
-	    cout << dec << x.u[j] << endl;
-	}
-    }
-}
-
-int non_reducible(GF2X& fpoly, int degree) {
-    static const GF2X t2(2, 1);
-    static const GF2X t1(1, 1);
-    GF2X t2m;
-    GF2X t;
-    GF2X alpha;
-    int m;
-
-    t2m = t2;
-    if (deg(fpoly) < degree) {
-	return 0;
-    }
-    t = t1;
-    t += t2m;
-
-    for (m = 1; deg(fpoly) > degree; m++) {
-	for(;;) {
-	    GCD(alpha, fpoly, t);
-	    if (IsOne(alpha)) {
-		break;
-	    }
-	    fpoly /= alpha;
-	    if (deg(fpoly) < degree) {
-		return 0;
+	for (int i = 0; i < maxdegree; i++) {
+	    sfmt.init_basis();
+	    for (int bitpos = 0; bitpos < 128; bitpos++) {
+		calc_minimal(minimal, sfmt, bitpos);
+		LCM(tmp, lcmpoly, minimal);
+		lcmpoly = tmp;
+		if (deg(lcmpoly) == maxdegree) {
+		    return;
+		}
 	    }
 	}
-	t2m *= t2m;
-	t2m %= fpoly;
-	add(t, t2m, t1);
+	cerr << "deg:" << deg(lcmpoly) << endl;
+	throw new logic_error("can't find lcm");
     }
-    if (deg(fpoly) != degree) {
-	return 0;
+
+    static void check(SFMText& sfmt) {
+	sfmt.seeding(1234);
+
+	for (int i = 0; i < 10; i++) {
+	    w128_t x = sfmt.next();
+	    for (int j = 0; j < 4; j++) {
+		cout << dec << x.u[j] << endl;
+	    }
+	}
     }
-    return IterIrredTest(fpoly);
+
+    static int has_large_irreducible(GF2X& fpoly, int degree) {
+	static const GF2X t2(2, 1);
+	static const GF2X t1(1, 1);
+	GF2X t2m;
+	GF2X t;
+	GF2X alpha;
+	int m;
+
+	t2m = t2;
+	if (deg(fpoly) < degree) {
+	    return 0;
+	}
+	t = t1;
+	t += t2m;
+
+	for (m = 1; deg(fpoly) > degree; m++) {
+	    for(;;) {
+		GCD(alpha, fpoly, t);
+		if (IsOne(alpha)) {
+		    break;
+		}
+		fpoly /= alpha;
+		if (deg(fpoly) < degree) {
+		    return 0;
+		}
+	    }
+	    t2m *= t2m;
+	    t2m %= fpoly;
+	    add(t, t2m, t1);
+	}
+	if (deg(fpoly) != degree) {
+	    return 0;
+	}
+	return IterIrredTest(fpoly);
+    }
 }
+#if defined(MAIN)
+using namespace sfmt;
+using namespace NTL;
+using namespace std;
 
 int main(int argc, char *argv[]) {
     if (argc < 11) {
@@ -177,19 +181,21 @@ int main(int argc, char *argv[]) {
     cout << "parity4:" << hex << parity[3] << endl;
 #endif
     SFMText sfmt(mexp, sl1, sl2, sr1, sr2, pos1,
-		  mask, parity);
+		 mask, parity);
     GF2X characteristic(0, 1);
 #if defined(DEBUG)
     check(sfmt);
 #endif
-    get_lcm(characteristic, sfmt);
-    GF2X work = characteristic;
+    get_characteristic(characteristic, sfmt);
+    GF2X work;
+    work = characteristic;
 #if defined(DEBUG)
     cout << "degree:" << deg(characteristic) << endl;
     cout << characteristic << endl;
 #endif
-    if (!non_reducible(characteristic, mexp)) {
+    if (!has_large_irreducible(characteristic, mexp)) {
 	cout << "error?" << endl;
+	return -1;
     }
     string x;
     polytostring(x, work);
@@ -202,15 +208,17 @@ int main(int argc, char *argv[]) {
     cout << "," << dec << sl2;
     cout << "," << dec << sr1;
     cout << "," << dec << sr2;
-    cout << "," << hex<< mask[0];
+    cout << "," << hex << mask[0];
     cout << "," << hex << mask[1];
     cout << "," << hex << mask[2];
     cout << "," << hex << mask[3];
-    cout << "," << hex<< parity[0];
+    cout << "," << hex << parity[0];
     cout << "," << hex << parity[1];
     cout << "," << hex << parity[2];
     cout << "," << hex << parity[3];
     cout << endl;
-    cout << hex << x << endl;
+    cout << x << endl;
+    cout << dec << flush;
     return 0;
 }
+#endif

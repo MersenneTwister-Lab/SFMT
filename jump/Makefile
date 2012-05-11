@@ -1,6 +1,6 @@
 #for GNU make
 
-#DDEBUG = -O0 -g -DDEBUG=1
+#DDEBUG = -O0 -g -ggdb -DDEBUG=1
 
 # uncomment next line if you installed NTL with gf2x
 LIBGF2X = -lgf2x
@@ -8,8 +8,8 @@ LIBGF2X = -lgf2x
 #LIBGMP = -lgmp
 
 DEFINES = -D__STDC_CONSTANT_MACROS=1
-#CPP = g++ -Wall -Wextra -O3 -I../include -msse3 $(DEFINES) $(DDEBUG)
-CPP = icc -Wall -Wextra -O3 -I../include -msse3 $(DEFINES) $(DDEBUG)
+CPP = g++ -Wall -Wextra -O3 -I../include -msse3 $(DEFINES) $(DDEBUG)
+#CPP = icc -Wall -Wextra -O3 -I../include $(DEFINES) $(DDEBUG)
 
 #CC = gcc
 CC = icc
@@ -19,13 +19,20 @@ STD = -std=c99
 WARN = -Wmissing-prototypes -Wall #-Winline
 CCFLAGS = $(OPTI) $(WARN) $(STD) $(DDEBUG)
 
-LINKOPT = -lntl -lcrypto $(LIBGF2X) $(LIBGMP)
+#LINKOPT = -lntl -lcrypto $(LIBGF2X) $(LIBGMP)
+LINKOPT = -lntl $(LIBGF2X) $(LIBGMP)
 
-calc-characteristic: calc-characteristic.o SFMText.hpp string-poly.hpp
-	${CPP} -o $@ calc-characteristic.o ${LINKOPT}
+all:calc-characteristic calc-jump test-string test-std
 
-calc-jump: calc-jump.o string-poly.hpp
-	${CPP} -o $@ calc-jump.o ${LINKOPT}
+calc-characteristic: calc-characteristic.cpp SFMText.hpp SFMT-calc-jump.hpp
+	${CPP} -o $@ calc-characteristic.cpp ${LINKOPT}
+
+calc-jump: calc-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp
+	${CPP} -DSFMT_MEXP=607 -o $@ calc-jump.cpp SFMTst.c SFMT-jump.c \
+	${LINKOPT}
+
+test-string: test-string.cpp SFMT-calc-jump.hpp
+	${CPP} -o $@ test-string.cpp ${LINKOPT}
 
 test-std: test.c SFMTst.c SFMTst.h SFMT-params607.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=607 -o $@ test.c SFMTst.c

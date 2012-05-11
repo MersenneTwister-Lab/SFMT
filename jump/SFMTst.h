@@ -1,5 +1,5 @@
 /**
- * @file SFMT.h
+ * @file SFMTst.h
  *
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
  * number generator
@@ -7,8 +7,9 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (Hiroshima University)
  *
- * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
- * University. All rights reserved.
+ * Copyright (C) 2006 -- 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+ * University and The University of Tokyo.
+ * All rights reserved.
  *
  * The new BSD License is applied to this software.
  * see LICENSE.txt
@@ -76,6 +77,9 @@
 
 #if defined(HAVE_SSE2)
   #include <emmintrin.h>
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /** 128-bit data structure */
 union W128_T {
@@ -84,9 +88,15 @@ union W128_T {
 };
 /** 128-bit data type */
 typedef union W128_T w128_t;
+#if defined(__cplusplus)
+}
+#endif
 
 #else
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
 /** 128-bit data structure */
 struct W128_T {
     uint32_t u[4];
@@ -94,6 +104,13 @@ struct W128_T {
 /** 128-bit data type */
 typedef struct W128_T w128_t;
 
+#if defined(__cplusplus)
+}
+#endif
+#endif
+
+#if defined(__cplusplus)
+extern "C" {
 #endif
 
 struct SFMT_T {
@@ -105,86 +122,90 @@ struct SFMT_T {
 
 typedef struct SFMT_T sfmt_t;
 
-uint32_t gen_rand32(sfmt_t * sfmt);
-uint64_t gen_rand64(sfmt_t * sfmt);
-void fill_array32(uint32_t *array, int size, sfmt_t * sfmt);
-void fill_array64(uint64_t *array, int size, sfmt_t * sfmt);
-void init_gen_rand(uint32_t seed, sfmt_t * sfmt);
-void init_by_array(uint32_t *init_key, int key_length, sfmt_t * sfmt);
-const char * get_idstring(sfmt_t * sfmt);
-int get_min_array_size32(sfmt_t * sfmt);
-int get_min_array_size64(sfmt_t * sfmt);
+uint32_t sfmt_genrand_uint32(sfmt_t * sfmt);
+uint64_t sfmt_genrand_uint64(sfmt_t * sfmt);
+void sfmt_fill_array32(sfmt_t * sfmt, uint32_t * array, int size);
+void sfmt_fill_array64(sfmt_t * sfmt, uint64_t * array, int size);
+void sfmt_init(sfmt_t * sfmt, uint32_t seed);
+void sfmt_init_by_array(sfmt_t * sfmt, uint32_t * init_key, int key_length);
+const char * sfmt_get_idstring(sfmt_t * sfmt);
+int sfmt_get_min_array_size32(sfmt_t * sfmt);
+int sfmt_get_min_array_size64(sfmt_t * sfmt);
 
 /* These real versions are due to Isaku Wada */
 /** generates a random number on [0,1]-real-interval */
-inline static double to_real1(uint32_t v)
+inline static double sfmt_to_real1(uint32_t v)
 {
     return v * (1.0/4294967295.0);
     /* divided by 2^32-1 */
 }
 
 /** generates a random number on [0,1]-real-interval */
-inline static double genrand_real1(sfmt_t * sfmt)
+inline static double sfmt_genrand_real1(sfmt_t * sfmt)
 {
-    return to_real1(gen_rand32(sfmt));
+    return sfmt_to_real1(sfmt_genrand_uint32(sfmt));
 }
 
 /** generates a random number on [0,1)-real-interval */
-inline static double to_real2(uint32_t v)
+inline static double sfmt_to_real2(uint32_t v)
 {
     return v * (1.0/4294967296.0);
     /* divided by 2^32 */
 }
 
 /** generates a random number on [0,1)-real-interval */
-inline static double genrand_real2(sfmt_t * sfmt)
+inline static double sfmt_genrand_real2(sfmt_t * sfmt)
 {
-    return to_real2(gen_rand32(sfmt));
+    return sfmt_to_real2(sfmt_genrand_uint32(sfmt));
 }
 
 /** generates a random number on (0,1)-real-interval */
-inline static double to_real3(uint32_t v)
+inline static double sfmt_to_real3(uint32_t v)
 {
     return (((double)v) + 0.5)*(1.0/4294967296.0);
     /* divided by 2^32 */
 }
 
 /** generates a random number on (0,1)-real-interval */
-inline static double genrand_real3(sfmt_t * sfmt)
+inline static double sfmt_genrand_real3(sfmt_t * sfmt)
 {
-    return to_real3(gen_rand32(sfmt));
+    return sfmt_to_real3(sfmt_genrand_uint32(sfmt));
 }
 /** These real versions are due to Isaku Wada */
 
 /** generates a random number on [0,1) with 53-bit resolution*/
-inline static double to_res53(uint64_t v)
+inline static double sfmt_to_res53(uint64_t v)
 {
     return v * (1.0/18446744073709551616.0L);
 }
 
 /** generates a random number on [0,1) with 53-bit resolution from two
  * 32 bit integers */
-inline static double to_res53_mix(uint32_t x, uint32_t y)
+inline static double sfmt_to_res53_mix(uint32_t x, uint32_t y)
 {
-    return to_res53(x | ((uint64_t)y << 32));
+    return sfmt_to_res53(x | ((uint64_t)y << 32));
 }
 
 /** generates a random number on [0,1) with 53-bit resolution
  */
-inline static double genrand_res53(sfmt_t * sfmt)
+inline static double sfmt_genrand_res53(sfmt_t * sfmt)
 {
-    return to_res53(gen_rand64(sfmt));
+    return sfmt_to_res53(sfmt_genrand_uint64(sfmt));
 }
 
 /** generates a random number on [0,1) with 53-bit resolution
     using 32bit integer.
  */
-inline static double genrand_res53_mix(sfmt_t * sfmt)
+inline static double sfmt_genrand_res53_mix(sfmt_t * sfmt)
 {
     uint32_t x, y;
 
-    x = gen_rand32(sfmt);
-    y = gen_rand32(sfmt);
-    return to_res53_mix(x, y);
+    x = sfmt_genrand_uint32(sfmt);
+    y = sfmt_genrand_uint32(sfmt);
+    return sfmt_to_res53_mix(x, y);
 }
+#if defined(__cplusplus)
+}
+#endif
+
 #endif

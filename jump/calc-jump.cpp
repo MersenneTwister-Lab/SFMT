@@ -14,6 +14,7 @@
  * LICENSE.txt
  */
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -22,38 +23,174 @@
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
 #include <NTL/ZZ.h>
-#include "string-poly.hpp"
+#include "SFMT-calc-jump.hpp"
+#include "SFMT-jump.h"
 
 using namespace NTL;
 using namespace std;
+using namespace sfmt;
 
-/**
- * The internal state jump.
- * SFMT generates 4 32-bit integers from one internal state.
- * @param jump_str output string which represents jump polynomial.
- * @param step jump step of internal state
- */
-void calc_jump(string& jump_str, ZZ& step, GF2X& characteristic)
-{
-    GF2X jump;
-    PowerXMod(jump, step, characteristic);
-    polytostring(jump_str, jump);
-}
+static void read_file(GF2X& characteristic, int line_no, const string& file);
+static void test(sfmt_t * sfmt, GF2X& poly);
+static int check(sfmt_t *a, sfmt_t *b);
+static void print_state(sfmt_t *a, sfmt_t * b);
+static void print_sequence(sfmt_t *a, sfmt_t * b);
 
 int main(int argc, char * argv[]) {
-    if (argc <= 2) {
-	cout << argv[0] << " characteristic-polynomial jumpstep" << endl;
+    if (argc <= 1) {
+	cout << argv[0] << " jumpstep" << endl;
 	return -1;
     }
-    string chara_string = argv[1];
-    string step_string = argv[2];
+    stringstream ss_file;
     GF2X characteristic;
-    stringtopoly(characteristic, chara_string);
+    ss_file << "characteristic." << SFMT_MEXP << ".txt";
+    read_file(characteristic, 0, ss_file.str());
+#if 0
+    string step_string = argv[1];
     ZZ step;
     stringstream ss(step_string);
     ss >> step;
     string jump_str;
     calc_jump(jump_str, step, characteristic);
+
+    string tmp;
+    polytostring(tmp, characteristic);
+    cout << "tmp :" << endl;
+    cout << tmp << endl;
     cout << jump_str << endl;
+#endif
+    sfmt_t sfmt;
+    test(&sfmt, characteristic);
     return 0;
+}
+
+static void read_file(GF2X& characteristic, int line_no, const string& file)
+{
+    ifstream ifs(file.c_str());
+    string line;
+    for (int i = 0; i < line_no; i++) {
+	ifs >> line;
+	ifs >> line;
+    }
+    if (ifs) {
+	ifs >> line;
+	line = "";
+	ifs >> line;
+    }
+    stringtopoly(characteristic, line);
+#if defined(DEBUG)
+    cout << "line = " << line << endl;
+    cout << "deg = " << deg(characteristic) << endl;
+    cout << "cha = " << characteristic << endl;
+    string x;
+    polytostring(x, characteristic);
+    cout << "x = " << x << endl;
+#endif
+}
+
+static int check(sfmt_t *a, sfmt_t *b)
+{
+    int check = 0;
+    for (int i = 0; i < 100; i++) {
+	uint32_t x = sfmt_genrand_uint32(a);
+	uint32_t y = sfmt_genrand_uint32(b);
+	if (x != y) {
+	    print_state(a, b);
+	    print_sequence(a, b);
+	    check = 1;
+	    break;
+	}
+    }
+    if (check == 0) {
+	printf("OK!\n");
+    } else {
+	printf("NG!\n");
+    }
+    return check;
+}
+
+static void print_state(sfmt_t *a, sfmt_t * b)
+{
+    printf("idx = %d                             idx = %d\n",
+	   a->idx, b->idx);
+    for (int i = 0; (i < 10) && (i < SFMT_N); i++) {
+	printf("[");
+	for (int j = 0; j < 4; j++) {
+//	    printf("%08"PRIx32, a->state[(a->idx / 4 + i) % SFMT_N].u[j]);
+	    printf("%08"PRIx32, a->state[i].u[j]);
+	    if (j < 3) {
+		printf(" ");
+	    } else {
+		printf("]");
+	    }
+	}
+	printf("[");
+	for (int j = 0; j < 4; j++) {
+//	    printf("%08"PRIx32, b->state[(b->idx / 4 + i) % SFMT_N].u[j]);
+	    printf("%08"PRIx32, b->state[i].u[j]);
+	    if (j < 3) {
+		printf(" ");
+	    } else {
+		printf("]");
+	    }
+	}
+	printf("\n");
+    }
+}
+
+static void print_sequence(sfmt_t *a, sfmt_t * b)
+{
+    for (int i = 0; i < 25; i++) {
+	uint32_t c, d;
+	c = sfmt_genrand_uint32(a);
+	d = sfmt_genrand_uint32(b);
+	printf("[%08"PRIx32" %08"PRIx32"]\n", c, d);
+    }
+}
+
+static void test(sfmt_t * sfmt, GF2X& characteristic)
+{
+    sfmt_t new_sfmt_z;
+    sfmt_t * new_sfmt = &new_sfmt_z;
+//    uint32_t seed[] = {1, 998102, 1234, 0, 5};
+    uint32_t seed[20] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    long steps[] = {1, 2, SFMT_N + 1,
+		    SFMT_N * 128 - 1,
+		    SFMT_N * 128 + 1,
+		    3003,
+		    200004,
+		    10000005};
+    int steps_size = sizeof(steps) / sizeof(long);
+    ZZ test_count;
+    string jump_string;
+
+    sfmt_init(sfmt, seed[0]);
+    sfmt_genrand_uint32(sfmt);
+    sfmt_genrand_uint32(sfmt);
+    sfmt_genrand_uint32(sfmt);
+    sfmt_genrand_uint32(sfmt);
+    /* plus jump */
+    for (int index = 0; index < steps_size; index++) {
+//	sfmt_init(sfmt, seed[index]);
+	test_count = steps[index];
+	cout << "jump " << test_count << " steps" << endl;
+	*new_sfmt = *sfmt;
+	for (long i = 0; i < steps[index] * 4; i++) {
+	    sfmt_genrand_uint32(sfmt);
+	}
+	calc_jump(jump_string, test_count, characteristic);
+#if defined(DEBUG)
+	cout << "jump string:" << jump_string << endl;
+	cout << "before jump:" << endl;
+	print_state(new_sfmt, sfmt);
+#endif
+	SFMT_jump(new_sfmt, jump_string.c_str());
+#if defined(DEBUG)
+	cout << "after jump:" << endl;
+	print_state(new_sfmt, sfmt);
+#endif
+	if (check(new_sfmt, sfmt)) {
+	    return;
+	}
+    }
 }

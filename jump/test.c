@@ -45,17 +45,17 @@ void check32(void) {
     uint32_t r32;
     sfmt_t sfmt;
 
-    if (get_min_array_size32(&sfmt) > 10000) {
+    if (sfmt_get_min_array_size32(&sfmt) > 10000) {
 	printf("array size too small!\n");
 	exit(1);
     }
-    printf("%s\n32 bit generated randoms\n", get_idstring(&sfmt));
+    printf("%s\n32 bit generated randoms\n", sfmt_get_idstring(&sfmt));
     printf("init_gen_rand__________\n");
     /* 32 bit generation */
-    init_gen_rand(1234, &sfmt);
-    fill_array32(array32, 10000, &sfmt);
-    fill_array32(array32_2, 10000, &sfmt);
-    init_gen_rand(1234, &sfmt);
+    sfmt_init(&sfmt, 1234);
+    sfmt_fill_array32(&sfmt, array32, 10000);
+    sfmt_fill_array32(&sfmt, array32_2, 10000);
+    sfmt_init(&sfmt, 1234);
     for (i = 0; i < 10000; i++) {
 	if (i < 1000) {
 	    printf("%10u ", array32[i]);
@@ -63,7 +63,7 @@ void check32(void) {
 		printf("\n");
 	    }
 	}
-	r32 = gen_rand32(&sfmt);
+	r32 = sfmt_genrand_uint32(&sfmt);
 	if (r32 != array32[i]) {
 	    printf("\nmismatch at %d array32:%x gen:%x\n",
 		   i, array32[i], r32);
@@ -71,7 +71,7 @@ void check32(void) {
 	}
     }
     for (i = 0; i < 700; i++) {
-	r32 = gen_rand32(&sfmt);
+	r32 = sfmt_genrand_uint32(&sfmt);
 	if (r32 != array32_2[i]) {
 	    printf("\nmismatch at %d array32_2:%x gen:%x\n",
 		   i, array32_2[i], r32);
@@ -79,7 +79,7 @@ void check32(void) {
 	}
     }
     printf("\n");
-    init_by_array(ini, 4, &sfmt);
+    sfmt_init_by_array(&sfmt, ini, 4);
 #if defined(DEBUG)
     printf("first init_by_array\n");
     for (int i = 0; i < 2; i++) {
@@ -90,9 +90,9 @@ void check32(void) {
     }
 #endif
     printf("init_by_array__________\n");
-    fill_array32(array32, 10000, &sfmt);
-    fill_array32(array32_2, 10000, &sfmt);
-    init_by_array(ini, 4, &sfmt);
+    sfmt_fill_array32(&sfmt, array32, 10000);
+    sfmt_fill_array32(&sfmt, array32_2, 10000);
+    sfmt_init_by_array(&sfmt, ini, 4);
 #if defined(DEBUG)
     printf("second init_by_array\n");
     for (int i = 0; i < 2; i++) {
@@ -109,7 +109,7 @@ void check32(void) {
 		printf("\n");
 	    }
 	}
-	r32 = gen_rand32(&sfmt);
+	r32 = sfmt_genrand_uint32(&sfmt);
 	if (r32 != array32[i]) {
 	    printf("\nmismatch at %d array32:%x gen:%x\n",
 		   i, array32[i], r32);
@@ -117,7 +117,7 @@ void check32(void) {
 	}
     }
     for (i = 0; i < 700; i++) {
-	r32 = gen_rand32(&sfmt);
+	r32 = sfmt_genrand_uint32(&sfmt);
 	if (r32 != array32_2[i]) {
 	    printf("\nmismatch at %d array32_2:%x gen:%x\n",
 		   i, array32_2[i], r32);
@@ -133,16 +133,16 @@ void speed32(void) {
     uint32_t *array32 = (uint32_t *)array1;
     sfmt_t sfmt;
 
-    if (get_min_array_size32(&sfmt) > BLOCK_SIZE) {
+    if (sfmt_get_min_array_size32(&sfmt) > BLOCK_SIZE) {
 	printf("array size too small!\n");
 	exit(1);
     }
     /* 32 bit generation */
-    init_gen_rand(1234, &sfmt);
+    sfmt_init(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < COUNT; j++) {
-	    fill_array32(array32, BLOCK_SIZE, &sfmt);
+	    sfmt_fill_array32(&sfmt, array32, BLOCK_SIZE);
 	}
 	clo = clock() - clo;
 	if (clo < min) {
@@ -153,11 +153,11 @@ void speed32(void) {
     printf("ms for %u randoms generation\n",
 	   BLOCK_SIZE * COUNT);
     min = LONG_MAX;
-    init_gen_rand(1234, &sfmt);
+    sfmt_init(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < BLOCK_SIZE * COUNT; j++) {
-	    gen_rand32(&sfmt);
+	    sfmt_genrand_uint32(&sfmt);
 	}
 	clo = clock() - clo;
 	if (clo < min) {
@@ -180,17 +180,17 @@ void check64(void) {
 
     array64 = (uint64_t *)array1;
     array64_2 = (uint64_t *)array2;
-    if (get_min_array_size64(&sfmt) > 5000) {
+    if (sfmt_get_min_array_size64(&sfmt) > 5000) {
 	printf("array size too small!\n");
 	exit(1);
     }
-    printf("%s\n64 bit generated randoms\n", get_idstring(&sfmt));
+    printf("%s\n64 bit generated randoms\n", sfmt_get_idstring(&sfmt));
     printf("init_gen_rand__________\n");
     /* 64 bit generation */
-    init_gen_rand(4321, &sfmt);
-    fill_array64(array64, 5000, &sfmt);
-    fill_array64(array64_2, 5000, &sfmt);
-    init_gen_rand(4321, &sfmt);
+    sfmt_init(&sfmt, 4321);
+    sfmt_fill_array64(&sfmt, array64, 5000);
+    sfmt_fill_array64(&sfmt, array64_2, 5000);
+    sfmt_init(&sfmt, 4321);
     for (i = 0; i < 5000; i++) {
 	if (i < 1000) {
 	    printf("%20"PRIu64" ", array64[i]);
@@ -198,7 +198,7 @@ void check64(void) {
 		printf("\n");
 	    }
 	}
-	r = gen_rand64(&sfmt);
+	r = sfmt_genrand_uint64(&sfmt);
 	if (r != array64[i]) {
 	    printf("\nmismatch at %d array64:%"PRIx64" gen:%"PRIx64"\n",
 		   i, array64[i], r);
@@ -207,7 +207,7 @@ void check64(void) {
     }
     printf("\n");
     for (i = 0; i < 700; i++) {
-	r = gen_rand64(&sfmt);
+	r = sfmt_genrand_uint64(&sfmt);
 	if (r != array64_2[i]) {
 	    printf("\nmismatch at %d array64_2:%"PRIx64" gen:%"PRIx64"\n",
 		   i, array64_2[i], r);
@@ -216,10 +216,10 @@ void check64(void) {
     }
     printf("init_by_array__________\n");
     /* 64 bit generation */
-    init_by_array(ini, 5, &sfmt);
-    fill_array64(array64, 5000, &sfmt);
-    fill_array64(array64_2, 5000, &sfmt);
-    init_by_array(ini, 5, &sfmt);
+    sfmt_init_by_array(&sfmt, ini, 5);
+    sfmt_fill_array64(&sfmt, array64, 5000);
+    sfmt_fill_array64(&sfmt, array64_2, 5000);
+    sfmt_init_by_array(&sfmt, ini, 5);
     for (i = 0; i < 5000; i++) {
 	if (i < 1000) {
 	    printf("%20"PRIu64" ", array64[i]);
@@ -227,7 +227,7 @@ void check64(void) {
 		printf("\n");
 	    }
 	}
-	r = gen_rand64(&sfmt);
+	r = sfmt_genrand_uint64(&sfmt);
 	if (r != array64[i]) {
 	    printf("\nmismatch at %d array64:%"PRIx64" gen:%"PRIx64"\n",
 		   i, array64[i], r);
@@ -236,7 +236,7 @@ void check64(void) {
     }
     printf("\n");
     for (i = 0; i < 700; i++) {
-	r = gen_rand64(&sfmt);
+	r = sfmt_genrand_uint64(&sfmt);
 	if (r != array64_2[i]) {
 	    printf("\nmismatch at %d array64_2:%"PRIx64" gen:%"PRIx64"\n",
 		   i, array64_2[i], r);
@@ -252,16 +252,16 @@ void speed64(void) {
     uint64_t *array64 = (uint64_t *)array1;
     sfmt_t sfmt;
 
-    if (get_min_array_size64(&sfmt) > BLOCK_SIZE64) {
+    if (sfmt_get_min_array_size64(&sfmt) > BLOCK_SIZE64) {
 	printf("array size too small!\n");
 	exit(1);
     }
     /* 64 bit generation */
-    init_gen_rand(1234, &sfmt);
+    sfmt_init(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < COUNT; j++) {
-	    fill_array64(array64, BLOCK_SIZE64, &sfmt);
+	    sfmt_fill_array64(&sfmt, array64, BLOCK_SIZE64);
 	}
 	clo = clock() - clo;
 	if (clo < min) {
@@ -272,11 +272,11 @@ void speed64(void) {
     printf("ms for %u randoms generation\n",
 	   BLOCK_SIZE64 * COUNT);
     min = LONG_MAX;
-    init_gen_rand(1234, &sfmt);
+    sfmt_init(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < BLOCK_SIZE64 * COUNT; j++) {
-	    gen_rand64(&sfmt);
+	    sfmt_genrand_uint64(&sfmt);
 	}
 	clo = clock() - clo;
 	if (clo < min) {
