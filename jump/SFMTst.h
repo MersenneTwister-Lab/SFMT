@@ -131,6 +131,7 @@ void sfmt_init_by_array(sfmt_t * sfmt, uint32_t * init_key, int key_length);
 const char * sfmt_get_idstring(sfmt_t * sfmt);
 int sfmt_get_min_array_size32(sfmt_t * sfmt);
 int sfmt_get_min_array_size64(sfmt_t * sfmt);
+void sfmt_gen_rand_all(sfmt_t * sfmt);
 
 /* These real versions are due to Isaku Wada */
 /** generates a random number on [0,1]-real-interval */

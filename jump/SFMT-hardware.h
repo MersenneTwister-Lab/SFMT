@@ -1,41 +1,14 @@
-#ifndef SFMT_HARDWARE_H
-#define SFMT_HARDWARE_H
+#ifndef SFMT_COMMON_H
+#define SFMT_COMMON_H
 
 inline static void do_recursion(w128_t * r, w128_t * a, w128_t * b,
 				w128_t * c, w128_t * d);
-#if defined(HAVE_SSE2)
-/**
- * This function represents the recursion formula.
- * @param a a 128-bit part of the interal state array
- * @param b a 128-bit part of the interal state array
- * @param c a 128-bit part of the interal state array
- * @param d a 128-bit part of the interal state array
- * @param mask 128-bit mask
- * @return output
- */
-inline static void do_recursion(w128_t * r, w128_t * a, w128_t * b,
-				w128_t * c, w128_t * d) {
-    __m128i v, x, y, z;
-    w128_t w;
 
-    x = _mm_load_si128(&a->si);
-    y = _mm_srli_epi32(b->si, SR1);
-    z = _mm_srli_si128(c->si, SR2);
-    v = _mm_slli_epi32(d->si, SL1);
-    z = _mm_xor_si128(z, x);
-    z = _mm_xor_si128(z, v);
-    x = _mm_slli_si128(x, SL2);
-    y = _mm_and_si128(y, sse2_param_mask.si);
-    z = _mm_xor_si128(z, x);
-    z = _mm_xor_si128(z, y);
-    r->si = z;
-}
-
-#else /* C99 */
 inline static void rshift128(w128_t *out,  w128_t const *in, int shift);
 inline static void lshift128(w128_t *out,  w128_t const *in, int shift);
 
-inline static void rshift128(w128_t *out, w128_t const *in, int shift) {
+inline static void rshift128(w128_t *out, w128_t const *in, int shift)
+{
     uint64_t th, tl, oh, ol;
 
     th = ((uint64_t)in->u[3] << 32) | ((uint64_t)in->u[2]);
@@ -50,7 +23,8 @@ inline static void rshift128(w128_t *out, w128_t const *in, int shift) {
     out->u[2] = (uint32_t)oh;
 }
 
-inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
+inline static void lshift128(w128_t *out, w128_t const *in, int shift)
+{
     uint64_t th, tl, oh, ol;
 
     th = ((uint64_t)in->u[3] << 32) | ((uint64_t)in->u[2]);
@@ -66,7 +40,7 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
 }
 
 inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
-				w128_t *d) {
+				    w128_t *d) {
     w128_t x;
     w128_t y;
 
@@ -81,7 +55,5 @@ inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
     r->u[3] = a->u[3] ^ x.u[3] ^ ((b->u[3] >> SFMT_SR1) & SFMT_MSK4)
 	^ y.u[3] ^ (d->u[3] << SFMT_SL1);
 }
-
-#endif
 
 #endif
