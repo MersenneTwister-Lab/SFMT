@@ -12,9 +12,9 @@ CPP = g++ -Wall -Wextra -O3 -I../include -msse3 $(DEFINES) $(DDEBUG)
 #CPP = icc -Wall -Wextra -O3 -I../include $(DEFINES) $(DDEBUG)
 
 #CC = gcc
-CC = icc
+CC = icc -fast
 OPTI = -O3 -finline-functions -fomit-frame-pointer -DNDEBUG \
--fno-strict-aliasing
+-fno-strict-aliasing --param max-inline-insns-single=1800
 STD = -std=c99
 WARN = -Wmissing-prototypes -Wall #-Winline
 CCFLAGS = $(OPTI) $(WARN) $(STD) $(DDEBUG)
@@ -34,8 +34,11 @@ calc-jump: calc-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp
 test-string: test-string.cpp SFMT-calc-jump.hpp
 	${CPP} -o $@ test-string.cpp ${LINKOPT}
 
-test-std: test.c SFMTst.c SFMTst.h SFMT-params607.h
+test-std: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-hardware.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=607 -o $@ test.c SFMTst.c
+
+test-sse2: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-hardware.h
+	${CC} ${CCFLAGS} -DSFMT_MEXP=607 -DHAVE_SSE2 -o $@ test.c SFMTst.c
 
 .cpp.o:
 	${CPP} -c $<
