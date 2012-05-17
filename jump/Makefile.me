@@ -1,0 +1,65 @@
+#for GNU make
+
+FILES = SFMT.h \
+	SFMT-params.h \
+	SFMT.c \
+	SFMT-alti.h \
+	SFMT-sse2.h \
+	SFMT-params607.h \
+	SFMT-params1279.h \
+	SFMT-params2281.h \
+	SFMT-params4253.h \
+	SFMT-params11213.h \
+	SFMT-params19937.h \
+	SFMT-params44497.h \
+	SFMT-params86243.h \
+	SFMT-params132049.h \
+	SFMT-params216091.h \
+	SFMT.607.out.txt \
+	SFMT.1279.out.txt \
+	SFMT.2281.out.txt \
+	SFMT.4253.out.txt \
+	SFMT.11213.out.txt \
+	SFMT.19937.out.txt \
+	SFMT.44497.out.txt \
+	SFMT.86243.out.txt \
+	SFMT.132049.out.txt \
+	SFMT.216091.out.txt \
+	FILES.txt \
+	LICENSE.txt \
+	Makefile \
+	test.c \
+	check.sh \
+	CHANGE-LOG.txt \
+	README.txt \
+	html
+
+VERSION = 1.3.3
+DIR = SFMT-src-${VERSION}
+
+doc:
+	rm -rf html
+	/Applications/Doxygen.app/Contents/Resources/doxygen doxygen.cfg
+	cp howto-compile.html html
+
+.PHONY : tar.gz
+tar.gz: $(FILES)
+	mkdir ${DIR}
+	mkdir ${DIR}/params
+	cp -r ${FILES} ${DIR}
+	cp params/*.csv params/*.txt params/*.awk ${DIR}/params
+	tar czvf ${DIR}.tar.gz ${DIR}/*
+	rm -rf ${DIR}
+
+.PHONY : zip
+zip: $(FILES)
+	mkdir ${DIR}
+	mkdir ${DIR}/params
+	rm -f ${DIR}.zip
+	cp -r ${FILES} ${DIR}
+	cp params/*.csv params/*.txt params/*.awk ${DIR}/params
+	zip -r ${DIR}.zip ${DIR}/*
+	rm -rf ${DIR}
+
+clean:
+	rm -f *.o *~

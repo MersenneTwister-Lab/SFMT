@@ -1,7 +1,7 @@
 /**
- * @file calc-jump.cpp
+ * @file test-jump.cpp
  *
- * @brief calculate jump polynomial.
+ * @brief test jump function.
  *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (The University of Tokyo)
@@ -20,6 +20,7 @@
 #include <string>
 #include <inttypes.h>
 #include <stdint.h>
+#include <time.h>
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
 #include <NTL/ZZ.h>
@@ -35,10 +36,11 @@ static void test(sfmt_t * sfmt, GF2X& poly);
 static int check(sfmt_t *a, sfmt_t *b);
 static void print_state(sfmt_t *a, sfmt_t * b);
 static void print_sequence(sfmt_t *a, sfmt_t * b);
+static void speed(sfmt_t * sfmt, GF2X& characteristic);
 
 int main(int argc, char * argv[]) {
     if (argc <= 1) {
-	cout << argv[0] << " jumpstep" << endl;
+	printf("%s -s|-c\n", argv[0]);
 	return -1;
     }
     stringstream ss_file;
@@ -60,8 +62,69 @@ int main(int argc, char * argv[]) {
     cout << jump_str << endl;
 #endif
     sfmt_t sfmt;
-    test(&sfmt, characteristic);
+    if (argv[1][1] == 's') {
+	speed(&sfmt, characteristic);
+    } else {
+	test(&sfmt, characteristic);
+    }
     return 0;
+}
+
+static void speed(sfmt_t * sfmt, GF2X& characteristic)
+{
+    uint32_t seed = 1234;
+    long step = 10000;
+    int exp = 4;
+    ZZ test_count;
+    string jump_string;
+    clock_t start;
+    double elapsed1;
+    double elapsed2;
+
+    sfmt_init(sfmt, seed);
+    test_count = step;
+    for (int i = 0; i < 10; i++) {
+	start = clock();
+	calc_jump(jump_string, test_count, characteristic);
+	elapsed1 = clock() - start;
+	elapsed1 = elapsed1 * 1000 / CLOCKS_PER_SEC;
+	cout << "mexp "
+	     << setw(5)
+	     << SFMT_MEXP
+	     << " jump 10^"
+	     << setfill('0') << setw(2)
+	     << exp
+	     << " steps calc_jump:"
+	     << setfill(' ') << setiosflags(ios::fixed)
+	     << setw(6) << setprecision(3)
+	     << elapsed1
+	     << "ms"
+	     << endl;
+	start = clock();
+
+	for (int j = 0; j < 10; j++) {
+	    SFMT_jump(sfmt, jump_string.c_str());
+	}
+	elapsed2 = clock() - start;
+	elapsed2 = elapsed2 * 1000 / 10 / CLOCKS_PER_SEC;
+	cout << "mexp "
+	     << setw(5)
+	     << SFMT_MEXP
+	     << " jump 10^"
+	     << setfill('0') << setw(2)
+	     << exp
+	     << " steps SFMT_jump:"
+	     << setfill(' ') << setiosflags(ios::fixed)
+	     << setw(6) << setprecision(3)
+	     << elapsed2
+	     << "ms"
+	     << endl;
+	test_count *= 100;
+	exp += 2;
+	if (elapsed1 > 50.0) {
+	    break;
+	}
+    }
 }
 
 static void read_file(GF2X& characteristic, int line_no, const string& file)
@@ -116,7 +179,6 @@ static void print_state(sfmt_t *a, sfmt_t * b)
     for (int i = 0; (i < 10) && (i < SFMT_N); i++) {
 	printf("[");
 	for (int j = 0; j < 4; j++) {
-//	    printf("%08"PRIx32, a->state[(a->idx / 4 + i) % SFMT_N].u[j]);
 	    printf("%08"PRIx32, a->state[i].u[j]);
 	    if (j < 3) {
 		printf(" ");
@@ -126,7 +188,6 @@ static void print_state(sfmt_t *a, sfmt_t * b)
 	}
 	printf("[");
 	for (int j = 0; j < 4; j++) {
-//	    printf("%08"PRIx32, b->state[(b->idx / 4 + i) % SFMT_N].u[j]);
 	    printf("%08"PRIx32, b->state[i].u[j]);
 	    if (j < 3) {
 		printf(" ");
@@ -173,7 +234,8 @@ static void test(sfmt_t * sfmt, GF2X& characteristic)
     for (int index = 0; index < steps_size; index++) {
 //	sfmt_init(sfmt, seed[index]);
 	test_count = steps[index];
-	cout << "jump " << test_count << " steps" << endl;
+	cout << "mexp " << dec << SFMT_MEXP << " jump "
+	     << test_count << " steps" << endl;
 	*new_sfmt = *sfmt;
 	for (long i = 0; i < steps[index] * 4; i++) {
 	    sfmt_genrand_uint32(sfmt);

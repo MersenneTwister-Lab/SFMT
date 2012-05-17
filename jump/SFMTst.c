@@ -41,10 +41,6 @@ inline static uint32_t func2(uint32_t x);
 static void period_certification(sfmt_t * sfmt);
 static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt);
 
-#if defined(BIG_ENDIAN64) && !defined(ONLY64)
-inline static void swap(w128_t *array, int size);
-#endif
-
 /**
  * This function simulate a 64-bit index of LITTLE ENDIAN
  * in BIG ENDIAN machine.
@@ -72,21 +68,6 @@ inline static int idxof(int i) {
 
 
 
-#if defined(BIG_ENDIAN64)
-inline static void swap(w128_t *array, int size) {
-    int i;
-    uint32_t x, y;
-
-    for (i = 0; i < size; i++) {
-	x = array[i].u[0];
-	y = array[i].u[2];
-	array[i].u[0] = array[i].u[1];
-	array[i].u[2] = array[i].u[3];
-	array[i].u[1] = x;
-	array[i].u[3] = y;
-    }
-}
-#endif
 /**
  * This function represents a function used in the initialization
  * by init_by_array
