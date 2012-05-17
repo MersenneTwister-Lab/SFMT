@@ -1,5 +1,37 @@
+/**
+ * @file SFMT-common.h
+ *
+ * @brief SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
+ * number generator
+ *
+ * @author Mutsuo Saito (Hiroshima University)
+ * @author Makoto Matsumoto (Hiroshima University)
+ *
+ * Copyright (C) 2006 -- 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+ * University and The University of Tokyo.
+ * All rights reserved.
+ *
+ * The new BSD License is applied to this software.
+ * see LICENSE.txt
+ *
+ * @note We assume that your system has inttypes.h.  If your system
+ * doesn't have inttypes.h, you have to typedef uint32_t and uint64_t,
+ * and you have to define PRIu64 and PRIx64 in this file as follows:
+ * @verbatim
+ typedef unsigned int uint32_t
+ typedef unsigned long long uint64_t
+ #define PRIu64 "llu"
+ #define PRIx64 "llx"
+@endverbatim
+ * uint32_t must be exactly 32-bit unsigned integer type (no more, no
+ * less), and uint64_t must be exactly 64-bit unsigned integer type.
+ * PRIu64 and PRIx64 are used for printf function to print 64-bit
+ * unsigned int and 64-bit unsigned int in hexadecimal format.
+ */
 #ifndef SFMT_COMMON_H
 #define SFMT_COMMON_H
+
+#include "SFMTst.h"
 
 inline static void do_recursion(w128_t * r, w128_t * a, w128_t * b,
 				w128_t * c, w128_t * d);
@@ -39,8 +71,9 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift)
     out->u[2] = (uint32_t)oh;
 }
 
-inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b, w128_t *c,
-				    w128_t *d) {
+inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b,
+				w128_t *c, w128_t *d)
+{
     w128_t x;
     w128_t y;
 

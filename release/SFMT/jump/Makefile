@@ -8,16 +8,19 @@ LIBGF2X = -lgf2x
 #LIBGMP = -lgmp
 
 DEFINES = -D__STDC_CONSTANT_MACROS=1
-CPP = g++ -Wall -Wextra -O3 -I../include -msse3 $(DEFINES) $(DDEBUG)
-#CPP = icc -Wall -Wextra -O3 -I../include $(DEFINES) $(DDEBUG)
+CPP = g++
+#CPP = icc
+GPPFLAGS = -msse2
 
-#CC = gcc
-CC = icc -fast
-OPTI = -O3 -finline-functions -fomit-frame-pointer -DNDEBUG \
--fno-strict-aliasing --param max-inline-insns-single=1800
-STD = -std=c99
+CC = gcc
+#CC = icc -fast
+GCCFLAGS = -msse2 --param max-inline-insns-single=1800
+#ICCFLAGS = -fast
+OPTI = -O3 -finline-functions -fomit-frame-pointer
+CCSTD = -std=c99
 WARN = -Wmissing-prototypes -Wall #-Winline
-CCFLAGS = $(OPTI) $(WARN) $(STD) $(DDEBUG)
+CCFLAGS = $(GCCFLAGS) $(ICCFLAGS) $(OPTI) $(WARN) $(CCSTD) $(DDEBUG)
+CPPFLAGS = $(OPTI) $(GPPFLAGS) $(WARN) $(DEFINES) $(DDEBUG)
 
 #LINKOPT = -lntl -lcrypto $(LIBGF2X) $(LIBGMP)
 LINKOPT = -lntl $(LIBGF2X) $(LIBGMP)
@@ -25,20 +28,21 @@ LINKOPT = -lntl $(LIBGF2X) $(LIBGMP)
 all:calc-characteristic calc-jump test-string test-std
 
 calc-characteristic: calc-characteristic.cpp SFMText.hpp SFMT-calc-jump.hpp
-	${CPP} -o $@ calc-characteristic.cpp ${LINKOPT}
-
-calc-jump: calc-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp
-	${CPP} -DSFMT_MEXP=607 -o $@ calc-jump.cpp SFMTst.c SFMT-jump.c \
-	${LINKOPT}
+	${CPP} ${CPPFLAGS} -o $@ calc-characteristic.cpp ${LINKOPT}
 
 test-string: test-string.cpp SFMT-calc-jump.hpp
-	${CPP} -o $@ test-string.cpp ${LINKOPT}
+	${CPP} ${CPPFLAGS} -o $@ test-string.cpp ${LINKOPT}
 
-test-std: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-hardware.h
+test-std-M607: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=607 -o $@ test.c SFMTst.c
 
-test-sse2: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-hardware.h
+test-sse2-M607: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=607 -DHAVE_SSE2 -o $@ test.c SFMTst.c
+
+test-jump-M607: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
+	SFMT-common.h
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=607 -o $@ test-jump.cpp SFMTst.c \
+	SFMT-jump.c ${LINKOPT}
 
 .cpp.o:
 	${CPP} -c $<

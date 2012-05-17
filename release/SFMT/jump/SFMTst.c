@@ -1,5 +1,5 @@
 /**
- * @file  SFMT.c
+ * @file  SFMTst.c
  * @brief SIMD oriented Fast Mersenne Twister(SFMT)
  *
  * @author Mutsuo Saito (Hiroshima University)
@@ -23,28 +23,14 @@
 extern "C" {
 #endif
 
-#if defined(__BIG_ENDIAN__) && !defined(__amd64) && !defined(BIG_ENDIAN64)
-#define BIG_ENDIAN64 1
-#endif
-#if defined(HAVE_ALTIVEC) && !defined(BIG_ENDIAN64)
-#define BIG_ENDIAN64 1
-#endif
-#if defined(ONLY64) && !defined(BIG_ENDIAN64)
-  #if defined(__GNUC__)
-    #error "-DONLY64 must be specified with -DBIG_ENDIAN64"
-  #endif
-#undef ONLY64
-#endif
-
-w128_t sse2_param_mask = {{SFMT_MSK2, SFMT_MSK1, SFMT_MSK4, SFMT_MSK3}};
 /*--------------------------------------
-  FILE GLOBAL VARIABLES
-  internal state, index counter and flag
+  FILE GLOBAL CONSTANTS
   --------------------------------------*/
+static const w128_t sse2_param_mask = {{SFMT_MSK1, SFMT_MSK2,
+					SFMT_MSK3, SFMT_MSK4}};
 /** a parity check vector which certificate the period of 2^{MEXP} */
 static const uint32_t parity[4] = {SFMT_PARITY1, SFMT_PARITY2,
 				   SFMT_PARITY3, SFMT_PARITY4};
-#include "SFMT-hardware.h"
 
 /*----------------
   STATIC FUNCTIONS
@@ -53,6 +39,8 @@ inline static int idxof(int i);
 inline static uint32_t func1(uint32_t x);
 inline static uint32_t func2(uint32_t x);
 static void period_certification(sfmt_t * sfmt);
+static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt);
+
 #if defined(BIG_ENDIAN64) && !defined(ONLY64)
 inline static void swap(w128_t *array, int size);
 #endif
@@ -163,19 +151,18 @@ static void period_certification(sfmt_t * sfmt) {
  * @param mask 128-bit mask
  * @return output
  */
+
 inline static void mm_recursion(__m128i * r, __m128i a, __m128i b,
 				__m128i c, __m128i d);
 
 inline static void mm_recursion(__m128i * r, __m128i a, __m128i b,
-				__m128i c, __m128i d) {
+				__m128i c, __m128i d)
+{
     __m128i v, x, y, z;
 
-//    x = _mm_load_si128(a);
-//    x = a;
     y = _mm_srli_epi32(b, SFMT_SR1);
     z = _mm_srli_si128(c, SFMT_SR2);
     v = _mm_slli_epi32(d, SFMT_SL1);
-//    z = _mm_xor_si128(z, x);
     z = _mm_xor_si128(z, a);
     z = _mm_xor_si128(z, v);
     x = _mm_slli_si128(a, SFMT_SL2);
@@ -192,7 +179,8 @@ inline static void mm_recursion(__m128i * r, __m128i a, __m128i b,
  * @param array an 128-bit array to be filled by pseudorandom numbers.
  * @param size number of 128-bit pseudorandom numbers to be generated.
  */
-inline static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt) {
+static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt)
+{
     int i, j;
     __m128i r1, r2;
     w128_t * pstate = sfmt->state;
@@ -237,7 +225,8 @@ inline static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt) {
  * @param array an 128-bit array to be filled by pseudorandom numbers.
  * @param size number of 128-bit pseudorandom numbers to be generated.
  */
-inline static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt) {
+static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt)
+{
     int i, j;
     w128_t *r1, *r2;
     w128_t * pstate = sfmt->state;
@@ -361,59 +350,7 @@ void sfmt_gen_rand_all(sfmt_t * sfmt) {
 
 #endif
 
-#ifndef ONLY64
-/**
- * This function generates and returns 32-bit pseudorandom number.
- * init_gen_rand or init_by_array must be called before this function.
- * @return 32-bit pseudorandom number
- */
-uint32_t sfmt_genrand_uint32(sfmt_t * sfmt) {
-    uint32_t r;
-    uint32_t * psfmt32 = (uint32_t *)(sfmt->state);
 
-    if (sfmt->idx >= SFMT_N32) {
-	gen_rand_all(sfmt);
-	sfmt->idx = 0;
-    }
-    r = psfmt32[sfmt->idx++];
-    return r;
-}
-#endif
-/**
- * This function generates and returns 64-bit pseudorandom number.
- * init_gen_rand or init_by_array must be called before this function.
- * The function gen_rand64 should not be called after gen_rand32,
- * unless an initialization is again executed.
- * @return 64-bit pseudorandom number
- */
-uint64_t sfmt_genrand_uint64(sfmt_t * sfmt) {
-#if defined(BIG_ENDIAN64) && !defined(ONLY64)
-    uint32_t r1, r2;
-    uint32_t * psfmt32 = (uint32_t *)(sfmt->state);
-#else
-    uint64_t r;
-    uint64_t * psfmt64 = (uint64_t *)(sfmt->state);
-#endif
-
-    assert(sfmt->idx % 2 == 0);
-
-    if (sfmt->idx >= SFMT_N32) {
-	gen_rand_all(sfmt);
-	sfmt->idx = 0;
-    }
-#if defined(BIG_ENDIAN64) && !defined(ONLY64)
-    r1 = psfmt32[sfmt->idx];
-    r2 = psfmt32[sfmt->idx + 1];
-    sfmt->idx += 2;
-    return ((uint64_t)r2 << 32) | r1;
-#else
-    r = psfmt64[sfmt->idx / 2];
-    sfmt->idx += 2;
-    return r;
-#endif
-}
-
-#ifndef ONLY64
 /**
  * This function generates pseudorandom 32-bit integers in the
  * specified array[] by one call. The number of pseudorandom integers
@@ -447,7 +384,6 @@ void sfmt_fill_array32(sfmt_t * sfmt, uint32_t *array, int size) {
     gen_rand_array((w128_t *)array, size / 4, sfmt);
     sfmt->idx = SFMT_N32;
 }
-#endif
 
 /**
  * This function generates pseudorandom 64-bit integers in the
@@ -474,17 +410,14 @@ void sfmt_fill_array32(sfmt_t * sfmt, uint32_t *array, int size) {
  * memory. Mac OSX doesn't have these functions, but \b malloc of OSX
  * returns the pointer to the aligned memory block.
  */
-void sfmt_fill_array64(sfmt_t * sfmt, uint64_t *array, int size) {
+void sfmt_fill_array64(sfmt_t * sfmt, uint64_t *array, int size)
+{
     assert(sfmt->idx == SFMT_N32);
     assert(size % 2 == 0);
     assert(size >= SFMT_N64);
 
     gen_rand_array((w128_t *)array, size / 2, sfmt);
     sfmt->idx = SFMT_N32;
-
-#if defined(BIG_ENDIAN64) && !defined(ONLY64)
-    swap((w128_t *)array, size /2);
-#endif
 }
 
 /**
@@ -499,9 +432,9 @@ void sfmt_init(sfmt_t * sfmt, uint32_t seed) {
 
     psfmt32[idxof(0)] = seed;
     for (i = 1; i < SFMT_N32; i++) {
-	psfmt32[idxof(i)] = 1812433253UL * (psfmt32[idxof(i - 1)]
-					    ^ (psfmt32[idxof(i - 1)] >> 30))
-	    + i;
+	psfmt32[idxof(i)] = i + 1812433253UL
+	    * (psfmt32[idxof(i - 1)]
+	       ^ (psfmt32[idxof(i - 1)] >> 30));
     }
     sfmt->idx = SFMT_N32;
     period_certification(sfmt);
