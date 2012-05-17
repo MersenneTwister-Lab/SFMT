@@ -33,6 +33,7 @@
 #define SFMTST_H
 
 #include <stdio.h>
+#include <assert.h>
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
   #include <inttypes.h>
@@ -75,42 +76,30 @@
 
 #include "SFMT-params.h"
 
-#if defined(HAVE_SSE2)
-  #include <emmintrin.h>
 #if defined(__cplusplus)
 extern "C" {
 #endif
+
+#if defined(HAVE_SSE2)
+  #include <emmintrin.h>
 
 /** 128-bit data structure */
 union W128_T {
     uint32_t u[4];
+    uint64_t u64[2];
     __m128i si;
 };
 /** 128-bit data type */
 typedef union W128_T w128_t;
-#if defined(__cplusplus)
-}
-#endif
-
 #else
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
 /** 128-bit data structure */
-struct W128_T {
+union W128_T {
     uint32_t u[4];
+    uint64_t u64[2];
 };
 /** 128-bit data type */
-typedef struct W128_T w128_t;
+typedef union W128_T w128_t;
 
-#if defined(__cplusplus)
-}
-#endif
-#endif
-
-#if defined(__cplusplus)
-extern "C" {
 #endif
 
 struct SFMT_T {
@@ -122,8 +111,6 @@ struct SFMT_T {
 
 typedef struct SFMT_T sfmt_t;
 
-uint32_t sfmt_genrand_uint32(sfmt_t * sfmt);
-uint64_t sfmt_genrand_uint64(sfmt_t * sfmt);
 void sfmt_fill_array32(sfmt_t * sfmt, uint32_t * array, int size);
 void sfmt_fill_array64(sfmt_t * sfmt, uint64_t * array, int size);
 void sfmt_init(sfmt_t * sfmt, uint32_t seed);
@@ -133,6 +120,52 @@ int sfmt_get_min_array_size32(sfmt_t * sfmt);
 int sfmt_get_min_array_size64(sfmt_t * sfmt);
 void sfmt_gen_rand_all(sfmt_t * sfmt);
 
+/**
+ * This function generates and returns 32-bit pseudorandom number.
+ * init_gen_rand or init_by_array must be called before this function.
+ * @return 32-bit pseudorandom number
+ */
+inline static uint32_t sfmt_genrand_uint32(sfmt_t * sfmt) {
+    uint32_t r;
+    uint32_t * psfmt32 = &sfmt->state[0].u[0];
+
+    if (sfmt->idx >= SFMT_N32) {
+	sfmt_gen_rand_all(sfmt);
+	sfmt->idx = 0;
+    }
+    r = psfmt32[sfmt->idx++];
+    return r;
+}
+
+/**
+ * This function generates and returns 64-bit pseudorandom number.
+ * init_gen_rand or init_by_array must be called before this function.
+ * The function gen_rand64 should not be called after gen_rand32,
+ * unless an initialization is again executed.
+ * @return 64-bit pseudorandom number
+ */
+inline static uint64_t sfmt_genrand_uint64(sfmt_t * sfmt)
+{
+    uint64_t r;
+    uint64_t * psfmt64 = &sfmt->state[0].u64[0];
+
+    assert(sfmt->idx % 2 == 0);
+
+    if (sfmt->idx >= SFMT_N32) {
+	sfmt_gen_rand_all(sfmt);
+	sfmt->idx = 0;
+    }
+#if defined(BIG_ENDIAN64) && !defined(ONLY64)
+    r1 = psfmt32[sfmt->idx];
+    r2 = psfmt32[sfmt->idx + 1];
+    sfmt->idx += 2;
+    return ((uint64_t)r2 << 32) | r1;
+#else
+    r = psfmt64[sfmt->idx / 2];
+    sfmt->idx += 2;
+    return r;
+#endif
+}
 /* These real versions are due to Isaku Wada */
 /** generates a random number on [0,1]-real-interval */
 inline static double sfmt_to_real1(uint32_t v)

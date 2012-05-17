@@ -28,19 +28,14 @@ void speed32(void);
 void check64(void);
 void speed64(void);
 
-#if defined(HAVE_SSE2)
-static __m128i array1[BLOCK_SIZE / 4];
-static __m128i array2[10000 / 4];
-#else
-static uint64_t array1[BLOCK_SIZE / 4][2];
-static uint64_t array2[10000 / 4][2];
-#endif
+static w128_t array1[BLOCK_SIZE / 4];
+static w128_t array2[10000 / 4];
 
 #ifndef ONLY64
 void check32(void) {
     int i;
-    uint32_t *array32 = (uint32_t *)array1;
-    uint32_t *array32_2 = (uint32_t *)array2;
+    uint32_t *array32 = &array1[0].u[0];
+    uint32_t *array32_2 = &array2[0].u[0];
     uint32_t ini[4] = {0x1234, 0x5678, 0x9abc, 0xdef0};
     uint32_t r32;
     sfmt_t sfmt;

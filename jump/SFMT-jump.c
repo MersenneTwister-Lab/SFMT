@@ -21,7 +21,7 @@
 #include "SFMT-params.h"
 #include "SFMTst.h"
 #include "SFMT-jump.h"
-#include "SFMT-hardware.h"
+#include "SFMT-common.h"
 
 #if defined(__cplusplus)
 extern "C" {
