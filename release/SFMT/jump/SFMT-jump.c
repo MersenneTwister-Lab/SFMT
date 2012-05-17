@@ -29,18 +29,45 @@ extern "C" {
 
 inline static void next_state(sfmt_t * sfmt);
 
+#if defined(HAVE_SSE2)
 inline static void add(sfmt_t *dest, sfmt_t *src) {
     int dp = dest->idx / 4;
     int sp = src->idx / 4;
     int diff = (sp - dp + SFMT_N) % SFMT_N;
     int p;
-    for (int i = 0; i < SFMT_N; i++) {
-	p = (i + diff) % SFMT_N;
+    int i;
+    for (i = 0; i < SFMT_N - diff; i++) {
+	p = i + diff;
+	dest->state[i].si
+	    = _mm_xor_si128(dest->state[i].si, src->state[p].si);
+    }
+    for (; i < SFMT_N; i++) {
+	p = i + diff - SFMT_N;
+	dest->state[i].si
+	    = _mm_xor_si128(dest->state[i].si, src->state[p].si);
+    }
+}
+#else
+inline static void add(sfmt_t *dest, sfmt_t *src) {
+    int dp = dest->idx / 4;
+    int sp = src->idx / 4;
+    int diff = (sp - dp + SFMT_N) % SFMT_N;
+    int p;
+    int i;
+    for (i = 0; i < SFMT_N - diff; i++) {
+	p = i + diff;
+	for (int j = 0; j < 4; j++) {
+	    dest->state[i].u[j] ^= src->state[p].u[j];
+	}
+    }
+    for (; i < SFMT_N; i++) {
+	p = i + diff - SFMT_N;
 	for (int j = 0; j < 4; j++) {
 	    dest->state[i].u[j] ^= src->state[p].u[j];
 	}
     }
 }
+#endif
 
 inline static void next_state(sfmt_t * sfmt) {
     int idx = (sfmt->idx / 4) % SFMT_N;

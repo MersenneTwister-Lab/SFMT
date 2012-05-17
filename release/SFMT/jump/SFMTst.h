@@ -155,16 +155,9 @@ inline static uint64_t sfmt_genrand_uint64(sfmt_t * sfmt)
 	sfmt_gen_rand_all(sfmt);
 	sfmt->idx = 0;
     }
-#if defined(BIG_ENDIAN64) && !defined(ONLY64)
-    r1 = psfmt32[sfmt->idx];
-    r2 = psfmt32[sfmt->idx + 1];
-    sfmt->idx += 2;
-    return ((uint64_t)r2 << 32) | r1;
-#else
     r = psfmt64[sfmt->idx / 2];
     sfmt->idx += 2;
     return r;
-#endif
 }
 /* These real versions are due to Isaku Wada */
 /** generates a random number on [0,1]-real-interval */
