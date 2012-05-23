@@ -2,17 +2,19 @@
  * @file SFMTst.h
  *
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
- * number generator
+ * number generator using C structure.
  *
  * @author Mutsuo Saito (Hiroshima University)
- * @author Makoto Matsumoto (Hiroshima University)
+ * @author Makoto Matsumoto (The University of Tokyo)
  *
- * Copyright (C) 2006 -- 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+ * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University.
+ * Copyright (C) 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
  * University and The University of Tokyo.
  * All rights reserved.
  *
- * The new BSD License is applied to this software.
- * see LICENSE.txt
+ * The 3-clause BSD License is applied to this software, see
+ * LICENSE.txt
  *
  * @note We assume that your system has inttypes.h.  If your system
  * doesn't have inttypes.h, you have to typedef uint32_t and uint64_t,
@@ -58,22 +60,6 @@
   #endif
 #endif
 
-#if defined(__GNUC__)
-#define ALWAYSINLINE __attribute__((always_inline))
-#else
-#define ALWAYSINLINE
-#endif
-
-#if defined(_MSC_VER)
-  #if _MSC_VER >= 1200
-    #define PRE_ALWAYS __forceinline
-  #else
-    #define PRE_ALWAYS inline
-  #endif
-#else
-  #define PRE_ALWAYS inline
-#endif
-
 #include "SFMT-params.h"
 
 #if defined(__cplusplus)
@@ -89,19 +75,20 @@ union W128_T {
     uint64_t u64[2];
     __m128i si;
 };
-/** 128-bit data type */
-typedef union W128_T w128_t;
 #else
 /** 128-bit data structure */
 union W128_T {
     uint32_t u[4];
     uint64_t u64[2];
 };
+#endif
+
 /** 128-bit data type */
 typedef union W128_T w128_t;
 
-#endif
-
+/**
+ * SFMT internal state
+ */
 struct SFMT_T {
     /** the 128-bit internal state array */
     w128_t state[SFMT_N];
@@ -123,6 +110,7 @@ void sfmt_gen_rand_all(sfmt_t * sfmt);
 /**
  * This function generates and returns 32-bit pseudorandom number.
  * init_gen_rand or init_by_array must be called before this function.
+ * @param sfmt SFMT internal state
  * @return 32-bit pseudorandom number
  */
 inline static uint32_t sfmt_genrand_uint32(sfmt_t * sfmt) {
@@ -142,6 +130,7 @@ inline static uint32_t sfmt_genrand_uint32(sfmt_t * sfmt) {
  * init_gen_rand or init_by_array must be called before this function.
  * The function gen_rand64 should not be called after gen_rand32,
  * unless an initialization is again executed.
+ * @param sfmt SFMT internal state
  * @return 64-bit pseudorandom number
  */
 inline static uint64_t sfmt_genrand_uint64(sfmt_t * sfmt)
@@ -159,69 +148,111 @@ inline static uint64_t sfmt_genrand_uint64(sfmt_t * sfmt)
     sfmt->idx += 2;
     return r;
 }
-/* These real versions are due to Isaku Wada */
-/** generates a random number on [0,1]-real-interval */
+/* =================================================
+   The following real versions are due to Isaku Wada
+   ================================================= */
+/**
+ * converts an unsigned 32-bit number to a double on [0,1]-real-interval.
+ * @param v 32-bit unsigned integer
+ * @return double on [0,1]-real-interval
+ */
 inline static double sfmt_to_real1(uint32_t v)
 {
     return v * (1.0/4294967295.0);
     /* divided by 2^32-1 */
 }
 
-/** generates a random number on [0,1]-real-interval */
+/**
+ * generates a random number on [0,1]-real-interval
+ * @param sfmt SFMT internal state
+ * @return double on [0,1]-real-interval
+ */
 inline static double sfmt_genrand_real1(sfmt_t * sfmt)
 {
     return sfmt_to_real1(sfmt_genrand_uint32(sfmt));
 }
 
-/** generates a random number on [0,1)-real-interval */
+/**
+ * converts an unsigned 32-bit integer to a double on [0,1)-real-interval.
+ * @param v 32-bit unsigned integer
+ * @return double on [0,1)-real-interval
+ */
 inline static double sfmt_to_real2(uint32_t v)
 {
     return v * (1.0/4294967296.0);
     /* divided by 2^32 */
 }
 
-/** generates a random number on [0,1)-real-interval */
+/**
+ * generates a random number on [0,1)-real-interval
+ * @param sfmt SFMT internal state
+ * @return double on [0,1)-real-interval
+ */
 inline static double sfmt_genrand_real2(sfmt_t * sfmt)
 {
     return sfmt_to_real2(sfmt_genrand_uint32(sfmt));
 }
 
-/** generates a random number on (0,1)-real-interval */
+/**
+ * converts an unsigned 32-bit integer to a double on (0,1)-real-interval.
+ * @param v 32-bit unsigned integer
+ * @return double on (0,1)-real-interval
+ */
 inline static double sfmt_to_real3(uint32_t v)
 {
     return (((double)v) + 0.5)*(1.0/4294967296.0);
     /* divided by 2^32 */
 }
 
-/** generates a random number on (0,1)-real-interval */
+/**
+ * generates a random number on (0,1)-real-interval
+ * @param sfmt SFMT internal state
+ * @return double on (0,1)-real-interval
+ */
 inline static double sfmt_genrand_real3(sfmt_t * sfmt)
 {
     return sfmt_to_real3(sfmt_genrand_uint32(sfmt));
 }
-/** These real versions are due to Isaku Wada */
 
-/** generates a random number on [0,1) with 53-bit resolution*/
+/**
+ * converts an unsigned 32-bit integer to double on [0,1)
+ * with 53-bit resolution.
+ * @param v 32-bit unsigned integer
+ * @return double on [0,1)-real-interval with 53-bit resolution.
+ */
 inline static double sfmt_to_res53(uint64_t v)
 {
     return v * (1.0/18446744073709551616.0L);
 }
 
-/** generates a random number on [0,1) with 53-bit resolution from two
- * 32 bit integers */
-inline static double sfmt_to_res53_mix(uint32_t x, uint32_t y)
-{
-    return sfmt_to_res53(x | ((uint64_t)y << 32));
-}
-
-/** generates a random number on [0,1) with 53-bit resolution
+/**
+ * generates a random number on [0,1) with 53-bit resolution
+ * @param sfmt SFMT internal state
+ * @return double on [0,1) with 53-bit resolution
  */
 inline static double sfmt_genrand_res53(sfmt_t * sfmt)
 {
     return sfmt_to_res53(sfmt_genrand_uint64(sfmt));
 }
 
-/** generates a random number on [0,1) with 53-bit resolution
-    using 32bit integer.
+
+/* =================================================
+   The following function are added by Saito.
+   ================================================= */
+/**
+ * generates a random number on [0,1) with 53-bit resolution from two
+ * 32 bit integers
+ */
+inline static double sfmt_to_res53_mix(uint32_t x, uint32_t y)
+{
+    return sfmt_to_res53(x | ((uint64_t)y << 32));
+}
+
+/**
+ * generates a random number on [0,1) with 53-bit resolution
+ * using two 32bit integers.
+ * @param sfmt SFMT internal state
+ * @return double on [0,1) with 53-bit resolution
  */
 inline static double sfmt_genrand_res53_mix(sfmt_t * sfmt)
 {
@@ -231,6 +262,7 @@ inline static double sfmt_genrand_res53_mix(sfmt_t * sfmt)
     y = sfmt_genrand_uint32(sfmt);
     return sfmt_to_res53_mix(x, y);
 }
+
 #if defined(__cplusplus)
 }
 #endif

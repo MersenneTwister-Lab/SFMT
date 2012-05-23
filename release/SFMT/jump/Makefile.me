@@ -1,10 +1,9 @@
 #for GNU make
 
-FILES = SFMT.h \
+FILES = SFMTst.h \
 	SFMT-params.h \
-	SFMT.c \
-	SFMT-alti.h \
-	SFMT-sse2.h \
+	SFMTst.c \
+	SFMT-common.h \
 	SFMT-params607.h \
 	SFMT-params1279.h \
 	SFMT-params2281.h \
@@ -15,6 +14,10 @@ FILES = SFMT.h \
 	SFMT-params86243.h \
 	SFMT-params132049.h \
 	SFMT-params216091.h \
+	SFMT-jump.h \
+	SFMT-jump.c \
+	SFMT-calc-jump.hpp \
+	calc-jump.cpp \
 	SFMT.607.out.txt \
 	SFMT.1279.out.txt \
 	SFMT.2281.out.txt \
@@ -25,22 +28,34 @@ FILES = SFMT.h \
 	SFMT.86243.out.txt \
 	SFMT.132049.out.txt \
 	SFMT.216091.out.txt \
+	characteristic.607.txt \
+	characteristic.1279.txt \
+	characteristic.2281.txt \
+	characteristic.4253.txt \
+	characteristic.11213.txt \
+	characteristic.19937.txt \
+	characteristic.44497.txt \
+	characteristic.86243.txt \
+	characteristic.132049.txt \
+	characteristic.216091.txt \
 	FILES.txt \
 	LICENSE.txt \
 	Makefile \
 	test.c \
+	test-jump.cpp \
+	sample.c \
 	check.sh \
+	check-jump.sh \
 	CHANGE-LOG.txt \
-	README.txt \
+	readme.html \
 	html
 
-VERSION = 1.3.3
-DIR = SFMT-src-${VERSION}
+VERSION = 0.1
+DIR = SFMT-jump-${VERSION}
 
 doc:
 	rm -rf html
-	/Applications/Doxygen.app/Contents/Resources/doxygen doxygen.cfg
-	cp howto-compile.html html
+	doxygen doxygen.cfg
 
 .PHONY : tar.gz
 tar.gz: $(FILES)

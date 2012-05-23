@@ -23,7 +23,6 @@ WARN = -Wmissing-prototypes -Wall #-Winline
 CCFLAGS = $(GCCFLAGS) $(ICCFLAGS) $(OPTI) $(WARN) $(CCSTD) $(DDEBUG)
 CPPFLAGS = $(OPTI) $(GPPFLAGS) $(ICCPPFLAGS) $(WARN) $(DEFINES) $(DDEBUG)
 
-#LINKOPT = -lntl -lcrypto $(LIBGF2X) $(LIBGMP)
 LINKOPT = -lntl $(LIBGF2X) $(LIBGMP)
 
 SSE2FLAGS = -msse2 -DHAVE_SSE2
@@ -48,8 +47,15 @@ all-jump:calc-characteristic test-jump test-string
 calc-characteristic: calc-characteristic.cpp SFMText.hpp SFMT-calc-jump.hpp
 	${CPP} ${CPPFLAGS} -o $@ calc-characteristic.cpp ${LINKOPT}
 
+calc-jump: calc-jump.cpp SFMT-calc-jump.hpp
+	${CPP} ${CPPFLAGS} -o $@ calc-jump.cpp ${LINKOPT}
+
 test-string: test-string.cpp SFMT-calc-jump.hpp
 	${CPP} ${CPPFLAGS} -o $@ test-string.cpp ${LINKOPT}
+
+sample: sample.c SFMT-jump.h SFMTst.h SFMTst.c
+	${CC} ${CCFLAGS} -DHAVE_SSE2 -DSFMT_MEXP=607 -o sample \
+	sample.c SFMTst.c SFMT-jump.c
 
 jump-check: ${ALL_JUMP_TARGET}
 	./check-jump.sh 32 test-jump
@@ -78,8 +84,8 @@ sse2-check: ${ALL_SSE2_TARGET}
 #
 #test-jump-MXXX: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 #	SFMT-common.h
-#	${CPP} ${CPPFLAGS} -DSFMT_MEXP=XXX -o $@ test-jump.cpp SFMTst.c \
-#	SFMT-jump.c ${LINKOPT}
+#	${CPP} ${CPPFLAGS} -DSFMT_MEXP=XXX -DHAVE_SSE2 -o $@ \
+#	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 test-std-M607: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=607 -o $@ test.c SFMTst.c
 
@@ -88,8 +94,8 @@ test-sse2-M607: test.c SFMTst.c SFMTst.h SFMT-params607.h SFMT-common.h
 
 test-jump-M607: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=607 -DHAVE_SSE2 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=607 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M1279: test.c SFMTst.c SFMTst.h SFMT-params1279.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=1279 -o $@ test.c SFMTst.c
@@ -99,8 +105,8 @@ test-sse2-M1279: test.c SFMTst.c SFMTst.h SFMT-params1279.h SFMT-common.h
 
 test-jump-M1279: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=1279 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=1279 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M2281: test.c SFMTst.c SFMTst.h SFMT-params2281.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=2281 -o $@ test.c SFMTst.c
@@ -110,8 +116,8 @@ test-sse2-M2281: test.c SFMTst.c SFMTst.h SFMT-params2281.h SFMT-common.h
 
 test-jump-M2281: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=2281 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=2281 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M4253: test.c SFMTst.c SFMTst.h SFMT-params4253.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=4253 -o $@ test.c SFMTst.c
@@ -121,8 +127,8 @@ test-sse2-M4253: test.c SFMTst.c SFMTst.h SFMT-params4253.h SFMT-common.h
 
 test-jump-M4253: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=4253 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=4253 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M11213: test.c SFMTst.c SFMTst.h SFMT-params11213.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=11213 -o $@ test.c SFMTst.c
@@ -132,8 +138,8 @@ test-sse2-M11213: test.c SFMTst.c SFMTst.h SFMT-params11213.h SFMT-common.h
 
 test-jump-M11213: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=11213 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=11213 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M19937: test.c SFMTst.c SFMTst.h SFMT-params19937.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=19937 -o $@ test.c SFMTst.c
@@ -143,8 +149,8 @@ test-sse2-M19937: test.c SFMTst.c SFMTst.h SFMT-params19937.h SFMT-common.h
 
 test-jump-M19937: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=19937 -DHAVE_SSE2 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=19937 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M44497: test.c SFMTst.c SFMTst.h SFMT-params44497.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=44497 -o $@ test.c SFMTst.c
@@ -154,8 +160,8 @@ test-sse2-M44497: test.c SFMTst.c SFMTst.h SFMT-params44497.h SFMT-common.h
 
 test-jump-M44497: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=44497 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=44497 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M86243: test.c SFMTst.c SFMTst.h SFMT-params86243.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=86243 -o $@ test.c SFMTst.c
@@ -165,8 +171,8 @@ test-sse2-M86243: test.c SFMTst.c SFMTst.h SFMT-params86243.h SFMT-common.h
 
 test-jump-M86243: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=86243 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=86243 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M132049: test.c SFMTst.c SFMTst.h SFMT-params132049.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=132049 -o $@ test.c SFMTst.c
@@ -176,8 +182,8 @@ test-sse2-M132049: test.c SFMTst.c SFMTst.h SFMT-params132049.h SFMT-common.h
 
 test-jump-M132049: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=132049 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=132049 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 test-std-M216091: test.c SFMTst.c SFMTst.h SFMT-params216091.h SFMT-common.h
 	${CC} ${CCFLAGS} -DSFMT_MEXP=216091 -o $@ test.c SFMTst.c
@@ -187,8 +193,8 @@ test-sse2-M216091: test.c SFMTst.c SFMTst.h SFMT-params216091.h SFMT-common.h
 
 test-jump-M216091: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
-	${CPP} ${CPPFLAGS} -DSFMT_MEXP=216091 -o $@ test-jump.cpp SFMTst.c \
-	SFMT-jump.c ${LINKOPT}
+	${CPP} ${CPPFLAGS} -DSFMT_MEXP=216091 -DHAVE_SSE2 -o $@ \
+	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
 
 # ------------------
 # END MEXP dependent

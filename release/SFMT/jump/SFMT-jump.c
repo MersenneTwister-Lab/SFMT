@@ -30,6 +30,11 @@ extern "C" {
 inline static void next_state(sfmt_t * sfmt);
 
 #if defined(HAVE_SSE2)
+/**
+ * add internal state of src to dest as F2-vector.
+ * @param dest destination state
+ * @param src source state
+ */
 inline static void add(sfmt_t *dest, sfmt_t *src) {
     int dp = dest->idx / 4;
     int sp = src->idx / 4;
@@ -69,6 +74,10 @@ inline static void add(sfmt_t *dest, sfmt_t *src) {
 }
 #endif
 
+/**
+ * calculate next state
+ * @param sfmt SFMT internal state
+ */
 inline static void next_state(sfmt_t * sfmt) {
     int idx = (sfmt->idx / 4) % SFMT_N;
     w128_t *r1, *r2;
@@ -86,6 +95,11 @@ inline static void next_state(sfmt_t * sfmt) {
     sfmt->idx = sfmt->idx + 4;
 }
 
+/**
+ * jump ahead using jump_string
+ * @param sfmt SFMT internal state input and output.
+ * @param jump_string string which represents jump polynomial.
+ */
 void SFMT_jump(sfmt_t * sfmt, const char * jump_string) {
     sfmt_t work;
     int index = sfmt->idx;

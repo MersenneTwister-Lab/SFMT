@@ -121,9 +121,11 @@ static void speed(sfmt_t * sfmt, GF2X& characteristic)
 	     << endl;
 	test_count *= 100;
 	exp += 2;
-	if (elapsed1 > 50.0) {
+#if 0
+	if (elapsed1 > 200.0) {
 	    break;
 	}
+#endif
     }
 }
 
