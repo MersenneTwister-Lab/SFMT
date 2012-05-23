@@ -1,67 +1,52 @@
 /**
- * \mainpage 
+ * \mainpage
  *
  * This is SIMD oriented Fast Mersenne Twister pseudorandom number
- * generator(SFMT).
+ * generator(SFMT) with jump function.
  *
- * This Project provides pseudorandom number generators of various
- * Mersenne Prime Period: from 2<sup>607</sup>-1 to
- * 2<sup>216091</sup>-1.
+ * This Project provides jump function of SFMT.
  *
- * Please check endianness in source codes carefully,
- * if you are using BIG ENDIAN.  
+ * We are very sorry but we don't support either BIG ENDIAN or altivec
+ * in this version.
  *
- * - void init_gen_rand() initializes the generator with a 32-bit
- *   integer seed.
- * - void init_by_array() initializes the generator with an array of
- *   32-bit integers as the seeds.
- * - uint32_t gen_rand32() generates and returns a pseudorandom
- *   32-bit unsigned integer.
- * - uint32_t gen_rand64() generates and returns a pseudorandom
- *   64-bit unsigned integer.
- * - void fill_array32() fills the user-specified array with 32-bit
- *   pseudorandom integers.
- * - void fill_array64() fills the user-specified array with 64-bit
- *   pseudorandom integers.
- * - inline static double to_real1(uint32_t v) convert v to double on
- *   [0,1]-real-interval. 
- * - inline static double genrand_real1() generates a random number on 
- *   [0,1]-real-interval. 
- * - inline static double to_real2(uint32_t v) convert v to double on
- *   [0,1)-real-interval.
- * - inline static double genrand_real2() generates a random number on 
- *   [0,1)-real-interval.
- * - inline static double to_real3(uint32_t v) convert v to double on
- *   (0,1)-real-interval.
- * - inline static double genrand_real3() generates a random number on 
- *   (0,1)-real-interval.
- * - inline static double to_res53(uint64_t v) convert v to double on
- *   [0,1) with 53-bit resolution
- * - inline static double genrand_res53() generates a random number on 
- *   [0,1) with 53-bit resolution
- * - inline static double to_res53_mix(uint32_t x, uint32_t y) convert
- *   v to double on [0,1) with 53-bit resolution from two 32bit integers.
- * - inline static double genrand_res53_mix() generates a random
- *   number on [0,1) with 53-bit resolution using 32bit generation.
+ * There are two steps for jumpping.
+ * <ol>
+ *  <li>Calculate jump polynomial using characteristic polynomial.
+ *   <ul>
+ *    <li>\b calc-jump executable file calculates a jump polynomial.
+ *    <li>\b calc-jump is written in C++ language and needs NTL for compile.
+ *    <li> Additionally, users can call
+ *     sfmt::calc_jump(std::string& jump_str, NTL::ZZ& step,
+ *     NTL::GF2X& characteristic) in SFMT-calc-jump.hpp from their
+ *     programs.
+ *    <li> jump steps used above is based on internal state,
+ *     i.e, 32-bit integers are skipped 4 * jump steps, and 64-bit
+ *     integers are skipped 2 * jump steps.
+ *   </ul>
+ *  <li> Change internal state of SFMT into jumpped state.
+ *   <ul>
+ *     <li>\b SFMT_jump(sfmt_t * sfmt, const char * jump_str)
+ *         changes internal state of \b sfmt in user's programs.
+ *     <li> @see sample.c
+ *   </ul>
+ * </ol>
  *
- *   Each SFMT.xxx.out.txt file contains 1000 outputs of gen_rand32()
- *   initialized by init_genrand(1234), and 1000 outputs of
- *   gen_rand32() initialized by init_by_array with an array of
- *   {0x1234, 0x5678, 0x9abc, 0xdef0}.
- *	
- *   see <a href="howto-compile.html">How to compile</a> to compile
- *   your program with SFMT optimized for SIMD.
- * 
- * @author Mutsuo Saito (saito\@our-domain) Hiroshima University 
- * @author Makoto Matsumoto (m-mat\@our-domain) Hiroshima University
+ * Caution:
+ *   The jump polynomial calculated using a characteristic polynomial
+ * is only available for jumpping SFMT states which has the
+ * characteristic polynomial.
  *
- * Please change \b our-domain to \b math.sci.hiroshima-u.ac.jp
  *
- * @date 2007-10-3
+ * @author Mutsuo Saito (Hiroshima University)
+ * @author Makoto Matsumoto (The University of Tokyo)
  *
- * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
- * University. All rights reserved.
+ * @date 2012-05-22
  *
- * The new BSD License is applied to this software.
+ * Copyright (C) 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+ * University and The University of Tokyo.
+ * All rights reserved.
+ *
+ * The 3-clause BSD License is applied to this software.
  * \verbinclude LICENSE.txt
+ * LICENSE.txt
  */

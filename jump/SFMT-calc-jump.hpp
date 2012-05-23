@@ -1,6 +1,6 @@
+#pragma once
 #ifndef SFMT_CALC_JUMP_HPP
 #define SFMT_CALC_JUMP_HPP
-
 /**
  * @file SFMT-calc-jump.hpp
  *
@@ -22,18 +22,23 @@
 #include <NTL/GF2X.h>
 
 namespace sfmt {
-    static inline void polytostring(std::string& x, NTL::GF2X& characteristic)
+/**
+ * converts polynomial to string for convenient use in C language.
+ * @param x output string
+ * @param polynomial
+ */
+    static inline void polytostring(std::string& x, NTL::GF2X& polynomial)
     {
 	using namespace NTL;
 	using namespace std;
 
-	long degree = deg(characteristic);
+	long degree = deg(polynomial);
 	int buff;
 	stringstream ss;
 	for (int i = 0; i <= degree; i+=4) {
 	    buff = 0;
 	    for (int j = 0; j < 4; j++) {
-		if (IsOne(coeff(characteristic, i + j))) {
+		if (IsOne(coeff(polynomial, i + j))) {
 		    buff |= 1 << j;
 		} else {
 		    buff &= (0x0f ^ (1 << j));
@@ -45,6 +50,11 @@ namespace sfmt {
 	x = ss.str();
     }
 
+/**
+ * converts string to polynomial
+ * @param str string
+ * @param poly output polynomial
+ */
     static inline void stringtopoly(NTL::GF2X& poly, std::string& str)
     {
 	using namespace NTL;
@@ -76,10 +86,11 @@ namespace sfmt {
     }
 
 /**
- * The internal state jump.
+ * calculate the jump polynomial.
  * SFMT generates 4 32-bit integers from one internal state.
  * @param jump_str output string which represents jump polynomial.
  * @param step jump step of internal state
+ * @param characteristic polynomial
  */
     static inline void calc_jump(std::string& jump_str,
 				 NTL::ZZ& step,

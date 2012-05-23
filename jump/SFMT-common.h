@@ -1,32 +1,22 @@
+#pragma once
 /**
  * @file SFMT-common.h
  *
  * @brief SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
- * number generator
+ * number generator with jump function. This file includes common functions
+ * used in random number generation and jump.
  *
  * @author Mutsuo Saito (Hiroshima University)
- * @author Makoto Matsumoto (Hiroshima University)
+ * @author Makoto Matsumoto (The University of Tokyo)
  *
- * Copyright (C) 2006 -- 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+ * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
+ * University.
+ * Copyright (C) 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
  * University and The University of Tokyo.
  * All rights reserved.
  *
- * The new BSD License is applied to this software.
- * see LICENSE.txt
- *
- * @note We assume that your system has inttypes.h.  If your system
- * doesn't have inttypes.h, you have to typedef uint32_t and uint64_t,
- * and you have to define PRIu64 and PRIx64 in this file as follows:
- * @verbatim
- typedef unsigned int uint32_t
- typedef unsigned long long uint64_t
- #define PRIu64 "llu"
- #define PRIx64 "llx"
-@endverbatim
- * uint32_t must be exactly 32-bit unsigned integer type (no more, no
- * less), and uint64_t must be exactly 64-bit unsigned integer type.
- * PRIu64 and PRIx64 are used for printf function to print 64-bit
- * unsigned int and 64-bit unsigned int in hexadecimal format.
+ * The 3-clause BSD License is applied to this software, see
+ * LICENSE.txt
  */
 #ifndef SFMT_COMMON_H
 #define SFMT_COMMON_H
@@ -39,6 +29,14 @@ inline static void do_recursion(w128_t * r, w128_t * a, w128_t * b,
 inline static void rshift128(w128_t *out,  w128_t const *in, int shift);
 inline static void lshift128(w128_t *out,  w128_t const *in, int shift);
 
+/**
+ * This function simulates SIMD 128-bit right shift by the standard C.
+ * The 128-bit integer given in in is shifted by (shift * 8) bits.
+ * This function simulates the LITTLE ENDIAN SIMD.
+ * @param out the output of this function
+ * @param in the 128-bit data to be shifted
+ * @param shift the shift value
+ */
 inline static void rshift128(w128_t *out, w128_t const *in, int shift)
 {
     uint64_t th, tl, oh, ol;
@@ -55,6 +53,14 @@ inline static void rshift128(w128_t *out, w128_t const *in, int shift)
     out->u[2] = (uint32_t)oh;
 }
 
+/**
+ * This function simulates SIMD 128-bit left shift by the standard C.
+ * The 128-bit integer given in in is shifted by (shift * 8) bits.
+ * This function simulates the LITTLE ENDIAN SIMD.
+ * @param out the output of this function
+ * @param in the 128-bit data to be shifted
+ * @param shift the shift value
+ */
 inline static void lshift128(w128_t *out, w128_t const *in, int shift)
 {
     uint64_t th, tl, oh, ol;
@@ -71,6 +77,14 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift)
     out->u[2] = (uint32_t)oh;
 }
 
+/**
+ * This function represents the recursion formula.
+ * @param r output
+ * @param a a 128-bit part of the internal state array
+ * @param b a 128-bit part of the internal state array
+ * @param c a 128-bit part of the internal state array
+ * @param d a 128-bit part of the internal state array
+ */
 inline static void do_recursion(w128_t *r, w128_t *a, w128_t *b,
 				w128_t *c, w128_t *d)
 {

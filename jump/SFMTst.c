@@ -1,9 +1,11 @@
 /**
- * @file  SFMTst.c
- * @brief SIMD oriented Fast Mersenne Twister(SFMT)
+ * @file SFMTst.c
+ *
+ * @brief SIMD oriented Fast Mersenne Twister(SFMT) pseudorandom
+ * number generator using C structure.
  *
  * @author Mutsuo Saito (Hiroshima University)
- * @author Makoto Matsumoto (Hiroshima University)
+ * @author Makoto Matsumoto (The University of Tokyo)
  *
  * Copyright (C) 2006, 2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
  * University.
@@ -11,7 +13,8 @@
  * University and The University of Tokyo.
  * All rights reserved.
  *
- * The new BSD License is applied to this software, see LICENSE.txt
+ * The 3-clause BSD License is applied to this software, see
+ * LICENSE.txt
  */
 #include <string.h>
 #include <assert.h>
@@ -26,9 +29,14 @@ extern "C" {
 /*--------------------------------------
   FILE GLOBAL CONSTANTS
   --------------------------------------*/
+/**
+ * parameters used by sse2.
+ */
 static const w128_t sse2_param_mask = {{SFMT_MSK1, SFMT_MSK2,
 					SFMT_MSK3, SFMT_MSK4}};
-/** a parity check vector which certificate the period of 2^{MEXP} */
+/**
+ * a parity check vector which certificate the period of 2^{MEXP}-1.
+ */
 static const uint32_t parity[4] = {SFMT_PARITY1, SFMT_PARITY2,
 				   SFMT_PARITY3, SFMT_PARITY4};
 
@@ -39,7 +47,7 @@ inline static int idxof(int i);
 inline static uint32_t func1(uint32_t x);
 inline static uint32_t func2(uint32_t x);
 static void period_certification(sfmt_t * sfmt);
-static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt);
+static void gen_rand_array(sfmt_t * sfmt, w128_t * array, int size);
 
 /**
  * This function simulate a 64-bit index of LITTLE ENDIAN
@@ -48,25 +56,6 @@ static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt);
 inline static int idxof(int i) {
     return i;
 }
-/**
- * This function simulates SIMD 128-bit right shift by the standard C.
- * The 128-bit integer given in in is shifted by (shift * 8) bits.
- * This function simulates the LITTLE ENDIAN SIMD.
- * @param out the output of this function
- * @param in the 128-bit data to be shifted
- * @param shift the shift value
- */
-/**
- * This function represents the recursion formula.
- * @param r output
- * @param a a 128-bit part of the internal state array
- * @param b a 128-bit part of the internal state array
- * @param c a 128-bit part of the internal state array
- * @param d a 128-bit part of the internal state array
- */
-
-
-
 
 /**
  * This function represents a function used in the initialization
@@ -90,6 +79,7 @@ static uint32_t func2(uint32_t x) {
 
 /**
  * This function certificate the period of 2^{MEXP}
+ * @param sfmt SFMT internal state
  */
 static void period_certification(sfmt_t * sfmt) {
     int inner = 0;
@@ -120,22 +110,20 @@ static void period_certification(sfmt_t * sfmt) {
 }
 
 #if defined(HAVE_SSE2)
-/*
- * SSE2
- */
+/* --------
+   SSE2
+   -------- */
+inline static void mm_recursion(__m128i * r, __m128i a, __m128i b,
+				__m128i c, __m128i d);
+
 /**
  * This function represents the recursion formula.
+ * @param r an output
  * @param a a 128-bit part of the interal state array
  * @param b a 128-bit part of the interal state array
  * @param c a 128-bit part of the interal state array
  * @param d a 128-bit part of the interal state array
- * @param mask 128-bit mask
- * @return output
  */
-
-inline static void mm_recursion(__m128i * r, __m128i a, __m128i b,
-				__m128i c, __m128i d);
-
 inline static void mm_recursion(__m128i * r, __m128i a, __m128i b,
 				__m128i c, __m128i d)
 {
@@ -156,11 +144,11 @@ inline static void mm_recursion(__m128i * r, __m128i a, __m128i b,
 /**
  * This function fills the user-specified array with pseudorandom
  * integers.
- *
+ * @param sfmt SFMT internal state.
  * @param array an 128-bit array to be filled by pseudorandom numbers.
  * @param size number of 128-bit pseudorandom numbers to be generated.
  */
-static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt)
+static void gen_rand_array(sfmt_t * sfmt, w128_t * array, int size)
 {
     int i, j;
     __m128i r1, r2;
@@ -202,11 +190,11 @@ static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt)
 /**
  * This function fills the user-specified array with pseudorandom
  * integers.
- *
+ * @param sfmt SFMT internal state.
  * @param array an 128-bit array to be filled by pseudorandom numbers.
  * @param size number of 128-bit pseudorandom numbers to be generated.
  */
-static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt)
+static void gen_rand_array(sfmt_t * sfmt, w128_t * array, int size)
 {
     int i, j;
     w128_t *r1, *r2;
@@ -248,10 +236,13 @@ static void gen_rand_array(w128_t * array, int size, sfmt_t * sfmt)
   PUBLIC FUNCTIONS
   ----------------*/
 #define UNUSED_VARIABLE(x) (void)(x)
+
 /**
  * This function returns the identification string.
  * The string shows the word size, the Mersenne exponent,
  * and all parameters of this generator.
+ * @param sfmt SFMT internal state
+ * @return identification string.
  */
 const char *sfmt_get_idstring(sfmt_t * sfmt) {
     UNUSED_VARIABLE(sfmt);
@@ -261,6 +252,7 @@ const char *sfmt_get_idstring(sfmt_t * sfmt) {
 /**
  * This function returns the minimum size of array used for \b
  * fill_array32() function.
+ * @param sfmt SFMT internal state.
  * @return minimum size of array used for fill_array32() function.
  */
 int sfmt_get_min_array_size32(sfmt_t * sfmt) {
@@ -271,6 +263,7 @@ int sfmt_get_min_array_size32(sfmt_t * sfmt) {
 /**
  * This function returns the minimum size of array used for \b
  * fill_array64() function.
+ * @param sfmt SFMT internal state.
  * @return minimum size of array used for fill_array64() function.
  */
 int sfmt_get_min_array_size64(sfmt_t * sfmt) {
@@ -282,6 +275,7 @@ int sfmt_get_min_array_size64(sfmt_t * sfmt) {
 /**
  * This function fills the internal state array with pseudorandom
  * integers.
+ * @param sfmt SFMT internal state
  */
 void sfmt_gen_rand_all(sfmt_t * sfmt) {
     int i;
@@ -308,6 +302,7 @@ void sfmt_gen_rand_all(sfmt_t * sfmt) {
 /**
  * This function fills the internal state array with pseudorandom
  * integers.
+ * @param sfmt SFMT internal state
  */
 void sfmt_gen_rand_all(sfmt_t * sfmt) {
     int i;
@@ -343,6 +338,7 @@ void sfmt_gen_rand_all(sfmt_t * sfmt) {
  * before the first call of this function. This function can not be
  * used after calling gen_rand function, without initialization.
  *
+ * @param sfmt SFMT internal state.
  * @param array an array where pseudorandom 32-bit integers are filled
  * by this function.  The pointer to the array must be \b "aligned"
  * (namely, must be a multiple of 16) in the SIMD version, since it
@@ -362,7 +358,7 @@ void sfmt_fill_array32(sfmt_t * sfmt, uint32_t *array, int size) {
     assert(size % 4 == 0);
     assert(size >= SFMT_N32);
 
-    gen_rand_array((w128_t *)array, size / 4, sfmt);
+    gen_rand_array(sfmt, (w128_t *)array, size / 4);
     sfmt->idx = SFMT_N32;
 }
 
@@ -377,6 +373,7 @@ void sfmt_fill_array32(sfmt_t * sfmt, uint32_t *array, int size) {
  * before the first call of this function. This function can not be
  * used after calling gen_rand function, without initialization.
  *
+ * @param sfmt SFMT internal state.
  * @param array an array where pseudorandom 64-bit integers are filled
  * by this function.  The pointer to the array must be "aligned"
  * (namely, must be a multiple of 16) in the SIMD version, since it
@@ -397,7 +394,7 @@ void sfmt_fill_array64(sfmt_t * sfmt, uint64_t *array, int size)
     assert(size % 2 == 0);
     assert(size >= SFMT_N64);
 
-    gen_rand_array((w128_t *)array, size / 2, sfmt);
+    gen_rand_array(sfmt, (w128_t *)array, size / 2);
     sfmt->idx = SFMT_N32;
 }
 
@@ -405,6 +402,7 @@ void sfmt_fill_array64(sfmt_t * sfmt, uint64_t *array, int size)
  * This function initializes the internal state array with a 32-bit
  * integer seed.
  *
+ * @param sfmt SFMT internal state.
  * @param seed a 32-bit integer used as the seed.
  */
 void sfmt_init(sfmt_t * sfmt, uint32_t seed) {
@@ -424,6 +422,7 @@ void sfmt_init(sfmt_t * sfmt, uint32_t seed) {
 /**
  * This function initializes the internal state array,
  * with an array of 32-bit integers used as the seeds
+ * @param sfmt SFMT internal state.
  * @param init_key the array of 32-bit integers, used as a seed.
  * @param key_length the length of init_key.
  */
