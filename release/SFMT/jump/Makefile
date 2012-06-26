@@ -39,6 +39,8 @@ test-jump-M4253 test-jump-M11213 test-jump-M19937 test-jump-M44497 \
 test-jump-M86243 test-jump-M132049 test-jump-M216091
 .PHONY: std-check sse2-check alti-check
 
+all: calc-jump
+check: std-check jump-check
 #
 # jump
 #
@@ -68,10 +70,10 @@ std: ${STD_TARGET}
 sse2:${SSE2_TARGET}
 
 std-check: ${ALL_STD_TARGET}
-	./check.sh 32 test-std
+	./check-gen.sh 32 test-std
 
 sse2-check: ${ALL_SSE2_TARGET}
-	./check.sh 32 test-sse2
+	./check-gen.sh 32 test-sse2
 
 # --------------------
 # START MEXP dependent
@@ -195,6 +197,9 @@ test-jump-M216091: test-jump.cpp SFMTst.c SFMT-jump.c SFMT-calc-jump.hpp \
 	SFMT-common.h
 	${CPP} ${CPPFLAGS} -DSFMT_MEXP=216091 -DHAVE_SSE2 -o $@ \
 	test-jump.cpp SFMTst.c SFMT-jump.c ${LINKOPT}
+
+test-seed607: test-seed.c SFMTst.c SFMTst.h
+	${CC} ${CCFLAGS} -DSFMT_MEXP=607 -DHAVE_SSE2 -o $@ test-seed.c SFMTst.c
 
 # ------------------
 # END MEXP dependent

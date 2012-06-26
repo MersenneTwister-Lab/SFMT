@@ -405,7 +405,7 @@ void sfmt_fill_array64(sfmt_t * sfmt, uint64_t *array, int size)
  * @param sfmt SFMT internal state.
  * @param seed a 32-bit integer used as the seed.
  */
-void sfmt_init(sfmt_t * sfmt, uint32_t seed) {
+void sfmt_init_gen_rand(sfmt_t * sfmt, uint32_t seed) {
     int i;
     uint32_t * psfmt32 = (uint32_t *)(sfmt->state);
 

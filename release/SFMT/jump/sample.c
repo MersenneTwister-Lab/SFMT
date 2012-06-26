@@ -46,7 +46,7 @@ int main(int argc, char * argv[])
      * sfmt[4]: position 8000
      * sfmt[5]: position 10000
      */
-    sfmt_init(&sfmt[0], seed);
+    sfmt_init_gen_rand(&sfmt[0], seed);
     for (int i = 1; i < 6; i++) {
 	sfmt[i] = sfmt[0];
 	for (int j = 0; j < i; j++) {
@@ -54,7 +54,7 @@ int main(int argc, char * argv[])
 	}
     }
     /* initialize serial generator */
-    sfmt_init(&serial, seed);
+    sfmt_init_gen_rand(&serial, seed);
     /* generate and compare with serial generation */
     for (int i = 0; i < 10; i++) {
 	/* simulating parallel generation */

@@ -7,8 +7,10 @@
     <meta http-equiv="Content-Type" content="text/html" />
     <title>SFMT jump function</title>
     <style type="text/css">
-      BLOCKQUOTE {background-color:#a0ffa0;
+      BLOCKQUOTE {background-color:#e0ffe0;
                   padding-left: 1em;}
+      div.math {padding-left:2em;
+                font-weight:bold}
     </style>
   </head>
   <body>
@@ -30,11 +32,13 @@
 
     <h3>Calculations of jump polynomial</h3>
 
-    <p>From the characteristic polynomial ϕ of a linear random number
-    generator and an integer N, we can get jump polynomial<br/>
-      ψ = X<sup>N</sup> mod ϕ.<br/>
-      As a result, degree of jump polynomial ψ is less or equals to
-      the characteristic polynomial ϕ, regardless of jump step N.
+    <p>From the characteristic polynomial <b>ϕ</b> of a linear random number
+    generator and an integer <b>N</b>, we can get jump polynomial <b>ψ</b></p>
+    <div class="math">
+      ψ = X<sup>N</sup> mod ϕ.
+    </div>
+      As a result, degree of jump polynomial <b>ψ</b> is less or equals to
+      the characteristic polynomial <b>ϕ</b>, regardless of jump step <b>N</b>.
     </p>
 
     <p>The characteristic polynomial of SFMT of MEXP is stored in files
