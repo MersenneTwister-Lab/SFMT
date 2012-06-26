@@ -81,7 +81,7 @@ static void speed(sfmt_t * sfmt, GF2X& characteristic)
     double elapsed1;
     double elapsed2;
 
-    sfmt_init(sfmt, seed);
+    sfmt_init_gen_rand(sfmt, seed);
     test_count = step;
     for (int i = 0; i < 10; i++) {
 	start = clock();
@@ -227,14 +227,14 @@ static void test(sfmt_t * sfmt, GF2X& characteristic)
     ZZ test_count;
     string jump_string;
 
-    sfmt_init(sfmt, seed[0]);
+    sfmt_init_gen_rand(sfmt, seed[0]);
     sfmt_genrand_uint32(sfmt);
     sfmt_genrand_uint32(sfmt);
     sfmt_genrand_uint32(sfmt);
     sfmt_genrand_uint32(sfmt);
     /* plus jump */
     for (int index = 0; index < steps_size; index++) {
-//	sfmt_init(sfmt, seed[index]);
+//	sfmt_init_gen_rand(sfmt, seed[index]);
 	test_count = steps[index];
 	cout << "mexp " << dec << SFMT_MEXP << " jump "
 	     << test_count << " steps" << endl;

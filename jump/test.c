@@ -47,10 +47,10 @@ void check32(void) {
     printf("%s\n32 bit generated randoms\n", sfmt_get_idstring(&sfmt));
     printf("init_gen_rand__________\n");
     /* 32 bit generation */
-    sfmt_init(&sfmt, 1234);
+    sfmt_init_gen_rand(&sfmt, 1234);
     sfmt_fill_array32(&sfmt, array32, 10000);
     sfmt_fill_array32(&sfmt, array32_2, 10000);
-    sfmt_init(&sfmt, 1234);
+    sfmt_init_gen_rand(&sfmt, 1234);
     for (i = 0; i < 10000; i++) {
 	if (i < 1000) {
 	    printf("%10u ", array32[i]);
@@ -133,7 +133,7 @@ void speed32(void) {
 	exit(1);
     }
     /* 32 bit generation */
-    sfmt_init(&sfmt, 1234);
+    sfmt_init_gen_rand(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < COUNT; j++) {
@@ -148,7 +148,7 @@ void speed32(void) {
     printf("ms for %u randoms generation\n",
 	   BLOCK_SIZE * COUNT);
     min = LONG_MAX;
-    sfmt_init(&sfmt, 1234);
+    sfmt_init_gen_rand(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < BLOCK_SIZE * COUNT; j++) {
@@ -182,10 +182,10 @@ void check64(void) {
     printf("%s\n64 bit generated randoms\n", sfmt_get_idstring(&sfmt));
     printf("init_gen_rand__________\n");
     /* 64 bit generation */
-    sfmt_init(&sfmt, 4321);
+    sfmt_init_gen_rand(&sfmt, 4321);
     sfmt_fill_array64(&sfmt, array64, 5000);
     sfmt_fill_array64(&sfmt, array64_2, 5000);
-    sfmt_init(&sfmt, 4321);
+    sfmt_init_gen_rand(&sfmt, 4321);
     for (i = 0; i < 5000; i++) {
 	if (i < 1000) {
 	    printf("%20"PRIu64" ", array64[i]);
@@ -252,7 +252,7 @@ void speed64(void) {
 	exit(1);
     }
     /* 64 bit generation */
-    sfmt_init(&sfmt, 1234);
+    sfmt_init_gen_rand(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < COUNT; j++) {
@@ -267,7 +267,7 @@ void speed64(void) {
     printf("ms for %u randoms generation\n",
 	   BLOCK_SIZE64 * COUNT);
     min = LONG_MAX;
-    sfmt_init(&sfmt, 1234);
+    sfmt_init_gen_rand(&sfmt, 1234);
     for (i = 0; i < 10; i++) {
 	clo = clock();
 	for (j = 0; j < BLOCK_SIZE64 * COUNT; j++) {

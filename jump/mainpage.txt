@@ -36,7 +36,6 @@
  * is only available for jumpping SFMT states which has the
  * characteristic polynomial.
  *
- *
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (The University of Tokyo)
  *
@@ -48,5 +47,4 @@
  *
  * The 3-clause BSD License is applied to this software.
  * \verbinclude LICENSE.txt
- * LICENSE.txt
  */

@@ -33,6 +33,9 @@
 
 #ifndef SFMTST_H
 #define SFMTST_H
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 #include <stdio.h>
 #include <assert.h>
@@ -62,10 +65,9 @@
 
 #include "SFMT-params.h"
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
+/*------------------------------------------
+  128-bit SIMD like data type for standard C
+  ------------------------------------------*/
 #if defined(HAVE_SSE2)
   #include <emmintrin.h>
 
@@ -100,7 +102,7 @@ typedef struct SFMT_T sfmt_t;
 
 void sfmt_fill_array32(sfmt_t * sfmt, uint32_t * array, int size);
 void sfmt_fill_array64(sfmt_t * sfmt, uint64_t * array, int size);
-void sfmt_init(sfmt_t * sfmt, uint32_t seed);
+void sfmt_init_gen_rand(sfmt_t * sfmt, uint32_t seed);
 void sfmt_init_by_array(sfmt_t * sfmt, uint32_t * init_key, int key_length);
 const char * sfmt_get_idstring(sfmt_t * sfmt);
 int sfmt_get_min_array_size32(sfmt_t * sfmt);
