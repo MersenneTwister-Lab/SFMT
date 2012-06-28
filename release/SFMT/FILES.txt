@@ -20,6 +20,7 @@ params216091.h:		parameters for period of 2^{216091}-1
 SFMT.c:			C code for standard C (c99) and unix like systems.
 SFMT-alti.h:		C code optimized for PowerPC AltiVec.
 SFMT-sse2.h:		C code optimized for intel SSE2.
+SFMT-common.h:		functions used SFMT.c and SFMT-jump.c
 test.c:			Test driver for 32 bit output for standard C.
 check.sh:		Test shell script.
 SFMT.607.out.txt:	correct 32-bit output of SFMT MEXP=607
