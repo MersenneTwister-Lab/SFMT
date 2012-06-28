@@ -5,6 +5,7 @@ FILES = SFMT.h \
 	SFMT.c \
 	SFMT-alti.h \
 	SFMT-sse2.h \
+	SFMT-common.h \
 	SFMT-params607.h \
 	SFMT-params1279.h \
 	SFMT-params2281.h \
@@ -34,12 +35,12 @@ FILES = SFMT.h \
 	README.txt \
 	html
 
-VERSION = 1.3.3
+VERSION = 1.4
 DIR = SFMT-src-${VERSION}
 
 doc:
 	rm -rf html
-	/Applications/Doxygen.app/Contents/Resources/doxygen doxygen.cfg
+	doxygen doxygen.cfg
 	cp howto-compile.html html
 
 .PHONY : tar.gz

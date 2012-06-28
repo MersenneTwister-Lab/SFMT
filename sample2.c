@@ -10,13 +10,14 @@ int main(int argc, char* argv[]) {
     const int R_SIZE = 2 * NUM;
     int size;
     uint64_t *array;
+    sfmt_t sfmt;
 
     if (argc >= 2) {
 	seed = strtol(argv[1], NULL, 10);
     } else {
 	seed = 12345;
     }
-    size = get_min_array_size64();
+    size = sfmt_get_min_array_size64(&sfmt);
     if (size < R_SIZE) {
 	size = R_SIZE;
     }
@@ -51,11 +52,11 @@ int main(int argc, char* argv[]) {
 #endif
     cnt = 0;
     j = 0;
-    init_gen_rand(seed);
-    fill_array64(array, size);
+    sfmt_init_gen_rand(&sfmt, seed);
+    sfmt_fill_array64(&sfmt, array, size);
     for (i = 0; i < NUM; i++) {
-	x = to_res53(array[j++]);
-	y = to_res53(array[j++]);
+	x = sfmt_to_res53(array[j++]);
+	y = sfmt_to_res53(array[j++]);
 	if (x * x + y * y < 1.0) {
 	    cnt++;
 	}

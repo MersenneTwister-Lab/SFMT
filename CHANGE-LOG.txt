@@ -1,3 +1,9 @@
+ver 1.4
+-------
+internal state of SFMT is kept in structure.
+function and macro names are changed to have sfmt_ prefix.
+ALTIVEC OR BIGENDIAN ARE NOT TESTED AT ALL.
+
 ver 1.3.3
 -------
 change condition compile of do_recursion in SFMT.c
@@ -8,7 +14,7 @@ bug fix to_res53_mix and genrand_res53_mix.
 
 ver 1.3.1
 -------
-gcc compile option changed form -O9 to -O3.
+gcc compile option changed from -O9 to -O3.
 add functions genrand_res53_mix and to_res53_mix.
 bug fix about definition of ALWAYS_INLINE.
 add new definition PRE_ALWAYS for MSC.
