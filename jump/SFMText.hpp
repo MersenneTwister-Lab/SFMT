@@ -1,5 +1,6 @@
 #ifndef SFMTEXT_HPP
 #define SFMTEXT_HPP
+#include <string.h>
 /**
  * @file SFMText.hpp
  *

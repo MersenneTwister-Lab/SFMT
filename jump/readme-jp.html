@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>SFMT jump function</title>
+    <style type="text/css">
+      BODY {margin-left: 1%}
+      BLOCKQUOTE {background-color:#e0ffe0;
+                  padding-left: 1em;}
+      div.math {padding-left:2em;
+                font-weight:bold}
+    </style>
+  </head>
+  <body>
+    <h2>目次</h2>
+    <ul>
+      <li><a href="#jump">SFMTジャンプ機能について</a></li>
+      <ul>
+	<li><a href="#calculation">ステップ1:ジャンプ多項式の計算</a></li>
+	<li><a href="#execution">
+	    ステップ2:SFMTの内部状態をジャンプ後の状態に変更する</a></li>
+      </ul>
+      <li><a href="#compile">インストール、コンパイル、テスト</a></li>
+      <li><a href="#sample">並列生成サンプル</a></li>
+      <li><a href="#license">ライセンス</a></li>
+    </ul>
+
+    <h2><a id="jump">SFMT ジャンプ機能について</a></h2>
+
+    <p>
+      ジャンプ機能を使うと、SFMTのある内部状態からNステップ後の状態を計算することが
+      出来ます。これはSFMTの32ビット乱数生成を4N回呼び出すのと同じことですが、
+      Nが大きい場合、乱数生成よりずっと速くNステップ後の状態に移ることができます。
+      ジャンプ機能の典型的な使用法は、SFMTによって生成される（長い）周期の中で、
+      互いに重ならないという保証のある複数の部分列を取得することです。
+    </p>
+    <p>
+      ジャンプを実行するには二つのステップがあります。ジャンプ多項式の計算と内部状態の
+      変更です。
+    </p>
+
+    <h3><a id="calculation">ステップ1:ジャンプ多項式の計算</a></h3>
+
+    <p>線形疑似乱数生成器の特性多項式<b>ϕ</b>とジャンプステップ<b>N</b>から
+      以下の式によってジャンプ多項式<b>ψ</b>を計算することができます。
+    </p>
+    <div class="math">
+      ψ = X<sup>N</sup> mod ϕ.
+    </div>
+    <p>
+      式から分かるように、ジャンプ多項式<b>ψ</b>の次数は、ジャンプステップ<b>N</b>
+      に関わらず、特性多項式<b>ϕ</b>の次数より小さくなります。
+      <br/>
+      メルセンヌ指数がMEXPのSFMTの特性多項式は、独自の文字列形式で、
+      'characteristic.MEXP.txt' ファイルに保存されています。
+      このファイルはジャンプ機能のアーカイブファイルに含まれています。
+      <br/>
+      make によって作られる実行可能ファイル 'calc-jump'を使って、
+      コマンドラインからジャンプ多項式を計算することができます。
+      使用法は以下のとおりです。
+    </p>
+      <blockquote>
+	<pre>
+./calc-jump jump-step characteristic-file [no.]
+    jump-step: a number between zero and 2^{SFMT_MEXP}-1.
+               large decimal number is allowed.
+    characteristic-file: one of characteristic.{SFMT_MEXP}.txt file
+    [no.]: shows which characteristic polynomial in
+           the file should be used. 0 is used if omitted.
+           this is used for files in params directory.
+</pre>
+      </blockquote>
+      <p>
+	jump-stepは十進数で指定してください。大きな数を指定することが出来ます。
+	no. は、params ディレクトリにある characteristic.{SFMT_MEXP}.txt
+	ファイルを使用する時に、指定してください。
+	<br/>
+	C++ の関数 'sfmt::calc_jump' を使ってジャンプ多項式を計算することも
+	できます。この関数は 'SFMT-calc-jump.hpp' ファイルの中で定義されています。
+      </p>
+    <p>ジャンプ多項式の計算にはVictor Shoup教授の
+      <a href="http://shoup.net/ntl/">NTL: A Library for doing Number
+	Theory</a> が必要です。
+    <br/>
+    また、ジャンプ多項式の計算にはSFMTの内部状態は必要ありませんし、
+    特性多項式の格納されたファイル名以外はメルセンヌ指数にも依存しません。
+    </p>
+
+    <h3><a id="execution">ステップ2:SFMTの内部状態をジャンプ後の状態に変更する</a></h3>
+
+    <p>
+      このステップは、SFMTのメルセンヌ指数に依存します。
+      ジャンプ多項式の計算に使用した特性多項式の次数と同じメルセンヌ指数を
+      必ず使用してください。
+    <br/>
+      C言語で書かれたSFMT_jump関数がこのステップを実行します。
+      この関数は、SFMT-jump.hの中で宣言されています。
+      この関数のコンパイルには、SFMT バージョン1.4 が必要です。
+    </p>
+
+    <h2><a id="compile">インストール、コンパイル、テスト</a></h2>
+    </p>
+    <p>
+      Jump プログラムは単独ではコンパイルできません。SFMT 1.4 のソースファイルが
+      必要です。</p>
+    <ol>
+      <li><a href="http://shoup.net/ntl/">NTL</a>をインストールしていなければ
+	インストールする。</li>
+      <li>アーカイブファイルを解凍します。</li>
+      <li>出来たディレクトリ(SFMTJump-src-xxx)の中のjumpディレクトリを
+	SFMTのディクレクトリにコピーします。</li>
+<pre>
+SFMT-src-1.4
+   +---html
+   +---params
+   +---jump
+</pre>
+      <li>コピーしたjumpディレクトリにcd します。</li>
+      <li>NTLのインストール時にgmp か gf2x を使用した場合は、Makefile の
+	以下の行のどちらかのコメントを外す必要があります。</li>
+<pre>
+#LIBGF2X = -lgf2x
+#LIBGMP = -lgmp
+</pre>
+      <li>make を実行します</li>
+    <blockquote>
+<pre>
+make all
+make check
+</pre>
+    </blockquote>
+      <li>make check の結果 OK と表示されればテストは成功です</li>
+    </ol>
+    <p>make check で作られた test-jump-MXXX ファイルは、-s
+      を指定して実行するとジャンプ多項式の計算時間とジャンプの実行時間を表示します。
+    </p>
+    <blockquote>
+<pre>
+$ ./test-jump-M19937 -s
+mexp 19937 jump 10^04 steps calc_jump: 0.806ms
+mexp 19937 jump 10^04 steps SFMT_jump: 0.319ms
+mexp 19937 jump 10^06 steps calc_jump: 3.562ms
+mexp 19937 jump 10^06 steps SFMT_jump: 3.248ms
+mexp 19937 jump 10^08 steps calc_jump: 6.480ms
+mexp 19937 jump 10^08 steps SFMT_jump: 3.275ms
+mexp 19937 jump 10^10 steps calc_jump: 9.385ms
+mexp 19937 jump 10^10 steps SFMT_jump: 3.267ms
+mexp 19937 jump 10^12 steps calc_jump:12.720ms
+mexp 19937 jump 10^12 steps SFMT_jump: 3.273ms
+mexp 19937 jump 10^14 steps calc_jump:15.429ms
+mexp 19937 jump 10^14 steps SFMT_jump: 3.280ms
+mexp 19937 jump 10^16 steps calc_jump:18.377ms
+mexp 19937 jump 10^16 steps SFMT_jump: 3.301ms
+mexp 19937 jump 10^18 steps calc_jump:21.416ms
+mexp 19937 jump 10^18 steps SFMT_jump: 3.297ms
+mexp 19937 jump 10^20 steps calc_jump:24.440ms
+mexp 19937 jump 10^20 steps SFMT_jump: 3.233ms
+mexp 19937 jump 10^22 steps calc_jump:27.389ms
+mexp 19937 jump 10^22 steps SFMT_jump: 3.283ms
+</pre>
+    </blockquote>
+
+    <h2><a id="sample">並列生成サンプル</a></h2>
+    <p>
+      アーカイブに同梱されている <a href="sample1.c">sample1.c</a>ファイルは、
+      SFMT1279を使って、10<sup>20</sup>
+      ステップのジャンプをすることによって、重なりのないことが保証された部分列を5個生成
+      しています。5個のSFMTが10<sup>20</sup>以下の疑似乱数を生成する限り、
+      部分列が重なることはありません。
+    </p>
+    <p>
+      大きめのジャンプステップを指定して、重なりのない部分列を生成することが
+      ジャンプ機能の重要な目的ですが、
+      ジャンプ機能を使って、並列にひとつながりの疑似乱数列を生成することも出来ます。
+      <a href="sample2.c">sample2.c</a>では6個のSFMT607を使用して
+      ひとつながりの疑似乱数列を生成し、
+      ひとつのSFMT607で順次生成した疑似乱数列と比較しています。
+      <br/>
+      このサンプルでは、順次生成と比較するために、小さなジャンプステップを使って
+      いますが、実際にひとつながりの疑似乱数列を並列生成するなら、もっと大きな
+      ジャンプステップを使用することになるはずです。
+    </p>
+
+    <h2><a id="license">ライセンス</a></h2>
+    <p>
+      SFMT-jump は SFMT と同様に商用にも利用することができます。<br/>
+      詳細は<a href="LICENSE.txt">LICENSE.txt</a> を参照してください。
+    </p>
+  </body>
+</html>

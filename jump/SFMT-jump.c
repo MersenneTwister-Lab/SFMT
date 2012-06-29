@@ -19,7 +19,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "SFMT-params.h"
-#include "SFMTst.h"
+#include "SFMT.h"
 #include "SFMT-jump.h"
 #include "SFMT-common.h"
 

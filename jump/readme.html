@@ -7,6 +7,7 @@
     <meta http-equiv="Content-Type" content="text/html" />
     <title>SFMT jump function</title>
     <style type="text/css">
+      BODY {margin-left: 1%}
       BLOCKQUOTE {background-color:#e0ffe0;
                   padding-left: 1em;}
       div.math {padding-left:2em;
@@ -14,8 +15,21 @@
     </style>
   </head>
   <body>
-    <h2>SFMT jump function</h2>
+    <h2>Index</h2>
+    <ul>
+      <li><a href="#jump">About SFMT jump function</a></li>
+      <ul>
+	<li><a href="#calculation">
+	    Step 1: Calculations of jump polynomial</a></li>
+	<li><a href="#execution">
+	    Step 2: Changing internal state of SFMT to jumped state.</a></li>
+      </ul>
+      <li><a href="#compile">Install, Compile and Test</a></li>
+      <li><a href="#sample">Samples of Parallel generation</a></li>
+      <li><a href="#license">License</a></li>
+    </ul>
 
+    <h2><a id="jump">About SFMT jump function</a></h2>
     <p>
       For a given integer N, this jump function executes the N-step
       jump. Namely, from the given state, obtain the state of SFMT
@@ -30,14 +44,14 @@
       and changing internal state.
     </p>
 
-    <h3>Calculations of jump polynomial</h3>
+    <h3><a id="calculation">Step 1: Calculations of jump polynomial</a></h3>
 
     <p>From the characteristic polynomial <b>ϕ</b> of a linear random number
     generator and an integer <b>N</b>, we can get jump polynomial <b>ψ</b></p>
     <div class="math">
       ψ = X<sup>N</sup> mod ϕ.
     </div>
-      As a result, degree of jump polynomial <b>ψ</b> is less or equals to
+      As a result, degree of jump polynomial <b>ψ</b> is less than
       the characteristic polynomial <b>ϕ</b>, regardless of jump step <b>N</b>.
     </p>
 
@@ -71,30 +85,53 @@
       from MEXPs except file names of characteristic polynomials.
     </p>
 
-    <h3>Changing internal state of SFMT to jumped state.</h3>
+    <h3><a id="execution">
+	Step 2: Changing internal state of SFMT to jumped state.</a></h3>
 
     <p>This step depends on MEXPs of SFMT, and the characteristic
       polynomial of SFMT should be the same as one used for the jump
       polynomial calculation.
     </p>
-    <p>The function SFMT-jump written in C language does this step.
+    <p>The function SFMT_jump written in C language does this step.
       For our convenience, we used C structure for SFMT internal state,
       and almost of all functions provided in SFMT ver. 1.3 were
       re-written to use SFMT structures. No support for ALTIVEC or BIG
       ENDIAN.
     </p>
 
-    <h3>Compile and test</h3>
-    <p><a href="http://shoup.net/ntl/">NTL: A Library for doing Number
-    Theory</a>by Victor Shoup is required for compile. If you
-      installed NTL with gmp or gf2x, you will need to change Makefile.
+    <h2><a id="compile">Install, Compile and Test</a></h2>
+    <p>Test program needs source programs of SFMT ver. 1.4 to be compiled.
     </p>
+
+    <ol>
+      <li>Install <a href="http://shoup.net/ntl/">NTL</a>
+	if not installed. </li>
+      <li>Expand archive file</li>
+      <li>Copy <b>jump</b> directory in SFMTJump-src-xxxx to
+        the directory of SFMT.</li>
+<pre>
+SFMT-src-1.4
+   +---html
+   +---params
+   +---jump
+</pre>
+      <li>Change directory to copied jump directory</li>
+      <li>If you specify gmp or gf2x when you installed NTL,
+	you need to uncomment one of below lines in Makefile.
+      </li>
+<pre>
+#LIBGF2X = -lgf2x
+#LIBGMP = -lgmp
+</pre>
+      <li>make</li>
     <blockquote>
 <pre>
 make all
 make check
 </pre>
     </blockquote>
+      <li>Check if OK is showed and no NG</li>
+    </ol>
 
     <p>test-jump-MXXX files made by above can invoke with '-s'
       argument like this:
@@ -125,22 +162,29 @@ mexp 19937 jump 10^22 steps SFMT_jump: 3.283ms
 </pre>
     </blockquote>
 
-    <h3>Parallel generation sample</h3>
+    <h2><a id="sample">Samples of Parallel generation</a></h2>
     <p>
-    Getting distinct sub sequences is an important purpose of
-    jump function, however jump function is also available to get
-    a sub-sequence using parallel computing.
+      <a href="sample1.c">sample1.c</a> file included in the
+      archive shows generation of
+      5 distinct sub-sequences using 10<sup>20</sup> steps jump.
+      As far as the length of each sub-sequence is smaller than
+      10<sup>20</sup> the sub-sequences are not overlapping.
     </p>
     <p>
+      Getting distinct sub sequences is an important purpose of
+      jump function, however jump function is also available to get
+      a sub-sequence using parallel computing.
+      <br/>
       Here is a sample of generating a sequence using 6 SFMT instances.
-      This sample is included in SFMT-jump archive.
-      <a href="sample.c">sample.c</a>
+      This sample is included in the archive.
+      <a href="sample2.c">sample2.c</a>
     </p>
 
-    <h3>License</h3>
+    <h2><a id="license">License</a></h2>
     <p>
       SFMT-jump, as well as SFMT, can be used freely for any purpose, including
-    commercial use. See <a href="LICENSE.txt">LICENSE.txt</a> for detail.
+      commercial use. <br/>
+      See <a href="LICENSE.txt">LICENSE.txt</a> for detail.
     </p>
   </body>
 </html>

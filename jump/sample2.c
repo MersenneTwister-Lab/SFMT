@@ -1,7 +1,7 @@
 /**
- * @file sample.c
+ * @file sample2.c
  *
- * @brief sample jump using pre-computed jump polynomial.
+ * @brief sample jump for one sequence using 6 generators.
  *
  * The jump polynomial used in this program was calculated like this:
 <pre>
@@ -16,7 +16,7 @@ jump polynomial:
  */
 #define SFMT_MEXP 607
 #include <stdio.h>
-#include "SFMTst.h"
+#include "SFMT.h"
 #include "SFMT-jump.h"
 
 /*
@@ -48,10 +48,8 @@ int main(int argc, char * argv[])
      */
     sfmt_init_gen_rand(&sfmt[0], seed);
     for (int i = 1; i < 6; i++) {
-	sfmt[i] = sfmt[0];
-	for (int j = 0; j < i; j++) {
-	    SFMT_jump(&sfmt[i], jump2000);
-	}
+	sfmt[i] = sfmt[i - 1];
+	SFMT_jump(&sfmt[i], jump2000);
     }
     /* initialize serial generator */
     sfmt_init_gen_rand(&serial, seed);

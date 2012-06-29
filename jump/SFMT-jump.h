@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-#include "SFMTst.h"
+#include "SFMT.h"
 void SFMT_jump(sfmt_t * sfmt, const char * jump_str);
 
 #if defined(__cplusplus)
