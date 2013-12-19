@@ -27,7 +27,7 @@
  *   <ul>
  *     <li>\b SFMT_jump(sfmt_t * sfmt, const char * jump_str)
  *         changes internal state of \b sfmt in user's programs.
- *     <li> @see sample.c
+ *     <li> @see sample1.c sample2.c
  *   </ul>
  * </ol>
  *
@@ -39,7 +39,7 @@
  * @author Mutsuo Saito (Hiroshima University)
  * @author Makoto Matsumoto (The University of Tokyo)
  *
- * @date 2012-05-22
+ * @date 2012-05-29
  *
  * Copyright (C) 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima
  * University and The University of Tokyo.

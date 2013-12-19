@@ -132,8 +132,8 @@ inline static uint32_t sfmt_genrand_uint32(sfmt_t * sfmt) {
     uint32_t * psfmt32 = &sfmt->state[0].u[0];
 
     if (sfmt->idx >= SFMT_N32) {
-	sfmt_gen_rand_all(sfmt);
-	sfmt->idx = 0;
+        sfmt_gen_rand_all(sfmt);
+        sfmt->idx = 0;
     }
     r = psfmt32[sfmt->idx++];
     return r;
@@ -158,8 +158,8 @@ inline static uint64_t sfmt_genrand_uint64(sfmt_t * sfmt) {
     assert(sfmt->idx % 2 == 0);
 
     if (sfmt->idx >= SFMT_N32) {
-	sfmt_gen_rand_all(sfmt);
-	sfmt->idx = 0;
+        sfmt_gen_rand_all(sfmt);
+        sfmt->idx = 0;
     }
 #if defined(BIG_ENDIAN64) && !defined(ONLY64)
     r1 = psfmt32[sfmt->idx];
@@ -247,7 +247,7 @@ inline static double sfmt_genrand_real3(sfmt_t * sfmt)
  */
 inline static double sfmt_to_res53(uint64_t v)
 {
-    return v * (1.0/18446744073709551616.0L);
+    return v * (1.0/18446744073709551616.0);
 }
 
 /**

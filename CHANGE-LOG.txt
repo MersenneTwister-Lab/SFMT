@@ -1,3 +1,7 @@
+ver 1.4.1
+-------
+fix MSC compile error reported by Dirk Steenpass.
+
 ver 1.4
 -------
 internal state of SFMT is kept in structure.
