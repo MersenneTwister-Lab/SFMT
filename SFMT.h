@@ -1,4 +1,8 @@
 #pragma once
+/*
+ * ARM Port of SFMT
+ * Copyright (C) 2016 Masaki Ota. All rights reserved.
+ */
 /**
  * @file SFMT.h
  *
@@ -78,6 +82,15 @@ union W128_T {
     vector unsigned int s;
     uint32_t u[4];
     uint64_t u64[2];
+};
+#elif defined(HAVE_NEON)
+  #include <arm_neon.h>
+
+/** 128-bit data structure */
+union W128_T {
+    uint32_t u[4];
+    uint64_t u64[2];
+    uint32x4_t si;
 };
 #elif defined(HAVE_SSE2)
   #include <emmintrin.h>

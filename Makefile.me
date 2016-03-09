@@ -4,6 +4,7 @@ FILES = SFMT.h \
 	SFMT-params.h \
 	SFMT.c \
 	SFMT-alti.h \
+	SFMT-neon.h \
 	SFMT-sse2.h \
 	SFMT-sse2-msc.h \
 	SFMT-common.h \
@@ -30,14 +31,16 @@ FILES = SFMT.h \
 	FILES.txt \
 	LICENSE.txt \
 	Makefile \
+	Makefile.armv7a \
+	Makefile.aarch64 \
 	test.c \
 	check.sh \
 	CHANGE-LOG.txt \
 	README.txt \
 	html
 
-VERSION = 1.4.1
-DIR = SFMT-src-${VERSION}
+VERSION = 1.4.1r1
+DIR = SFMT-armport-src-${VERSION}
 
 doc:
 	rm -rf html

@@ -1,4 +1,8 @@
 /**
+ * ARM Port of SFMT
+ * Copyright (C) 2016 Masaki Ota. All rights reserved.
+ */
+/**
  * @file  SFMT.c
  * @brief SIMD oriented Fast Mersenne Twister(SFMT)
  *
@@ -16,7 +20,7 @@
  * The 3-clause BSD License is applied to this software, see
  * LICENSE.txt
  */
-
+ 
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -40,11 +44,6 @@ extern "C" {
 #undef ONLY64
 #endif
 
-/**
- * parameters used by sse2.
- */
-static const w128_t sse2_param_mask = {{SFMT_MSK1, SFMT_MSK2,
-                                        SFMT_MSK3, SFMT_MSK4}};
 /*----------------
   STATIC FUNCTIONS
   ----------------*/
@@ -65,6 +64,13 @@ inline static void swap(w128_t *array, int size);
   #else
     #include "SFMT-sse2.h"
   #endif
+/**
+ * parameters used by sse2.
+ */
+static const w128_t sse2_param_mask = {{SFMT_MSK1, SFMT_MSK2,
+                                        SFMT_MSK3, SFMT_MSK4}};
+#elif defined(HAVE_NEON)
+  #include "SFMT-neon.h"
 #endif
 
 /**
@@ -81,7 +87,7 @@ inline static int idxof(int i) {
 }
 #endif
 
-#if (!defined(HAVE_ALTIVEC)) && (!defined(HAVE_SSE2))
+#if (!defined(HAVE_ALTIVEC)) && (!defined(HAVE_SSE2)) && (!defined(HAVE_NEON))
 /**
  * This function fills the user-specified array with pseudorandom
  * integers.
@@ -232,7 +238,7 @@ int sfmt_get_min_array_size64(sfmt_t * sfmt) {
     return SFMT_N64;
 }
 
-#if !defined(HAVE_SSE2) && !defined(HAVE_ALTIVEC)
+#if !defined(HAVE_SSE2) && !defined(HAVE_ALTIVEC) && !defined(HAVE_NEON)
 /**
  * This function fills the internal state array with pseudorandom
  * integers.
