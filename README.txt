@@ -1,8 +1,4 @@
  =================================================================
- SFMT ARM port ver. 0.1 (based on SFMT ver. 1.4.1)
-
- Copyright (C) 2016 Masaki Ota All rights reserved.
- =================================================================
  SFMT ver. 1.4
  SIMD oriented Fast Mersenne Twister(SFMT)
 
