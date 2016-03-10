@@ -1,8 +1,4 @@
 #pragma once
-/*
- * ARM Port of SFMT
- * Copyright (C) 2016 Masaki Ota. All rights reserved.
- */
 /**
  * @file SFMT.h
  *

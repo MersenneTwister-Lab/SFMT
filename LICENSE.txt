@@ -2,7 +2,6 @@ Copyright (c) 2006,2007 Mutsuo Saito, Makoto Matsumoto and Hiroshima
 University.
 Copyright (c) 2012 Mutsuo Saito, Makoto Matsumoto, Hiroshima University
 and The University of Tokyo.
-Copyright (c) 2016 Masaki Ota. 
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
