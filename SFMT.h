@@ -256,7 +256,7 @@ inline static double sfmt_genrand_real3(sfmt_t * sfmt)
  */
 inline static double sfmt_to_res53(uint64_t v)
 {
-    return v * (1.0/18446744073709551616.0);
+    return (v >> 11) * (1.0/9007199254740992.0);
 }
 
 /**
