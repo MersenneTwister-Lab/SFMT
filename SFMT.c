@@ -168,17 +168,19 @@ static uint32_t func2(uint32_t x) {
  * @param sfmt SFMT internal state
  */
 static void period_certification(sfmt_t * sfmt) {
-    int inner = 0;
+    uint32_t inner = 0;
     int i, j;
     uint32_t work;
     uint32_t *psfmt32 = &sfmt->state[0].u[0];
     const uint32_t parity[4] = {SFMT_PARITY1, SFMT_PARITY2,
                                 SFMT_PARITY3, SFMT_PARITY4};
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 4; i++) {
         inner ^= psfmt32[idxof(i)] & parity[i];
-    for (i = 16; i > 0; i >>= 1)
+    }
+    for (i = 16; i > 0; i >>= 1) {
         inner ^= inner >> i;
+    }
     inner &= 1;
     /* check OK */
     if (inner == 1) {
