@@ -16,7 +16,7 @@
  *   an array of 32-bit integers as the seeds.
  * - uint32_t sfmt_genrand_uint32() generates and returns
  *   a pseudorandom 32-bit unsigned integer.
- * - uint32_t sfmt_genrand_uint64() generates and returns
+ * - uint64_t sfmt_genrand_uint64() generates and returns
  *   a pseudorandom 64-bit unsigned integer.
  * - void sfmt_fill_array32() fills the user-specified array with
  *   32-bit pseudorandom integers.
