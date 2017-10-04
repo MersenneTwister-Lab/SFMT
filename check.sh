@@ -6,8 +6,9 @@ tmp64=tmp64.$$
 exps="607 1279 2281 4253 11213 19937 44497 86243 132049 216091"
 for mexp in $exps; do
     if [ $bit_len = "64" ]; then
-	./test-std-M${mexp} -b64 > $tmp64
-	compare=$tmp64
+#	./test-std-M${mexp} -b64 > $tmp64
+#	compare=$tmp64
+	compare=SFMT.${mexp}.64.out.txt
     else
 	compare=SFMT.${mexp}.out.txt
     fi
@@ -15,7 +16,7 @@ for mexp in $exps; do
     if ./$command -b${bit_len}> $tmp; then
 	:;
     else
-	echo $command exexute error!
+	echo $command -b$bit_len exexute error!
 	rm -f $tmp
 	if [ -n "$tmp64" ] && [ -e $tmp64 ]; then
 	    rm -f $tmp64
@@ -23,10 +24,10 @@ for mexp in $exps; do
 	exit 1
     fi
     if diff -q -w $tmp $compare; then
-	echo $command output check OK
+	echo $command -b$bit_len output check OK
 	rm -f $tmp
     else
-	echo $command output check NG!
+	echo $command -b$bit_len output check NG!
 	rm -f $tmp
 	if [ -n "$tmp64" ] && [ -e $tmp64 ]; then
 	    rm -f $tmp64
