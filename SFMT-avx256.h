@@ -7,7 +7,7 @@
  *  asssumed: 
  *    SFMT_SL1 >= 16
  *    SFMT_N % 2 == 0 
- *	  SFMT_POS1 % 2 == 0
+ *    SFMT_POS1 % 2 == 0
  * 
  * Copyright (C) 2020. Masaki Ota. All rights reserved.
  * 
