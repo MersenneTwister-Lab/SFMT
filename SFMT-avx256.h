@@ -18,6 +18,7 @@
 
 #define LD2(addr) _mm256_loadu_si256((__m256i*)addr)
 #define ST2(addr, x) _mm256_storeu_si256((__m256i*)addr, x)
+#define ST1(addr, x) _mm_store_si128((__m128i*)addr, _mm256_castsi256_si128(x))
 
 /**
  * This function represents the recursion formula.
@@ -107,10 +108,15 @@ static void gen_rand_array(sfmt_t * sfmt, w128_t * array, int size)
         r = LD2(&array[j + size - SFMT_N]);
         ST2(&pstate[j], r);
     }
-    for (; i < size; i+=2, j+=2) {
+    for (; i < size - 1; i+=2, j+=2) {
         r = mm256_recursion(LD2(&array[i - SFMT_N]), LD2(&array[i + SFMT_POS1 - SFMT_N]), r);
         ST2(&array[i], r);
         ST2(&pstate[j], r);
+    }
+    if (size & 1) {
+        r = mm256_recursion(LD2(&array[i - SFMT_N]), LD2(&array[i + SFMT_POS1 - SFMT_N]), r);
+        ST1(&array[i], r);
+        ST1(&pstate[j], r);
     }
 }
 #endif 
