@@ -34,6 +34,8 @@ ALTIFLAGS = -mabi=altivec -maltivec -DHAVE_ALTIVEC
 OSXALTIFLAGS = -faltivec -maltivec -DHAVE_ALTIVEC
 SSE2FLAGS = -msse2 -DHAVE_SSE2
 #SSE2FLAGS = /arch:SSE2 /DHAVE_SSE2
+AVX2FLAGS = -mavx2 -DHAVE_SSE2
+AVX512FLAGS = -mavx512vl -DHAVE_SSE2
 STD_TARGET = test-std-M19937
 BIG_TARGET = test-big64-M19937
 ALL_STD_TARGET = test-std-M607 test-std-M1279 test-std-M2281 test-std-M4253 \
@@ -50,9 +52,14 @@ ALL_ALTIBIG_TARGET = test-alti64-M607 test-alti64-M1279 test-alti64-M2281 \
 test-alti64-M4253 test-alti64-M11213 test-alti64-M19937 test-alti64-M44497 \
 test-alti64-M86243 test-alti64-M132049 test-alti64-M216091
 SSE2_TARGET = test-sse2-M19937
+AVX2_TARGET = test-avx2-M19937
+AVX512_TARGET = test-avx512-M19937
 ALL_SSE2_TARGET = test-sse2-M607 test-sse2-M1279 test-sse2-M2281 \
 test-sse2-M4253 test-sse2-M11213 test-sse2-M19937 test-sse2-M44497 \
 test-sse2-M86243 test-sse2-M132049 test-sse2-M216091
+ALL_AVX2_TARGET =  test-avx2-M19937 
+ALL_AVX512_TARGET =  test-avx512-M19937 
+
 # ==========================================================
 # comment out or EDIT following lines to get max performance
 # ==========================================================
@@ -84,6 +91,10 @@ std: $(STD_TARGET)
 
 sse2:$(SSE2_TARGET)
 
+avx2:$(AVX2_TARGET)
+
+avx512:$(AVX512_TARGET)
+
 alti:$(ALTI_TARGET)
 
 osx-alti:
@@ -96,6 +107,12 @@ std-check: $(ALL_STD_TARGET)
 
 sse2-check: $(ALL_SSE2_TARGET)
 	./check.sh 32 test-sse2
+
+avx2-check: $(ALL_AVX2_TARGET)
+	./check.sh 32 test-avx2
+
+avx512-check: $(ALL_AVX512_TARGET)
+	./check.sh 32 test-avx512
 
 alti-check: $(ALL_ALTI_TARGET)
 	./check.sh 32 test-alti
@@ -169,6 +186,14 @@ test-alti-M19937: test.c SFMT.c SFMT.h SFMT-alti.h \
 test-sse2-M19937: test.c SFMT.c SFMT.h SFMT-sse2.h \
 	SFMT-params19937.h
 	$(CC) $(CCFLAGS) $(SSE2FLAGS) -DSFMT_MEXP=19937 -o $@ test.c SFMT.c
+
+test-avx2-M19937: test.c SFMT.c SFMT.h SFMT-avx256.h \
+	SFMT-params19937.h
+	$(CC) $(CCFLAGS) $(AVX2FLAGS) -DSFMT_MEXP=19937 -o $@ test.c SFMT.c
+
+test-avx512-M19937: test.c SFMT.c SFMT.h SFMT-avx256.h \
+	SFMT-params19937.h
+	$(CC) $(CCFLAGS) $(AVX512FLAGS) -DSFMT_MEXP=19937 -o $@ test.c SFMT.c
 
 test-std-M44497: test.c SFMT.c SFMT.h SFMT-params44497.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=44497 -o $@ test.c SFMT.c
