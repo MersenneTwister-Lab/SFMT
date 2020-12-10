@@ -48,6 +48,9 @@ std-check: $(ALL_std_TARGET)
 asimd-check: $(ALL_ASIMD_TARGET)
 	./check.sh 32 test-asimd
 
+sha3-check: $(ALL_SHA3_TARGET)
+	./check.sh 32 test-sha3
+
 test-std-M607: test.c SFMT.c SFMT.h SFMT-params607.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=607 -o $@ test.c SFMT.c
 
@@ -151,4 +154,4 @@ test-sha3-M216091: test.c SFMT.c SFMT.h SFMT-neon.h \
 	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=216091 -o $@ test.c SFMT.c
 
 clean:
-	rm -f *.o *~
+	rm -f *.o *~ test-std-M* test-asimd-M* test-sha3-M*
