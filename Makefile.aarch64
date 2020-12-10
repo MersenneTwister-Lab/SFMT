@@ -1,5 +1,5 @@
-# @file  Makefile.aarch64
-# @brief Makefile.aarch64
+# @file  Makefile.apple
+# @brief Makefile.apple
 #
 # @author Masaki Ota
 #
@@ -7,108 +7,148 @@
 # see LICENSE.txt
 #
 # @note
-# We could compile test-neon-Mxxx using gcc-4.8(aarch64) of Linux.
+# I could compile test-asimd-Mxxx using clang 12
 # 
 WARN = -Wmissing-prototypes -Wall -Winline
 OPTI = -O3 -finline-functions -fomit-frame-pointer -DNDEBUG \
 -fno-strict-aliasing --param max-inline-insns-single=1800
 STD = -std=c99
-CC = aarch64-linux-gnu-gcc
+CC = clang
 CCFLAGS = $(OPTI) $(WARN) $(STD)
-NEONFLAGS = -DHAVE_NEON -ftree-vectorize
-ARM_TARGET = test-arm-M19937
-NEON_TARGET = test-neon-M19937
+NEONFLAGS = -DHAVE_NEON -march=armv8.3-a
+SHA3FLAGS = -DHAVE_NEON -DHAVE_SHA3 -march=armv8.3-a+sha3
+STD_TARGET = test-std-M19937
+ASIMD_TARGET = test-asimd-M19937
+SHA3_TARGET = test-sha3-M19937
 
-ALL_ARM_TARGET = test-arm-M607 test-arm-M1279 test-arm-M2281 test-arm-M4253 \
-test-arm-M11213 test-arm-M19937 test-arm-M44497 test-arm-M86243 \
-test-arm-M132049 test-arm-M216091
+ALL_STD_TARGET = test-std-M607 test-std-M1279 test-std-M2281 test-std-M4253 \
+test-std-M11213 test-std-M19937 test-std-M44497 test-std-M86243 \
+test-std-M132049 test-std-M216091
 
-ALL_NEON_TARGET = test-neon-M607 test-neon-M1279 test-neon-M2281 \
-test-neon-M4253 test-neon-M11213 test-neon-M19937 test-neon-M44497 \
-test-neon-M86243 test-neon-M132049 test-neon-M216091
+ALL_ASIMD_TARGET = test-asimd-M607 test-asimd-M1279 test-asimd-M2281 \
+test-asimd-M4253 test-asimd-M11213 test-asimd-M19937 test-asimd-M44497 \
+test-asimd-M86243 test-asimd-M132049 test-asimd-M216091
 
-.PHONY: arm-check neon-check
+ALL_SHA3_TARGET = test-sha3-M607 test-sha3-M1279 test-sha3-M2281 \
+test-sha3-M4253 test-sha3-M11213 test-sha3-M19937 test-sha3-M44497 \
+test-sha3-M86243 test-sha3-M132049 test-sha3-M216091
 
-arm: $(ARM_TARGET)
+.PHONY: std-check asimd-check sha3-check
 
-neon:$(NEON_TARGET)
+std: $(STD_TARGET)
+
+asimd:$(ASIMD_TARGET)
+
+sha3:$(SHA3_TARGET)
 
 
-arm-check: $(ALL_ARM_TARGET)
-	./check.sh 32 test-arm
+std-check: $(ALL_std_TARGET)
+	./check.sh 32 test-std
 
-neon-check: $(ALL_NEON_TARGET)
-	./check.sh 32 test-neon
+asimd-check: $(ALL_ASIMD_TARGET)
+	./check.sh 32 test-asimd
 
-test-arm-M607: test.c SFMT.c SFMT.h SFMT-params607.h
+test-std-M607: test.c SFMT.c SFMT.h SFMT-params607.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=607 -o $@ test.c SFMT.c
 
-test-neon-M607: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params607.h
+test-asimd-M607: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params607.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=607 -o $@ test.c SFMT.c
 
-test-arm-M1279: test.c SFMT.c SFMT.h SFMT-params1279.h
+test-sha3-M607: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params607.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=607 -o $@ test.c SFMT.c
+
+test-std-M1279: test.c SFMT.c SFMT.h SFMT-params1279.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=1279 -o $@ test.c SFMT.c
 
-test-neon-M1279: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params1279.h
+test-asimd-M1279: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params1279.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=1279 -o $@ test.c SFMT.c
 
-test-arm-M2281: test.c SFMT.c SFMT.h SFMT-params2281.h
+test-sha3-M1279: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params1279.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=1279 -o $@ test.c SFMT.c
+
+test-std-M2281: test.c SFMT.c SFMT.h SFMT-params2281.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=2281 -o $@ test.c SFMT.c
 
-test-neon-M2281: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params2281.h
+test-asimd-M2281: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params2281.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=2281 -o $@ test.c SFMT.c
 
-test-arm-M4253: test.c SFMT.c SFMT.h SFMT-params4253.h
+test-sha3-M2281: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params2281.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=2281 -o $@ test.c SFMT.c
+
+test-std-M4253: test.c SFMT.c SFMT.h SFMT-params4253.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=4253 -o $@ test.c SFMT.c
 
-test-neon-M4253: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params4253.h
+test-asimd-M4253: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params4253.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=4253 -o $@ test.c SFMT.c
 
-test-arm-M11213: test.c SFMT.c SFMT.h SFMT-params11213.h
+test-sha3-M4253: test.c SFMT.c SFMT.h SFMT-neon.h SFMT-params4253.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=4253 -o $@ test.c SFMT.c
+
+test-std-M11213: test.c SFMT.c SFMT.h SFMT-params11213.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=11213 -o $@ test.c SFMT.c
 
-test-neon-M11213: test.c SFMT.c SFMT.h SFMT-neon.h \
+test-asimd-M11213: test.c SFMT.c SFMT.h SFMT-neon.h \
 	SFMT-params11213.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=11213 -o $@ test.c SFMT.c
 
-test-arm-M19937: test.c SFMT.c SFMT.h SFMT-params19937.h
+test-sha3-M11213: test.c SFMT.c SFMT.h SFMT-neon.h \
+	SFMT-params11213.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=11213 -o $@ test.c SFMT.c
+
+test-std-M19937: test.c SFMT.c SFMT.h SFMT-params19937.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=19937 -o $@ test.c SFMT.c
 
-test-neon-M19937: test.c SFMT.c SFMT.h SFMT-neon.h \
+test-asimd-M19937: test.c SFMT.c SFMT.h SFMT-neon.h \
 	SFMT-params19937.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=19937 -o $@ test.c SFMT.c
 
-asm-neon-M19937: test.c SFMT.c SFMT.h SFMT-neon.h \
+test-sha3-M19937: test.c SFMT.c SFMT.h SFMT-neon.h \
 	SFMT-params19937.h
-	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=19937 -s $@ test.c SFMT.c -S
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=19937 -o $@ test.c SFMT.c
 
-test-arm-M44497: test.c SFMT.c SFMT.h SFMT-params44497.h
+test-std-M44497: test.c SFMT.c SFMT.h SFMT-params44497.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=44497 -o $@ test.c SFMT.c
 
-test-neon-M44497: test.c SFMT.c SFMT.h SFMT-neon.h \
+test-asimd-M44497: test.c SFMT.c SFMT.h SFMT-neon.h \
 	SFMT-params44497.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=44497 -o $@ test.c SFMT.c
 
-test-arm-M86243: test.c SFMT.c SFMT.h SFMT-params86243.h
+test-sha3-M44497: test.c SFMT.c SFMT.h SFMT-neon.h \
+	SFMT-params44497.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=44497 -o $@ test.c SFMT.c
+
+test-std-M86243: test.c SFMT.c SFMT.h SFMT-params86243.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=86243 -o $@ test.c SFMT.c
 
-test-neon-M86243: test.c SFMT.c SFMT.h SFMT-neon.h \
+test-asimd-M86243: test.c SFMT.c SFMT.h SFMT-neon.h \
 	SFMT-params86243.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=86243 -o $@ test.c SFMT.c
 
-test-arm-M132049: test.c SFMT.c SFMT.h SFMT-params132049.h
+test-sha3-M86243: test.c SFMT.c SFMT.h SFMT-neon.h \
+	SFMT-params86243.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=86243 -o $@ test.c SFMT.c
+
+test-std-M132049: test.c SFMT.c SFMT.h SFMT-params132049.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=132049 -o $@ test.c SFMT.c
 
-test-neon-M132049: test.c SFMT.c SFMT.h SFMT-neon.h \
+test-asimd-M132049: test.c SFMT.c SFMT.h SFMT-neon.h \
 	SFMT-params132049.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=132049 -o $@ test.c SFMT.c
 
-test-arm-M216091: test.c SFMT.c SFMT.h SFMT-params216091.h
+test-sha3-M132049: test.c SFMT.c SFMT.h SFMT-neon.h \
+	SFMT-params132049.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=132049 -o $@ test.c SFMT.c
+
+test-std-M216091: test.c SFMT.c SFMT.h SFMT-params216091.h
 	$(CC) $(CCFLAGS) -DSFMT_MEXP=216091 -o $@ test.c SFMT.c
 
-test-neon-M216091: test.c SFMT.c SFMT.h SFMT-neon.h \
+test-asimd-M216091: test.c SFMT.c SFMT.h SFMT-neon.h \
 	SFMT-params216091.h
 	$(CC) $(CCFLAGS) $(NEONFLAGS) -DSFMT_MEXP=216091 -o $@ test.c SFMT.c
+
+test-sha3-M216091: test.c SFMT.c SFMT.h SFMT-neon.h \
+	SFMT-params216091.h
+	$(CC) $(CCFLAGS) $(SHA3FLAGS) -DSFMT_MEXP=216091 -o $@ test.c SFMT.c
 
 clean:
 	rm -f *.o *~
