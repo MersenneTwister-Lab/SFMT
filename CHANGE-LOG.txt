@@ -1,3 +1,8 @@
+ver 1.5.3
+-------
+AARCH64 some changes / performance increasing for Apple M1 / Cortex-A7x
+by Masaki Ota.
+
 ver 1.5.2
 -------
 AVX256, AVX512 256bit code by Masaki Ota.
