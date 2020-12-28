@@ -15,29 +15,26 @@
 /*
  * SHA3 missing intrinsics
  */
-__inline uint64x2_t veor3q_u64(uint64x2_t a, uint64x2_t b, uint64x2_t c)
+__inline uint32x4_t veor3q_u32(uint32x4_t a, uint32x4_t b, uint32x4_t c)
 {
-    uint64x2_t r;
+    uint32x4_t r;
     __asm__ ("eor3.16b %0,%1,%2,%3" :"=w"(r) :"w"(a), "w"(b), "w"(c));
     return r;
 }
-__inline uint64x2_t vbcaxq_u64(uint64x2_t a, uint64x2_t b, uint64x2_t c)
+__inline uint32x4_t vbcaxq_u32(uint32x4_t a, uint32x4_t b, uint32x4_t c)
 {
-    uint64x2_t r;
+    uint32x4_t r;
     __asm__ ("bcax.16b %0,%1,%2,%3" :"=w"(r) :"w"(a), "w"(b), "w"(c));
     return r;
 }
-#endif
-
-#define EOR3(a,b,c) veor3q_u64(a,b,c)
-#define BCAX(a,b,c) vbcaxq_u64(a,b,c)
-
-#else // NO SHA3
+#endif 
+#define EOR3(a,b,c) veor3q_u32(a,b,c)
+#define BCAX(a,b,c) vbcaxq_u32(a,b,c)
+#else /* NO SHA3 */
 /* emulate SHA3 */
-#define EOR3(a,b,c) veorq_u64(a, veorq_u64(b,c)) 
-#define BCAX(a,b,c) veorq_u64(a, vbicq_u64(b,c))
+#define EOR3(a,b,c) veorq_u32(a, veorq_u32(b,c)) 
+#define BCAX(a,b,c) veorq_u32(a, vbicq_u32(b,c))
 #endif
-
 
 inline static void neon_recursion(uint32x4_t * r, uint32x4_t a, uint32x4_t b,
                                 uint32x4_t c, uint32x4_t d);

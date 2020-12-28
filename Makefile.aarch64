@@ -15,7 +15,7 @@ OPTI = -O3 -finline-functions -fomit-frame-pointer -DNDEBUG \
 STD = -std=c99
 CC = clang
 CCFLAGS = $(OPTI) $(WARN) $(STD)
-NEONFLAGS = -DHAVE_NEON -march=armv8.3-a
+NEONFLAGS = -DHAVE_NEON
 SHA3FLAGS = -DHAVE_NEON -DHAVE_SHA3 -march=armv8.3-a+sha3
 STD_TARGET = test-std-M19937
 ASIMD_TARGET = test-asimd-M19937
