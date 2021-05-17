@@ -6,6 +6,7 @@ CMakeFiles/
 cmake_install.cmake
 *.exe
 lib*.a
+*.vcproj
 *.vcxproj
 *.sln
 *.filters
